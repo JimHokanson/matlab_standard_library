@@ -1,4 +1,4 @@
-function [obj,extras] = toObject(obj,s,fields_ignore,varargin)
+function output = toObject(obj,s,fields_ignore,varargin)
 %toObject Copies structure to object fields
 %
 %   [obj,extras] = sl.struct.toObject(obj,s,*fields_ignore)
@@ -9,19 +9,34 @@ function [obj,extras] = toObject(obj,s,fields_ignore,varargin)
 %   =======================================================================
 %   obj : Handle object
 %
+%   OUTPUTS
+%   =======================================================================
+%
 %   IMPROVEMENTS:
 %   =======================================================================
 %   1) Allow option to error when field doesn't exist
-%   2) Allow option to error when ignore fields don't exist (lower
+%   2) Allow option to error when fields to ignore don't exist (lower
 %       priority)
+%
+%   IMPORTANT
+%   =============================================================
+%   Jim will be updating the output so that it is an object
+%
 %
 %   TODO: Finish documentation
 
 missing_fields = {};
+
 fn = fieldnames(s);
 
+
+
+
 if exist('fields_ignore','var')
-   fn(ismember(fn,fields_ignore)) = []; 
+
+    %TODO: Check that ignored fields actually exist
+    
+    fn(ismember(fn,fields_ignore)) = []; 
 end
 
 for iFN = 1:length(fn)
@@ -34,4 +49,4 @@ for iFN = 1:length(fn)
     end
 end
 
-extras.missing_fields = missing_fields;
+output = sl.struct.toObjectResult(obj,missing_fields);
