@@ -44,12 +44,11 @@ in.fields_ignore  = {};
 in.remove_classes = true;
 in = sl.in.processVarargin(in,varargin);
 
-
+initial_struct_fn = fieldnames(s);
 
 struct_fn = fieldnames(s);
 
 if in.remove_classes
-   keyboard 
    is_object = structfun(@isobject,s);
    obj_names = struct_fn(is_object);
    s = rmfield(s,obj_names);
@@ -58,48 +57,51 @@ end
 
 
 mc = metaclass(obj);
-prop_list = mc.PropertyList;
-
-prop_names     = {prop_list.Name};
-constant_props = prop_names([prop_list.Constant]);
+prop_list  = mc.PropertyList;
+prop_names = {prop_list.Name};
 
 
-%TODO: Eventually write a double setdiff method as this is horribly
-%inefficient ..
-valid_struct_fields_mask = ismember(struct_fn,prop_names);
-missing_props_mask       = ~ismember(prop_names,struct_fn);
+%Removal of properties that we can't set
+%--------------------------------------------------------------------------
+constant_props_mask = [prop_list.Constant];
+dependent_mask      = [prop_list.Dependent];
+if any(dependent_mask)
+   %We can't set dependent methods which don't have a set method ...
+   dependent_mask(dependent_mask) = arrayfun(@(x) isempty(x.SetMethod),prop_list(dependent_mask));
+end
 
-s = rmfield(s,constant_props);
+all_cant_set_props  = prop_names(constant_props_mask | dependent_mask);
+struct_fn(ismember(struct_fn,all_cant_set_props)) = [];
 
-is_constant_struct_fn = ismember(struct_fn,constant_props);
 
-%Grab constant fields
-%NOTE: Not using this currently ...
-% % % s_const     = rmfield(s,struct_fn(~is_constant_struct_fn));
-%Removal of trying to assign to a constant property
-% % % % s_non_const = rmfield(s,struct_fn(is_constant_struct_fn));
+%Determine properties no longer in the object
+%--------------------------------------------------------------------------
+not_in_class_prop_mask  = ~ismember(struct_fn,prop_names);
+unassigned_struct_props = struct_fn(not_in_class_prop_mask);
+struct_fn(not_in_class_prop_mask) = [];
 
-valid_struct_fields_mask = valid_struct_fields_mask(~is_constant_struct_fn);
-struct_fn                = struct_fn(~is_constant_struct_fn);
-
-unassigned_struct_props   = struct_fn(~valid_struct_fields_mask);
-class_props_not_in_struct = prop_names(missing_props_mask);
-
+%Removal of fields to ignore 
+%--------------------------------------------------------------------------
 if ~isempty(in.fields_ignore)
     %TODO: Check that ignored fields actually exist
     %
     %   Why, what would I do with this info ????
+    %
+    %   Might be good just to know ...
+    %
     struct_fn(ismember(struct_fn,fields_ignore)) = []; 
 end
 
+%Final assignment ...
+%--------------------------------------------------------------------------
 for iFN = 1:length(struct_fn)
     curField = struct_fn{iFN};
-% % % %     try
-        obj.(curField) = s.(curField);
-% %     catch
-% %        missing_fields = [missing_fields {curField}]; %#ok<AGROW>
-% %        %Currently we won't throw an error
-% %     end
+    obj.(curField) = s.(curField);
 end
+
+
+%Population of output
+%--------------------------------------------------------------------------
+class_props_not_in_struct = prop_names(~ismember(prop_names,initial_struct_fn));
 
 output = sl.struct.toObjectResult(obj,unassigned_struct_props,class_props_not_in_struct);

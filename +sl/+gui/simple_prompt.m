@@ -7,6 +7,8 @@ classdef simple_prompt < sl.obj.handle_light
     %
     %   This class is meant to facilitate simple gui prompts that run until
     %   some event
+    %
+    %   Originally written for Mendeley authentication, check that code ...
     
     properties (SetAccess = private)
         %NOTE: We might want to add run options here ...
@@ -28,11 +30,9 @@ classdef simple_prompt < sl.obj.handle_light
     
     methods
         function obj = simple_prompt(fig_path,prop_value_pairs)            
-%             f = prop_value_pairs(1:2:end);
-%             v = prop_value_pairs(2:2:end);
-%             obj.data = cell2struct(v(:),f(:));
-            
-            
+            %
+            %
+            %   obj = simple_prompt(fig_path,prop_value_pairs)
             
             %TODO: Load figure
             obj.fig_handle = hgload(fig_path);
