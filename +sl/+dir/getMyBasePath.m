@@ -3,9 +3,12 @@ function base_path = getMyBasePath(file_name,n_dirs_up)
 %
 %   s = getMyBasePath(*file_name,*n_dirs_up)
 %
-%   Note this replaces:
-%       fileparts(mfilename('fullpath')) 
-%   which I find hard to remember ..
+
+%
+%   OUTPUTS
+%   =======================================================================
+%   base_path : path to cotaining folder of function that is calling
+%       this function.
 %
 %   INPUTS
 %   =======================================================================
@@ -18,11 +21,17 @@ function base_path = getMyBasePath(file_name,n_dirs_up)
 %   n_dirs_up : (default 0), if not 0, goes up the path by the specified #
 %               of directories
 %
+%   NOTES
+%   =======================================================================
+%   Note this replaces:
+%       fileparts(mfilename('fullpath')) 
+%   which I find hard to remember ..
+%
 %   EXAMPLES:
 %   =======================================================================
-%   1) Returns path to 
+%   1) Typical usage case:
 %
-%       base_path = getMyBasePath
+%       base_path = getMyBasePath();
 %
 %   2) Useful for executing in a script where you want the script path
 %   
@@ -31,6 +40,8 @@ function base_path = getMyBasePath(file_name,n_dirs_up)
 %   3) TODO: Provide example with n_dirs_up being used
 %
 %   IMPROVEMENTS
+%   =================================
+%   1) Provide specific examples ...
 %
 %
 %   See Also:
