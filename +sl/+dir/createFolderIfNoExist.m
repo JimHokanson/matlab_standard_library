@@ -22,7 +22,6 @@ if islogical(varargin{1})
         varargin(1) = [];
     end
 else
-    varargin = [{last_as_file_flag} varargin];
     file_name = '';
 end
 
