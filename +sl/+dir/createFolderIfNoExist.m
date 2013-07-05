@@ -1,4 +1,4 @@
-function output_path = createFolderIfNoExist(last_as_file,varargin)
+function output_path = createFolderIfNoExist(varargin)
 %createIfNecessary: creates a folder if it doesn't exist
 %
 %   #1 - just create the folder if necessary
@@ -14,12 +14,16 @@ function output_path = createFolderIfNoExist(last_as_file,varargin)
 %
 %
 
-if islogical(last_as_file_flag) && last_as_file_flag
-   file_name     = varargin{end};
-   varargin(end) = [];
+if islogical(varargin{1})
+    if varargin{1}
+        file_name = varargin{end};
+        varargin([1 end]) = [];
+    else
+        varargin(1) = [];
+    end
 else
-   varargin = [{last_as_file} varargin];
-   file_name = '';
+    varargin = [{last_as_file_flag} varargin];
+    file_name = '';
 end
 
 output_path = fullfile(varargin{:});
@@ -28,7 +32,7 @@ if ~exist(output_path,'dir')
 end
 
 if ~isempty(file_name)
-   output_path = fullfile(output_path,file_name);
+    output_path = fullfile(output_path,file_name);
 end
 
 end
