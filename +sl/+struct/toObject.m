@@ -88,7 +88,11 @@ if ~isempty(in.fields_ignore)
     %   Why, what would I do with this info ????
     %
     %   Might be good just to know ...
-    %
+    
+    if ischar(in.fields_ignore)
+        in.fields_ignore = {in.fields_ignore};
+    end
+    
     struct_fn(ismember(struct_fn,fields_ignore)) = []; 
 end
 
