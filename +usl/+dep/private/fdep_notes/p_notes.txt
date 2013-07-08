@@ -1,0 +1,43 @@
+p
+         magic: 'FDEP'
+       FDEPver: '21-Jun-2010 02:16:53'
+       FARGver: '21-Jun-2010 02:16:38'
+         MLver: '8.1.0.604 (R2013a)'
+    section_10: '---------- ENGINE  ------------'
+       rundate: '29-Jun-2013 00:18:29'
+       runtime: [0 0 0]
+           par: []
+    section_20: '---------- INPUT   ------------'
+         afile: {'C:\D\SVN_FOLDERS\matlab_toolboxes\database\version_2\hds\@HDS\HDS.m'}
+          file: 'C:/D/SVN_FOLDERS/matlab_toolboxes/database/version_2/hds/@HDS/HDS.m'
+    section_30: '---------- OUTPUT  ------------'
+         ncall: 0
+          nfun: 0
+        module: {'HDS'}
+           fun: {'C:/D/SVN_FOLDERS/matlab_toolboxes/database/version_2/hds/@HDS/HDS.m'}
+         froot: {'C:\D\SVN_FOLDERS\matlab_toolboxes\database\version_2\hds\@HDS\HDS'}
+           sub: [1x1 struct]
+           mix: {}
+           cix: {}
+          mlix: {}
+           tix: []
+         depth: [0 0]
+       nmlcall: [0 0 0 0 0 0]
+         mlfun: {}
+       toolbox: {}
+        modbix: {}
+        modbox: []
+          tree: {}
+         rtree: {}
+        caller: {}
+           mat: []
+    section_31: '---------- macros   -----------'
+           lib: []
+          help: []
+           get: []
+          find: []
+          list: []
+         mhelp: []
+         mplot: []
+         tplot: []
+          smod: []

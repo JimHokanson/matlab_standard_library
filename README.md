@@ -4,7 +4,7 @@ This repository was created in order to supplement other projects that I was wor
 
 When I began work different repositories, I found myself copying specific functions that I needed from other repositories. When I would make a change or update to the function it was difficult to propagate. 
 
-IMHO Matlab has a terrible habit of encouraging cheap functions that live in the global namespace. They are cheap in the sense that many different versions might exist in public for doing nearly the same thing. One of the goals of the standard library is to try and provide organized code that does things well. When possible it is desirable to add functionality (read options) to a function instead of creating a new one with a slight difference.
+IMHO Matlab has a terrible habit of encouraging cheap functions that live in the global namespace. They are cheap in the sense that they take minimal effort to create. As such many different versions might exist in public for doing nearly the same thing. One of the goals of the standard library is to try and provide organized code that does things well. When possible, it is desirable to add functionality (read options) to a function instead of creating a new one with a slight difference.
 
 ## Status ##
 This library will probably always be a work in progress.
@@ -26,7 +26,7 @@ A typical usage example would be:
 
 ## Design Decisions ##
 1. I was originally going to call the top level package jsl (Jim's Standard Library as opposed to Standard Library). This however would have been a little too 'me' focused. It also would have added an extra character
-2. I currently only plan on having a depth of two packages. My plan is to have further organization occur via web documentation ...
+2. I currently only plan on having a depth of two packages. My plan is to have further organization occur via web documentation which breaks up these packages into further sub-types. Adding more packages increases the calling depth. Sadly Matlab's importing funtionality is quite poor which means I tend to fully scope function calls :/
 3. I try to reduce function outputs and instead return objects if further analysis or interpretation may be needed.
 4. I tend to prefer parsing of optional inputs using:
 
@@ -48,4 +48,4 @@ A typical usage example would be:
 
 
 ## What's not covered? ##
-This is not meant to cover larger/topic specific projects.
+This is not meant to cover larger/topic specific projects. I will tend to distribute these as separate packages in their own repositories.
