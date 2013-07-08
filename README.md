@@ -1,4 +1,4 @@
-# Jim's Standard Matlab Library #
+# Matlab Standard Library #
 
 This repository was created in order to supplement other projects that I was working on. 
 
