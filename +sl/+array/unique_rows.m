@@ -9,6 +9,15 @@ classdef unique_rows < sl.obj.handle_light
     %   unique(,'rows'). It does this by holding onto intermediate values
     %   during the sorting process.
     %
+    %   IMPORTANT DESIGN NOTE:
+    %   -------------------------------------------------------------------
+    %   I want to eventually have this, along with numeric arrays and 
+    %   cellstr arrays, as well as perhaps mixed type arrays all use the
+    %   same base superclass. I might expose a single static function
+    %   for creating all of these ...
+    %   Feeback/Suggestions welcome!
+    %   
+    %
     %   IMPROVEMENTS
     %   ===================================================================
     %   1) Handle empty better
@@ -38,7 +47,8 @@ classdef unique_rows < sl.obj.handle_light
         %o_data(#) = s_data(o_indices(#))
         %index - original
         %value - sorted index
-        o_unique         %
+        o_unique         %This is what is known as the stable sort in the
+        %typical unique function ...
         o_start_mask     %Indicates first instance of a unique element
                          %based on the original 'stable' order
         %o_end_mask      %NYI
