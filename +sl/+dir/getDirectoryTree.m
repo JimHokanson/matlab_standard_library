@@ -34,63 +34,59 @@ function output = getDirectoryTree(root,varargin)
 % =========================================================================
 %
 %
+%
+%   IMPROVEMENTS
+%   =======================================================================
+%   I'd eventually like to implement this as a two step class method with
+%   subclasses ...
+%
 % tags: directory, system utility
 
+%Filter methods
+%--------------------------------------------------------------------------
+%name1
+%   - .leading_char_ignore
+%   - .ignore_exact
+%   - 
 
-%FEX SUBMISSIONS
-%==========================================================================
-%http://www.mathworks.com/matlabcentral/fileexchange/16217-wildcardsearch
-%http://www.mathworks.com/matlabcentral/fileexchange/16216-regexpdir
-%http://www.mathworks.com/matlabcentral/fileexchange/32226-recursive-directory-listing-enhanced-rdir
-%http://www.mathworks.com/matlabcentral/fileexchange/19550-recursive-directory-listing
+%.dir_method - Implementation notes, these should filter out 
+%--------------------------------------------------------------------------
+%dir1 - Uses dir() command ...
 
-in.ignore_exact        = {'private'}; %NOTE: Other directories that we might
-%have typically ignored ...
-in.leading_char_ignore = '.'; %This can be used to specify ignoring
-in.no_sub_char         = '+@';
+
+
+in.filter_method       = @name1; %The idea is to allow custom filtering
+%and maybe eventually custom input/output structures ...
+in.ignore_exact        = {}; %Specify exact names of directories to ignore
+in.leading_char_ignore = '.'; %This is an array of leading characters to ignore ...
 in.init_size           = 1000;
 in.growth_size         = 1000;
+in.dir_method          = @dir1;  %This allows us
 %directories that start with a specific character. By using only
 %a single character we can optimize the filter ...
+in.loop_method         = @normal1;  %This method would determine the output ...
 [in,extras] = sl.in.processVarargin(in,varargin);
 
-%TODO: probably need to run unique on all inputs ...
-in.ignore_exact = unique([{'.' '..'} in.ignore_exact]);
 
-%parent_index  name
-
-cur_index = 1;
-n_total   = 
-parent_index = zeros(1,in.init_size);
-names        = cell(1,in.init_size);
-
-while cur_index < n_total
-   next_dir = 
-    
-    
-    
-end
-
-
-
-
-
-
-
-
-
-
-output = [];
 
 return
-
-ignoreDir, bReturnAbsolutePath, wildcard, returnOption
-
-
 
 %MAIN CODE - Run without input checks
 %====================================
 output = getDirectoryTree_Helper(root,ignoreDir,bReturnAbsolutePath,wildcard,lower(returnOption));
+end
+
+
+function normal1()
+
+
+
+
+
+end
+
+function dir1(current_path)
+
 end
 
 
