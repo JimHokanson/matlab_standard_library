@@ -1,3 +1,15 @@
+## Directory Searching ##
+
+Filters:
+- ignore specific directories
+- ignore directories that start with specific characters, notably .+@
+
+
+Output Decisions:
+- whether or not to return an absolute path or not ...
+- whether to strip off the base path or not (i.e. provide paths relative to the base link)
+
+
 FEX Related Links:
 
 **GREP Utilities:**
