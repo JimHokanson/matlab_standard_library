@@ -4,12 +4,22 @@ Filters:
 - ignore specific directories
 - ignore directories that start with specific characters, notably .+@
 - contains all strings from set
-    - 35816
+  - 35816
 
 Output Decisions:
 - whether or not to return an absolute path or not ...
 - whether to strip off the base path or not (i.e. provide paths relative to the base link)
 - output same as Matlab's dir() 
+- by multiple file extensions
+
+Other Features:
+- displays # of folders searched
+  - 21791
+
+Matlab Functions:
+
+- genpath
+- what
 
 FEX Related Links:
 
@@ -28,6 +38,15 @@ FEX Related Links:
 
 ** File Listing **
 - http://www.mathworks.com/matlabcentral/fileexchange/15859-subdir-a-recursive-file-search
+  - Title: subdir: a recursive file search
+  - Author: Kelly Kearney
+  - 2007-08-07
+  - 45 DL - 2013-07-11
+- http://www.mathworks.com/matlabcentral/fileexchange/21791-search-files-recursively-dir2
+  - Title: Search files recursively (DIR2)
+  - Author: Luc Masset
+  - 2008-10-17
+  - 2 DL - 2013-07-11
 - http://www.mathworks.com/matlabcentral/fileexchange/35816-file-name-search-function
   - Title: File Name Search Function
   - Author: Tristan Ursell
