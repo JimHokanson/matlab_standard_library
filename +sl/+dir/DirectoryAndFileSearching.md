@@ -19,6 +19,7 @@ Other Features:
 Matlab Functions:
 
 - genpath
+  - NOTE: This function does not ignore version control directories ...
 - what
 
 FEX Related Links:
