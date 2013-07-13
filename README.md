@@ -25,16 +25,15 @@ A typical usage example would be:
 
 
 ## Design Decisions ##
-1. I was originally going to call the top level package jsl (Jim's Standard Library as opposed to Standard Library). This however would have been a little too 'me' focused. It also would have added an extra character
-2. I currently only plan on having a depth of two packages. My plan is to have further organization occur via web documentation which breaks up these packages into further sub-types. Adding more packages increases the calling depth. Sadly Matlab's importing funtionality is quite poor which means I tend to fully scope function calls :/
-3. I try to reduce function outputs and instead return objects if further analysis or interpretation may be needed.
-4. I tend to prefer parsing of optional inputs using:
+1. Where possibly I would like to limit the depth to two packages. My plan is to have further organization occur via web documentation which breaks up these packages into further sub-types. Adding more packages increases the calling depth. 
+2. I try to reduce function outputs and instead return objects if further analysis or interpretation may be needed.
+3. I tend to prefer parsing of optional inputs using:
 
 	`sl.in.processVarargin`
 	
 	See the definition of the function on how to use it.
 
-5. Where possible functions should be named with the parent in mind:
+4. Where possible functions should be named with the parent in mind:
 
 	`sl.cellstr.join`
 

@@ -53,17 +53,26 @@ end
 %--------------------------------------------------------------------------
 %min_dist_to_chosen_point reflects the minimum distance from all unchosen
 %points to all previously chosen points. The point that has the maximum in
-%this vector at any step cycle is the point that is the furthest from 
-%any chosen point. We need to make sure this kept up to date as we choose 
+%this vector at any step cycle is the point that is the furthest from
+%any chosen point. We need to make sure this kept up to date as we choose
 %new points ...
-[~,min_dist_to_chosen_point] = knnsearch(new_data(starting_indices,:),new_data);
 
-if ~isempty(old_data)
-    %Old data are considered chosen points as well ...
-    %Merge via min(x,y) operation, not by previous concatenation
-    [~,temp] = knnsearch(old_data,new_data);
-    min_dist_to_chosen_point = min(min_dist_to_chosen_point,temp);
+if isempty(starting_indices)
+    if isempty(old_data)
+        error('Logic above changed, starting indices should be defined if old data is not')
+    end
+    [~,min_dist_to_chosen_point] = knnsearch(old_data,new_data);
+else
+    [~,min_dist_to_chosen_point] = knnsearch(new_data(starting_indices,:),new_data);
+    if ~isempty(old_data)
+        %Old data are considered chosen points as well ...
+        %Merge via min(x,y) operation, not by previous concatenation
+        [~,temp] = knnsearch(old_data,new_data);
+        min_dist_to_chosen_point = min(min_dist_to_chosen_point,temp);
+    end
 end
+
+
 
 min_dist_to_chosen_point(starting_indices) = 0; %By definition ...
 
