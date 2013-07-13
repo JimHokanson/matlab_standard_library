@@ -2,7 +2,7 @@ This directory contains functions and classes for working with directories (fold
 
 Issues:
 
-[Directory & File Searching](DirectoryAndFileSearching.md)
+[Directory & File Searching](md_docs/DirectoryAndFileSearching.md)
 
 Interesting, not yet incorporated:
 
