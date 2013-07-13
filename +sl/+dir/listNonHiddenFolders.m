@@ -1,13 +1,13 @@
 function dir_names = listNonHiddenFolders(rootPath)
-%listNonHiddenFolders Lists not hidden folders and omits .. & .
+%listNonHiddenFolders  Lists not hidden folders and omits .. & .
 %
 %   This function returns subfolders which are not hidden. It also omits
 %   the . and .. directories.
 %
-%   dir_names = listNonHiddenFolders(rootPath)
+%   dir_names = sl.dir.listNonHiddenFolders(rootPath)
 %   
 %   See Also:
-%       fileattrib
+%   fileattrib
 
 d         = dir(rootPath);
 keep_mask = [d.isdir];

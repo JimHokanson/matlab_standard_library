@@ -17,12 +17,9 @@ function path_out = filepartsx(file_or_folder_path,N)
 %
 %   path_out  => 'C:\my_dir1'
 
-
-
 path_out = file_or_folder_path;
 for iN = 1:N
    path_out = fileparts(path_out); 
 end
-
 
 end
