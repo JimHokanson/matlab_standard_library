@@ -38,6 +38,16 @@ FEX Related Links:
   - Returns the names of all m-files in a directory or directory-tree that contain a search string
 
 ** File Listing **
+- http://www.mathworks.com/matlabcentral/fileexchange/172-findfiles
+  - Title: findfiles
+  - Author: Tony Christney
+  - 2001-03-23
+  - 3 DL - 2013-07-13
+- http://www.mathworks.com/matlabcentral/fileexchange/8600-findfiles
+  - Title: findFiles
+  - Author: Shane Lin
+  - 2005-09-30
+  - 4 DL - 2013-07-13
 - http://www.mathworks.com/matlabcentral/fileexchange/15859-subdir-a-recursive-file-search
   - Title: subdir: a recursive file search
   - Author: Kelly Kearney
@@ -48,6 +58,11 @@ FEX Related Links:
   - Author: Luc Masset
   - 2008-10-17
   - 2 DL - 2013-07-11
+- http://www.mathworks.com/matlabcentral/fileexchange/34816
+  - Title: Another recursive find file
+  - Author: Azim
+  - 2012-01-27
+  - 2 DL - 2013-07-13
 - http://www.mathworks.com/matlabcentral/fileexchange/35816-file-name-search-function
   - Title: File Name Search Function
   - Author: Tristan Ursell
