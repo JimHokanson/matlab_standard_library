@@ -1,15 +1,14 @@
-function data_cell_array = grabDataByCounts(data,counts)
-%grabDataByCounts  Grabs data in sets by the size of counts 
+function data_cell_array = toCellArrayByCounts(data,counts)
+%toCellArrayByCounts  Grabs data in sets by the size of counts 
 %
-%   data_cell_array = sl.array.grabDataByCounts(data,counts)
+%   data_cell_array = sl.array.toCellArrayByCounts(data,counts)
 %
 %   This is similar to mat2cell, which is not used in this implementation
 %   but which could be used to produce the same output ...
 %
 %   See Also:
+%   sl.array.genFromCounts
 %   mat2cell 
-
-sl.warning.deprecated('','sl.array.toCellArrayByCounts','Renamed function to make it more explicit')
 
 if length(data) ~= sum(counts)
     error('Data is missing')

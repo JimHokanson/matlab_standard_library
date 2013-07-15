@@ -3,9 +3,15 @@ classdef folder_default < sl.dir.searcher
     %   Class:
     %   sl.dir.searcher.folder_default
     %
+    %   See Also:
+    %   sl.dir.list_methods
+    %   sl.dir.filter_methods
     
     properties (Constant)
-       %NOTE: We can add on here to create more defaults ... 
+       %NOTE: We can add on here to create more ways of listing
+       %directories and filtering the results. Depending on how much things
+       %change we might need a different searcher, rather than more options
+       %for this searcher
        OPTIONS = {
             'DIR_folders_names' 'ByName_v1' 1}
     end
@@ -18,11 +24,14 @@ classdef folder_default < sl.dir.searcher
     methods
         function obj = folder_default()
             obj@sl.dir.searcher();
+            
+            %Use the only option available for now ...
             obj.changeOption(1);
         end
         function full_paths = searchDirectories(obj,base_path)
-           
            %
+           %
+           
            fm  = obj.filter_method_use;
            lm  = obj.list_method_use;
            opt = obj.filter_options.getStruct;

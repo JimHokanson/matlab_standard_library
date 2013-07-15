@@ -14,7 +14,7 @@ function str = createLinkForCommands(disp_str,command_str)
 %
 %   EXAMPLE
 %   ===========================================================
-%   str = createLinkForCommands('show_random_numbers','rand(1,5)');
+%   str = sl.cmd_window.createLinkForCommands('show_random_numbers','rand(1,5)');
 %   disp(str)
 
 str = sprintf('<a href="matlab:%s">%s</a>',command_str,disp_str);

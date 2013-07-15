@@ -105,3 +105,10 @@ error('Not yet implemented')
 %   
 %IDENTIFIER: ????
 %MESSAGE: Error using griddedInterpolant The grid vectors are not strictly monotonic increasing.
+
+%Forgot to put varargin in function prototype
+%        message: 'Attempt to execute SCRIPT varargin as a function:
+% C:\Program Files\MATLAB\R2013a\toolbox\matlab\lang\varargin.m'
+%     identifier: 'MATLAB:scriptNotAFunction'
+%          stack: [1x1 struct]
+

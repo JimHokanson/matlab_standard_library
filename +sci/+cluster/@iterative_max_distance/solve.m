@@ -100,9 +100,15 @@ for iPoint = n_starting_indices+1:n_new
     %SLOW LINE
     [cur_max_distance,I] = max(min_dist_to_chosen_point);
     
-    index_order(iPoint) = I;
-    not_chosen_mask(I)  = false;
-    max_distance(iPoint)    = cur_max_distance;
+    if cur_max_distance == 0
+       %This happens if the points are not unique ...
+       index_order(iPoint:end) = find(not_chosen_mask);
+       break
+    end
+    
+    index_order(iPoint)  = I;
+    not_chosen_mask(I)   = false;
+    max_distance(iPoint) = cur_max_distance;
     min_dist_to_chosen_point(I) = 0;
     
     if dist_nn(end,I) < cur_max_distance

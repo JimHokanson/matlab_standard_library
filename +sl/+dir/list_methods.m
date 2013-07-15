@@ -3,8 +3,9 @@ classdef (Hidden) list_methods
     %   Class:
     %   sl.dir.list_methods
     %
-    %   ??? Better name needed ?????
-    %
+    %   The idea is to expand the list methods with other options which
+    %   return more data like data modified and attributes (size, hidden,
+    %   etc)
     %
     %   Improvements:
     %   -------------------------------------------------------------------
@@ -12,17 +13,24 @@ classdef (Hidden) list_methods
     %   2) Need to implement testing suite along with speed testing support
     %   framework ...
     %
-    %   Example usage:
-    %   d = sl.dir.list_methods.DIR_fullpath_folders_only;
-    %   full_paths = d(cd);
+    %   See Also:
+    %   sl.dir.searcher
+    %   sl.dir.filter_methods
+    %   sl.dir.filter_options
+    %   
     %
-    %
+    
+    
     %Other list methods:
-    % Windows mex:
+    %
+    % Windows c++:
     % #include <io.h>
     % #include <direct.h>
+    %   getcwd
+    %    
     % #include <sys/types.h>  // For stat().
     % #include <sys/stat.h>   // For stat().
+    %   
     
     
     methods (Static)

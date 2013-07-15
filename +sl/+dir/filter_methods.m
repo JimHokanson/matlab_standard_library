@@ -6,7 +6,10 @@ classdef (Hidden) filter_methods
     %   Filter methods should filter a list of directoryt or files ...
     %
     %   See Also:
+    %   sl.dir.searcher
     %   sl.dir.list_methods
+    %   sl.dir.filter_options
+    
     
     %Usage by filtering method
     %----------------------------------------------------------------------
@@ -40,9 +43,10 @@ classdef (Hidden) filter_methods
 end
 
 
-
-%Implementation of options ...
 %--------------------------------------------------------------------------
+%                   Implementation of options ...
+%--------------------------------------------------------------------------
+
 function delete_mask = f_dirs_ignore(ignore_dirs,file_names)
 
 %ismember is slow, incorporate ismember_str ...

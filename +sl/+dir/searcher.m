@@ -1,9 +1,14 @@
 classdef (Hidden) searcher < sl.obj.handle_light
     %
     %   Class:
-    %   sl.dir.sub_directory_searcher
+    %   sl.dir.searcher
     %
     %   Search subdirectories ....
+    %
+    %   See Also:
+    %   sl.dir.list_methods
+    %   sl.dir.filter_methods
+    %   sl.dir.filter_options
     
     properties (Abstract,Constant)
        OPTIONS 
