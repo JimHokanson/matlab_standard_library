@@ -7,27 +7,33 @@ function deprecated(old_file_name, new_file_name, reason_str)
 %   [WARNING <file>:<line> ] <message>
 %
 %   INPUTS
-%   =========================================================================
-%   old_file_name - (char) default: name of calling function, file being deprecated
-%              for display purposes only, if empty uses the default
+%   =======================================================================
+%   old_file_name : (char, default: name of calling function), file being 
+%               deprecated (for display purposes only), caller info
+%               is used to provide a link
 %   new_file_name : (char, default: '') new version of deprecated file
 %   reason_str    : (char,  default '') reason for deprecation
 %
+%   
+%   IMPROVEMENTS
+%   =======================================================================
+%   1) 
+%
 %   EXAMPLE
-%   =================================
-%   Called from file
+%   =======================================================================
+%   Called from some function:
 %   sl.warning.deprecated('','getDirectoryTree.m','Chris'' code is better than Jim''s')
 %
 %   tags: text, display
 %
 %   See Also: 
 %   sl.warning.formatted
-%   sl.stack.getCallingFunction
+%   sl.stack.calling_function_info
 
 info = sl.stack.calling_function_info(2);
 
 if nargin < 1 || isempty(old_file_name)
-    old_file_name = name;
+    old_file_name = info.name;
 end
 
 %Display string construction

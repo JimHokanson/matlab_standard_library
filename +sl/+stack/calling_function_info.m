@@ -3,94 +3,76 @@ classdef calling_function_info < sl.obj.handle_light
     %   Class:
     %   sl.stack.calling_function_info
     %
+    %   See Also:
+    %   sl.warning.deprecated
     %
-    %   Status:
-    %   I am still working on this code
-    
+    %   IMPROVEMENTS:
+    %   ===================================================================
+    %   1) We might eventually add on a workspace grab of the level
+    %   requested
+    %   2) Multiple levels???
+    %   3) Add on an option for a fully resolved name (make a separate
+    %   property)
     
     properties
-       line_number
-       file_path
-       name
+       line_number = NaN
+       file_path   = ''
+       name     %file_name or 'CommandWindow' when called from command window
+       %Notes about name:
+       %
+       %    1) The file name lacks an extension
+       %    2) For classes, a function will contain the class name (at
+       %    least for static methods ...)
+       %    3) The name lacks the package
+       is_cmd_window = false
     end
     
     methods
-        
         function obj = calling_function_info(level)
-            %getCallingFunction  Returns the caller of the calling function.
+            %calling_function_info  Returns the caller of the calling function.
             %
+            %   obj = sl.stack.calling_function_info(*level)
             %
-            %   TODO:
-            %   1) Update documentation
-            %   2)
-            %
-            %
-            %
-            %
-            %   [FUNCTION_NAME, FILE, LINE] = sl.stack.getCallingFunction(*level)
-            %
-            %   Use this function to tell what function is calling your function.
             %
             %   INPUTS
-            %   =========================================================================
-            %   level - (numeric) default: 1, which caller to retrieve, where 1 denotes
-            %   the parent, 2 denotes grandparent:
-            %       Call Tree:
-            %         grandparent ( level 2 )
-            %           -> parent ( level 1 )
-            %             -> child
-            %   OUTPUTS
-            %   =========================================================================
-            %   functionName - (char) name of calling function of 'CommandWindow_Or_Script'
-            %       if the function was called from the command window or an mfile
-            %       script
-            %   file         - (char) filepath
-            %   line         - (numeric) calling line number
+            %   ============================================================
+            %   level : (scalar, default: 2) which caller to retrieve,
+            %       where 1 denotes caller of this function, 2 caller of
+            %       the function calling this function, etc
             %
-            %   Example:
-            %   ========================================
-            %   If function2 calls function1, and function1 calls getCallingFunction()
-            %   then the output FUNCTION_NAME would be function2, indicating that
-            %   function1's caller is function2.
-            %   Call Tree:
-            %     function2
-            %     -> function1
-            %       -> getCallingFunction
+            %   Known Users:
+            %   sl.warning.deprecated
             %
-            % tags: utility, display
+            %   tags: utility, display
             
             if nargin < 1
-                level = 1;
-            end
-            if level < 1
-                formattedWarning(' ''level'' must be > 0 ');
-                level = 1;
-            end
-            file = [];
-            line = [];
-            s    = dbstack('-completenames');
-            if length(s) == 1
-                error('This function should be called from a function')
-            elseif length(s) == 2
-                functionName = 'CommandWindow_Or_Script';
-            else
-                idx = min(3+level-1,length(s));
-                functionName = s(idx).name;
-                if nargout > 1
-                    file = s(idx).file;
-                    if nargout > 2
-                        line = s(idx).line;
-                    end
-                end
+                level = 2;
             end
             
+            s    = dbstack('-completenames');
+            assert(level > 0,'The input ''level'' must be > 0, %d observed',level);
+
+            %NOTE: Stack has most recent on top
+            %this   - index 1
+            %caller - index 2
+            %etc
+            
+            if length(s) == 1
+                obj.name = 'CommandWindow';
+                obj.is_cmd_window = true;
+            else
+                idx = level + 1;
+                obj.name        = s(idx).name;
+                obj.file_path   = s(idx).file;
+                obj.line_number = s(idx).line;
+            end
+            
+            %Debug commands only allowed when in debug mode
+%             for iLevel = 1:level
+%                dbup 
+%             end
+%             keyboard
         end
-        
-        
-        
-        
-        
     end
-    
 end
 

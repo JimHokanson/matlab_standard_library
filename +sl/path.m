@@ -1,21 +1,36 @@
-classdef path
+classdef (Hidden) path
     %
     %   Class:
     %   sl.path
+    %
+    %   Class for hiding functions. I don't think you can hide
+    %   normal functions in Matlab. However, if the functions are static methods of a class
+    %   they can be hidden ... By placing them in a class it also provides
+    %   a bit more convenient access for simple functions.
     
     properties
     end
     
     methods (Static,Hidden)
         function subs_mask = matchSubdirectories(path_entries,base_path)
-            %matchSubdirectories 
+            %matchSubdirectories  Match subdirectories of a given base_path
             %
             %   subs_mask = sl.path.matchSubdirectories(path_entries,base_path)
             %
+            %   Currently only subdirectories are matched
+            %
+            %   INPUTS
+            %   ===========================================================
+            %   path_entries : (cell array)
+            %   base_path    : (char) path of root folder
+            %
             %   IMPROVEMENTS
             %   ===========================================================
-            %   1) Allow multiple base paths
-            %   2) 
+            %   1) Allow multiple base paths as an input
+            %   2) Allow matching the base path as well
+            %
+            %   See Also:
+            %   
             
             %in.include_base_path
             %in = sl.in.processVarargin(in,varargin);
@@ -29,6 +44,8 @@ classdef path
             
             %{
             @TEST_CODE
+            
+            %Still working out details on how I want to do testing ...
             
                 path_entries = 
                 subs_mask    = sl.path.matchSubdirectories(path_entries,base_path)
