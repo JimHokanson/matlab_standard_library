@@ -1,10 +1,10 @@
 function output = genFromCounts(counts,values,varargin)
 %genFromCounts  Provides a convenient way for generating an array based on counts
 %
-%   output = sl.array.genFromCounts(counts,*value)
+%   output = sl.array.genFromCounts(counts,*values)
 %
 %   Generates an array by replicating each value the number of times
-%   specified in counts.
+%   specified in counts. It uses a cumsum() (cumulative sum) trick.
 %
 %   QUESTION
 %   ??? Is there a better name for this function?
@@ -12,12 +12,13 @@ function output = genFromCounts(counts,values,varargin)
 %
 %   INPUTS
 %   =======================================================================
-%   counts  - array specifying how many
-%   values  - (default, values = counts), value to replicate for each count
+%   counts  : array specifying how many times each value should appear
+%               in the final output
+%   values  : (default, values = counts), values to replicate for each count
 %
 %   OUTPUTS
 %   =======================================================================
-%   output  - array of values replicated
+%   output  : array of values replicated
 %
 %   EXAMPLES
 %   =======================================================================
@@ -26,10 +27,6 @@ function output = genFromCounts(counts,values,varargin)
 %
 %   output = sl.array.genFromCounts(1:4,[3 5 6 7])
 %   output => 3 5 5 6 6 6 7 7 7 7
-%
-%   IMPROVEMENTS
-%   =======================================================================
-%   1) Allow short circuiting for indices
 
 
 %See comment at end of file on why this is needed
