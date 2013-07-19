@@ -1,7 +1,7 @@
 function varargout = formatted(message_str,varargin)
 %formatted  Create a formatted warning with a link to the calling method
 %
-%   sl.warning.formatted(message_str,format_str)
+%   sl.warning.formatted(message_str,**formatting_option_inputs)
 %   
 %   formatted_warning_str = sl.warning.formatted(message_str)
 %
@@ -10,6 +10,9 @@ function varargout = formatted(message_str,varargin)
 %
 %   If an output is requested display is quenched.
 %
+%   INPUTS
+%   =======================================================================
+%   
 %
 % tags: text, display
 % see also: getCallingFunction, createOpenToLineLink, displayCallStack

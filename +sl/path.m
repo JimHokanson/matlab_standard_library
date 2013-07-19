@@ -12,6 +12,10 @@ classdef (Hidden) path
     end
     
     methods (Static,Hidden)
+        function [base_path,file_name,ext] = fileparts()
+            %This is only meant to be used on files
+            %Goal is to provide something that handles packages
+        end
         function subs_mask = matchSubdirectories(path_entries,base_path)
             %matchSubdirectories  Match subdirectories of a given base_path
             %
