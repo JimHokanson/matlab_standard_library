@@ -117,7 +117,7 @@ for iPoint = n_starting_indices+1:n_new
         %to this point than to previously chosen points ...
         exhaustive_search(iPoint) = true;
         min_dist_to_chosen_point(not_chosen_mask) = ...
-            min(min_dist_to_chosen_point(not_chosen_mask),pdist2(new_data(not_chosen_mask,:),new_data(I,:)));
+            min(min_dist_to_chosen_point(not_chosen_mask),helper_pdist2(new_data(not_chosen_mask,:),new_data(I,:)));
     else
         last_update_index = find(dist_nn(:,I) > cur_max_distance,1)-1;
         update_indices    = idx_nn(1:last_update_index,I);
@@ -179,6 +179,26 @@ obj.max_distance      = max_distance;
 %   We use knnsearch to form a partially sorted list of smallest distances.
 %   If the max occurs within this list, we can stop. If not, we must
 %   compute the distance from this point to all other points ...
+
+
+end
+
+function D = helper_pdist2(X,Y)
+
+D = sqrt(sum(bsxfun(@minus,X,Y).^2,2));
+
+% tic
+% for i = 1:10000
+%    D = pdist2mex(X',Y','euc',[],[],[]);
+%   %pdist2mex - stats toolbox
+% end
+% toc
+
+% tic
+% for i = 1:10000
+%    D = sqrt(sum(bsxfun(@minus,X,Y).^2,2));
+% end
+% toc
 
 
 end
