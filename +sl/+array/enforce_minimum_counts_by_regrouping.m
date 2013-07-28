@@ -56,10 +56,12 @@ classdef enforce_minimum_counts_by_regrouping < sl.obj.handle_light
             %
             counts_in_local = obj.counts_in;
             min_size_local  = obj.min_size;
-            
-            %total_counts = sum(counts_in_local);
-            
-            %TODO: Short circuit on total_counts < min_size_local
+                        
+            total_counts = sum(counts_in_local);
+            if total_counts <= min_size_local
+               obj.counts_out = total_counts;
+               return
+            end
             
             cur_run_size = 0;
             
