@@ -3,7 +3,7 @@ function base_path = getMyBasePath(file_name,n_dirs_up)
 %
 %   s = getMyBasePath(*file_name,*n_dirs_up)
 %
-
+%   
 %
 %   OUTPUTS
 %   =======================================================================
