@@ -4,7 +4,7 @@ classdef unique < sl.array.unique_super
     %   sl.array.unique
     %   
     
-    properties (Constant)
+    properties (Constant,Hidden)
         SORT_FUNCTION_HANDLE = @sort
         IS_DIFFERENT_HANDLE  = @sl.array.unique.isDifferent
         IS_2D = false

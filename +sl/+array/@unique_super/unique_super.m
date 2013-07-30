@@ -5,22 +5,22 @@ classdef (Hidden) unique_super < sl.obj.handle_light
     %
     %   Status:
     %   I'm still working on the properties that this class will contain.
-    %   
-   
-
+    %   I also need some more error checking ...
     %
     %   IMPROVEMENTS
     %   ===================================================================
     %   1) Handle empty better
     %   2) Handle Inf and Nan better
     %   3) Implement test cases!
+    %   4) Floating point unique ...
     %
     %   See Also:
+    %   sl.array.unique
     %   sl.array.unique_rows
-    %   sl.array.unique_fp
+    %   sl.cellstr.unique
     
     
-    properties (Constant,Abstract)
+    properties (Constant,Hidden,Abstract)
         SORT_FUNCTION_HANDLE %Must return sorted and indexes
         IS_DIFFERENT_HANDLE  %Must return a mask, with n-1 elements
         IS_2D
@@ -64,6 +64,20 @@ classdef (Hidden) unique_super < sl.obj.handle_light
         s_end_I          %s_unique = s_data(s_end_I)
         s_unique         %The traditional output of unique
         
+        
+        o_IA_first
+%         o_IA_last  = 
+%         s_IA_first = find(obj.s_indices(obj.s_start_mask))
+%         s_IA_last  = find(obj.s_indices(obj.s_end_mask));
+        
+        o_IC_first %reference into the stable solution
+        s_IC_first
+        
+        
+        
+        
+        %s_unique_stable_index = 
+        
         d3 = '---- More useful Properties ----'
         o_first_group_I  %Index of first element that has the same value
         %as the current element
@@ -83,15 +97,92 @@ classdef (Hidden) unique_super < sl.obj.handle_light
         %   I could extend their solutions to other points that had
         %   redundant stimuli.
         
+
+        o_unique_counts
+        s_unique_counts  %
+        
+        o_group_indices  %(cell array), this provides group indices but
+        %the order is based on a stable sort. The indices still refer to
+        %the original data. 
+        %
         s_group_indices  %(cell array), each cell array element contains
-        %indices of a unique value
+        %indices of a unique value. Indices are to the original data.
         %
         %   i.e. each element from o_data(s_group_indices{#}) == s_unique(#)
         %
         %   This is useful for grabbing associated data by unique elements
+    
+        %This would be the same as s_group_indices but organized by the
+        %first occurence of each entry, not by the sorted occurence of each
+        %unique entry
+        %o_group_indices
+    
+    end
+    
+    properties (Hidden)
+       index_of_first_unique_stable_in_sorted
     end
     
     methods
+        function value = get.index_of_first_unique_stable_in_sorted(obj)
+           value = obj.index_of_first_unique_stable_in_sorted;
+           if isempty(value)
+                             %There are at least two ways of doing this
+              %
+              %  use sort or do a find (requires more memory)
+              %
+              %And an additional question of whether or not you 
+              %access s_group_indices or not
+
+              I_orig = obj.s_indices(obj.s_start_I);
+              [~,value] = sort(I_orig);
+              obj.index_of_first_unique_stable_in_sorted = value;
+              %An alternative approach would involve creating
+              %an empty vector the same length as the max
+              %of the indices, then assigning 1:n to each of these indices
+              %and then getting these non-zero elements in order
+              %i.e. let's say we had the indices 5 2 7
+              %
+              %  we could easily create a vector 0 2 0 0 1 0 3
+              %
+              %  we then grab the non-zero elements
+              %
+              %  what about a sparse matrix?
+              %  the sparse matrix would need to do a sort 
+              %
+              %  The sort might be more efficient for sparse, 
+              %  sparse is slower 
+              
+%                 tic
+%                 for i = 1:1000  
+%                 temp = zeros(1,max(I_orig));
+%                 temp(I_orig) = 1:length(I_orig);
+%                 I2 = nonzeros(temp);
+%                 end
+%                 toc
+              
+              
+%               tic
+%               for i = 1:1000
+%               I2 = nonzeros(sparse(1,I_orig,1:length(I_orig)));
+%               end
+%               toc
+           end
+        end
+        function value = get.o_unique_counts(obj)
+           value = obj.o_unique_counts; 
+           if isempty(value)
+              value = obj.s_unique_counts(obj.index_of_first_unique_stable_in_sorted);
+              obj.o_unique_counts = value;
+           end
+        end
+        function value = get.s_unique_counts(obj)
+           value = obj.s_unique_counts;
+           if isempty(value)
+              value = obj.s_end_I - obj.s_start_I + 1;
+              obj.s_unique_counts = value;
+           end
+        end
         function value = get.s_start_I(obj)
             value = obj.s_start_I;
             if isempty(value)
@@ -143,6 +234,38 @@ classdef (Hidden) unique_super < sl.obj.handle_light
                 obj.o_indices       = invSort;
             end
         end
+        function value = get.o_IA_first(obj)
+           value = obj.o_IA_first;
+           if isempty(value)
+              value = find(obj.o_start_mask);
+              obj.o_IA_first = value;
+           end
+        end
+        function value = get.s_IC_first(obj)
+           value = obj.s_IC_first;
+           if isempty(value)
+              value = cumsum(obj.s_start_mask);
+              value(obj.s_indices) = value;
+              obj.s_IC_first = value;
+           end
+        end
+        function value = get.o_IC_first(obj)
+           value = obj.o_IC_first;
+           if isempty(value)
+              value = zeros(size(obj.o_start_mask));
+              value(obj.o_start_mask) = 1:obj.n_unique;
+              value = value(obj.o_first_group_I);
+              obj.o_IC_first = value;
+           end
+        end
+        function value = get.o_group_indices(obj)
+           value = obj.o_group_indices;
+           if isempty(value)
+              value = obj.s_group_indices(obj.index_of_first_unique_stable_in_sorted);
+              obj.o_group_indices = value;
+
+           end
+        end
         function value = get.s_group_indices(obj)
             value = obj.s_group_indices;
             if isempty(value)
@@ -174,12 +297,12 @@ classdef (Hidden) unique_super < sl.obj.handle_light
                 %We thus assign all of these indices the first index, which,
                 %due to the stable sort, will be the lowest index of all the
                 %values.
-                
+                                
                 %TODO: This should be a method ...
                 Isort  = obj.s_indices;
                 Istart = obj.s_start_I;
                 Iend   = obj.s_end_I;
-                n_unique_local  = obj.n_unique;
+                n_unique_local = obj.n_unique;
                 
                 value = zeros(1,length(Isort));
                 for iGroup = 1:n_unique_local

@@ -8,7 +8,7 @@ classdef unique_rows < sl.array.unique_super
     %   unique(,'rows'). It does this by holding onto intermediate values
     %   during the sorting process.
     
-    properties (Constant)
+    properties (Constant,Hidden)
         SORT_FUNCTION_HANDLE = @sortrows
         IS_DIFFERENT_HANDLE  = @sl.array.unique_rows.isDifferent
         IS_2D = true
