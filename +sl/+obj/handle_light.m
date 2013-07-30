@@ -10,8 +10,11 @@ classdef handle_light < handle
           try
               delete@handle(varargin{:});
           catch ME
-              formattedWarning('WHAT THE HECK')
-              keyboard
+          %This appears to occur after the class has been edited
+          %while in debug mode.
+              
+%               formattedWarning('WHAT THE HECK')
+%               keyboard
           end
       end
       function Hmatch = findobj(varargin)
