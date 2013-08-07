@@ -1,0 +1,31 @@
+## Style Guidelines ##
+
+- Parsing Inputs
+  - processVarargin
+  - string flag style
+  - optional inputs by spacing
+- Helper functions
+- Class name
+- Functions vs classes
+- Number of outputs
+- Name standards
+  - file_path, path to a file, including name
+  - file_name, name of a file, no path
+  - base_path, path to the file
+  - indices????
+  - iterators
+- feval vs calling (I prefer calling)
+- singleton access name
+- documentation
+- intermediate lines vs inline evaluation
+- variable name length 
+  - short vs long
+  - max length?
+- functions in class vs in class folder
+- spacing between functions
+- casing for acronyms -> ID
+- plural vs singular property names
+- writing guis
+- avoiding generic names
+- pluralization of variable names
+
