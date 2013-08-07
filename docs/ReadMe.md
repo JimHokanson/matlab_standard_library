@@ -2,12 +2,10 @@
 
 I think I'd like this to be the main place to keep documentation. For the most part this file should just link to other files that discuss the issues at hand.
 
-## Challenges
-
-
 ## Style Guidelines, Design Decisions, & Challenges ##
 
 - [General guiding principles](style_guidelines/general_principles.md) (An overview)
+- Library goals, stability, & contributing
 - Naming Standards
 
 ## Library Subsets ##
