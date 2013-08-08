@@ -28,4 +28,5 @@
 - writing guis
 - avoiding generic names
 - pluralization of variable names
+- use of return
 
