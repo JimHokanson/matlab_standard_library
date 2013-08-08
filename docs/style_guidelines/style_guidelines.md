@@ -29,4 +29,4 @@
 - avoiding generic names
 - pluralization of variable names
 - use of return
-
+- avoiding aliasing for simple functions (i.e. just renaming something else to help memory) -> isequal, bsxfun, others?
