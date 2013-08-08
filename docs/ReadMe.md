@@ -5,6 +5,7 @@ I think I'd like this to be the main place to keep documentation. For the most p
 ## Style Guidelines, Design Decisions, & Challenges ##
 
 - [General guiding principles](style_guidelines/general_principles.md) (An overview)
+- [Contributing] (style_guidelines/contributing.md)
 - Library goals, stability, & contributing
 - Naming Standards
 
