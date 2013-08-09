@@ -48,6 +48,9 @@ if is_file
         %which is not what we want ...s
         system(['explorer.exe /select,' file_path]);
 
+    elseif ismac
+        %Do I need to escape the file path somehow?
+        system(['open -R ' file_path])
     else
         error('Function not yet expanded to support current os')
     end
