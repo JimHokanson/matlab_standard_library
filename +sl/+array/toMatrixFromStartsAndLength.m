@@ -17,6 +17,8 @@ function out = toMatrixFromStartsAndLength(data_in,starts,n_samples_per_grab)
 %   Improvements
 %   -----------------------------------------------------------------------
 %   1) More error checking
+%   2) Allow assignment of spans to rows or columns, currently each
+%   assignment spans a column
 
 n_grabs = length(starts);
 
@@ -30,11 +32,14 @@ out = zeros(n_grabs,n_samples_per_grab,class(data_in));
 
 %We do a loop over whichever dimension has less iterations
 if n_grabs < n_samples_per_grab
+    
+    %Assign each span, one at a time
     stops = starts + n_samples_per_grab - 1;
     for iGrab = 1:n_grabs
         out(iGrab,:) = data_in(starts(iGrab):stops(iGrab));
     end
 else
+    %Assign each element position, one at a time
     for iSample = 1:n_samples_per_grab
         out(:,iSample) = data_in(starts + (iSample - 1));
     end

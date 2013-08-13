@@ -14,6 +14,8 @@ function data_cell_array = toCellArrayByCounts(data,counts)
 %   See Also:
 %   sl.array.genFromCounts
 %   mat2cell 
+%
+%   I'm not a really big fan of the name of this function ...
 
 l_data   = length(data);
 s_counts = sum(counts);
