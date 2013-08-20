@@ -10,7 +10,7 @@ I think I'd like this to be the main place to keep documentation. For the most p
 - Naming Standards
 
 ## Library Subsets ##
-- array
+- [array](../+sl/+array/ReadMe.md)
 - cellstr - functions specific to cell arrays of strings aka cellstr (cell strings)
 - cmd_window - command window
 - datetime
