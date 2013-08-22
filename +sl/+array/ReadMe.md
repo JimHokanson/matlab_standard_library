@@ -1,4 +1,3 @@
-
 TODO: Ideally these would be somewhat more organized by topic.
 
 Possible topics:
@@ -17,3 +16,7 @@ Function list:
 - toMatrixFromStartsAndLength
 - unique
 - unique_rows
+
+Possible Additions:
+- reshape - interface to reshape that makes the input and output formats easier to manage, instead of showing transposes, size divisions, and the colon operator
+  - i.e. the goal would be to simplify the following call: reshape(params(:),2,length(params)/2)';
