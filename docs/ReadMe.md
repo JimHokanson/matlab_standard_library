@@ -8,6 +8,7 @@ I think I'd like this to be the main place to keep documentation. For the most p
 - [Contributing](style_guidelines/contributing.md)
 - Library goals, stability, & contributing
 - [Naming Standards](style_guidelines/naming_standards.md)
+- [Code Style](style_guidelines/code_style.md)
 
 ## Library Subsets ##
 - [array](../+sl/+array/ReadMe.md)
