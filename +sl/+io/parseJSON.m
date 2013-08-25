@@ -22,10 +22,6 @@ str_ends   = str_I(2:2:end)-1;
 n_str = length(str_starts);
 all_strings = cell(1,n_str);
 
-%TODO:
-%1) empty
-%2) not-empty but escaped
-%3) normal
 
 is_empty_string = str_starts == str_ends + 1;
 
@@ -62,14 +58,17 @@ end
 
 cur_string_index  = 1;
 %NOTE: Second input is sorted ...
-is_special_I      = find(sl.str.quick.ismemberCharSortedSecondInput(string,SPECIAL_CHARS_SORTED) & ~is_string);
+special_chars_I  = find(sl.str.quick.ismemberCharSortedSecondInput(string,SPECIAL_CHARS_SORTED) & ~is_string);
+
+special_chars = string(special_chars_I);
+
 cur_special_index = 1;
 
-switch(string(is_special_I(1)))
+switch(special_chars(1))
     case '{'
-        data = parse_object(string,is_special_I,cur_special_index,all_strings,cur_string_index);
+        data = parse_object(string,special_chars,special_chars_I,cur_special_index,all_strings,cur_string_index);
     case '['
-        data = parse_array(string,is_special_I,cur_special_index,all_strings,cur_string_index);
+        data = parse_array(string,special_chars,special_chars_I,cur_special_index,all_strings,cur_string_index);
     otherwise
         error('Outer level structure must be an object or an array')
         %error_pos('Outer level structure must be an object or an array',string,pos);
@@ -151,7 +150,7 @@ function [is_string,is_esc_char,is_quote] = helper__getQuotesAndEscapes(string)
 
 end
 
-function [object,cur_special_index,cur_string_index] = parse_object(string,is_special_I,cur_special_index,all_strings,cur_string_index)
+function [object,cur_special_index,cur_string_index] = parse_object(string,special_chars,special_chars_I,cur_special_index,all_strings,cur_string_index)
 
 %NOTE: An object is like a structure, with fields
 
@@ -159,7 +158,7 @@ cur_special_index = cur_special_index + 1;
 
 object = [];
 
-if string(is_special_I(cur_special_index)) ~= '}'
+if special_chars(cur_special_index) ~= '}'
     while 1
         
         str = all_strings{cur_string_index};
@@ -172,13 +171,20 @@ if string(is_special_I(cur_special_index)) ~= '}'
 %             error_pos('Name of value at position %d cannot be empty');
 %         end
         
-        if string(is_special_I(cur_special_index)) ~= ':'
-            error('Expected : following object definition, observed: %s',string(is_special_I(cur_special_index)))
+        if special_chars(cur_special_index) ~= ':'
+            error('Expected : following object definition, observed: %s',string(special_chars(cur_special_index)))
         end
         
         cur_special_index = cur_special_index + 1;
         
-        [val,cur_special_index,cur_string_index] = parse_value(string,is_special_I,cur_special_index,all_strings,cur_string_index);
+        
+        if special_chars(cur_special_index) == '"'
+            val = all_strings{cur_string_index};
+            cur_special_index = cur_special_index + 2;
+            cur_string_index  = cur_string_index  + 1;
+        else
+            [val,cur_special_index,cur_string_index] = parse_value(string,special_chars,special_chars_I,cur_special_index,all_strings,cur_string_index);
+        end
         
         try
             object.(str) = val;
@@ -186,8 +192,7 @@ if string(is_special_I(cur_special_index)) ~= '}'
             object.(valid_field(str)) = val;
         end
         
-        
-        if string(is_special_I(cur_special_index)) == '}'
+        if special_chars(cur_special_index) == '}'
             break
         else
             %NOTE: We should check that we have a comma ...
@@ -200,7 +205,7 @@ cur_special_index = cur_special_index + 1;
 
 end
 
-function [object,cur_special_index,cur_string_index] = parse_array(string,is_special_I,cur_special_index,all_strings,cur_string_index)
+function [object,cur_special_index,cur_string_index] = parse_array(string,special_chars,special_chars_I,cur_special_index,all_strings,cur_string_index)
 
 cur_special_index = cur_special_index + 1;
 
@@ -208,13 +213,19 @@ cur_special_index = cur_special_index + 1;
 %preprocessing ...
 
 object = {};
-if string(is_special_I(cur_special_index)) ~= ']'
+if special_chars(cur_special_index) ~= ']'
     while 1
-        [val,cur_special_index,cur_string_index] = parse_value(string,is_special_I,cur_special_index,all_strings,cur_string_index);
+        if special_chars(cur_special_index) == '"'
+            val = all_strings{cur_string_index};
+            cur_special_index = cur_special_index + 2;
+            cur_string_index  = cur_string_index  + 1;
+        else
+            [val,cur_special_index,cur_string_index] = parse_value(string,special_chars,special_chars_I,cur_special_index,all_strings,cur_string_index);
+        end
         
         object{end+1} = val; %#ok<AGROW>
         
-        if string(is_special_I(cur_special_index)) == ']'
+        if special_chars(cur_special_index) == ']'
             break
         else
             %NOTE: We should check that we have a comma ...
@@ -257,17 +268,14 @@ str(~isletter(str) & ~('0' <= str & str <= '9')) = '_';
 
 end
 
-function error_pos(msg,string,pos)
-poss = max(min([pos-15 pos-1 pos pos+20],len),1);
-if poss(3) == poss(2)
-    poss(3:4) = poss(2)+[0 -1];         % display nothing after
-end
-msg = [sprintf(msg, pos) ' : ... ' string(poss(1):poss(2)) '<error>' string(poss(3):poss(4)) ' ... '];
-ME = MException('JSONparser:invalidFormat', msg);
-throw(ME);
-end
+function [val,cur_special_index,cur_string_index] = parse_value(string,special_chars,special_chars_I,cur_special_index,all_strings,cur_string_index)
+%
+%
+%   Called by:
+%   parse_array
+%   parse_object
 
-function [val,cur_special_index,cur_string_index] = parse_value(string,is_special_I,cur_special_index,all_strings,cur_string_index)
+
 
 %[ - start of an array
 %" - start of a string
@@ -279,19 +287,20 @@ function [val,cur_special_index,cur_string_index] = parse_value(string,is_specia
 %,
 
 
-switch string(is_special_I(cur_special_index))
-    case '"'
-        val = all_strings{cur_string_index};
-        cur_special_index = cur_special_index + 2;
-        cur_string_index  = cur_string_index + 1;
+switch special_chars(cur_special_index)
+%We took this out into the caller ...
+%     case '"'
+%         val = all_strings{cur_string_index};
+%         cur_special_index = cur_special_index + 2;
+%         cur_string_index  = cur_string_index + 1;
     case '['
-        [val,cur_special_index,cur_string_index] = parse_array(string,is_special_I,cur_special_index,all_strings,cur_string_index);
+        [val,cur_special_index,cur_string_index] = parse_array(string,special_chars,special_chars_I,cur_special_index,all_strings,cur_string_index);
     case '{'
-        [val,cur_special_index,cur_string_index] = parse_object(string,is_special_I,cur_special_index,all_strings,cur_string_index);
+        [val,cur_special_index,cur_string_index] = parse_object(string,special_chars,special_chars_I,cur_special_index,all_strings,cur_string_index);
     otherwise
         %Pointer to ',' ']' or '}'
         %??? - use deblank instead, don't care about trailing stuffs ...
-        prev_str = strtrim(string((is_special_I(cur_special_index-1)+1):(is_special_I(cur_special_index)-1)));
+        prev_str = strtrim(string((special_chars_I(cur_special_index-1)+1):(special_chars_I(cur_special_index)-1)));
         switch(prev_str(1))
             case 't'
                 val = true;

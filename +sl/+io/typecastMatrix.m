@@ -11,11 +11,18 @@ function output = typecastMatrix(data,format,keep_columns)
 %   -----------------------------------------------------------------------
 %   1) Provide error processing when reshape fails
 
+if isempty(data)
+   output = [];
+   return
+end
+
 n_rows = size(data,1);
 n_cols = size(data,2);
 
 %TODO: Add try catch with details on error (thrown by reshape)
 %This occurs when reshape size is wrong
+%
+%I've also passed a cell array in ...
 
 if keep_columns
    temp_output = typecast(data(:),format);

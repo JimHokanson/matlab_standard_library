@@ -12,6 +12,7 @@ function out = fileRead(file_path,type)
 %   out = sl.io.fileRead(file_path,*uint8)
 
 if ~exist(file_path,'file')
+    
     error('Specified file does not exist:\n%s\n',file_path)
 end
 
