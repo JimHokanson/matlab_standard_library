@@ -1,14 +1,24 @@
-function output = getSHA1(data)
+function output = getSHA1(data_or_file_path,varargin)
 %getSHA1 Creates message digest using SHA-1 hash function
 %
-%   output = sl.crypt.getSHA1(data)
+%   output = sl.crypt.getSHA1(data_or_file_path)
 %
 %   Example:
 %   ----------------------------------
-%   data = sl.io.fileRead(file_path,'*uint8');
+%   data_or_file_path : uint8 of data in file or path to file
+%   
 %
 %   See Also:
-%   sl.io.fileread
+%   sl.io.fileRead
+
+in.is_file = false; %If true, data should be a file_path
+in = sl.in.processVarargin(in,varargin);
+
+if in.is_file
+   data = sl.io.fileRead(data_or_file_path,'*uint8');
+else
+   data = data_or_file_path;
+end
 
 %data = 'The quick brown fox jumps over the lazy dog';
 digest = org.apache.commons.codec.digest.DigestUtils;

@@ -3,9 +3,28 @@ function [output,is_matched] = regexpSingleMatchTokens(data_in,pattern)
 %
 %   [output,is_matched] = sl.cellstr.regexpSingleMatchTokens(data_in,pattern)
 %   
+%   TODO: Finish documentation
+%
+%
+%   Example:
+%   -----------------------------------------------------------------------
+%   data =>
+%     'Altman, Plonsey - 1992 - Approximations of excitation threshold in modeling nerve stimulation.pdf'
+%     'Jones, Campbell, Normann - 1992 - A glasssilicon composite intracortical electrode array.pdf'
+%     'Krnjevic - 1992 - Cellular and synaptic actions of general anaesthetics.pdf'
+%     'Lan, Crago - 1992 - Control of limb movements by functional neuromuscular stimulation.pdf'
+%   
+%   [output,is_matched] = sl.cellstr.regexpSingleMatchTokens(data,'([^-]*)-\s*(\d+)\s*-\s*([^\.]*)');
+%
+%   output => {n x 3} -> 3 tokens in request
+%     'Altman, Plonsey '                '1992'                         [1x68  char]
+%     'Jones, Campbell, Normann '       '1992'                         [1x54  char]
+%     'Krnjevic '                       '1992'                         [1x53  char]
+%     'Lan, Crago '                     '1992'                         [1x65  char]
+
 
 if ischar(data_in)
-    error('This function is designed for cell strings') %??? Move to cellstr?
+    error('This function is designed for cell strings')
 end
 
 %??? Provide length as input????
