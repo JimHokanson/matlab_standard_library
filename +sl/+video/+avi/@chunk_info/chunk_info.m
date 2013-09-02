@@ -1,4 +1,4 @@
-classdef chunk_info < handle
+classdef (Hidden) chunk_info < handle
     %
     %   Class:
     %   sl.video.avi.chunk_info
@@ -61,13 +61,11 @@ classdef chunk_info < handle
             obj.data_length(1)      = temp_data_length;
             obj.next_start_index(1) = temp_data_length + 12 + 1;
             
+            %I think this would occur if the file is large and there
+            %are extended AVI headers (AVIX)
             if obj.next_start_index(1) ~= length(data)+1
                error('Length mismatch, code improvements needed') 
             end
-            
-            %TODO: Ensure that this matches the length of the file. If it
-            %does not it is possible that additional AVIX entries exist
-            %to extend the length of the video ...
             
             obj.cur_obj_count = 1;
             depth_local       = 1;

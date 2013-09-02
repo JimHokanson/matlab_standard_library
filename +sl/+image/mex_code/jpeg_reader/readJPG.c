@@ -9,7 +9,11 @@ Currently it decodes a jpg image from memory
 
 img = readJPG(uint8_data)
 
+file_path = '/Users/jameshokanson/Desktop/Music/Mos Def & Talib Kweli/Black Star/AlbumArt_{745F688E-9905-448D-9269-9905ACC1D8C2}_Large.jpg'
 
+data = sl.io.fileRead(file_path,'*uint8'); 
+
+img_data = permute(sl.image.readJPG(data),[3 2 1]);
 */
 
 
@@ -23,7 +27,12 @@ img = readJPG(uint8_data)
 
 //http://www.mathworks.com/matlabcentral/newsreader/view_thread/81585
 //http://www.mathworks.com/matlabcentral/answers/35071
-//mex -I"C:\libjpeg-turbo64\include" COMPFLAGS="$COMPFLAGS /MT"  please2.c turbojpeg-static.lib
+//
+//  Windows compiling. Currently this must be done from the same directory
+//
+//mex -I"C:\libjpeg-turbo64\include" COMPFLAGS="$COMPFLAGS /MT"  readJPG.c turbojpeg-static.lib
+//
+//mex -I"/opt/libjpeg-turbo/include" readJPG.c libturbojpeg.a
 
 //http://stackoverflow.com/questions/9094691/examples-or-tutorials-of-using-libjpeg-turbos-turbojpeg
 
@@ -37,27 +46,47 @@ img = readJPG(uint8_data)
  *  tjDecompressHeader2
  *  tjDecompress2
  */
-void pleaseWork(unsigned char* compressed_image, int jpegSize,unsigned char** ret_buffer,int* width, int* height){
- 
+void mexFunction( int nlhs, mxArray *plhs[], 
+                  int nrhs, const mxArray*prhs[] )
+{ 
+    
+    //Calling form
+    //img_data = readJPG(uncompressed_image_data);
+    
     uint8_T* buffer;
-    int jpegSubsamp;
     
-    tjhandle jpegDecompressor = tjInitDecompress();
+    unsigned char* compressed_image;
+    int compressed_image_size;
     
+    mwSize dims[3] = {0,0,0};
+    int width;
+    int height;
+    int jpeg_subsamp;
     
-
+    if (nrhs != 1) { 
+        mexErrMsgTxt("1 input required, image data as uint8");
+    }else if (!mxIsUint8(prhs[0])) {
+        mexErrMsgTxt("Input data type must be uint8"); 
+    }
+    
+    compressed_image = (unsigned char *)mxGetData(prhs[0]);
+    compressed_image_size = (int)mxGetNumberOfElements(prhs[0]);
+    
+    tjhandle jpeg_decompressor = tjInitDecompress();
+    
+    //Retrieve image information, namely width and height
     //tjhandle handle, unsigned char *jpegBuf, unsigned long jpegSize, int *width, int *height, int *jpegSubsamp
-    tjDecompressHeader2(jpegDecompressor, compressed_image, jpegSize, width, height, &jpegSubsamp);
-
-    buffer      = mxMalloc((*width)*(*height)*3);
+    tjDecompressHeader2(jpeg_decompressor, compressed_image, compressed_image_size, &width, &height, &jpeg_subsamp);
     
-    *ret_buffer = buffer;
+    //NOTE, this might eventually change based on what we want out
+    //--------------------------------------------
+    buffer = mxMalloc((width)*(height)*3); //*3 implies RGB
 
     //mexPrintf("Width: %d\n",width);
     //mexPrintf("Height: %d\n",height);
-    //mexPrintf("sub_samp: %d\n",jpegSubsamp);
+    //mexPrintf("sub_samp: %d\n",jpeg_subsamp);
     
-    /*
+        /*
      * tjhandle handle
      * unsigned char *jpegBuf
      * unsigned long jpegSize, 
@@ -73,51 +102,34 @@ void pleaseWork(unsigned char* compressed_image, int jpegSize,unsigned char** re
      *  it might be useful to expose them.
      *
      *  TJFLAG_FASTDCT - fast DCT/IDCT algorithm, has more of an impact
-     *  on decompression
-     *  TJXOPT_GRAY - discard color data, produce grayscale image instead
-     *
-     *  
-     *  
+     *  on decompression, currently enabled by default
+     *  TJXOPT_GRAY - discard color data, produce grayscale image instead 
      */
     
     
+    //Last two inputs are flags and options
+    //I'm not sure how to distinguish them, but the inputs are very different
     
-    tjDecompress2(jpegDecompressor, compressed_image, jpegSize, buffer, *width, 0, *height, TJPF_RGB, TJFLAG_FASTDCT);
+    tjDecompress2(jpeg_decompressor, compressed_image, compressed_image_size, buffer, width, 0, height, TJPF_RGB, TJFLAG_FASTDCT);
 
-    tjDestroy(jpegDecompressor);
-}
-
-void mexFunction( int nlhs, mxArray *plhs[], 
-                  int nrhs, const mxArray*prhs[] )
-{ 
+    tjDestroy(jpeg_decompressor);
     
-    uint8_T* bufferRef;
-    mwSize dims[3] = {0,0,0};
-    int width;
-    int height;
-    
-    if (nrhs != 1) { 
-        mexErrMsgTxt("Two inputs argument required.");
-    }
-    
-    //TODO: Check input type, should be uint8
-    
-    pleaseWork((unsigned char *)mxGetData(prhs[0]),(int)mxGetNumberOfElements(prhs[0]),&bufferRef,&width,&height);
-    
+    //Setup Output
+    //------------------------------------------------------------------
     plhs[0] = mxCreateNumericArray(3,&dims[0], mxUINT8_CLASS, mxREAL);
     
-    
-    
-    mxSetData(plhs[0], bufferRef);
-	
-	//plhs[0] = mxCreateNumericMatrix(0, 0, mxUINT8_CLASS, mxREAL);
-    //mxSetM(plhs[0], width*height*3);
-    //mxSetN(plhs[0], 1);
-    
+    mxSetData(plhs[0], buffer);
+	    
     dims[0] = 3;
     dims[1] = width;
     dims[2] = height;
     
     mxSetDimensions(plhs[0],&dims[0], 3);
+    
+    //OLD, single dimension only
+    //-------------------------------
+    //plhs[0] = mxCreateNumericMatrix(0, 0, mxUINT8_CLASS, mxREAL);
+    //mxSetM(plhs[0], width*height*3);
+    //mxSetN(plhs[0], 1);
     
 }

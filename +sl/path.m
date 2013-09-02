@@ -7,24 +7,37 @@ classdef (Hidden) path
     %   functions in Matlab. However, if the functions are static methods
     %   of a class they can be hidden ... By placing them in a class it
     %   also provides a bit more convenient access for simple functions.
+    %
+    %   Functions that are in this class are typically not meant to be
+    %   accessed directly by users.
     
     properties (Constant)
-       LIBRARY_PARENT_PATH = sl.path.getLibraryParentPath;
-       LIBRARY_BETA_PATH = '' %TODO: Implement
+       LIBRARY_PARENT_PATH = sl.path.getLibraryParentPath(); %Points to folder
+       %that contains the '+sl' folder
+       LIBRARY_BETA_PATH   = sl.path.getBetaPath();
     end
     
     methods (Static,Hidden)
-        function value = getLibraryParentPath
-           %TODO: Implement function
-           %value
-           value = '';
+        function value = getBetaPath()
+           value = fullfile(sl.path.LIBRARY_PARENT_PATH,'beta_code');
         end
+        function value = getLibraryParentPath()
+           %%??? - when is the class definition loaded? On first call?
+           %
+           %or, when added to the path?
+           %
+           %If the latter, this would cause problems
+           %
+           %
+           value = sl.dir.getMyBasePath('',1);
+        end
+        %NOTE: I had thought about creating a GUI which would toggle
+        %beta code being on the path or not.
         function addBeta()
-           %TODO: Add beta library
-           
+           addpath(sl.path.LIBRARY_BETA_PATH);
         end
         function removeBeta()
-          %TODO: Remove beta library
+           rmpath(sl.path.LIBRARY_BETA_PATH);
         end
         function [base_path,file_name,ext] = fileparts()
             %This is only meant to be used on files

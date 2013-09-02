@@ -9,6 +9,11 @@ function addSubdirectories(base_paths,varargin)
 %   =======================================================================
 %   base_paths : (char or cellstr), must be absolute paths
 %
+%   OPTIONAL INPUTS
+%   =======================================================================
+%   dirs_ignore:
+%   add_base_path:
+%
 %   IMPROVEMENTS
 %   =======================================================================
 %   1) Move the code that gets directories to add to a separate function

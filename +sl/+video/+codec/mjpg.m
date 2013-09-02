@@ -1,9 +1,10 @@
 classdef mjpg < sl.video.codec
     %
     %   Class:
-    %   sl.video.avi.codec.mjpg
+    %   sl.video.codec.mjpg
     
     properties
+       %What options would I like to include in here ????
     end
     
     methods
@@ -12,13 +13,13 @@ classdef mjpg < sl.video.codec
             %What do I want to do in the constructor???
             
         end
-        function decodeHeaders(input_data)
+        function output_data = decodeFrame(obj,input_data)
            % 
            %
-           %    - ##dc <- We'll assume '00dc' for now
-           %    - u32 -> data size
-           %    
             
+           
+           output_data = permute(sl.image.readJPG(input_data),[3 2 1]);
+           
         end
     end
     

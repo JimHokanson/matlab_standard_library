@@ -1,4 +1,4 @@
-classdef index < handle
+classdef (Hidden) index < handle
     %
     %   Class:
     %   sl.video.avi.index

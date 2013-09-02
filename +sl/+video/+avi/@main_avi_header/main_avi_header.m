@@ -1,4 +1,4 @@
-classdef main_avi_header < handle
+classdef  (Hidden) main_avi_header < handle
     %
     %   Class:
     %   sl.video.avi.main_avi_header
