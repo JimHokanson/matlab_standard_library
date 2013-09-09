@@ -1,4 +1,7 @@
 function explain
+%
+%
+%   See "explain_error.md" in larger projects. 
 
 error('Not yet implemented')
 

@@ -1,5 +1,5 @@
 function out = fileRead(file_path,type,varargin)
-%
+%fileRead
 %
 %   out = sl.io.fileRead(file_path,type,varargin)
 %
@@ -32,17 +32,16 @@ in = sl.in.processVarargin(in,varargin);
 %                        ordering and 64 bit long data type.
 
 
-
-%NOTE: I've run into problems with unicode ...
-%
-if ~exist(file_path,'file')
-    error('Specified file does not exist:\n%s\n',file_path)
-end
-
 % open the file
 [fid, msg] = fopen(file_path,'r',in.endian);
 if fid == (-1)
-    error(message('sl:io:fileRead:cannotOpenFile', filename, msg));
+    %NOTE: I've run into problems with unicode ...
+    %http://www.mathworks.com/matlabcentral/answers/86186-working-with-unicode-paths
+    if ~exist(file_path,'file')
+       error('Specified file does not exist:\n%s\n',file_path)
+    else
+        error(message('sl:io:fileRead:cannotOpenFile', filename, msg));
+    end
 end
 
 try

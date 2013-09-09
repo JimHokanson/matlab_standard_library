@@ -18,7 +18,7 @@ classdef mjpg < sl.video.codec
            %
             
            
-           output_data = permute(sl.image.readJPG(input_data),[3 2 1]);
+           output_data = sl.image.readJPG(input_data);
            
         end
     end

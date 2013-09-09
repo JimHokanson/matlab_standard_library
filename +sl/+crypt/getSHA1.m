@@ -18,6 +18,7 @@ if in.is_file
    data = sl.io.fileRead(data_or_file_path,'*uint8');
 else
    data = data_or_file_path;
+   %TODO: Test is uint8
 end
 
 %data = 'The quick brown fox jumps over the lazy dog';

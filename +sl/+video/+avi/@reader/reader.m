@@ -174,6 +174,13 @@ classdef reader < handle
             end_I   = obj.frame_data_end_I(frame_number);
             raw_frame_data = obj.data(start_I:end_I);  
         end
+        function close(obj)
+           %Do nothing for now
+           %If we start to partially read a video from file
+           %into memory and keep the file open then we will
+           %want to close the file ...
+        end
+        %NOTE: Might want delete function as well ...
     end
     
 end
