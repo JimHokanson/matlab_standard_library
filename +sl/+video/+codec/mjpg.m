@@ -3,8 +3,25 @@ classdef mjpg < sl.video.codec
     %   Class:
     %   sl.video.codec.mjpg
     
-    properties
+    properties (Dependent)
        %What options would I like to include in here ????
+       read_as_gray = false
+    end
+    properties (Hidden)
+       jpg_read_option = 2
+    end
+    
+    methods
+        function value = get.read_as_gray(obj)
+           value = obj.jpg_read_option == 4; 
+        end
+        function set.read_as_gray(obj,value)
+           if value
+               obj.jpg_read_option = 4;
+           else
+               obj.jpg_read_option = 2;
+           end
+        end
     end
     
     methods
@@ -18,7 +35,7 @@ classdef mjpg < sl.video.codec
            %
             
            
-           output_data = sl.image.readJPG(input_data);
+           output_data = sl.image.readJPG(input_data,obj.jpg_read_option);
            
         end
     end
