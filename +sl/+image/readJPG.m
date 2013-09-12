@@ -1,22 +1,37 @@
-function image_out = readJPG(uint8_data_or_filename,option)
+function image_out = readJPG(uint8_data_or_filepath,option)
 %
 %
 %   image_out = sl.image.readJPG(uint8_data_or_filename,*option)
+%
+%   INPUTS
+%   ---------------------------------------------------------------
+%   uint8_data_or_filepath : (uint8 or path to a jpg image)
+%   option: (default 1) - fast uses the fast idct algorithm
+%       available and might cause some slight quality loss. On Windows I've
+%       actually found the 'fast' to be somewhat slower
+%       - 1: fast rgb
+%       - 2: slow rgb   - default
+%       - 3: fast gray
+%       - 4: slow gray
+%
+%   fp = 'C:\Users\RNEL\Desktop\Able_air_and_space.jpg';
+%   image_out = sl.image.readJPG(fp,3);
 
-%Can we read from file as well????
-
-%OPTIONS
-%1) fast rgb
-%2) slow rgb
-%3) 
-
-
-if ischar(uint8_data_or_filename)
-   uint8_data = sl.io.fileRead(uint8_data_or_filename,'*uint8');
-else
-   uint8_data = uint8_data_or_filename;
+if ~exist('option','var')
+    option = 2;
 end
 
-image_out = permute(readJPGHelper(uint8_data),[3 2 1]);
+if ischar(uint8_data_or_filepath)
+   uint8_data = sl.io.fileRead(uint8_data_or_filepath,'*uint8');
+else
+   uint8_data = uint8_data_or_filepath;
+end
 
+switch option
+    case {1 2}
+        image_out = permute(readJPGHelper(uint8_data,option),[3 2 1]);
+    case {3 4}
+        image_out = readJPGHelper(uint8_data,option)';
+    otherwise
+        error('Unrecognized option: %d',option)
 end
