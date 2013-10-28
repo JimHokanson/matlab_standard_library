@@ -13,8 +13,14 @@ function makeMEX
 %   http://sourceforge.net/projects/libjpeg-turbo/files/1.3.0/libjpeg-turbo-1.3.0-vc64.exe/download
 %   
 %   For mac
-%   ?????
-%   http://sourceforge.net/projects/libjpeg-turbo/files/1.3.0/libjpeg-turbo-1.3.0.tar.gz/download
+%   http://sourceforge.net/projects/libjpeg-turbo/files/1.3.0/libjpeg-turbo-1.3.0.dmg/download
+%
+%
+%   IMPROVEMENTS
+%   -----------------------------------------------------------------------
+%   1) Build in support for moving file to appropriate directory. Currently
+%   this needs to be done manually.
+
 
 %{
 
@@ -29,15 +35,14 @@ Some notes on compiling:
 //  Mac:
 //mex -I"/opt/libjpeg-turbo/include" readJPG.c libturbojpeg.a
 
+http://stackoverflow.com/questions/8140156/gcc-linker-cant-find-library-openni
 
 %}
 
-
 FILE_NAME = 'readJPGHelper.c';
 
-COMP_FLAGS = ''; %#ok<NASGU>
+COMP_FLAGS = '';
 
-%TODO: We need an architecture switch as well
 switch computer
     case 'PCWIN64'
         INCLUDE_PATH    = '"C:\libjpeg-turbo64\include"';
@@ -46,9 +51,8 @@ switch computer
         COMP_FLAGS      = 'COMPFLAGS="$COMPFLAGS /MT"';
     case 'MACI64'
         INCLUDE_PATH = '/opt/libjpeg-turbo/include';
-        STATIC_LIB_NAME = 'libturbojpeg.a';
-        error('Finish this ...')
-        %STATIC_LIB_BASE_PATH = ''???
+        STATIC_LIB_NAME = 'turbojpeg';
+        STATIC_LIB_BASE_PATH = '/opt/libjpeg-turbo/lib';
     otherwise
         error('Computer %s, not yet implemented',computer)
 end
