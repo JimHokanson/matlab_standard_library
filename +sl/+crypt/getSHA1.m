@@ -5,8 +5,9 @@ function output = getSHA1(data_or_file_path,varargin)
 %
 %   Example:
 %   ----------------------------------
-%   data_or_file_path : uint8 of data in file or path to file
-%   
+%   data_or_file_path : 
+%       - uint8 of data in file
+%       - path to file (NOTE: This may be a Java file (java.io.File)
 %
 %   See Also:
 %   sl.io.fileRead
