@@ -33,25 +33,44 @@ in = sl.in.processVarargin(in,varargin);
 
 
 % open the file
-[fid, msg] = fopen(file_path,'r',in.endian);
-if fid == (-1)
-    %NOTE: I've run into problems with unicode ...
-    %http://www.mathworks.com/matlabcentral/answers/86186-working-with-unicode-paths
-    if ~exist(file_path,'file')
-       error('Specified file does not exist:\n%s\n',file_path)
-    else
-        error(message('sl:io:fileRead:cannotOpenFile', filename, msg));
+if ischar(file_path)
+    [fid, msg] = fopen(file_path,'r',in.endian);
+    
+    if fid == (-1)
+        %NOTE: I've run into problems with unicode ...
+        %http://www.mathworks.com/matlabcentral/answers/86186-working-with-unicode-paths
+        if ~exist(file_path,'file')
+            error('Specified file does not exist:\n%s\n',file_path)
+        else
+            error(message('sl:io:fileRead:cannotOpenFile', filename, msg));
+        end
     end
-end
-
-try
-    % read file
-    out = fread(fid,type)';
-catch exception
+    
+    try
+        % read file
+        out = fread(fid,type)';
+    catch exception
+        % close file
+        fclose(fid);
+        throw(exception);
+    end
+    
     % close file
     fclose(fid);
-	throw(exception);
+else
+    
+    %'source' - output as double
+    %'source=>output'
+    %'*source' - keep input type
+    %'N*source' or 'N*source=>output'
+    
+    %Note: endian wouldn't be handled ...
+    
+    if type(1) == '*'
+        type = type(2:end);
+        out  = typecast(org.apache.commons.io.FileUtils.readFileToByteArray(file_path),type);
+    else
+        error('Conversion type: "%s" not supported yet',type)
+    end
+    
 end
-
-% close file
-fclose(fid);
