@@ -64,16 +64,16 @@ function [output,extras] = readDelimitedFile(filePath,delimiter,varargin)
 %   aftewards, i.e. a row with only delimiters will not be removed ...
 %   
 %   IMPROVEMENTS
-%   =========================================================
-%   - pass the read text into a string function, instead of the current hack of 
-%   using this function both for files and strings ...
+%   =======================================================================
+%
 %
 %   See Also:
 %       
 
-
+in.input_is_str  = false; %If true, then 
 in.merge_lines   = true;
-in.header_lines  = 0; %NYI
+in.header_lines  = 0;
+in.parse_headers = false; %NYI - this is primarily for labels of headers
 in.default_ca    = '';
 in.deblank_all   = false;
 in.strtrim_all   = false;
@@ -86,16 +86,12 @@ in.remove_empty_lines         = false;  %Any line which literally has no
 in.remove_lines_with_no_content = false; %If each cell for a line is empty,
 %then the line is deleted
 in.single_delimiter_match = false;
-in = processVarargin(in,varargin);
+in = sl.in.processVarargin(in,varargin);
 
-%Obtaining the text data
+%Obtaining the text data - change to using an optional input ...
 %--------------------------------------------------------------------
-if iscell(filePath)
-    if length(filePath) == 2 && strcmp(filePath{1},'str')
-       text = filePath{2}; 
-    else
-        error('Cell entry to readDelimitedFile should be of form {''str'' str_data}')
-    end
+if in.input_is_str
+    text = filePath; 
 else
     if ~exist(filePath,'file')
         error('Missing file %s',filePath)

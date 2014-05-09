@@ -3,16 +3,14 @@ function addSubdirectories(base_paths,varargin)
 %
 %   sl.path.addSubdirectories(base_paths,varargin)
 %
-%   This function was written to facilitate adding
-%
 %   INPUTS
 %   =======================================================================
 %   base_paths : (char or cellstr), must be absolute paths
 %
 %   OPTIONAL INPUTS
 %   =======================================================================
-%   dirs_ignore:
-%   add_base_path:
+%   dirs_ignore: {'private'};
+%   add_base_path: (default false)
 %
 %   IMPROVEMENTS
 %   =======================================================================

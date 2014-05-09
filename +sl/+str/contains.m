@@ -3,6 +3,8 @@ function flag = contains(s1,str_to_match,varargin)
 %   sl.str.contains(s1,str_to_match,varargin)
 %
 
+%TODO: Should check for anywhere, otherwise throw an error
+
 %Could add case sensitivity as well ...
 
 in.location = 'anywhere'; %

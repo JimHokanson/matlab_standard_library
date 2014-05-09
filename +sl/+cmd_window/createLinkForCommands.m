@@ -6,7 +6,8 @@ function str = createLinkForCommands(disp_str,command_str)
 %   INPUTS
 %   ===========================================================
 %   disp_str    : String to display in the link
-%   command_str : String of the command to run
+%   command_str : String of the command to run. This shold NOT include the 
+%       matlab prefix as this is done in this function.
 %
 %   OUTPUTS
 %   ===========================================================
