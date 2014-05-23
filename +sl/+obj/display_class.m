@@ -12,6 +12,8 @@ classdef display_class < handle
     
     methods(Hidden)
         function disp(obj)
+           %This is the new method that was added on from handle_light
+           %to make this the display class.
            sl.obj.dispObject_v1(obj)
         end
         function lh = addlistener(varargin)

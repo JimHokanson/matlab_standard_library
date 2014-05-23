@@ -10,7 +10,7 @@ classdef obj
     methods (Static)
         function name = getClassNameWithoutPackages(obj)
            %x Returns name of the class, removing package prefixes if present
-           %
+           %    
            %    name = sl.obj.getClassNameWithoutPackages(obj)
            
            temp_str = class(obj);
@@ -22,9 +22,15 @@ classdef obj
            end
         end
         function output = getFullMethodName(obj,method_name_or_names)
-            %
+            %x Adds on packages and
             %
             %   output = sl.obj.getFullMethodName(obj,method_name_or_names)
+            %
+            %   Inputs:
+            %   --------
+            %   obj : Matlab Object 
+            %       Object from which the names should be referenced
+            %   method_name_or_names :
             %
             %   Example:
             %   Go from:
@@ -59,6 +65,7 @@ classdef obj
         %   h - normally hidden
         %   i - inherited
           
+        %TODO: This could be an array of objects ...
         
         SEP_STR = ': ';
         

@@ -1,5 +1,8 @@
-classdef LinePlotExplorer < handle   
-% LinePlotExplorer
+classdef LinePlotExplorer < handle
+%
+%   Class:
+%   sl.plot.big_data.LinePlotExplorer
+% 
 %
 % This tool allows users to move around quickly within a 2D plot by panning
 % (left clicking and dragging) or zoom (scrolling with a scroll wheel). 
@@ -65,6 +68,8 @@ classdef LinePlotExplorer < handle
         
     end
     
+    %Constructor
+    %-----------------------------------------
     methods
         
         % Create a ReductiveViewer for the x and y variables.
@@ -128,7 +133,9 @@ classdef LinePlotExplorer < handle
         
     end
     
-    methods (Access = protected,Hidden)
+    %Callback methods
+    %-------------------------------------------------------
+    methods (Access = protected)
         
         % When the user moves the mouse wheel...
         function Scroll(o, h, event, varargin)

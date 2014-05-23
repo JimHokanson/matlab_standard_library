@@ -1,7 +1,15 @@
 function [x_reduced, y_reduced] = reduce_to_width(x, y, width, lims)
-
-% [x_reduced, y_reduced] = reduce_to_width(x, y, width, lims)
+%
+%
+% [x_reduced, y_reduced] = sl.plot.big_data.reduce_to_width(x, y, width, lims)
 % 
+%
+%   Inputs
+%   ------
+%   lims : 2 element vector [min,max], can be [-Inf Inf]
+%
+%
+%
 % (This function is primarily used by LinePlotReducer, but has been
 %  provided as a stand-alone function outside of that class so that it can
 %  be used potentially in other projects. See help LinePlotReducer for 

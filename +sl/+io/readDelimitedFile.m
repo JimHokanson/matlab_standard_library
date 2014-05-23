@@ -10,9 +10,7 @@ function [output,extras] = readDelimitedFile(filePath,delimiter,varargin)
 %   FORMS ===========================================================
 %   [output,extras] = readDelimitedFile(filePath,delimiter,varargin)
 %
-%   %Ugly hack to process input as string
-%   [output,extras] = readDelimitedFile({'str' str_data},delimiter,varargin)   
-%   In this case 
+%   [output,extras] = readDelimitedFile(str_data,delimiter,'input_is_str',true,varargin)   
 %   
 %   EXAMPLES
 %   ========================================================

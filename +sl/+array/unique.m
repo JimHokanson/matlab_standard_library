@@ -3,6 +3,9 @@ classdef unique < sl.array.unique_super
     %   Class:
     %   sl.array.unique
     %   
+    %   ???? Is this used at all?????
+    %
+    %   I don't think so, I'd like to delete it ...
     
     properties (Constant,Hidden)
         SORT_FUNCTION_HANDLE = @sort
