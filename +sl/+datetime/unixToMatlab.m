@@ -21,7 +21,7 @@ function matlab_time = unixToMatlab(unix_time,utc_offset)
 %   sl.datetime.getTimeZone
 
 
-if ~exist('UTC_OFFSET','var') || isempty(utc_offset)
+if ~exist('utc_offset','var') || isempty(utc_offset)
     utc_offset = sl.datetime.getTimeZone;
 end
 
