@@ -6,17 +6,22 @@ function out = fileRead(file_path,type,varargin)
 %   Similiar to fileread() except that it allows specification of a single
 %   fread type, like uint8
 %
-%   Inputs
-%   -----------------------------------------------------------------------
-%   type   : passed directly into fread
+%   Required Inputs
+%   ----------------
+%   type   : 
+%       Passed directly into fread
 %
 %   Optional Inputs
-%   -----------------------------------------------------------------------
+%   ---------------
 %   endian : (default 'n')
 %
-%   example:
-%   -------------------------------------------------------------
+%   Examples:
+%   ---------
 %   out = sl.io.fileRead(file_path,'*uint8')
+%   out = sl.io.fileRead(file_path,'*char')
+%
+%   See Also:
+%   fread
 
 in.endian = 'n';
 in = sl.in.processVarargin(in,varargin);

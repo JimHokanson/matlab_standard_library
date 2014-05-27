@@ -2,6 +2,10 @@ function s = toStruct(obj,fields_to_remove)
 %
 %   s = sl.obj.toStruct(obj,*fields_to_remove)
 %
+%   OUTPUTS
+%   ===============================================
+%   s : structure
+%
 %   INPUTS
 %   ================================================
 %   obj              : Input object to convert
@@ -10,6 +14,9 @@ function s = toStruct(obj,fields_to_remove)
 %   OPTIONAL_INPUTS
 %   ================================================
 %   
+%   See Also:
+%   sl.struct.toObject
+
 %Additional options? - ignore constants
 
 % in.throw_error_missing_field = true;
