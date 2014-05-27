@@ -12,6 +12,19 @@ classdef obj
            %x Returns name of the class, removing package prefixes if present
            %    
            %    name = sl.obj.getClassNameWithoutPackages(obj)
+           %
+           %    Example:
+           %    --------
+           %    obj = temp.package.my_object()
+           %    name = sl.obj.getClassNameWithoutPackages(obj)
+           %    
+           %    name => 'my_object'
+           %
+           %    %VERSUS:
+           %
+           %    class(obj)
+           %    temp.package.my_object
+           %    
            
            temp_str = class(obj);
            I   = strfind(temp_str,'.');
@@ -27,15 +40,22 @@ classdef obj
             %   output = sl.obj.getFullMethodName(obj,method_name_or_names)
             %
             %   Inputs:
-            %   --------
+            %   -------
             %   obj : Matlab Object 
             %       Object from which the names should be referenced
             %   method_name_or_names :
             %
             %   Example:
-            %   Go from:
-            %   getAllData to adinstruments.channel.getAllData
+            %   --------
+            %   obj = adinstruments.channel()
             %
+            %   m = methods(obj)
+            %   m(1) => 'getAllData'
+            %
+            %   output = getFullMethodName(obj,'getAllData')
+            %   output => 'adinstruments.channel.getAllData'
+            %
+            
            class_name = class(obj);
            if ischar(method_name_or_names)
                output = [class_name '.' method_name_or_names];
@@ -46,7 +66,7 @@ classdef obj
     end
     
     methods (Static,Hidden)
-        function dispObject_v1(obj,varargin)
+        function dispObject_v1(objs,varargin)
         %x  Displays props AND methods of an object to the cmd window
         %
         %   sl.obj.dispObject_v1(obj,varargin)
@@ -59,7 +79,8 @@ classdef obj
         %   parent)
         %   5) TODO: Provide link to the definition of the methods
         %   
-        %   Method Prefixes (NYI)
+        %   Method Prefixes (NYI) - goal is to prefix methods
+        %   with indicators as to the type ...
         %   ==================================================
         %   s - static
         %   h - normally hidden
@@ -84,14 +105,14 @@ classdef obj
         %   adinstruments.channel with properties:
         %
         %TODO: Remove spacing at the end ...
-        prop_str = evalc('builtin(''disp'',obj)');
+        prop_str = evalc('builtin(''disp'',objs)');
         disp(prop_str)
         
         %Method Display
         %------------------------------------------------------------------
-        fprintf('    Methods:\n');
         
-        mc = metaclass(obj);
+        
+        mc = metaclass(objs(1));
         meta_methods = mc.MethodList;
         
         %Can be used to filter by classes ...
@@ -107,7 +128,7 @@ classdef obj
         end
         
         %1.2) Remove handle methods
-        if ~in.show_handle_methods && any(strcmp(superclasses(obj),'handle'))
+        if ~in.show_handle_methods && any(strcmp(superclasses(objs),'handle'))
            defining_class_names = sl.cell.getStructureField({meta_methods.DefiningClass},'Name','un',0); 
            meta_methods(strcmp(defining_class_names,'handle')) = [];
         end
@@ -117,14 +138,14 @@ classdef obj
         method_names = {meta_methods.Name};
         %2.1) Remove constructor
         if ~in.show_constructor
-           c_name = sl.obj.getClassNameWithoutPackages(obj);
+           c_name = sl.obj.getClassNameWithoutPackages(objs);
            method_names(strcmp(method_names,c_name)) = [];
         end
         
         %Retrieval of names to display and help text
         %-------------------------------------------------
         methods_sorted = sort(method_names);
-        full_method_names = sl.obj.getFullMethodName(obj,methods_sorted);
+        full_method_names = sl.obj.getFullMethodName(objs,methods_sorted);
         h1_lines       = cellfun(@sl.help.getH1Line,full_method_names,'un',0);
         
         %Size setup
@@ -134,13 +155,21 @@ classdef obj
         max_method_name_length = max(method_names_lengths);
 
         space_for_help_text = n_chars_max - max_method_name_length - length(SEP_STR);
-                
+        
         n_methods   = length(method_names);
+        
+        if n_methods == 0
+            fprintf('No Methods\n')
+            return
+        end
+        
+        fprintf('    Methods:\n');
+        
         for iM = 1:n_methods
            cur_method  = methods_sorted{iM};
            cur_h1_line = h1_lines{iM};
            
-           help_cmd         = sprintf('help(''%s'')',sl.obj.getFullMethodName(obj,cur_method));
+           help_cmd         = sprintf('help(''%s'')',sl.obj.getFullMethodName(objs,cur_method));
            method_with_link = sl.cmd_window.createLinkForCommands(cur_method,help_cmd);
            
            left_str  = sl.str.padText(method_with_link,max_method_name_length,...
