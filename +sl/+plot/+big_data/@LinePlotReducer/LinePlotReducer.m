@@ -56,6 +56,9 @@ classdef LinePlotReducer < handle
         
         % Original data
         %---------------
+        %Note on why non-evenly sampled data is no longer supported well.
+        %
+        %
         %NOTE: Previously there was a y to x map. This was done because
         %we could have multiple x timelines for each y. The result of this
         %parsing is that when we trim the data, our x 'channels' may not
@@ -91,7 +94,9 @@ classdef LinePlotReducer < handle
         %- construction
         %- refreshData
         
-        post_render_callback = [];
+        post_render_callback = []; %This can be set to render
+        %something after the data has been drawn .... Any inputs
+        %should be done by binding to the anonymous function.
         
     end
     
@@ -100,7 +105,8 @@ classdef LinePlotReducer < handle
        y_limits
     end
     
-    methods 
+    methods
+        %TODO: Allow invalid checking as well
         function value = get.x_limits(obj)
            if isempty(obj.h_axes)
                value = [NaN NaN];
@@ -129,6 +135,10 @@ classdef LinePlotReducer < handle
         
         % Create a ReductiveViewer for the x and y variables.
         function o = LinePlotReducer(varargin)
+            
+            %I'm hiding the initialization details in another file to
+            %reduce the high indendtation levels and the length of this
+            %function.
             init(o,varargin{:})
         end
     end
@@ -241,4 +251,21 @@ classdef LinePlotReducer < handle
     
 end
 
+%dcm_obj = datacursormode(fig);
+%set(dcm_obj,'UpdateFcn',@myupdatefcn)
+%
+% % function output_txt = h__DataCursorCallback(obj,event_obj)
+% % % Display the position of the data cursor
+% % % obj          Currently not used (empty)
+% % % event_obj    Handle to event object
+% % % output_txt   Data cursor text string (string or cell array of strings).
+% % 
+% % pos = get(event_obj,'Position');
+% % output_txt = {['X: ',num2str(pos(1),4)],...
+% %     ['Y: ',num2str(pos(2),4)]};
+% % 
+% % % If there is a Z-coordinate in the position, display it as well
+% % if length(pos) > 2
+% %     output_txt{end+1} = ['Z: ',num2str(pos(3),4)];
+% % end
 

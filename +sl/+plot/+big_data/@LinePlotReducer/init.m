@@ -1,4 +1,7 @@
 function init(o,varargin)
+%
+%   sl.plot.big_data.LinePlotReducer.init
+%
 
 % We're busy. Ignore resizing and things.
 o.busy = true;
@@ -107,7 +110,7 @@ if previous_type == 'x'
     % probably was actually a y with an implied x.
     
     % Rename for simplicity.
-    ym = varargin{k-1};
+    ym = varargin{k};
     
     % We can accept data in rows or columns. If this is
     % 1-by-n -> 1 series from columns

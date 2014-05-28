@@ -29,14 +29,14 @@ classdef (Hidden) chunk_info < handle
     end
     
     methods
-        function obj = chunk_info(data)
+        function obj = chunk_info(data,varargin)
             %
             %   data - u32
             
+            in.ignore_length_error = false;
+            in = sl.in.processVarargin(in,varargin);
             
             %LIST_VALUE = typecast(uint8('LIST'),'uint32');
-            
-            toU32 = [2^0 2^8 2^16 2^24]';
             
             INIT_LENGTH = 10000;
             obj.name   = zeros(4,INIT_LENGTH,'uint8');
@@ -63,9 +63,13 @@ classdef (Hidden) chunk_info < handle
             
             %I think this would occur if the file is large and there
             %are extended AVI headers (AVIX)
-            if obj.next_start_index(1) ~= length(data)+1
+            if ~in.ignore_length_error && obj.next_start_index(1) ~= length(data)+1
                error('Length mismatch, code improvements needed') 
             end
+            
+            %In one video I see:
+            %00db   Ро ...  - 00db repeats a lot
+            
             
             obj.cur_obj_count = 1;
             depth_local       = 1;

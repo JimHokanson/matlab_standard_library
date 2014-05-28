@@ -85,16 +85,23 @@ classdef reader < handle
     end
     
     methods
-        function obj = reader(file_path)
+        function obj = reader(file_path,varargin)
             %
             %    obj = sl.video.avi.reader(file_path)
-            %
+            
+            in.ignore_length_error = false;
+            in = sl.in.processVarargin(in,varargin);
+            
             obj.file_path = file_path;
             
+            %NOTE: For large files this might eventually need to change.
+            %We are reading in the data all at once.
             data_local = sl.io.fileRead(file_path,'*uint8');
             obj.data = data_local;
             
-            chunk_info_local = sl.video.avi.chunk_info(data_local);
+            %Get information about the video
+            %-------------------------------
+            chunk_info_local = sl.video.avi.chunk_info(data_local,in);
             
             obj.chunk_info = chunk_info_local;
             
@@ -121,11 +128,16 @@ classdef reader < handle
             
             %NOTE: This could be a warning, if we just wanted to examine
             %the avi itself. Move the warning to the decoding stage?
-            if ~strcmp(compression,'mjpg')
-                error('Compression type: "%s" not yet supported')
+            switch compression
+                case 'mjpg'
+                    obj.codec = sl.video.codec.mjpg;
+                case char(zeros(1,4))
+                    obj.codec = sl.video.codec.raw(obj.height,obj.width);
+                otherwise
+                    error('Compression type: "%s" not yet supported')
             end
 
-            obj.codec = sl.video.codec.mjpg;
+            
             
             %Explicit determination of data starts and ends
             %-----------------------------------------------------
@@ -145,6 +157,9 @@ classdef reader < handle
             %
             %
             %   What should I do for null frames???
+            
+            error('This doesn''t look implemented') 
+            %:/
             
             next_frame_local = obj.next_frame;
             if next_frame_local > obj.n_frames

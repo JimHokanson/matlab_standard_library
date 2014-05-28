@@ -73,8 +73,12 @@ classdef video_stream_formats < handle
             switch obj.compression
                 case 'mjpg'
                     %TODO Add properties
+                case char(zeros(1,4))
+                    %Raw ...
                 otherwise
                     error('Unhandled data')
+                %IV50
+                %-http://www.free-codecs.com/download/Indeo_Codec.htm ????
             end
             
         end
