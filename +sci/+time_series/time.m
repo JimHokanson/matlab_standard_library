@@ -53,6 +53,7 @@ classdef time < handle
         function times = getTimesFromIndices(obj,indices)
            times = obj.start_offset + (indices-1)*obj.dt; 
         end
+        %TODO: Provide interpolation indices function
         function indices = getNearestIndices(obj,times)
            indices = round((times - obj.start_offset)./obj.dt); 
         end

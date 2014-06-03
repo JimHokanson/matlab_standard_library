@@ -168,6 +168,11 @@ classdef LinePlotReducer < handle
               
                 width = sl.axes.getWidthInPixels(o.h_axes(1));
                  
+                %Why is this happening?
+                if width == 0
+                    width = 100;
+                end
+                
                 n_plots     = length(o.x);
                 temp_h_plot = zeros(1,n_plots);
                 % For all data we manage...
@@ -209,6 +214,11 @@ classdef LinePlotReducer < handle
                 lims  = get(o.h_axes(1), 'XLim');
                 
                 width = sl.axes.getWidthInPixels(o.h_axes(1));
+                
+                %???
+                if width == 0
+                    width = 100;
+                end
                 
                 % For all data we manage...
                 for k = 1:length(o.x)
