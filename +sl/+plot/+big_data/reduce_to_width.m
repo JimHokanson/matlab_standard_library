@@ -1,48 +1,47 @@
-function [x_reduced, y_reduced] = reduce_to_width(x, y, width, lims)
-%
+function [x_reduced, y_reduced] = reduce_to_width(x, y, axis_width_in_pixels, x_limits)
 %
 % [x_reduced, y_reduced] = sl.plot.big_data.reduce_to_width(x, y, width, lims)
 % 
+%   For a given data set, this function returns the maximum and minimum
+%   points within non-overlapping subsets of the data, bounded by the 
+%   specified limits.
+%
+%   This helps us to increase the rate at which we can plot data.
 %
 %   Inputs
 %   ------
-%   lims : 2 element vector [min,max], can be [-Inf Inf]
+%   x : 
+%       [samples x channels], TODO: Support sci.time_series.time
+%   y : 
+%   axis_width_in_pixels : 
+%       This specifies the number of min/max pairs to generate.
+%   x_limits : 
+%       2 element vector [min,max], can be [-Inf Inf] to indicate everything
+%       This limit is applied to the 'x' input to exclude any points that 
+%       are outside the limits.
 %
+%   Outputs
+%   -------
+%   x_reduced :
+%   y_reduced :
 %
+%   
+%   Example
+%   -------
+%   [xr, yr] = sl.plot.big_data.reduce_to_width(x, y, 500, [5 10]);
 %
-% (This function is primarily used by LinePlotReducer, but has been
-%  provided as a stand-alone function outside of that class so that it can
-%  be used potentially in other projects. See help LinePlotReducer for 
-%  more.)
+%   plot(xr, yr); % This contains many fewer points than plot(x, y) 
+%                 %but looks the same.
 %
-% Reduce the data contained in x and y for display on width pixels,
-% stretching from lims(1) to lims(2).
-%
-% For example, if x and y are 20m points long, but we only need to plot
-% them over 500 pixels from x=5 to x=10, this function will return 1000
-% points representing the first point of the window (x=5), the last point
-% of the window (x=10), and the maxima and minima for each pixel between 
-% those two points. The result is that x_reduced and y_reduced can be 
-% plotted and will look exactly like x and y, without all of the waste of 
-% plotting too many points.
-%
-% x can be n-by-1 or n-by-m with n samples of m columns (that is, there can
-% be 1 x for all y or 1 x for each y.
-%
-% y must be n-by-m with n samples of m columns
-%
-% [xr, yr] = reduce_to_width(x, y, 500, [5 10]); % Reduce the data.
-%
-% plot(xr, yr); % This contains many fewer points than plot(x, y) but looks
-%                 the same.
-%
-% Tucker McClure
-% Copyright 2013, The MathWorks, Inc.
+%   Original Function By:
+%   Tucker McClure (Mathworks)
 
     % We'll need the first point to the left of the limits, the first point
     % to the right to the right of the limits, and the min and max at every
     % pixel inbetween. That's 1 + 1 + 2*(width - 2) = 2*width total points.
-    n_points = 2*width;
+    n_points = 2*axis_width_in_pixels;
+    
+    %TODO: Check x type, support time object ...
     
     % If the data is already small, there's no need to reduce.
     if size(x, 1) <= n_points
@@ -59,21 +58,17 @@ function [x_reduced, y_reduced] = reduce_to_width(x, y, width, lims)
         % Find the starting and stopping indices for the current limits.
         if k <= size(x, 2)
             
-            % Rename the column. This actually makes stuff substantially 
-            % faster than referencing x(:, k) all over the place. On my
-            % timing trials, this was 20x faster than referencing x(:, k)
-            % in the loop below.
             xt = x(:, k);
 
             % Map the lower and upper limits to indices.
             nx = size(x, 1);
-            lower_limit      = binary_search(xt, lims(1), 1,           nx);
-            [~, upper_limit] = binary_search(xt, lims(2), lower_limit, nx);
+            lower_limit      = binary_search(xt, x_limits(1), 1,           nx);
+            [~, upper_limit] = binary_search(xt, x_limits(2), lower_limit, nx);
             
             % Make the windows mapping to each pixel.
             x_divisions = linspace(x(lower_limit, k), ...
                                    x(upper_limit, k), ...
-                                   width + 1);
+                                   axis_width_in_pixels + 1);
                                
         end
 
@@ -82,7 +77,7 @@ function [x_reduced, y_reduced] = reduce_to_width(x, y, width, lims)
         
         % For each pixel...
         right = lower_limit;
-        for z = 1:width-1
+        for z = 1:axis_width_in_pixels-1
             
             % Find the window bounds.
             left               = right;
