@@ -12,14 +12,16 @@
  *  On throwing in AVX:
  *      http://www.virtualdub.org/blog/pivot/entry.php?id=347
  *
+ *  On min & max in Matlab:
+ *      http://www.mathworks.com/matlabcentral/answers/41008-find-min-max-togather
  * 
  *  1)
- *  mex -v minMaxOfDataSubset.cpp COMPFLAGS="$COMPFLAGS /arch:AVX /fp:fast"
+ *  mex minMaxOfDataSubset.cpp COMPFLAGS="$COMPFLAGS /arch:AVX /fp:fast"
  *
  *  2) 
  *  mex -v minMaxOfDataSubset.cpp
  *
- *
+ *  
  *
  *
  */
@@ -63,8 +65,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     mwSize n_groups;
     
     mwSize assignment_offset = -1;
-    mwSize start1, end1, start2, end2;
+    mwSize row_start, row_end, col_start, col_end;
     
+    double *init_offset;
     double *data_offset;
         
     if (dim_use == 1){
@@ -83,6 +86,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
         plhs[3]  = mxCreateNumericMatrix(n_chans,n_groups,mxDOUBLE_CLASS,mxREAL);
     }
     
+    
     double *xp, *xend, *minp, *maxp;
     double *all_max, *all_min, *all_max_I, *all_min_I;
     
@@ -93,19 +97,21 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     
     mwSize n_rows = mxGetM(prhs[0]);
     mwSize n_cols = mxGetN(prhs[0]);
+// // // // //     
+// // // // //     if (dim_use == 1){
     
-    if (dim_use == 1){
-        data_offset       = data;
+        //col_start   = (mwSize)(starts2[0]-1);
+        data_offset = data; // + (row_start*n_rows);
         
         for (mwSize iChan = 0; iChan < n_chans; iChan++){
-            
+
             //We are looping over the subset of data which we are working with
             for (mwSize iGroup = 0; iGroup < n_groups; iGroup++){
-                start1  = starts1[iGroup];
-                end1    = ends1[iGroup];
+                row_start  = (mwSize) starts1[iGroup];
+                row_end    = (mwSize) ends1[iGroup];
                 
-                xp   = data_access_pointer_offset + start1;
-                xend = data_access_pointer_offset + end1;
+                xp   = data_offset + row_start - 1;
+                xend = data_offset + row_end   - 1;
                 
                 minp = xp;
                 maxp = xp;
@@ -120,48 +126,50 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
                 }
                 
                 assignment_offset++;
-                all_max[assignment_offset]   = *maxp;
-                all_min[assignment_offset]   = *minp;
-                all_max_I[assignment_offset] = minp - data_index_offset;
-                all_min_I[assignment_offset] = maxp - data_index_offset;
+                //all_max[assignment_offset]   = *maxp;
+                //all_min[assignment_offset]   = *minp;
+                all_max_I[assignment_offset] = minp - data_offset + 1;
+                all_min_I[assignment_offset] = maxp - data_offset + 1;
                 
             }
-            start2++;
-            data_access_pointer_offset += n_rows;
+            data_offset += n_rows;
         }
-    } else { 
-
-         
-
-//grabbing chunks over 2nd dimension ...
-        
-//         for (mwSize iGroup = 0; iGroup < n_groups; iGroup++){
-//             start1  = (mwSize) bounds1[iGroup][0];
-//             end1    = (mwSize) bounds1[1][1];
-//             start2  = (mwSize) bounds2[0];
-//             end2    = (mwSize) bounds2[1];
-//             
-//             xp   = data + (start1 - 1);
-//             xend = data + (end1 - 1);
-//             
-//             minp = xp;
-//             maxp = xp;
-//             
-//             while (xp < xend) {
-//                 if (*xp > *maxp){
-//                     maxp = xp;
-//                 } else if (*xp < *minp) {
-//                     minp = xp;
-//                 }
-//                 xp++; //Wrong for 2d
-//             }
-//             
-//             all_max[0]   = *maxp;
-//             all_min[0]   = *minp;
-//             all_max_I[0] = (minp - data + 1); //Wrong for 2d
-//             all_min_I[0] = (maxp - data + 1); //Wrong for 2d
-//         }
-        
-    }
+    
+    
+    
+// // // // //     } else { 
+// // // // // 
+// // // // //          
+// // // // // 
+// // // // // //grabbing chunks over 2nd dimension ...
+// // // // //         
+// // // // // //         for (mwSize iGroup = 0; iGroup < n_groups; iGroup++){
+// // // // // //             start1  = (mwSize) bounds1[iGroup][0];
+// // // // // //             end1    = (mwSize) bounds1[1][1];
+// // // // // //             start2  = (mwSize) bounds2[0];
+// // // // // //             end2    = (mwSize) bounds2[1];
+// // // // // //             
+// // // // // //             xp   = data + (start1 - 1);
+// // // // // //             xend = data + (end1 - 1);
+// // // // // //             
+// // // // // //             minp = xp;
+// // // // // //             maxp = xp;
+// // // // // //             
+// // // // // //             while (xp < xend) {
+// // // // // //                 if (*xp > *maxp){
+// // // // // //                     maxp = xp;
+// // // // // //                 } else if (*xp < *minp) {
+// // // // // //                     minp = xp;
+// // // // // //                 }
+// // // // // //                 xp++; //Wrong for 2d
+// // // // // //             }
+// // // // // //             
+// // // // // //             all_max[0]   = *maxp;
+// // // // // //             all_min[0]   = *minp;
+// // // // // //             all_max_I[0] = (minp - data + 1); //Wrong for 2d
+// // // // // //             all_min_I[0] = (maxp - data + 1); //Wrong for 2d
+// // // // // //         }
+// // // // //         
+// // // // //     }
     
 }
