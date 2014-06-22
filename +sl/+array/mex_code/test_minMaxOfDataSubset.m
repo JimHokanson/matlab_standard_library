@@ -5,9 +5,11 @@ function test_minMaxOfDataSubset
 N    = 1e7; %10 million
 data = rand(N,1);
 
-bound_indices = 1:1e4:N;
+bound_indices = round(linspace(1,N,100));
 
-n_repeats = 20;
+
+
+n_repeats = 100;
 
 tic
 for iRepeat = 1:n_repeats
@@ -25,13 +27,13 @@ end
 toc
 
 tic
-indices  = zeros(2,axis_width_in_pixels);
+indices  = zeros(2,length(bound_indices) - 1);
 for iRepeat = 1:n_repeats
     for iRegion = 1:length(bound_indices) - 1
         left  = bound_indices(iRegion);
         right = bound_indices(iRegion+1);
         
-        yt = data(left:right, iChan);
+        yt = data(left:right, 1);
         [~, index_of_max]     = max(yt);
         [~, index_of_min]     = min(yt);
         

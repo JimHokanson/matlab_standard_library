@@ -6,10 +6,8 @@ function init(o,varargin)
 % We're busy. Ignore resizing and things.
 o.busy = true;
 
-
 % The first argument might be a function handle or it might
-% just be the start of the data. 'next' will represent the
-% index we need to examine next.
+% just be the start of the data.
 start = 1;
 
 %Function handle determination
@@ -57,29 +55,37 @@ temp_y = {};
 previous_type = 's'; %s - start
 n_groups      = 0; %Increment when both x & y are set ...
 n_inputs      = length(varargin);
-for k = 1:n_inputs   
-    if isnumeric(varargin{k})
+for k = 1:n_inputs
+    current_argument = varargin{k};
+    if isnumeric(current_argument) || isa(current_argument,'sci.time_series.time')
         % If we already have an x, then this must be y.
         if previous_type == 'x'
             
             % Rename for simplicity.
-            ym = varargin{k};
+            ym = current_argument;
             xm = varargin{k-1};
             
             % We can accept data in rows or columns. If this is
             % 1-by-n -> 1 series from columns
             % m-by-n -> n series from columns
             % m-by-1 -> 1 series from rows (transpose)
-            if size(xm, 1) == 1
-                xm = xm.';
-            end
-            if size(ym, 1) == 1
-                ym = ym.';
-            end
             
-            % Transpose if necessary.
-            if size(xm, 1) ~= size(ym, 1)
-                ym = ym';
+            if isobject(xm)
+                %Assume of type sci.time_series.time for now
+                if size(ym,1) ~= xm.n_samples
+                   ym = ym'; 
+                end
+            else
+                if size(xm, 1) == 1
+                    xm = xm.';
+                end
+                if size(ym, 1) == 1
+                    ym = ym.';
+                end
+                % Transpose if necessary.
+                if size(xm, 1) ~= size(ym, 1)
+                    ym = ym';
+                end
             end
             
             % Store y, x, and a map from y index to x index.
@@ -97,7 +103,7 @@ for k = 1:n_inputs
         %TODO: Should ensure correct previous type - x or y
         previous_type = 'l';
         %Must be a linespec or the end of the data
-        temp_specs{n_groups} = varargin{k};
+        temp_specs{n_groups} = current_argument;
     else
         %Must be done with everything, remainder are options ...
         o.extra_plot_options = varargin(k+1:end);

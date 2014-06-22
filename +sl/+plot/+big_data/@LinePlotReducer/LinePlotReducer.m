@@ -128,12 +128,12 @@ classdef LinePlotReducer < handle
     end
     
     properties (Hidden,Constant)
-        reduce = @sl.plot.big_data.reduce_to_width;
+        reduce_fh = @sl.plot.big_data.reduce_to_width;
     end
-    
+
+    %Constructor
+    %-----------------------------------------
     methods
-        
-        % Create a ReductiveViewer for the x and y variables.
         function o = LinePlotReducer(varargin)
             
             %I'm hiding the initialization details in another file to
@@ -148,6 +148,9 @@ classdef LinePlotReducer < handle
             % Draws all of the data.
             %
             %   This is THE main function which actually plots data.
+            %
+            %   This function is called:
+            %   manually
             %
             %   See Also:
             %   resize
@@ -164,12 +167,14 @@ classdef LinePlotReducer < handle
                 if isempty(o.h_axes)
                     o.h_axes   = gca;
                     o.h_figure = gcf;
+                %TODO: If only the axes are specified, then we should get
+                %the figure handle ...
                 end
               
                 width = sl.axes.getWidthInPixels(o.h_axes(1));
                  
                 %Why is this happening?
-                if width == 0
+                if width <= 0
                     width = 100;
                 end
                 
@@ -180,7 +185,7 @@ classdef LinePlotReducer < handle
                     
                     %Reduce the data.
                     %----------------------------------------
-                    [x_r, y_r] = o.reduce(o.x{k}, o.y{k}, width, [-Inf Inf]);
+                    [x_r, y_r] = o.reduce_fh(o.x{k}, o.y{k}, width, [-Inf Inf]);
 
                     plot_args = {o.h_axes(1) x_r y_r};
                     
@@ -215,8 +220,8 @@ classdef LinePlotReducer < handle
                 
                 width = sl.axes.getWidthInPixels(o.h_axes(1));
                 
-                %???
-                if width == 0
+                %??? - Why was the width 0?
+                if width <= 0
                     width = 100;
                 end
                 
@@ -225,7 +230,7 @@ classdef LinePlotReducer < handle
                     
                     %Reduce the data.
                     %----------------------------------------
-                    [x_r, y_r] = o.reduce(o.x{k}, o.y{k}, width, lims);
+                    [x_r, y_r] = o.reduce_fh(o.x{k}, o.y{k}, width, lims);
                     
                     % Update the plot.
                     set(o.h_plot(k), 'XData', x_r, 'YData', y_r);
@@ -257,6 +262,10 @@ classdef LinePlotReducer < handle
                 %fprintf('Callback ran\n');
             end
         end
+    end
+    
+    methods (Static)
+       test_plotting_speed %sl.plot.big_data.LinePlotReducer.test_plotting_speed 
     end
     
 end
