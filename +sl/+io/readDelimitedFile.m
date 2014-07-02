@@ -75,7 +75,7 @@ in.parse_headers = false; %NYI - this is primarily for labels of headers
 in.default_ca    = '';
 in.deblank_all   = false;
 in.strtrim_all   = false;
-in.row_delimiter = '\r\n|\n';
+in.row_delimiter = '\r\n|\r';
 in.make_row_delimiter_literal = false;
 in.make_delimiter_literal     = false;
 in.remove_empty_lines         = false;  %Any line which literally has no 
@@ -111,6 +111,10 @@ end
 %Lines handling
 %--------------------------------------------------------
 lines = regexp(text,in.row_delimiter,'split');
+
+if isempty(lines)
+    lines = {text};
+end
 
 if in.header_lines > 0
    extras.header_lines = lines(1:in.header_lines);
