@@ -11,6 +11,11 @@ function output = getFilesInFolder(folder_path,varargin)
 %
 %   OPTIONAL INPUTS
 %   =======================================================================
+%   TODO: Finish documentation
+%
+%   check_single_match : Not yet documented :/
+%   type : Not yet documented :/
+%
 %   ext : default ''
 %       If not empty filters on the extension. Leading period optional.
 %   regexp : (default '')
@@ -29,7 +34,10 @@ function output = getFilesInFolder(folder_path,varargin)
 %   See Also:
 %   sl.dir.rdir
 
+in.check_single_match = false;
+in.type = 0; %0 - file, 1 - folder, 2 - both
 in.ext = ''; %file extension
+in.match_number = [];
 in.regexp = ''; %NOTE: All regex must be escaped
 in.use_java = false;
 in = sl.in.processVarargin(in,varargin);
@@ -43,6 +51,15 @@ if in.use_java
     
     if ~isempty(in.regexp)
        error('Regular Expression support not build into java version yet') 
+    end
+    if in.type ~= 0
+       error('Only type 0 is supported for the Java version currently') 
+    end
+    if in.check_single_match
+       error('Checking for a single match is not supported with this version') 
+    end
+    if ~isempty(in.match_number)
+       error('Not supported with Java version') 
     end
     
     if ~isempty(in.ext)
@@ -84,14 +101,38 @@ else
     %     isdir
     %     datenum
     
-    temp([temp.isdir]) = [];
+    if in.type == 0
+        temp([temp.isdir]) = [];
+    elseif in.type == 1
+        temp(~[temp.isdir]) = [];
+    elseif in.type == 2
+        %do nothing
+    else
+        error('Unrecognized option type: %d',in.type)
+    end
     
+    %NOTE: The order of these filters is a design choice (not necessarily
+    %the right one). Eventually a bank of filters might be desirable ...
     if ~isempty(in.regexp)
        regex_matches = regexp({temp.name},in.regexp,'match','once');
        delete_mask = cellfun('isempty',regex_matches); 
        temp(delete_mask) = [];
     end
 
+    if ~isempty(in.match_number)
+       %NOTE: We only get one numberic match, which is why I put this
+       %2nd so that you could filter out options via the regexp above
+       regex_matches = regexp({temp.name},'\d+','match','once');
+       found_number  = cellfun(@str2double,regex_matches);
+       delete_mask   = found_number ~= in.match_number; 
+       temp(delete_mask) = []; 
+    end
+    
+    
+    if in.check_single_match && length(temp) ~= 1
+        error('Singular file match requested but %d files were found',length(temp))
+    end
+    
     output = sl.dir.file_list_result;
     
     output.file_names = {temp.name};
