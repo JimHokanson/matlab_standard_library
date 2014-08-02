@@ -3,8 +3,9 @@ function I = findSingularMatch(string_to_match,cellstr_data,varargin)
 %
 %   I = sl.str.findSingularMatch(string_to_match,cellstr_data)
 %
-%   This function can be used to find a match with the added check of 
-%   ensuring that it is a singular match
+%   This function matches a string against an array of strings (cell array
+%   of strings) and ensures that only a singular match is found (i.e. not
+%   zero matches or more than one).
 %
 %   INPUTS
 %   -----------------------------------------------------------
