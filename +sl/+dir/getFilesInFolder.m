@@ -2,24 +2,28 @@ function output = getFilesInFolder(folder_path,varargin)
 %
 %   output = sl.dir.getFilesInFolder(folder_path,varargin)
 %
-%   OUTPUT
-%   ===================================================
-%   output :
-%           @type sl.dir.file_list_result
+%   Outputs:
+%   --------
+%   output : sl.dir.file_list_result OR java.io.File[]
 %
-%           - if use_java is true, type is java.io.File[]
-%
-%   OPTIONAL INPUTS
-%   =======================================================================
-%   ext : (default ''), if not empty filters on the extension
-%   use_java : (default false), if true the result uses Java, this can
-%       avoid some problems with Unicode file paths. Eventually I would
-%       like to have code that makes this unecessary and just works
+%   Optional Inputs:
+%   ----------------
+%   ext : (default '')
+%       If not empty filters on the extension.
+%   use_java : (default false), 
+%       If true the result uses Java, this can avoid some problems with
+%       Unicode file paths. Eventually I would like to have code that makes
+%       this unecessary and just works.
 %
 %   IMPROVEMENTS
 %   =======================================================================
 %   1) I'd like to wrap this into the searcher objects and get rid of this
-%   function in favor of a method.
+%   function in favor of a method. (NOTE: Actually, I don't mind keeping
+%   the name (perhaps move as static method of dir, but change innards to
+%   use internals)
+%
+%   See Also:
+%   sl.dir.file_list_result
 
 in.ext = ''; %file extension
 in.use_java = false;
@@ -28,7 +32,7 @@ in = sl.in.processVarargin(in,varargin);
 
 if in.use_java
     %This bit of code was written to handle file names which were not 7-bit
-    %ascii. In addition
+    %ascii.
     dir_obj    = java.io.File(folder_path);
     dir_files  = dir_obj.listFiles;
     if ~isempty(in.ext)
