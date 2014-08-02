@@ -3,7 +3,15 @@ classdef (Hidden) toObject < sl.obj.handle_light
     %   Class:
     %   sl.struct.toObject
     %
-    %   Copies fields to object from struct
+    %   Copies fields to object from struct.
+    %
+    %   The resulting object is a property of this object.
+    %
+    %   I created an object because there was additional information
+    %   besides just the converted object that I wanted to hold onto.
+    %   Since I didn't know how complicated it was going to get I decided
+    %   to create the temporary conversion object.
+    %
     %
     %   Implementation Notes
     %   =======================================================================
@@ -22,6 +30,13 @@ classdef (Hidden) toObject < sl.obj.handle_light
     
     methods
         function obj = toObject(old_obj,s,varargin)
+            %
+            %
+            %   :/ I should really switch the input order
+            %
+            %   Inputs first, then pointers ...
+            %
+            %
             %   INPUTS
             %   =======================================================================
             %   old_obj : handle or value object, for value objects the result will need to

@@ -3,6 +3,14 @@ classdef (Hidden) searcher < sl.obj.handle_light
     %   Class:
     %   sl.dir.searcher
     %
+    %   I completely forgot how this class was supposed to be used. This
+    %   needs to be clarified and most likely refactored to be more
+    %   obvious.
+    %
+    %   Implementations:
+    %   sl.dir.searcher.folder_default
+    %   
+    %
     %   Search subdirectories ....
     %
     %   See Also:

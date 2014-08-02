@@ -67,6 +67,7 @@ classdef calling_function_info < sl.obj.handle_light
                 obj.line_number = s(idx).line;
             end
             
+            %NOTE: I think this was meant to 
             %Debug commands only allowed when in debug mode
 %             for iLevel = 1:level
 %                dbup 

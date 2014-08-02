@@ -3,6 +3,10 @@ classdef (Hidden) list_methods
     %   Class:
     %   sl.dir.list_methods
     %
+    %   This should be reorganized. These are static methods that can be
+    %   used to enumerate the contants of a directory ...
+    %   
+    %
     %   The idea is to expand the list methods with other options which
     %   return more data like data modified and attributes (size, hidden,
     %   etc)

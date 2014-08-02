@@ -1,9 +1,13 @@
 function explain
 %
 %
-%   See "explain_error.md" in larger projects. 
+%   See "explain_error.md" in 'docs/larger projects'. 
 
-error('Not yet implemented')
+%error('Not yet implemented')
+
+eval(fileread(which('sl.stack.grabCallerWorkspace')))
+
+ex = sl.error.explain(lasterror,DEBUG_s);
 
 %See: http://en.wikibooks.org/wiki/MATLAB_Programming/Error_Messages
 
@@ -21,7 +25,7 @@ error('Not yet implemented')
 
 %2) Examine error lines and show exact fault ...
 %
-%   IN OTHER WORDS, EXPALIN THE ERROR
+%   IN OTHER WORDS, EXPLAIN THE ERROR
 
 %ERRORS: %This will eventually be organized into code 
 %a bit better ...

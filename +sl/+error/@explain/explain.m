@@ -43,17 +43,39 @@ classdef explain
        ALLOW_ERROR_REGISTRATION = true %The idea with this variable is
        %that we can log errors that we are not familiar with into a 
        %file for later processing.
+       %
+       %??? How would we register these things???
     end
     
     properties
     end
     
     methods
-        function obj = explain(ME)
+        function obj = explain(ME,workspace_variables)
            %Display identifier
            
+           %Step 1: Did the error come from an unsaved file?
+           %---------------------------------------------------------------
+           %If so, let the user know we can't do anything until the file is
+           %saved. Also, we could check if the unsaved file is in the
+           %stack, perhaps indicating a failure as well.
+           %
+           %NOTE: We need to be able to handle the editor not being
+           %available
+           %
+           %    TODO: Ask question at this point as to whether or not the
+           %    user should continue ...
+           %
+           %STILL TO DO
            
+           %Is this always correct? 
            
+           keyboard
+           
+        end
+        function logError(obj)
+           %
+           %TODO: The goal of this error is to log
         end
     end
     
