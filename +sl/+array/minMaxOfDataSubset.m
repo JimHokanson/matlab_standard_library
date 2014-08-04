@@ -1,4 +1,4 @@
-function minMaxOfDataSubset(varargin)
+function varargout = minMaxOfDataSubset(varargin)
 %
 %
 %   minMaxOfDataSubset(data,start1,stop1,start2,stop2,dim_1_or_2)

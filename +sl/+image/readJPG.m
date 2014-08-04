@@ -3,6 +3,16 @@ function image_out = readJPG(uint8_data_or_filepath,option)
 %
 %   image_out = sl.image.readJPG(uint8_data_or_filename,*option)
 %
+%   This function reads a JPEG image from file OR MEMORY. It was originally
+%   written to facilitate decoding of videos that had been read into memory
+%   that used the mjpeg (motion JPEG) codec (essentially just a series of 
+%   JPEG's that form a video).
+%
+%   It relies on the libjpeg-turbo project.
+%
+%   This function will be much faster at processing in memory pictures as
+%   compared to writing the image to disk just to have it be processed.
+%
 %   INPUTS
 %   ---------------------------------------------------------------
 %   uint8_data_or_filepath : (uint8 or path to a jpg image)

@@ -84,7 +84,7 @@ for iChan = 1:n_channels_y
         
     %chan_vector = [iChan iChan];
     
-    
+    %TODO: This can go really wrong if the input is a single ...
     [~,~,indices_of_max,indices_of_min] = minMax_fh(y,bound_indices(1:end-1),...
         bound_indices(2:end),iChan,iChan,1);
     
