@@ -1,31 +1,61 @@
-function flag = contains(s1,str_to_match,varargin)
+function flag = contains(input_string,string_to_match,varargin)
 %
 %   sl.str.contains(s1,str_to_match,varargin)
 %
+%   Checks if one string can be found in another string.
+%
+%   Inputs:
+%   -------
+%   input_string: char
+%   string_to_match: char
+%
+%   Optional Inputs:
+%   ----------------
+%   location: (default 'anywhere'
+%       - 'start'
+%       - 'end'
+%       - 'anywhere'
+%
+%   Examples:
+%   ----------
+%   >> sl.str.contains('testing','ing','location','end')
+%     ans = 1
+%
+%   >> sl.str.contains('testing','est','location','anywhere')
 
-%TODO: Should check for anywhere, otherwise throw an error
-
-%Could add case sensitivity as well ...
-
-in.location = 'anywhere'; %
-%Options:
-%   - start
-%   - end,
-%   - anywhere
+in.case_sensitive = true;
+in.location = 'anywhere';
 in = sl.in.processVarargin(in,varargin);
 
 switch in.location
     case 'start'
-        flag = strncmp(s1,str_to_match,length(str_to_match));
+        if in.case_sensitive
+            flag = strncmp(input_string,string_to_match,length(string_to_match));
+        else
+            flag = strncmpi(input_string,string_to_match,length(string_to_match));
+        end
     case 'end'
-        length_str = length(str_to_match);
-        if length(s1) < length_str
+        length_str = length(string_to_match);
+        if length(input_string) < length_str
             flag = false;
         else
-            flag = strcmp(s1((end-length_str+1):end),str_to_match);
+            if in.case_sensitive
+                flag = strcmp(input_string((end-length_str+1):end),string_to_match);
+            else
+                flag = strcmpi(input_string((end-length_str+1):end),string_to_match);
+            end
+        end
+    case 'anywhere'
+        if in.case_sensitive
+            flag = any(strfind(input_string,string_to_match));
+        else
+            %I had considered using regexpi but then I need to worry about
+            %translating the string to match 
+            %flag = any(regexpi(input_string,regexptranslate(string_to_match),'match','once')
+            flag = any(strfind(lower(input_string),lower(string_to_match)));
         end
     otherwise
-        flag = any(strfind(s1,str_to_match));
+        error('Unrecognized option for string match: %s',in.location);
 end
 
 end

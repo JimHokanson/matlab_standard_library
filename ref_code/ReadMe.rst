@@ -1,0 +1,1 @@
+This folder contains code that I am not planning on using in the library but that I am using as a reference for code that I am containing. Since it is in a separate folder, it will normally not be added to the path for usage.

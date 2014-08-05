@@ -18,6 +18,10 @@ classdef data < handle
         n_channels
     end
     
+    properties 
+       history = {}
+    end
+    
     %Optional properties -------------------------------------------------
     properties
         
@@ -32,9 +36,15 @@ classdef data < handle
             %
             %    obj = sci.time_series.data(data_in,dt,varargin)
             %
+            %   Optional Inputs:
+            %   ----------------
+            %   history: 
+            %   units:
+            %   channel_labels:
             %
             %    data_in must be with samples going down the rows
             
+            in.history = {};
             in.units = 'Unknown';
             in.channel_labels = ''; %TODO: If numeric, change to string ...
             in = sl.in.processVarargin(in,varargin);
@@ -50,6 +60,8 @@ classdef data < handle
             end
             
             obj.units = in.units;
+            
+            obj.history = in.history;
         end
         function plot(obj,channels)
             if ~exist('channels','var')
@@ -58,6 +70,17 @@ classdef data < handle
                 temp = sl.plot.big_data.LinePlotReducer(obj.time,obj.d(:,channels));
             end
             temp.renderData();
+        end
+        function addHistoryElements(obj,history_elements)
+            if iscell(history_elements);
+                if size(history_elements,2) > 1
+                    history_elements = history_elements';
+                end
+            elseif ~ischar(history_elements)
+                error('Invalid history element type')
+            end
+            
+            obj.history = [obj.history; history_elements];
         end
     end
     

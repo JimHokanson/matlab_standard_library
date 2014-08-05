@@ -4,7 +4,7 @@ function output = genFromCounts(counts,values,varargin)
 %   output = sl.array.genFromCounts(counts,*values)
 %
 %   Generates an array by replicating each value the number of times
-%   specified in counts. It uses a cumsum() (cumulative sum) trick.
+%   specified in counts. It uses a cumaltive sum trick.
 %
 %   QUESTION
 %   ??? Is there a better name for this function?
