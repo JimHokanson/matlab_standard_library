@@ -1,0 +1,1 @@
+These are functions that I want to be able directly without digging deep into packages. These are typically functions that will be called from the command window.

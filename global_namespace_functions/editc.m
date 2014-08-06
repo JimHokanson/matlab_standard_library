@@ -36,6 +36,7 @@ else
     class_name = class_name_or_object;
 end
 
+%Which resolves the class or function rather than the property.
 class_path = which(class_name);
 
 matlab.desktop.editor.openDocument(class_path);
