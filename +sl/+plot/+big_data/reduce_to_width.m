@@ -37,9 +37,6 @@ function [x_reduced, y_reduced] = reduce_to_width(x, y, axis_width_in_pixels, x_
 %   Original Function By:
 %   Tucker McClure (Mathworks)
 
-% We'll need the first point to the left of the limits, the first point
-% to the right to the right of the limits, and the min and max at every
-% pixel inbetween. That's 1 + 1 + 2*(width - 2) = 2*width total points.
 n_points = 2*axis_width_in_pixels;
 
 % If the data is already small, there's no need to reduce.
@@ -72,6 +69,8 @@ n_edges  = axis_width_in_pixels + 1;
 indices  = zeros(2,axis_width_in_pixels);
 
 minMax_fh = @sl.array.minMaxOfDataSubset;
+
+%TODO: Add data check
 
 for iChan = 1:n_channels_y
     

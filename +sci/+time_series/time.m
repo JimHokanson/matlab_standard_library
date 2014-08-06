@@ -41,9 +41,25 @@ classdef time < sl.obj.display_class
     end
     
     methods
-        function obj = time(dt,n_samples)
+        function obj = time(dt,n_samples,varargin)
             %
             %   obj = sci.time_series.time(dt,n_samples)
+            
+            %TODO: Document these optional inputs
+            %sample_offset - for when the
+            in.start_offset = [];
+            in.sample_offset = [];
+            in = sl.in.processVarargin(in,varargin);
+            
+            %TODO: I think I'd like to clean this up ...
+            if ~isempty(in.sample_offset)
+                obj.start_offset = dt*(in.sample_offset-1);
+            elseif ~isempty(in.start_offset)
+                obj.start_offset = in.start_offset;
+            else
+                obj.start_offset = 0;
+            end
+            
             obj.dt = dt;
             obj.n_samples = n_samples;
         end
@@ -57,7 +73,9 @@ classdef time < sl.obj.display_class
         function times = getTimesFromIndices(obj,indices)
             times = obj.start_offset + (indices-1)*obj.dt;
         end
+        
         %TODO: Provide interpolation indices function - ???? What does this mean????
+        
         function indices = getNearestIndices(obj,times)
             indices = round((times - obj.start_offset)./obj.dt)+1;
         end
