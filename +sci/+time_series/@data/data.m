@@ -18,8 +18,8 @@ classdef data < handle
         n_channels
     end
     
-    properties 
-       history = {}
+    properties
+        history = {}
     end
     
     %Optional properties -------------------------------------------------
@@ -38,7 +38,7 @@ classdef data < handle
             %
             %   Optional Inputs:
             %   ----------------
-            %   history: 
+            %   history:
             %   units:
             %   channel_labels:
             %
@@ -49,7 +49,7 @@ classdef data < handle
             in.channel_labels = ''; %TODO: If numeric, change to string ...
             in = sl.in.processVarargin(in,varargin);
             
-            obj.n_channels = size(data_in,1);
+            obj.n_channels = size(data_in,2);
             
             obj.d = data_in;
             
@@ -63,11 +63,26 @@ classdef data < handle
             
             obj.history = in.history;
         end
-        function plot(obj,channels)
-            if ~exist('channels','var')
-                temp = sl.plot.big_data.LinePlotReducer(obj.time,obj.d);
+        function plot(obj,local_options,plotting_options)
+            %
+            %
+            %   TODO: How do we want to plot multiple repetitions ...
+            %
+            %   Optional Inputs:
+            %   - Pass in as a cell array for the second input.
+            %   ----------------
+            %   channels: default 'all'
+            %       Pass in the numeric values of the channels to plot.
+            %
+            
+            
+            in.channels = 'all';
+            in = sl.in.processVarargin(in,local_options);
+            
+            if ischar(in.channels)
+                temp = sl.plot.big_data.LinePlotReducer(obj.time,obj.d,plotting_options{:});
             else
-                temp = sl.plot.big_data.LinePlotReducer(obj.time,obj.d(:,channels));
+                temp = sl.plot.big_data.LinePlotReducer(obj.time,obj.d(:,in.channels),plotting_options{:});
             end
             temp.renderData();
         end
@@ -82,7 +97,76 @@ classdef data < handle
             
             obj.history = [obj.history; history_elements];
         end
+        function event_aligned_data = getDataAlignedToEvent(obj,event_times,new_time_range,varargin)
+            %
+            %
+            %    Inputs:
+            %    -------
+            %    event_times:
+            %    new_time_range: [min max] with 0 being the event times
+            %
+            %    Optional Inputs:
+            %    ----------------
+            %    allow_overlap:
+            %
+            
+            %TODO: Add history support ...
+            
+            if size(obj.d,3) ~= 1
+                error('Unable to compute aligned data when the 3rd dimension is not of size 1')
+            end
+            
+            %TODO: Check for no events ...
+            
+            %???? - how should we adjust for time offsets where our
+            %event_times are occuring between samples ????
+            
+            %What options do we want to implement ...
+            
+            %We could allow time range
+            
+            %TODO: What if things are out of range ...
+            
+            in.allow_overlap = true;
+            in = sl.in.processVarargin(in,varargin);
+            
+            [indices,time_errors] = obj.time.getNearestIndices(event_times);
+            
+            start_index_1 = obj.time.getNearestIndices(event_times(1)+new_time_range(1));
+            end_index_1 = obj.time.getNearestIndices(event_times(1)+new_time_range(2));
+            
+            dStart_index = indices(1) - start_index_1;
+            dEnd_index   = end_index_1 - indices(1);
+            
+            n_samples_new = dEnd_index + dStart_index + 1;
+            
+            data_start_indices = indices - dStart_index;
+            data_end_indices   = indices + dEnd_index;
+            
+            n_events = length(event_times);
+            
+            %TODO: Should match class
+            new_data = zeros(n_samples_new,obj.n_channels,n_events);
+            cur_data = obj.d;
+            %TODO: Is this is rate limiting step, should we mex it ????
+            for iEvent = 1:n_events
+                cur_start = data_start_indices(iEvent);
+                cur_end   = data_end_indices(iEvent);
+                new_data(:,:,iEvent) = cur_data(cur_start:cur_end,:);
+            end
+            
+            %TODO: This needs to be cleaned up ...
+            %Ideally we could call a copy object method ...
+            
+            new_time_object = obj.time.getNewTimeObjectForDataSubset(new_time_range(1),n_samples_new);
+            
+            event_aligned_data = sci.time_series.data(new_data,new_time_object);
+            
+        end
+        function [data,time] = getRawDataAndTime(obj)
+           data = obj.d;
+           time = obj.time.getTimeArray();
+        end
     end
-    
 end
 
