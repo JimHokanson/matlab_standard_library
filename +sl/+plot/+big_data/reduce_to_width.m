@@ -66,7 +66,9 @@ n_edges  = axis_width_in_pixels + 1;
 %NOTE: We'll do linear indexing so we size 2 x n instead of n x 2
 %so that when we linearize we get 1,2 over each span rather than
 %1 over the span then 2 over the span
-indices  = zeros(2,axis_width_in_pixels);
+%
+%
+%indices  = zeros(2,axis_width_in_pixels);
 
 minMax_fh = @sl.array.minMaxOfDataSubset;
 
@@ -78,12 +80,21 @@ for iChan = 1:n_channels_y
         bound_indices = h__getBoundIndices(x,iChan,n_edges,x_limits);
     end
     
-    %indices(:,1)   = bound_indices(1);
-    %indices(:,end) = bound_indices(end);
-        
-    %chan_vector = [iChan iChan];
+    if isempty(bound_indices)
+       continue 
+    end
+       
     
-    %TODO: This can go really wrong if the input is a single ...
+    %This can go really wrong if the input is a single ...
+    %------------------------------------------------------
+    if ~isa(bound_indices,'double')
+        error('Bound indices must be of type double currently ...')
+    end
+    
+    if ~isa(y,'double')
+       error('Data must currently be of type double') 
+    end
+    
     [~,~,indices_of_max,indices_of_min] = minMax_fh(y,bound_indices(1:end-1),...
         bound_indices(2:end),iChan,iChan,1);
     
@@ -148,13 +159,27 @@ function bound_indices = h__getBoundIndices(x,cur_column_I,n_points,x_limits)
 %   --------
 %   bound_indices :
 %       length(bound_indices) => n_points , Indices are absolute relative
-%       to the original data array
+%       to the original data array. If the data are outside of the limits,
+%       then bound_indices is empty.
+%
+%       
 
 
 % Find the starting and stopping indices for the current limits.
 
     if isobject(x)
         
+        if x_limits(1) > x.end_time || x_limits(2) < x.start_time
+            bound_indices = [];
+            return
+        end
+        
+        %NOTE: These adjustments are overkill when this limit is way off.
+        %For example. imagine we are plotting from 1 to 1000 but our data
+        %only goes from 900 to 1000. Let's say we are doing 10 points per
+        %pixel. This gives us roughly 100 points (1000/10). We update our
+        %start to be 900 so we know have roughly 1 point per pixel instead
+        %of 10 (100 samples/100 points).
         if x_limits(1) < x.start_time
            x_limits(1) = x.start_time;
         end
@@ -180,6 +205,11 @@ function bound_indices = h__getBoundIndices(x,cur_column_I,n_points,x_limits)
            bound_indices(end) = bound_indices(end)-1; 
         end
     else
+        
+        if x_limits(1) > x(end) || x_limits(2) < x(1)
+            bound_indices = [];
+            return
+        end
         
         if x_limits(1) < x(1)
            x_limits(1) = x(1);

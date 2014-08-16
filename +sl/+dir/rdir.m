@@ -1,6 +1,10 @@
 function [varargout] = rdir(rootdir,varargin)
 % RDIR - Recursive directory listing
 % 
+%
+%   This is temporary and will be removed. It has multiple issues that I am
+%   not a big fan of.
+%
 %  d = rdir(ROOT)
 %  d = rdir(ROOT, TEST)
 %  d = rdir(ROOT, TEST, RMPATH)

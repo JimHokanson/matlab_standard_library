@@ -3,10 +3,10 @@ function base_path = getMyBasePath(file_name,n_dirs_up)
 %
 %   s = getMyBasePath(*file_name,*n_dirs_up)
 %
-%   
+%   TODO: This should be in the stack path ...
 %
-%   OUTPUTS
-%   =======================================================================
+%   OUTPUTS:
+%   --------
 %   base_path : path to cotaining folder of function that is calling
 %       this function.
 %

@@ -26,13 +26,11 @@ function output = getFilesInFolder(folder_path,varargin)
 %       avoid some problems with Unicode file paths. Eventually I would
 %       like to have code that makes this unecessary and just works.
 %
-%   IMPROVEMENTS
-%   =======================================================================
-%   1) I'd like to wrap this into the searcher objects and get rid of this
-%   function in favor of a method.
 %
 %   See Also:
 %   sl.dir.rdir
+
+%TODO: Allow multiple folder paths ...
 
 in.check_single_match = false;
 in.type = 0; %0 - file, 1 - folder, 2 - both

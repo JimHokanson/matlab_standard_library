@@ -3,7 +3,7 @@ classdef (Hidden) file_list_result < sl.obj.handle_light
     %   Class:
     %   sl.dir.file_list_result
     %
-    %   Result class for:
+    %   This class is the returned value when you call:
     %   sl.dir.getFilesInFolder
     %
     %   See Also:

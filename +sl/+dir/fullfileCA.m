@@ -6,13 +6,13 @@ function paths_out = fullfileCA(root,paths_in)
 %   Performs the equivalent of fullfile() on each root/pathsIn pair. It
 %   tries to accomplish this in the quickest way possible.
 %
-%   INPUTS
-%   =======================================================================
+%   Inputs:
+%   -------
 %   root     : (string), root path for appending to
 %   paths_in : (cellstr), paths to append to the root
 %
-%   OUTPUTS
-%   =======================================================================
+%   Outputs:
+%   --------
 %   paths_out : (cellstr) resultant concatenation of paths
 %
 %   EXAMPLE

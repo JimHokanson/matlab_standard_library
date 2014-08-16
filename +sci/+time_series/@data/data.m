@@ -1,4 +1,4 @@
-classdef data < handle
+classdef data < sl.obj.handle_light
     %
     %   Class:
     %   sci.time_series.data
@@ -19,7 +19,16 @@ classdef data < handle
     end
     
     properties
-        history = {}
+        history = {} %Right now this is an arbitrary cell array that can
+        %be added to as necessary using:
+        %
+        %   addHistoryElements()
+        %
+        %It is meant to help track the source of data and how it is
+        %processed
+        devents %Container with class: sci.time_series.time_events
+        %
+        %   See: addEventElements()
     end
     
     %Optional properties -------------------------------------------------
@@ -36,17 +45,24 @@ classdef data < handle
             %
             %    obj = sci.time_series.data(data_in,dt,varargin)
             %
+            %   Inputs:
+            %   -------
+            %   data_in: array [samples x channels]
+            %   time_object_or_dt:
+            %
             %   Optional Inputs:
             %   ----------------
             %   history:
             %   units:
             %   channel_labels:
+            %   events: array or cell array of sci.time_series.time_events
             %
             %    data_in must be with samples going down the rows
             
             in.history = {};
             in.units = 'Unknown';
             in.channel_labels = ''; %TODO: If numeric, change to string ...
+            in.events = [];
             in = sl.in.processVarargin(in,varargin);
             
             obj.n_channels = size(data_in,2);
@@ -59,32 +75,72 @@ classdef data < handle
                 obj.time = sci.time_series.time(time_object_or_dt,obj.n_channels);
             end
             
+            obj.devents = containers.Map();
+            if ~isempty(in.events)
+                obj.addEventElements(in.events);
+            end
+            
             obj.units = in.units;
             
             obj.history = in.history;
         end
-        function plot(obj,local_options,plotting_options)
+        function plot(objs,local_options,plotting_options)
             %
             %
             %   TODO: How do we want to plot multiple repetitions ...
             %
-            %   Optional Inputs:
-            %   - Pass in as a cell array for the second input.
-            %   ----------------
+            %   plot(obj,local_options,plotting_options)
+            %
+            %   Local Options: cell array
+            %   -------------------------
             %   channels: default 'all'
             %       Pass in the numeric values of the channels to plot.
             %
+            %   Plotting Options: cell array
+            %   ----------------------------
             
+            if nargin < 2
+                local_options = {};
+            end
+            if nargin < 3
+                plotting_options = {};
+            end
             
             in.channels = 'all';
             in = sl.in.processVarargin(in,local_options);
             
-            if ischar(in.channels)
-                temp = sl.plot.big_data.LinePlotReducer(obj.time,obj.d,plotting_options{:});
-            else
-                temp = sl.plot.big_data.LinePlotReducer(obj.time,obj.d(:,in.channels),plotting_options{:});
+            for iObj = 1:length(objs)
+                if iObj == 2
+                    hold all
+                end
+                if ischar(in.channels)
+                    temp = sl.plot.big_data.LinePlotReducer(objs(iObj).time,objs(iObj).d,plotting_options{:});
+                else
+                    temp = sl.plot.big_data.LinePlotReducer(objs(iObj).time,objs(iObj).d(:,in.channels),plotting_options{:});
+                end
+                temp.renderData();
             end
-            temp.renderData();
+            
+            %TODO: Do this only if not already in this state
+            %i.e. don't disable it if it wasn't enabled
+            hold off
+            
+            %TODO: Add labels ...
+        end
+        function addEventElements(obj,event_elements)
+            %
+            %    Inputs:
+            %    -------
+            %    event_elements : cell or cell array of sci.time_series.time_events
+            
+            if iscell(event_elements)
+                event_elements = [event_elements{:}];
+            end
+            
+            for iElement = 1:length(event_elements)
+                cur_element = event_elements(iElement);
+                obj.devents(cur_element.name) = cur_element;
+            end
         end
         function addHistoryElements(obj,history_elements)
             if iscell(history_elements);
@@ -96,6 +152,37 @@ classdef data < handle
             end
             
             obj.history = [obj.history; history_elements];
+        end
+        function zeroTimeByEvent(objs,event_name_or_time_array)
+           %
+           %    Inputs:
+           %    -------
+           %    event_name_or_time_array: char or array
+           %        If a string, this refers to one of the internal events
+           %        in the system.
+           
+           
+           
+           n_objects = length(objs);
+           if isnumeric(event_name_or_time_array)
+               event_times = event_name_or_time_array;
+           else
+               event_times = zeros(1,n_objects);
+               for iObj = 1:n_objects
+                   temp_event_obj = objs(iObj).devents(event_name_or_time_array);
+                   if length(temp_event_obj.times) ~= 1
+                       error('Each event must have only 1 time value ..., for now')
+                   end
+                   event_times(iObj) = temp_event_obj.times;
+               end
+           end
+           
+           for iObj = 1:n_objects
+              objs(iObj).time.start_offset = objs(iObj).time.start_offset - event_times(iObj); 
+           end
+           
+           %TODO: We need to zero the times in the events as well ...
+           
         end
         function event_aligned_data = getDataAlignedToEvent(obj,event_times,new_time_range,varargin)
             %
@@ -145,7 +232,7 @@ classdef data < handle
             
             n_events = length(event_times);
             
-            %TODO: Should match class
+            %TODO: Should match class: zeros(a,b,'single') etc ...
             new_data = zeros(n_samples_new,obj.n_channels,n_events);
             cur_data = obj.d;
             %TODO: Is this is rate limiting step, should we mex it ????
@@ -164,8 +251,8 @@ classdef data < handle
             
         end
         function [data,time] = getRawDataAndTime(obj)
-           data = obj.d;
-           time = obj.time.getTimeArray();
+            data = obj.d;
+            time = obj.time.getTimeArray();
         end
     end
 end

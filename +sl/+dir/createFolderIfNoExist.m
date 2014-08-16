@@ -1,6 +1,16 @@
 function output_path = createFolderIfNoExist(varargin)
-%createIfNecessary: creates a folder if it doesn't exist
+%createIfNecessary: Creates a folder if it doesn't exist
 %
+%   This function creates a folder if it does not exist. In addition it can
+%   be used to:
+%       - construct the path of the folder
+%       - construct the path to a file, ensuring that the folder path to
+%       the file exists
+%
+%   If multiple folders are missing in the path they will all be created.
+%
+%   Function Forms:
+%   ---------------
 %   #1 - just create the folder if necessary
 %   folder_path = sl.dir.createFolderIfNoExist(folderPath) - creates the folderPath
 %   if it doesn't exist
