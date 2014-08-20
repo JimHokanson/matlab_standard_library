@@ -7,6 +7,10 @@ classdef butter
     %   trade off of not being very steep in transition, thus typically
     %   requiring a higher order filter ...
     %
+    %   TODO: Decide on an interface that these things must have for
+    %   actually filtering the data ...
+    %   Also - get a 
+    %
     %
     %   See Also:
     %   sci.time_series.data_filterer

@@ -47,10 +47,12 @@ classdef data_filterer < handle
         function addFilter(obj,filter)
             obj.data_filters = {obj.data_filters{:} filter}; %#ok<CCAT>
         end
-        function data_out = filter(obj,data_obj,varargin)
+        function data_out = filter(obj,data_objs,varargin)
             %
             %
-            %
+            %   Inputs:
+            %   -------
+            %   data_objs : sci.time_series.data
             
             %TODO: Support data objects ...
             
@@ -73,26 +75,26 @@ classdef data_filterer < handle
                 error('There are no filters present')
             end
             
-            raw_data = data_obj.d;
             
-            for iObject = 1:length()
-            %The actual filtering
-            %-----------------------------
-            for iFilter = 1:length(all_filters)
-                cur_filter_obj = all_filters{iFilter};
-                
-                %TODO: Figure out how to make this generic ...
-                
-                
-                if cur_filter_obj.needs_fs
-                    data = cur_filter_obj.filter(raw_data,fs);
-                else
-                    data = cur_filter_obj.filter(data);
+            
+            for iObject = 1:length(data_objs)
+                raw_data = data_objs(iObject).d;
+                fs = data_objs(iObject).time.fs;
+                %The actual filtering
+                %-----------------------------
+                for iFilter = 1:length(all_filters)
+                    cur_filter_obj = all_filters{iFilter};
+
+                    %TODO: Figure out how to make this generic ...
+
+                    raw_data = cur_filter_obj.filter(raw_data,fs);
+
+
                 end
-            end
+                data_objs(iObject).d = raw_data;
             end
             
-            data_out = data;
+            
             
         end
     end
