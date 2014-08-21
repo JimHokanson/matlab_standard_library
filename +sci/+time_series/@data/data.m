@@ -127,6 +127,9 @@ classdef data < sl.obj.handle_light
             
             %TODO: Add labels ...
         end
+    end
+    %Adding things --------------------------------
+    methods
         function addEventElements(obj,event_elements)
             %
             %    Inputs:
@@ -184,6 +187,8 @@ classdef data < sl.obj.handle_light
            %TODO: We need to zero the times in the events as well ...
            
         end
+    end
+    methods
         function event_aligned_data = getDataAlignedToEvent(obj,event_times,new_time_range,varargin)
             %
             %
