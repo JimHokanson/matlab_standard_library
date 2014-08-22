@@ -16,8 +16,9 @@ function deprecated(old_file_name, new_file_name, reason_str)
 %
 %   
 %   IMPROVEMENTS
-%   =======================================================================
-%   1) 
+%   ------------
+%   1) Link to the caller of the caller, not the caller - maybe just do a
+%   stack dump
 %
 %   EXAMPLE
 %   =======================================================================

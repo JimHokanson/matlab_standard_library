@@ -29,7 +29,7 @@ classdef (Hidden) path
            %If the latter, this would cause problems
            %
            %
-           value = sl.dir.getMyBasePath('',1);
+           value = sl.stack.getMyBasePath('',1);
         end
         %NOTE: I had thought about creating a GUI which would toggle
         %beta code being on the path or not.

@@ -12,7 +12,7 @@ classdef calling_function_info < sl.obj.handle_light
     %   requested
     %   2) Multiple levels???
     %   3) Add on an option for a fully resolved name (make a separate
-    %   property)
+    %   property) -> i.e. for when things are in packages
     
     properties
        line_number = NaN
@@ -49,7 +49,7 @@ classdef calling_function_info < sl.obj.handle_light
                 level = 2;
             end
             
-            s    = dbstack('-completenames');
+            s = dbstack('-completenames');
             assert(level > 0,'The input ''level'' must be > 0, %d observed',level);
 
             %NOTE: Stack has most recent on top
@@ -66,13 +66,6 @@ classdef calling_function_info < sl.obj.handle_light
                 obj.file_path   = s(idx).file;
                 obj.line_number = s(idx).line;
             end
-            
-            %NOTE: I think this was meant to 
-            %Debug commands only allowed when in debug mode
-%             for iLevel = 1:level
-%                dbup 
-%             end
-%             keyboard
         end
     end
 end

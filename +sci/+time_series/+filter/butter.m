@@ -23,16 +23,20 @@ classdef butter
        order   %Filter order
        cutoff_or_cutoffs
        type
-       method
+       zero_phase %logical
     end
     
     methods
         function obj = butter(order,cutoff_or_cutoffs,type,varargin)
             %
             %   Inputs:
-            %   -------  
-            %   cutoff_or_cutoffs :
-            %       The frequency bands to cutoff at, in Hz.
+            %   ------- 
+            %   order : number
+            %       The order of the filter. Higher orders lead to ... (JAH
+            %       TODO: finish description)
+            %   
+            %   cutoff_or_cutoffs : 
+            %       The frequency bands to cutoff at, in Hz. 
             %
             %   type : {'low','high','stop','pass'}
             %
@@ -40,7 +44,7 @@ classdef butter
             %   --------------------
             %   
             
-           in.method = 'filtfilt';
+           in.zero_phase = true;
            in = sl.in.processVarargin(in,varargin);
            
            obj.order  = order;
@@ -50,7 +54,7 @@ classdef butter
            end
            
            obj.type   = type;
-           obj.method = in.method;
+           obj.zero_phase = in.zero_phase;
            obj.cutoff_or_cutoffs = cutoff_or_cutoffs;
         end
         function data_out = filter(obj,data_in,fs)
@@ -59,30 +63,14 @@ classdef butter
             
            [B,A] = butter(obj.order,obj.cutoff_or_cutoffs/(fs/2),obj.type);
            
-           if ischar(obj.method)
-               filter_method = str2func(obj.method);
+           if obj.zero_phase
+               filter_method = @filtfilt;
            else
-               filter_method = obj.method;
+               filter_method = @filter;
            end
            
            data_out = filter_method(B,A,data_in);
         end
     end
-    
-% % % %     methods (Static)
-% % % %         function obj = createLowPassFilter(order,cutoff)
-% % % %            obj = sci.time_series.filter.butter(order,cutoff,'low');
-% % % %         end
-% % % %         function obj = createHighPassFilter(order,cutoff)
-% % % %            obj = sci.time_series.filter.butter(order,cutoff,'high'); 
-% % % %         end
-% % % %         function obj = createBandstopFilter(order,cutoffs)
-% % % %            obj = sci.time_series.filter.butter(order,cutoffs,'stop'); 
-% % % %         end
-% % % %         function obj = createBandPassFilter(order,cutoffs)
-% % % %            obj = sci.time_series.filter.butter(order,cutoffs,'pass');  
-% % % %         end
-% % % %     end
-    
 end
 

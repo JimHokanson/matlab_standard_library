@@ -47,8 +47,6 @@ function base_path = getMyBasePath(file_name,n_dirs_up)
 %   See Also:
 %       sl.dir.filepartsx
 
-sl.warning.deprecated('','sl.stack.getMyBasePath','This function has been moved to the stack package') 
-
 if ~exist('n_dirs_up','var')
     n_dirs_up = 0;
 end
