@@ -9,8 +9,11 @@ classdef butter
     %
     %   TODO: Decide on an interface that these things must have for
     %   actually filtering the data ...
-    %   Also - get a 
-    %
+    %   
+    %   Filter ToDos:
+    %   - plot filter response
+    %   - create filter display string
+    %   - get coefficients
     %
     %   See Also:
     %   sci.time_series.data_filterer

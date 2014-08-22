@@ -155,7 +155,17 @@ classdef data < sl.obj.handle_light
             end
             
             obj.history = [obj.history; history_elements];
+        end  
+    end
+    %Data changing --------------------------------------------------------
+    methods
+        function filter(obj,filters)
+            df = sci.time_series.data_filterer('filters',filters);
+            df.filter(obj);
         end
+    end
+    
+    methods
         function zeroTimeByEvent(objs,event_name_or_time_array)
            %
            %    Inputs:
@@ -187,8 +197,6 @@ classdef data < sl.obj.handle_light
            %TODO: We need to zero the times in the events as well ...
            
         end
-    end
-    methods
         function event_aligned_data = getDataAlignedToEvent(obj,event_times,new_time_range,varargin)
             %
             %

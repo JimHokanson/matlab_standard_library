@@ -3,7 +3,10 @@ classdef data_filterer < handle
     %   Class:
     %   sci.time_series.data_filterer
     %
-    %   This class was written to go with the class
+    %   This class was written to go with the data class.
+    %   It can either be called directly or via the filter() method of the
+    %   data class.
+    %
     %   TODO: Add usage example ...
     %
     %   TODO: Allow a shallow copy ...
@@ -11,6 +14,9 @@ classdef data_filterer < handle
     %   See Also:
     %   sci.time_series.data
     %   sci.time_series.filter.butter
+    %
+    %
+    %
     
     properties
     end
@@ -41,6 +47,7 @@ classdef data_filterer < handle
             obj.data_filters = in.filters;
             
         end
+
         function clearFilters(obj)
             obj.data_filters = {};
         end
@@ -99,9 +106,19 @@ classdef data_filterer < handle
         end
     end
     
+    methods (Static)
+        function listAvailableFilters(obj)
+           %TODO: Provide links
+           fprintf('List of implemented filters\n');
+           fprintf('------------------------------\n');
+           fprintf('Butterworth: sci.time_series.filter.butter\n');
+        end 
+    end
+    
     methods
         %         function disp()
-        %             TODO: List filters
+        %             TODO: List filters in this object
+        %             This should really call the display method of filters
         %         end
     end
     
