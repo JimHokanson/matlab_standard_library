@@ -47,7 +47,7 @@ else
 end
 
 if nargin == 3
-    reason_str = sprintf('\nReason\n\t%s',str,reason_str);
+    reason_str = sprintf('\nReason\n\t%s',reason_str);
 else
     reason_str = '';
 end
