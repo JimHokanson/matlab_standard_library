@@ -120,6 +120,8 @@ classdef time < sl.obj.display_class
             end
         end
     end
+    
+    %Construction methods -------------------------------------------------
     methods
         function new_time_object = getNewTimeObjectForDataSubset(obj,new_start_time,n_samples)
             %

@@ -54,14 +54,12 @@ classdef data_filterer < handle
         function addFilter(obj,filter)
             obj.data_filters = {obj.data_filters{:} filter}; %#ok<CCAT>
         end
-        function data_out = filter(obj,data_objs,varargin)
+        function filter(obj,data_objs,varargin)
             %
             %
             %   Inputs:
             %   -------
             %   data_objs : sci.time_series.data
-            
-            %TODO: Support data objects ...
             
             %TODO: Add history support ...
             
@@ -69,6 +67,7 @@ classdef data_filterer < handle
             
             %TODO: Allow a shallow copy
             in.additional_filters = [];
+            in.subtract_filter_result = false;
             in = sl.in.processVarargin(in,varargin);
             
             all_filters = obj.data_filters;
@@ -81,9 +80,7 @@ classdef data_filterer < handle
             if isempty(all_filters)
                 error('There are no filters present')
             end
-            
-            
-            
+
             for iObject = 1:length(data_objs)
                 raw_data = data_objs(iObject).d;
                 fs = data_objs(iObject).time.fs;
@@ -93,16 +90,16 @@ classdef data_filterer < handle
                     cur_filter_obj = all_filters{iFilter};
 
                     %TODO: Figure out how to make this generic ...
-
-                    raw_data = cur_filter_obj.filter(raw_data,fs);
-
+                    if in.subtract_filter_result
+                        temp_data = cur_filter_obj.filter(raw_data,fs);
+                        raw_data  = raw_data - temp_data;
+                    else
+                        raw_data = cur_filter_obj.filter(raw_data,fs);
+                    end
 
                 end
                 data_objs(iObject).d = raw_data;
-            end
-            
-            
-            
+            end            
         end
     end
     

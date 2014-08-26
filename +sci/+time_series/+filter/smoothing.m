@@ -36,16 +36,14 @@ classdef smoothing < handle
             %
             %   Optional Inputs:
             %   ----------------
-            %   width_type : {'tri','rect'}
+            %   type : {'tri','rect'}
             %       The shape to use for smoothing ...
             %       tri - triangular window
             %       rect - rectangular window
             %   width_type : {'seconds','samples'}
-            %
-            %
-            %   Types:
-            %   - triangle window
-            %   - rectangle window
+            %   zero_phase : logical (default true)
+            %       If true the data are filtered forwards and backwards
+            %       using filtfilt() instead of filter()
             
             in.type = 'tri';
             in.width_type = 'seconds';
@@ -70,6 +68,7 @@ classdef smoothing < handle
                 coeff = ones(1,samples_width);
                 coeff = coeff./samples_width;
             else
+                n = samples_width;
                 %triangle
                 if rem(n,2)
                     %odd
@@ -80,6 +79,7 @@ classdef smoothing < handle
                     w = (2*(1:(n+1)/2)-1)/n;
                     coeff = [w w(n/2:-1:1)];
                 end
+                coeff = coeff./sum(coeff);
             end
         end
         function data_out = filter(obj,data_in,fs)

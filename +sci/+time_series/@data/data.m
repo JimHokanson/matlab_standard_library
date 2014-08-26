@@ -18,6 +18,7 @@ classdef data < sl.obj.handle_light
         n_channels
     end
     
+    %Add on properties ----------------------------------------------------
     properties
         history = {} %Right now this is an arbitrary cell array that can
         %be added to as necessary using:
@@ -26,7 +27,7 @@ classdef data < sl.obj.handle_light
         %
         %It is meant to help track the source of data and how it is
         %processed
-        devents %Container with class: sci.time_series.time_events
+        devents %struct with fields of type: sci.time_series.time_events
         %
         %   See: addEventElements()
     end
@@ -36,6 +37,7 @@ classdef data < sl.obj.handle_light
         
     end
     
+    %Constructor ----------------------------------------------------------
     methods
         function obj = data(data_in,time_object_or_dt,varargin)
             %
@@ -75,7 +77,7 @@ classdef data < sl.obj.handle_light
                 obj.time = sci.time_series.time(time_object_or_dt,obj.n_channels);
             end
             
-            obj.devents = containers.Map();
+            obj.devents = struct();
             if ~isempty(in.events)
                 obj.addEventElements(in.events);
             end
@@ -128,6 +130,7 @@ classdef data < sl.obj.handle_light
             %TODO: Add labels ...
         end
     end
+    
     %Adding things --------------------------------
     methods
         function addEventElements(obj,event_elements)
@@ -142,7 +145,7 @@ classdef data < sl.obj.handle_light
             
             for iElement = 1:length(event_elements)
                 cur_element = event_elements(iElement);
-                obj.devents(cur_element.name) = cur_element;
+                obj.devents.(cur_element.name) = cur_element;
             end
         end
         function addHistoryElements(obj,history_elements)
@@ -157,24 +160,66 @@ classdef data < sl.obj.handle_light
             obj.history = [obj.history; history_elements];
         end  
     end
+    
     %Data changing --------------------------------------------------------
     methods
-        function filter(obj,filters)
+        function filter(obj,filters,varargin)
+            %
+            %   This is a shortcut for calling the data_filterer.
+            %
+            %   TODO: Provide a list of filters that can be used ...
+            %
+            %   See Also:
+            %   sci.time_series.data_filterer
+            
+            in.subtract_filter_result = false;
+            in = sl.in.processVarargin(in,varargin);
+            
             df = sci.time_series.data_filterer('filters',filters);
-            df.filter(obj);
+            df.filter(obj,'subtract_filter_result',in.subtract_filter_result);
         end
     end
     
+    %Time related manipulations -------------------------------------------
     methods
+        function data_subset_objs = getDataSubset(objs,start_event,start_event_index,stop_event,stop_event_index)
+            %            
+            %
+            %
+            %   
+            
+            
+            n_objs = length(objs);
+            temp_objs_ca = cell(1,n_objs);
+            for iObj = 1:n_objs
+               cur_obj = objs(iObj); 
+               
+               start_time = cur_obj.devents.(start_event).times(start_event_index);
+               end_time   = cur_obj.devents.(stop_event).times(stop_event_index);
+               
+               temp_objs_ca{iObj} = cur_obj.getDataAlignedToEvent(start_time,[0 end_time-start_time]);
+            end
+            
+            %Crap, this currently also shifts the time :/
+            
+            data_subset_objs = [temp_objs_ca{:}];
+        end
         function zeroTimeByEvent(objs,event_name_or_time_array)
            %
+           %    
+           %    Redefines time such that the time of event is now at time
+           %    zero.
+           %
+           %    objs.zeroTimeByEvent(event_name)
+           %
+           %    objs.zeroTimeByEvent(event_times)
+           %    
            %    Inputs:
            %    -------
-           %    event_name_or_time_array: char or array
-           %        If a string, this refers to one of the internal events
-           %        in the system.
-           
-           
+           %    event_name :
+           %        This refers to one of the internal events in the system. 
+           %    event_times :
+           %        A single event time should be provided for each object
            
            n_objects = length(objs);
            if isnumeric(event_name_or_time_array)
@@ -182,7 +227,7 @@ classdef data < sl.obj.handle_light
            else
                event_times = zeros(1,n_objects);
                for iObj = 1:n_objects
-                   temp_event_obj = objs(iObj).devents(event_name_or_time_array);
+                   temp_event_obj = objs(iObj).devents.(event_name_or_time_array);
                    if length(temp_event_obj.times) ~= 1
                        error('Each event must have only 1 time value ..., for now')
                    end
@@ -190,6 +235,7 @@ classdef data < sl.obj.handle_light
                end
            end
            
+           %TODO: Make this a method - shift time
            for iObj = 1:n_objects
               objs(iObj).time.start_offset = objs(iObj).time.start_offset - event_times(iObj); 
            end
@@ -200,15 +246,26 @@ classdef data < sl.obj.handle_light
         function event_aligned_data = getDataAlignedToEvent(obj,event_times,new_time_range,varargin)
             %
             %
-            %    Inputs:
-            %    -------
-            %    event_times:
-            %    new_time_range: [min max] with 0 being the event times
+            %   This function is useful for things like stimulus triggered
+            %   averaging.
             %
-            %    Optional Inputs:
-            %    ----------------
-            %    allow_overlap:
+            %   Inputs:
+            %   -------
+            %   event_times:
+            %   new_time_range: [min max] with 0 being the event times
             %
+            %   Optional Inputs:
+            %   ----------------
+            %   allow_overlap:
+            %
+            %   Outputs:
+            %   --------
+            %   event_aligned_data
+            %
+            %   TODO: Provide an example of using this function.
+            %
+            
+            %TODO: Build in multiple object support ...
             
             %TODO: Add history support ...
             
@@ -232,8 +289,8 @@ classdef data < sl.obj.handle_light
             
             [indices,time_errors] = obj.time.getNearestIndices(event_times);
             
-            start_index_1 = obj.time.getNearestIndices(event_times(1)+new_time_range(1));
-            end_index_1 = obj.time.getNearestIndices(event_times(1)+new_time_range(2));
+            start_index_1 = h__timeToSamples(obj,event_times(1)+new_time_range(1));
+            end_index_1   = h__timeToSamples(obj,event_times(1)+new_time_range(2));
             
             dStart_index = indices(1) - start_index_1;
             dEnd_index   = end_index_1 - indices(1);
@@ -245,8 +302,7 @@ classdef data < sl.obj.handle_light
             
             n_events = length(event_times);
             
-            %TODO: Should match class: zeros(a,b,'single') etc ...
-            new_data = zeros(n_samples_new,obj.n_channels,n_events);
+            new_data = zeros(n_samples_new,obj.n_channels,n_events,'like',obj.d);
             cur_data = obj.d;
             %TODO: Is this is rate limiting step, should we mex it ????
             for iEvent = 1:n_events
@@ -267,6 +323,12 @@ classdef data < sl.obj.handle_light
             data = obj.d;
             time = obj.time.getTimeArray();
         end
+        function sample_number = timeToSample(obj)
+            
+        end
     end
 end
 
+function samples = h__timeToSamples(obj,times)
+   samples = obj.time.getNearestIndices(times);
+end

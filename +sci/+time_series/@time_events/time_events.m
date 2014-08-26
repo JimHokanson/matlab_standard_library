@@ -31,6 +31,10 @@ classdef time_events < handle
            obj.values = in.values;
            obj.msgs   = in.msgs;
         end
+        function new_obj = copy(old_obj)
+           %TODO: Implement this ...
+           new_obj = old_obj;
+        end
     end
     
 end
