@@ -12,7 +12,9 @@ classdef data < sl.obj.handle_light
     %   - averaging to a stimulus
     
     properties
-        d    %numeric array
+        d    %numeric array This is the actual data. In general it is
+        %preferable to retrieve the data via:
+        %
         time     %sci.time_series.time
         units
         n_channels
@@ -26,22 +28,23 @@ classdef data < sl.obj.handle_light
         %   addHistoryElements()
         %
         %It is meant to help track the source of data and how it is
-        %processed
+        %processed. As classes create or manipulate the data they can add
+        %on to the history.
+        
         devents %struct with fields of type: sci.time_series.time_events
         %
         %   See: addEventElements()
-    end
-    
-    %Optional properties -------------------------------------------------
-    properties
+        %
+        %   Shorts for "discrete events". I would prefer just to call this
+        %   field events but that is a reserved word. These hold times in
+        %   which certain things occured. The idea was that we could use
+        %   this information for plotting or data manipulation.
         
     end
     
     %Constructor ----------------------------------------------------------
     methods
         function obj = data(data_in,time_object_or_dt,varargin)
-            %
-            %    How to handle multiple channels?
             %
             %    obj = sci.time_series.data(data_in,time_object,varargin)
             %
@@ -54,9 +57,12 @@ classdef data < sl.obj.handle_light
             %
             %   Optional Inputs:
             %   ----------------
-            %   history:
-            %   units:
+            %   history: cell array
+            %       See description in class
+            %   units: str
+            %       Units of the data
             %   channel_labels:
+            %       Not yet implemented
             %   events: array or cell array of sci.time_series.time_events
             %
             %    data_in must be with samples going down the rows
