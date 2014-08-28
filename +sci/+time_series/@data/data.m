@@ -210,12 +210,27 @@ classdef data < sl.obj.display_class
             
             for iObj = 1:length(objs)
                 cur_obj = objs(iObj);
-            keyboard
-           %sample_width = ceil(bin_width*obj.time.
-            
+                sample_width = ceil(bin_width/cur_obj.time.dt);
+                
+                n_samples = size(cur_obj.d,1);
+                
+                %We'll change this eventually to allow the last bin
+                start_Is = 1:sample_width:n_samples;
+                start_Is(end) = [];
+                end_Is = start_Is + sample_width-1;
+                
+                n_bins = length(start_Is);
+                new_data = zeros(n_bins,cur_obj.n_channels,cur_obj.n_reps);
+                
+                cur_data = cur_obj.d;
+                for iBin = 1:n_bins
+                   temp_data = cur_data(start_Is(iBin):end_Is(iBin),:,:);
+                   %NOTE: Eventually we might change this ...
+                   new_data(iBin,:,:) = mean(abs(temp_data));
+                end
+                decimated_data{iObj} = new_data;
             end
-            
-            
+                        
         end
     end
     
@@ -403,7 +418,7 @@ classdef data < sl.obj.display_class
             time = obj.time.getTimeArray();
         end
         function sample_number = timeToSample(obj)
-           error('Not yet implemented') 
+            error('Not yet implemented')
         end
     end
 end
