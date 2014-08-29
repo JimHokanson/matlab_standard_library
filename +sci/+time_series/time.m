@@ -31,6 +31,7 @@ classdef time < sl.obj.display_class
         start_time
     end
     
+    %Dependent Methods ----------------------------------------------------
     methods
         function value = get.fs(obj)
             value = 1/obj.dt;
@@ -92,6 +93,13 @@ classdef time < sl.obj.display_class
             obj.dt = dt;
             obj.n_samples = n_samples;
         end
+        function new_obj = copy(obj)
+           new_obj = sci.time_series.time(obj.dt,obj.n_samples,...
+               'start_datetime',obj.start_datetime,'start_offset',obj.start_offset); 
+        end
+    end
+    
+    methods
         function time_array = getTimeArray(obj)
             %Creates the full time array.
             %

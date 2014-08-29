@@ -23,6 +23,7 @@ classdef data < sl.obj.display_class
         units
         n_channels
         n_reps
+        channel_labels
     end
     
     %Add on properties ----------------------------------------------------
@@ -106,9 +107,27 @@ classdef data < sl.obj.display_class
             end
             
             obj.units = in.units;
-            
+            obj.channel_labels = in.channel_labels;
             obj.history = in.history;
         end
+        function new_objs = copy(old_objs)
+            
+            %TODO: Eventually delink the history and events as well
+            n_objs = length(old_objs);
+            temp_objs = cell(1,n_objs);
+            for iObj = 1:n_objs
+                cur_obj = old_objs(iObj);
+                temp_objs{iObj} = sci.time_series.data(cur_obj.d,copy(cur_obj.time),...
+                    'history',cur_obj.history,'units',cur_obj.units,...
+                    'channel_labels',cur_obj.channel_labels,'events',cur_obj.devents);
+            end
+            
+            new_objs = [temp_objs{:}];
+        end
+    end
+    
+    %Visualization --------------------------------------------------------
+    methods
         function plot(objs,local_options,plotting_options)
             %
             %
@@ -169,6 +188,10 @@ classdef data < sl.obj.display_class
             
             if iscell(event_elements)
                 event_elements = [event_elements{:}];
+            elseif isstruct(event_elements)
+                %This occurs when copying ...
+                event_elements = struct2cell(event_elements);
+                event_elements = [event_elements{:}];
             end
             
             for iElement = 1:length(event_elements)
@@ -208,7 +231,13 @@ classdef data < sl.obj.display_class
         end
         function decimated_data = decimateData(objs,bin_width,varargin)
             
-            for iObj = 1:length(objs)
+            %in.max_samples = [];
+            %in = sl.in.processVarargin(in,varargin);
+            
+            n_objs = length(objs);
+            decimated_data = cell(1,n_objs);
+            
+            for iObj = 1:n_objs
                 cur_obj = objs(iObj);
                 sample_width = ceil(bin_width/cur_obj.time.dt);
                 
@@ -224,13 +253,14 @@ classdef data < sl.obj.display_class
                 
                 cur_data = cur_obj.d;
                 for iBin = 1:n_bins
-                   temp_data = cur_data(start_Is(iBin):end_Is(iBin),:,:);
-                   %NOTE: Eventually we might change this ...
-                   new_data(iBin,:,:) = mean(abs(temp_data));
+                    temp_data = cur_data(start_Is(iBin):end_Is(iBin),:,:);
+                    %NOTE: Eventually we might change this ...
+                    new_data(iBin,:,:) = mean(abs(temp_data));
                 end
+
                 decimated_data{iObj} = new_data;
             end
-                        
+            
         end
     end
     
