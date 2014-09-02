@@ -48,13 +48,17 @@ classdef tests_ellip
             
             d1 = sci.time_series.data(y1',1/fs);
             
-            ellip_filter = asdsadfsdfsdf.ellip(asdfasdfsadfaf);
+            keyboard
+            
+            ellip_filter = sci.time_series.filter.ellip(2, 10, 10, 20, 'high');
             ellip_filter.plot(fs)
             plot(ellip_filter,fs)
             
             d1.filter(ellip_filter);
             filtered_data1 = d1.d;
-            
+            keyboard % learn more about constructs and packages
+            % how to debug in matlab: references and a needed placement
+            % 
         end
     end
     
