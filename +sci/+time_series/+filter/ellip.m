@@ -23,24 +23,28 @@ classdef ellip
             % Inputs defined
             % Order = order number of filter
             % Storing order, type, cutoof_or_cutoffs in a function handle
+            %{ ellip is the name of this function. It will pass in these five inputs
+            %with an option of adding various other inputs likely a
+            %zero-phase input that will give the user functionality to
+            %control reallignment and that filter method will be adjusted
+            %for near the bottom of the code line
+            % All of these will be defined within the obj and referenced
+            % further below
             
             obj.order = order;
             obj.type = type;
             obj.cutoff_or_cutoffs= cutoff_or_cutoffs;
             obj.passband_peak_to_peak_db= passband_peak_to_peak_db;
             obj.stopband_attenuation= stopband_attenuation;
+            in.zero_phase = true;
+            in = sl.in.processVarargin(in,varargin);
+            obj.zero_phase= in.zero_phase; % Most commonly inputed vararigin
+            
+            
         end
-        function data_out = filter(obj, data_in, fs) % I'm not sure why I need a sampling frequency
-            % I am very unsure about the use of in.zero_phase
-            % and the use of this line of code in =
-            % sl.in.processVarargin(in,varargin); I guess I have no grip on
-            % what zerophase means in regard to filtering.
-            % this should clear up nearly everything
-            % This is causing an error in the data_in because it is still
-            % unsure what in is obviously
+        function data_out = filter(obj, data_in)
             
-            
-            [B,A] = ellip(obj.order, obj. obj.passband_peak_to_peak_db, obj.stopband_attenuation,obj.cutoff_or_cutoffs, obj.type);
+            [B,A] = ellip(obj.order, obj.passband_peak_to_peak_db, obj.stopband_attenuation,obj.cutoff_or_cutoffs, obj.type);
             
             if obj.zero_phase
                 filter_method = @filtfilt;

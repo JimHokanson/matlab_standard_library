@@ -52,6 +52,9 @@ classdef tests_ellip
             ellip_filter.plot(fs)
             plot(ellip_filter,fs)
             
+            d1.filter(ellip_filter);
+            filtered_data1 = d1.d;
+            
         end
     end
     
