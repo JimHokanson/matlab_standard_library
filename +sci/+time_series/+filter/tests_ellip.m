@@ -52,7 +52,6 @@ classdef tests_ellip
             
             ellip_filter = sci.time_series.filter.ellip(2, 10, 10, 20, 'high');
             ellip_filter.plot(fs)
-            plot(ellip_filter,fs)
             
             d1.filter(ellip_filter);
             filtered_data1 = d1.d;
