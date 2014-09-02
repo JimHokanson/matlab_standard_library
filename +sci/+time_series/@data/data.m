@@ -231,8 +231,8 @@ classdef data < sl.obj.display_class
         end
         function decimated_data = decimateData(objs,bin_width,varargin)
             
-            %in.max_samples = [];
-            %in = sl.in.processVarargin(in,varargin);
+            in.method = 'mean';
+            in = sl.in.processVarargin(in,varargin);
             
             n_objs = length(objs);
             decimated_data = cell(1,n_objs);
@@ -252,12 +252,19 @@ classdef data < sl.obj.display_class
                 new_data = zeros(n_bins,cur_obj.n_channels,cur_obj.n_reps);
                 
                 cur_data = cur_obj.d;
-                for iBin = 1:n_bins
-                    temp_data = cur_data(start_Is(iBin):end_Is(iBin),:,:);
-                    %NOTE: Eventually we might change this ...
-                    new_data(iBin,:,:) = mean(abs(temp_data));
+                
+                if strcmp(in.method,'mean')
+                    for iBin = 1:n_bins
+                        temp_data = cur_data(start_Is(iBin):end_Is(iBin),:,:);                        
+                        new_data(iBin,:,:) = mean(abs(temp_data));
+                    end
+                else %rms
+                    for iBin = 1:n_bins
+                        temp_data = cur_data(start_Is(iBin):end_Is(iBin),:,:);                        
+                        new_data(iBin,:,:) = rms(temp_data);
+                    end
                 end
-
+                
                 decimated_data{iObj} = new_data;
             end
             
