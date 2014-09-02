@@ -1,8 +1,15 @@
 function data = parseJSON(string)
 %
 %
-%   data = parseJSON(string)
-
+%   data = sl.io.parseJSON(string)
+%
+%   data = sl.io.parseJSON(fileread(file_path))
+%
+%   Inputs:
+%   -------
+%   string:
+%       A file can
+%
 
 persistent SPECIAL_CHARS_SORTED
 
@@ -172,7 +179,7 @@ if special_chars(cur_special_index) ~= '}'
 %         end
         
         if special_chars(cur_special_index) ~= ':'
-            error('Expected : following object definition, observed: %s',string(special_chars(cur_special_index)))
+            error('Expected ":" following object definition, observed: "%s"',special_chars(cur_special_index))
         end
         
         cur_special_index = cur_special_index + 1;
