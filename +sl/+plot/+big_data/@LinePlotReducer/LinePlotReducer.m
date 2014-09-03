@@ -37,6 +37,7 @@ classdef LinePlotReducer < handle
     %   It is slowly being rewritten to conform with my standards.
     %
     properties
+        id
         
         % Handles
         %----------
@@ -134,17 +135,18 @@ classdef LinePlotReducer < handle
     %Constructor
     %-----------------------------------------
     methods
-        function o = LinePlotReducer(varargin)
-            
+        function obj = LinePlotReducer(varargin)
+            temp = now;
+            obj.id = uint64(floor(1e8*(temp - floor(temp))));
             %I'm hiding the initialization details in another file to
             %reduce the high indendtation levels and the length of this
             %function.
-            init(o,varargin{:})
+            init(obj,varargin{:})
         end
     end
     
     methods
-        function renderData(o)
+        function renderData(obj)
             % Draws all of the data.
             %
             %   This is THE main function which actually plots data.
@@ -156,69 +158,69 @@ classdef LinePlotReducer < handle
             %   resize
             
             % We're busy now.
-            o.busy = true;
+            obj.busy = true;
             
             %TODO: If the figure closes, then we are in trouble ...
             
             % NOTE: Due to changes in the way this function was designed,
             % we may not have plotted the original data yet
-            if ~o.plotted_data_once
+            if ~obj.plotted_data_once
                 %NOTE: The user may have already specified the axes ...
-                if isempty(o.h_axes)
-                    o.h_axes   = gca;
-                    o.h_figure = gcf;
+                if isempty(obj.h_axes)
+                    obj.h_axes   = gca;
+                    obj.h_figure = gcf;
                 %TODO: If only the axes are specified, then we should get
                 %the figure handle ...
                 end
               
-                width = sl.axes.getWidthInPixels(o.h_axes(1));
+                width = sl.axes.getWidthInPixels(obj.h_axes(1));
                  
                 %Why is this happening?
                 if width <= 0
                     width = 100;
                 end
                 
-                n_plots     = length(o.x);
+                n_plots     = length(obj.x);
                 temp_h_plot = zeros(1,n_plots);
                 % For all data we manage...
                 for k = 1:n_plots
                     
                     %Reduce the data.
                     %----------------------------------------
-                    [x_r, y_r] = o.reduce_fh(o.x{k}, o.y{k}, width, [-Inf Inf]);
+                    [x_r, y_r] = obj.reduce_fh(obj.x{k}, obj.y{k}, width, [-Inf Inf]);
 
-                    plot_args = {o.h_axes(1) x_r y_r};
+                    plot_args = {obj.h_axes(1) x_r y_r};
                     
-                    cur_linespecs = o.linespecs{k};
+                    cur_linespecs = obj.linespecs{k};
                     if ~isempty(cur_linespecs)
                         plot_args = [plot_args {cur_linespecs}]; %#ok<AGROW>
                     end
                     
-                    if ~isempty(o.extra_plot_options)
-                        plot_args = [plot_args o.extra_plot_options]; %#ok<AGROW>
+                    if ~isempty(obj.extra_plot_options)
+                        plot_args = [plot_args obj.extra_plot_options]; %#ok<AGROW>
                     end
                     
-                    temp_h_plot(k) = o.plot_fcn(plot_args{:});                    
+                    temp_h_plot(k) = obj.plot_fcn(plot_args{:});                    
                 end
                 
-                o.h_plot = temp_h_plot;
+                obj.h_plot = temp_h_plot;
                 
                 % Listen for changes to the x limits of the axes.
-                for k = 1:length(o.h_axes)
-                    addlistener(o.h_axes(k), 'XLim',     'PostSet', @(~, ~) o.resize);
-                    addlistener(o.h_axes(k), 'Position', 'PostSet', @(~, ~) o.resize);
+                for k = 1:length(obj.h_axes)
+                    addlistener(obj.h_axes(k), 'XLim',     'PostSet', @(h, event_data) obj.resize(h,event_data));
+                    addlistener(obj.h_axes(k), 'Position', 'PostSet', @(h, event_data) obj.resize(h,event_data));
                 end
                 
-                o.plotted_data_once = true;
+                obj.plotted_data_once = true;
                 
                 
             else
                 % Get the new limits. Sometimes there are multiple axes stacked
                 % on top of each other. Just grab the first. This is really
                 % just for plotyy.
-                lims  = get(o.h_axes(1), 'XLim');
+                lims  = get(obj.h_axes(1), 'XLim');
                 
-                width = sl.axes.getWidthInPixels(o.h_axes(1));
+                width = sl.axes.getWidthInPixels(obj.h_axes(1));
                 
                 %??? - Why was the width 0?
                 if width <= 0
@@ -226,30 +228,59 @@ classdef LinePlotReducer < handle
                 end
                 
                 % For all data we manage...
-                for k = 1:length(o.x)
+                for k = 1:length(obj.x)
                     
                     %Reduce the data.
                     %----------------------------------------
-                    [x_r, y_r] = o.reduce_fh(o.x{k}, o.y{k}, width, lims);
+                    [x_r, y_r] = obj.reduce_fh(obj.x{k}, obj.y{k}, width, lims);
                     
                     % Update the plot.
-                    set(o.h_plot(k), 'XData', x_r, 'YData', y_r);
+                    set(obj.h_plot(k), 'XData', x_r, 'YData', y_r);
                 end
             end
             
-            if ~isempty(o.post_render_callback)
-               o.post_render_callback(); 
+            if ~isempty(obj.post_render_callback)
+               obj.post_render_callback(); 
             end
             
             % We're no longer busy.
-            o.busy = false;
+            obj.busy = false;
             
         end
-        function resize(o)
-            % If the user resizes the figure OR if the x limits change, then
+        function resize(obj,h,event_data)
+            % 
+            %   Called when things are resized or the x_limits change.
             %
+            %   h : schema.prop
+            %             Name: 'XLim'
+            %      Description: ''
+            %         DataType: 'axesXLimType'
+            %     FactoryValue: [0 1]
+            %      AccessFlags: [1x1 struct]
+            %          Visible: 'on'
+            %      GetFunction: []
+            %      SetFunction: []
             %
+            %   event_data : handle.PropertySetEventData
+            %               Type: 'PropertyPostSet'
+            %             Source: [1x1 schema.prop]
+            %     AffectedObject: [1x1 axes]
+            %           NewValue: [-75.0109 751.7581]
+            
+            
+            %The issue, the callback fires a ton
+            %Resizing can cause the labels to redraw to something that
+            %makes more sense i.e. from steps of 200 to 100 if the axis
+            %gets larger.
             %
+            %See:
+            %http://undocumentedmatlab.com/blog/controlling-callback-re-entrancy
+
+% % % % %             fprintf('Changing: %s\n',h.Name);
+% % % % %             disp(event_data.NewValue);
+            
+            
+            %format longg
             
             %TODO: This needs to be fixed ...
             %
@@ -257,9 +288,12 @@ classdef LinePlotReducer < handle
             %
             %???? Doesn't this approach mean that we'll miss events????
             % If we're not already busy updating and if the plots still exist.
-            if ~o.busy && all(ishandle(o.h_plot))
-                o.renderData();
+            if ~obj.busy && all(ishandle(obj.h_plot))
+                %fprintf('LinePlotReducer: redraw: %d\n',obj.id);
+                obj.renderData();
                 %fprintf('Callback ran\n');
+            else
+                %fprintf('LinePlotReducer: Busy: %d\n',obj.id);
             end
         end
     end

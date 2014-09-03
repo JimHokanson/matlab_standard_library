@@ -155,6 +155,12 @@ classdef data < sl.obj.display_class
                 plotting_options = {};
             end
             
+            %TODO: Determine x bounds and set them before hand
+            %I want to prevent x axis changing redraws
+            %
+            %Perhaps I can disable plotting until all objects have plotted
+            %...
+            
             in.channels = 'all';
             in = sl.in.processVarargin(in,local_options);
             
@@ -365,6 +371,7 @@ classdef data < sl.obj.display_class
         end
         function event_aligned_data = getDataAlignedToEvent(obj,event_times,new_time_range,varargin)
             %
+            %   event_aligned_data = getDataAlignedToEvent(obj,event_times,new_time_range,varargin)
             %
             %   This function is useful for things like stimulus triggered
             %   averaging.
@@ -385,6 +392,9 @@ classdef data < sl.obj.display_class
             %
             %   TODO: Provide an example of using this function.
             %
+            %   See Also:
+            %   sci.time_series.data.zeroTimeByEvent()
+            %   sci.time_series.data.getDataSubset()
             
             %TODO: Build in multiple object support ...
             
