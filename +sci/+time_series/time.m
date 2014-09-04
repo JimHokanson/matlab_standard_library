@@ -145,8 +145,8 @@ classdef time < sl.obj.display_class
     end
 
     methods
-        function shiftStartTime(obj,)
-            
+        function shiftStartTime(obj)
+           %How should this be implemented 
         end
     end
     

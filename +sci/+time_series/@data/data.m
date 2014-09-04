@@ -50,12 +50,16 @@ classdef data < sl.obj.display_class
     
     properties (Dependent)
         event_names
+        n_samples
     end
     
     %Dependent Methods ----------------------------------------------------
     methods
         function value = get.event_names(obj)
             value = fieldnames(obj.devents);
+        end
+        function value = get.n_samples(obj)
+           value = size(obj.d,1); 
         end
     end
     
@@ -143,6 +147,7 @@ classdef data < sl.obj.display_class
             %   Plotting Options: cell array
             %   ----------------------------
             
+            BIG_PLOT_N_SAMPLES = 1e7;
             %TODO: Plotting multiple objects on the same figure is a
             %problem as they may have completely different starting dates
             %
@@ -168,12 +173,24 @@ classdef data < sl.obj.display_class
                 if iObj == 2
                     hold all
                 end
-                if ischar(in.channels)
-                    temp = sl.plot.big_data.LinePlotReducer(objs(iObj).time,objs(iObj).d,plotting_options{:});
+                cur_obj = objs(iObj);
+                %This might be temporary if I can fix LinePlotReducer to
+                %not constantly replot ...
+                if cur_obj.n_samples > BIG_PLOT_N_SAMPLES
+                    t = cur_obj.time.getTimeArray();
+                    if ischar(in.channels)
+                        plot(t,cur_obj.d,plotting_options{:});
+                    else
+                        plot(t,cur_obj.d(:,in.channels),plotting_options{:});
+                    end
                 else
-                    temp = sl.plot.big_data.LinePlotReducer(objs(iObj).time,objs(iObj).d(:,in.channels),plotting_options{:});
+                    if ischar(in.channels)
+                        temp = sl.plot.big_data.LinePlotReducer(objs(iObj).time,objs(iObj).d,plotting_options{:});
+                    else
+                        temp = sl.plot.big_data.LinePlotReducer(objs(iObj).time,objs(iObj).d(:,in.channels),plotting_options{:});
+                    end
+                    temp.renderData();
                 end
-                temp.renderData();
             end
             
             %TODO: Do this only if not already in this state
