@@ -44,6 +44,7 @@ classdef time < sl.obj.display_class
         end
     end
     
+    %Constructor Methods --------------------------------------------------
     methods
         function obj = time(dt,n_samples,varargin)
             %
@@ -96,6 +97,56 @@ classdef time < sl.obj.display_class
         function new_obj = copy(obj)
            new_obj = sci.time_series.time(obj.dt,obj.n_samples,...
                'start_datetime',obj.start_datetime,'start_offset',obj.start_offset); 
+        end
+        function new_time_object = getNewTimeObjectForDataSubset(obj,start_sample,n_samples,varargin)
+            %
+            %   new_time_object = obj.getNewTimeObjectForDataSubset(new_start_time,n_samples)
+            %   
+            %   Inputs:
+            %   -------
+            %   start_sample : 
+            %   n_samples : 
+            %
+            %   Optional Inputs:
+            %   ----------------
+            %   first_sample_time : default (no change)
+            %       The default behavior is to keep the time offset of the 
+            %       sample. For example, with a sampling rate of 1 and a 
+            %       start offset of 0, the 1st sample occurs at time 2 and
+            %       the 2nd sample occurs at time 1. If we get a subset of
+            %       data starting with the 2nd sample, the new start offset
+            %       will be 1, such that the 2nd sample (now 1st) still
+            %       occurs at time t = 1
+            %
+            %   
+            %       
+            %   
+            %   What does this do?????
+            
+            in.first_sample_time = [];
+            in = sl.in.processVarargin(in,varargin);
+            
+            first_sample_real_time = (start_sample-1)*obj.dt + obj.start_offset;
+            
+            if isempty(in.first_sample_time)
+                start_offset = first_sample_real_time; %#ok<PROP>
+                start_datetime = obj.start_datetime; %#ok<PROP>
+            else
+                start_offset = in.first_sample_time; %#ok<PROP>
+                time_change = first_sample_real_time - start_offset;%#ok<PROP>
+                start_datetime = obj.start_datetime + time_change;%#ok<PROP>
+            end
+            
+            new_time_object = sci.time_series.time(...
+                obj.dt,n_samples,...
+                'start_offset',start_offset,... %#ok<PROP>
+                'start_datetime',start_datetime);%#ok<PROP>
+        end
+    end
+
+    methods
+        function shiftStartTime(obj)
+           %How should this be implemented 
         end
     end
     
@@ -150,52 +201,8 @@ classdef time < sl.obj.display_class
         end
     end
     
-    %Construction methods -------------------------------------------------
     methods
-        function new_time_object = getNewTimeObjectForDataSubset(obj,start_sample,n_samples,varargin)
-            %
-            %   new_time_object = obj.getNewTimeObjectForDataSubset(new_start_time,n_samples)
-            %   
-            %   Inputs:
-            %   -------
-            %   start_sample : 
-            %   n_samples : 
-            %
-            %   Optional Inputs:
-            %   ----------------
-            %   first_sample_time : default (no change)
-            %       The default behavior is to keep the time offset of the 
-            %       sample. For example, with a sampling rate of 1 and a 
-            %       start offset of 0, the 1st sample occurs at time 2 and
-            %       the 2nd sample occurs at time 1. If we get a subset of
-            %       data starting with the 2nd sample, the new start offset
-            %       will be 1, such that the 2nd sample (now 1st) still
-            %       occurs at time t = 1
-            %
-            %   
-            %       
-            %   
-            %   What does this do?????
-            
-            in.first_sample_time = [];
-            in = sl.in.processVarargin(in,varargin);
-            
-            first_sample_real_time = (start_sample-1)*obj.dt + obj.start_offset;
-            
-            if isempty(in.first_sample_time)
-                start_offset = first_sample_real_time; %#ok<PROP>
-                start_datetime = obj.start_datetime; %#ok<PROP>
-            else
-                start_offset = in.first_sample_time; %#ok<PROP>
-                time_change = first_sample_real_time - start_offset;%#ok<PROP>
-                start_datetime = obj.start_datetime + time_change;%#ok<PROP>
-            end
-            
-            new_time_object = sci.time_series.time(...
-                obj.dt,n_samples,...
-                'start_offset',start_offset,... %#ok<PROP>
-                'start_datetime',start_datetime);%#ok<PROP>
-        end
+        
     end
     
 end

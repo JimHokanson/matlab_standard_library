@@ -35,6 +35,8 @@ classdef time_events < handle
            %TODO: Implement this ...
            new_obj = old_obj;
         end
+        function shiftStartTime(obj)
+        end
     end
     
 end

@@ -50,12 +50,16 @@ classdef data < sl.obj.display_class
     
     properties (Dependent)
         event_names
+        n_samples
     end
     
     %Dependent Methods ----------------------------------------------------
     methods
         function value = get.event_names(obj)
             value = fieldnames(obj.devents);
+        end
+        function value = get.n_samples(obj)
+           value = size(obj.d,1); 
         end
     end
     
@@ -143,6 +147,7 @@ classdef data < sl.obj.display_class
             %   Plotting Options: cell array
             %   ----------------------------
             
+            BIG_PLOT_N_SAMPLES = 1e7;
             %TODO: Plotting multiple objects on the same figure is a
             %problem as they may have completely different starting dates
             %
@@ -155,6 +160,12 @@ classdef data < sl.obj.display_class
                 plotting_options = {};
             end
             
+            %TODO: Determine x bounds and set them before hand
+            %I want to prevent x axis changing redraws
+            %
+            %Perhaps I can disable plotting until all objects have plotted
+            %...
+            
             in.channels = 'all';
             in = sl.in.processVarargin(in,local_options);
             
@@ -162,12 +173,24 @@ classdef data < sl.obj.display_class
                 if iObj == 2
                     hold all
                 end
-                if ischar(in.channels)
-                    temp = sl.plot.big_data.LinePlotReducer(objs(iObj).time,objs(iObj).d,plotting_options{:});
+                cur_obj = objs(iObj);
+                %This might be temporary if I can fix LinePlotReducer to
+                %not constantly replot ...
+                if cur_obj.n_samples > BIG_PLOT_N_SAMPLES
+                    t = cur_obj.time.getTimeArray();
+                    if ischar(in.channels)
+                        plot(t,cur_obj.d,plotting_options{:});
+                    else
+                        plot(t,cur_obj.d(:,in.channels),plotting_options{:});
+                    end
                 else
-                    temp = sl.plot.big_data.LinePlotReducer(objs(iObj).time,objs(iObj).d(:,in.channels),plotting_options{:});
+                    if ischar(in.channels)
+                        temp = sl.plot.big_data.LinePlotReducer(objs(iObj).time,objs(iObj).d,plotting_options{:});
+                    else
+                        temp = sl.plot.big_data.LinePlotReducer(objs(iObj).time,objs(iObj).d(:,in.channels),plotting_options{:});
+                    end
+                    temp.renderData();
                 end
-                temp.renderData();
             end
             
             %TODO: Do this only if not already in this state
@@ -293,7 +316,8 @@ classdef data < sl.obj.display_class
             %       shifted such that
             %
             %   See Also:
-            %
+            %   sci.time_series.data.getDataAlignedToEvent()
+            %   sci.time_series.data.zeroTimeByEvent()
             
             in.align_time_to_start = false;
             in = sl.in.processVarargin(in,varargin);
@@ -301,6 +325,8 @@ classdef data < sl.obj.display_class
             if in.align_time_to_start
                 first_sample_time = 0;
             else
+                %This basically means keep the first sample at whatever
+                %time it currently is
                 first_sample_time = [];
             end
             
@@ -321,8 +347,7 @@ classdef data < sl.obj.display_class
                 
                 new_time_object = h__getNewTimeObject(cur_obj,start_index,end_index,'first_sample_time',first_sample_time);
                 
-                
-                temp_objs_ca{iObj} = sci.time_series.data(new_data,new_time_object);
+                temp_objs_ca{iObj} = h__createNewDataFromOld(cur_obj,new_data,new_time_object);
             end
             
             data_subset_objs = [temp_objs_ca{:}];
@@ -332,7 +357,6 @@ classdef data < sl.obj.display_class
             end
         end
         function zeroTimeByEvent(objs,event_name_or_time_array)
-            %
             %
             %    Redefines time such that the time of event is now at time
             %    zero.
@@ -344,9 +368,13 @@ classdef data < sl.obj.display_class
             %    Inputs:
             %    -------
             %    event_name :
-            %        This refers to one of the internal events in the system.
+            %        This refers to one of the internal events in the object.
             %    event_times :
             %        A single event time should be provided for each object
+            % 
+            %   See Also:
+            %   sci.time_series.data.getDataAlignedToEvent()
+            %   sci.time_series.data.getDataSubset()
             
             n_objects = length(objs);
             if isnumeric(event_name_or_time_array)
@@ -362,7 +390,7 @@ classdef data < sl.obj.display_class
                 end
             end
             
-            %TODO: Make this a method - shift time
+            %TODO: Make this a method in the time object - shift time
             for iObj = 1:n_objects
                 objs(iObj).time.start_offset = objs(iObj).time.start_offset - event_times(iObj);
             end
@@ -372,6 +400,7 @@ classdef data < sl.obj.display_class
         end
         function event_aligned_data = getDataAlignedToEvent(obj,event_times,new_time_range,varargin)
             %
+            %   event_aligned_data = getDataAlignedToEvent(obj,event_times,new_time_range,varargin)
             %
             %   This function is useful for things like stimulus triggered
             %   averaging.
@@ -392,6 +421,9 @@ classdef data < sl.obj.display_class
             %
             %   TODO: Provide an example of using this function.
             %
+            %   See Also:
+            %   sci.time_series.data.zeroTimeByEvent()
+            %   sci.time_series.data.getDataSubset()
             
             %TODO: Build in multiple object support ...
             
@@ -461,6 +493,9 @@ classdef data < sl.obj.display_class
 end
 
 %Helper functions ---------------------------------------------------------
+function new_data = h__createNewDataFromOld(obj,new_data,new_time_object)
+  new_data = sci.time_series.data(new_data,new_time_object);
+end
 function event_times = h__getEventTimes(obj,event_name,varargin)
 %
 %

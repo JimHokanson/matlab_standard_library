@@ -15,6 +15,7 @@ classdef smoothing < handle
     
     methods
         function set.window_type(obj,value)
+            %
             if ~any(strcmp(value,{'rect','tri'}))
                 error('Unrecognized filter type')
             end
