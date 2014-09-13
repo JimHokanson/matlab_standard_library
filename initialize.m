@@ -13,4 +13,14 @@ end
 addpath(cd);
 addpath(fullfile(cd,'global_namespace_functions'))
 
+%TODO: Change this ...
+%
+% %Let's first check that the class is not in the static path
+% if NEURON.comm_obj.java_comm_obj.validate_installation
+%     %Do nothing
+% else
+    %javaaddpath(sl.java.read_buffered_stream);
+    javaaddpath(sl.git.getJarBasePath);
+% end
+
 end
