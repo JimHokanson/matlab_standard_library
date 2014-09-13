@@ -470,7 +470,7 @@ classdef data < sl.obj.display_class
             %TODO: This needs to be cleaned up ...
             %Ideally we could call a copy object method ...
             
-            new_time_object = obj.time.getNewTimeObjectForDataSubset(new_time_range(1),n_samples_new);
+            new_time_object = obj.time.getNewTimeObjectForDataSubset(new_time_range(1),n_samples_new,'first_sample_time',new_time_range(1));
             
             event_aligned_data = sci.time_series.data(new_data,new_time_object);
             
