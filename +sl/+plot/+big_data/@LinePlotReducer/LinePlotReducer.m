@@ -4,16 +4,17 @@ classdef LinePlotReducer < handle
     %   sl.plot.big_data.LinePlotReducer
     %
     %   Manages the information in a standard MATLAB plot so that only the
-    %   necessary number of data points are shown. For instance, if the width
-    %   of the axis in the plot is only 500 pixels, there's no reason to have
-    %   more than 1000 data points along the width. This tool selects which
-    %   data points to show so that, for each pixel, all of the data mapping to
-    %   that pixel is crushed down to just two points, a minimum and a maximum.
-    %   Since all of the data is between the minimum and maximum, the user will
-    %   not see any difference in the reduced plot compared to the full plot.
-    %   Further, as the user zooms in or changes the figure size, this tool
-    %   will create a new map of reduced points for the new axes limits
-    %   automatically (it requires no further user input).
+    %   necessary number of data points are shown. For instance, if the
+    %   width of the axis in the plot is only 500 pixels, there's no reason
+    %   to have more than 1000 data points along the width. This tool
+    %   selects which data points to show so that, for each pixel, all of
+    %   the data mapping to that pixel is crushed down to just two points,
+    %   a minimum and a maximum. Since all of the data is between the
+    %   minimum and maximum, the user will not see any difference in the
+    %   reduced plot compared to the full plot. Further, as the user zooms
+    %   in or changes the figure size, this tool will create a new map of
+    %   reduced points for the new axes limits automatically (it requires
+    %   no further user input).
     %
     %   Using this tool, users can plot huge amounts of data without their
     %   machines becoming unresponsive, and yet they will still "see" all of
@@ -46,7 +47,7 @@ classdef LinePlotReducer < handle
         %There might be multiple axes for plotyy.
         
         
-        h_plot 
+        h_plot
         
         
         % Render Information
@@ -84,8 +85,9 @@ classdef LinePlotReducer < handle
         %
         %   This would allow more x's and y's with more or less than 'm'
         %   samples.
-        %
-        x %cell
+        
+        x %cell %NOTE: I don't think that x needs to be a cell.
+        %TODO: This inconsistency should be fixed
         y %cell
         linespecs %cell
         
@@ -102,25 +104,25 @@ classdef LinePlotReducer < handle
     end
     
     properties (Dependent)
-       x_limits
-       y_limits
+        x_limits
+        y_limits
     end
     
     methods
         %TODO: Allow invalid checking as well
         function value = get.x_limits(obj)
-           if isempty(obj.h_axes)
-               value = [NaN NaN];
-           else
-               value = get(obj.h_axes,'XLim');
-           end
+            if isempty(obj.h_axes)
+                value = [NaN NaN];
+            else
+                value = get(obj.h_axes,'XLim');
+            end
         end
         function value = get.y_limits(obj)
-           if isempty(obj.h_axes)
-               value = [NaN NaN];
-           else
-               value = get(obj.h_axes,'YLim');
-           end
+            if isempty(obj.h_axes)
+                value = [NaN NaN];
+            else
+                value = get(obj.h_axes,'YLim');
+            end
         end
     end
     
@@ -131,7 +133,7 @@ classdef LinePlotReducer < handle
     properties (Hidden,Constant)
         reduce_fh = @sl.plot.big_data.reduce_to_width;
     end
-
+    
     %Constructor
     %-----------------------------------------
     methods
@@ -152,7 +154,8 @@ classdef LinePlotReducer < handle
             %   This is THE main function which actually plots data.
             %
             %   This function is called:
-            %   manually
+            %       1) manually
+            %       2) list is incomplete TODO: Finish this...
             %
             %   See Also:
             %   resize
@@ -161,6 +164,11 @@ classdef LinePlotReducer < handle
             obj.busy = true;
             
             %TODO: If the figure closes, then we are in trouble ...
+            %   -???? - when is this a problem? - I think this happens if
+            %   we plot an object, then we close the figure, and then we
+            %   try to plot the object, at which point the figure and the
+            %   plotted data no longer exist, so we need to reset
+            %   - we probably also need to be careful about
             
             % NOTE: Due to changes in the way this function was designed,
             % we may not have plotted the original data yet
@@ -169,12 +177,12 @@ classdef LinePlotReducer < handle
                 if isempty(obj.h_axes)
                     obj.h_axes   = gca;
                     obj.h_figure = gcf;
-                %TODO: If only the axes are specified, then we should get
-                %the figure handle ...
+                    %TODO: If only the axes are specified, then we should get
+                    %the figure handle ...
                 end
-              
+                
                 width = sl.axes.getWidthInPixels(obj.h_axes(1));
-                 
+                
                 %Why is this happening?
                 if width <= 0
                     width = 100;
@@ -183,25 +191,29 @@ classdef LinePlotReducer < handle
                 n_plots     = length(obj.x);
                 temp_h_plot = zeros(1,n_plots);
                 % For all data we manage...
-                for k = 1:n_plots
-                    
-                    %Reduce the data.
-                    %----------------------------------------
-                    [x_r, y_r] = obj.reduce_fh(obj.x{k}, obj.y{k}, width, [-Inf Inf]);
-
-                    plot_args = {obj.h_axes(1) x_r y_r};
-                    
-                    cur_linespecs = obj.linespecs{k};
-                    if ~isempty(cur_linespecs)
-                        plot_args = [plot_args {cur_linespecs}]; %#ok<AGROW>
-                    end
-                    
-                    if ~isempty(obj.extra_plot_options)
-                        plot_args = [plot_args obj.extra_plot_options]; %#ok<AGROW>
-                    end
-                    
-                    temp_h_plot(k) = obj.plot_fcn(plot_args{:});                    
+                
+                %TODO: We need to be able to support the following case ...
+                %plot(x1,y1,x2,y2)
+                %Where all inputs are matrices ...
+                %for k = 1:n_plots
+                k = 1;
+                %Reduce the data.
+                %----------------------------------------
+                [x_r, y_r] = obj.reduce_fh(obj.x{k}, obj.y{k}, width, [-Inf Inf]);
+                
+                plot_args = {obj.h_axes(1) x_r y_r};
+                
+                cur_linespecs = obj.linespecs{k};
+                if ~isempty(cur_linespecs)
+                    plot_args = [plot_args {cur_linespecs}]; %#ok<AGROW>
                 end
+                
+                if ~isempty(obj.extra_plot_options)
+                    plot_args = [plot_args obj.extra_plot_options]; %#ok<AGROW>
+                end
+                
+                temp_h_plot = obj.plot_fcn(plot_args{:});
+                %end
                 
                 obj.h_plot = temp_h_plot;
                 
@@ -228,7 +240,8 @@ classdef LinePlotReducer < handle
                 end
                 
                 % For all data we manage...
-                for k = 1:length(obj.x)
+                %TODO: This needs to be fixed ...
+                for k = 1:length(obj.h_plot)
                     
                     %Reduce the data.
                     %----------------------------------------
@@ -240,7 +253,7 @@ classdef LinePlotReducer < handle
             end
             
             if ~isempty(obj.post_render_callback)
-               obj.post_render_callback(); 
+                obj.post_render_callback();
             end
             
             % We're no longer busy.
@@ -248,7 +261,7 @@ classdef LinePlotReducer < handle
             
         end
         function resize(obj,h,event_data)
-            % 
+            %
             %   Called when things are resized or the x_limits change.
             %
             %   h : schema.prop
@@ -275,9 +288,9 @@ classdef LinePlotReducer < handle
             %
             %See:
             %http://undocumentedmatlab.com/blog/controlling-callback-re-entrancy
-
-% % % % %             fprintf('Changing: %s\n',h.Name);
-% % % % %             disp(event_data.NewValue);
+            
+            % % % % %             fprintf('Changing: %s\n',h.Name);
+            % % % % %             disp(event_data.NewValue);
             
             
             %format longg
@@ -299,7 +312,7 @@ classdef LinePlotReducer < handle
     end
     
     methods (Static)
-       test_plotting_speed %sl.plot.big_data.LinePlotReducer.test_plotting_speed 
+        test_plotting_speed %sl.plot.big_data.LinePlotReducer.test_plotting_speed
     end
     
 end
@@ -312,11 +325,11 @@ end
 % % % obj          Currently not used (empty)
 % % % event_obj    Handle to event object
 % % % output_txt   Data cursor text string (string or cell array of strings).
-% % 
+% %
 % % pos = get(event_obj,'Position');
 % % output_txt = {['X: ',num2str(pos(1),4)],...
 % %     ['Y: ',num2str(pos(2),4)]};
-% % 
+% %
 % % % If there is a Z-coordinate in the position, display it as well
 % % if length(pos) > 2
 % %     output_txt{end+1} = ['Z: ',num2str(pos(3),4)];

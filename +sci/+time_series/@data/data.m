@@ -102,7 +102,7 @@ classdef data < sl.obj.display_class
             if isobject(time_object_or_dt)
                 obj.time = time_object_or_dt;
             else
-                obj.time = sci.time_series.time(time_object_or_dt,obj.n_channels);
+                obj.time = sci.time_series.time(time_object_or_dt,obj.n_samples);
             end
             
             obj.devents = struct();
