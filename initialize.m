@@ -2,6 +2,12 @@ function initialize()
 %
 %   Add to this anything that needs to be run on initialization of the
 %   standard library.
+%   
+%   Run As:
+%   -------
+%   std_lib_path = fullfile(GIT_ROOT,'matlab_standard_library');
+%   run(fullfile(std_lib_path,'initialize.m'))
+
 
 %We'll check for a file to make sure we are in the right place
 std_lib_check_file_path = fullfile(cd,'is_mat_std_lib.txt');
