@@ -35,11 +35,15 @@ classdef git
     end
     
     methods (Hidden,Static)
-        function jar_base_path = getJarBasePath()
-            %sl.git.getJarBasePath
+        function initialize()
+            %sl.git.initialize
             temp = fileparts(sl.stack.getMyBasePath);
             %-3.4.1.201406201815-r
-            jar_base_path = fullfile(temp,'src','java','org.eclipse.jgit.jar');
+            java_jar_path = fullfile(temp,'src','java');
+            jgit_jar = fullfile(java_jar_path,'org.eclipse.jgit.jar'); 
+            jsch_jar = fullfile(java_jar_path,'jsch-0.1.51.jar');
+            javaaddpath(jgit_jar)
+            javaaddpath(jsch_jar);
         end
     end
 end
