@@ -26,7 +26,7 @@ addpath(fullfile(cd,'global_namespace_functions'))
 %     %Do nothing
 % else
     %javaaddpath(sl.java.read_buffered_stream);
-    javaaddpath(sl.git.getJarBasePath);
+    sl.git.initialize()
 % end
 
 end
