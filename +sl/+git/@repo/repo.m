@@ -63,7 +63,8 @@ classdef repo < handle
            j_repo_builder = org.eclipse.jgit.storage.file.FileRepositoryBuilder();
            repo_j_file = java.io.File(repo_path);
            j_repo_builder.setWorkTree(repo_j_file);
-           obj.h = j_repo_builder.build();
+           
+           obj.h   = j_repo_builder.build();
            obj.git = org.eclipse.jgit.api.Git(obj.h);
         end
         function pull_result = pull(obj)
@@ -87,6 +88,11 @@ classdef repo < handle
            %getMergeResult
            %getRebaseResult
            %isSuccessful
+        end
+        function getCommits(obj)
+           %TODO: Build an interface to the log_requestor
+           log_requestor = sl.git.log_requestor(obj.git.log);
+           keyboard
         end
     end
     
