@@ -106,7 +106,7 @@ for k = 1:n_inputs
         temp_specs{n_groups} = current_argument;
     else
         %Must be done with everything, remainder are options ...
-        o.extra_plot_options = varargin(k+1:end);
+        o.extra_plot_options = varargin(k:end);
         break
     end
 end
