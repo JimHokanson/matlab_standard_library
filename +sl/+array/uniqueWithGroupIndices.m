@@ -1,23 +1,27 @@
 function [u,uI] = uniqueWithGroupIndices(A)
-%unique2 Returns groupings for each unique element
+%uniqueWithGroupIndices Returns groupings for each unique element
 %
 %   [u,uI] = sl.array.uniqueWithGroupIndices(A)
 %
 %   This function is a quicker way of getting the indices which 
 %   match a particular unique value.
 %
-%   INPUTS
-%   ============================================================
-%   A : must be sortable via sort()
+%   Inputs:
+%   -------
+%   A : vector
+%       Must be:
+%       1) sortable via sort()
+%       2) able to compare neighbors via diff or strcmp
 %
-%   OUTPUTS
-%   ============================================================
+%   Outputs:
+%   --------
 %   u  : unique values
-%   uI : (cell array), each entry holds the indices of A which match u
+%   uI : (cell array)
+%       Each entry holds the indices of A which match u.
 %
-%   EXAMPLE
-%   ============================================================
-%   [u,uI] = uniqueWithGroupIndices([3 5 3 5 5])
+%   Example:
+%   --------
+%   [u,uI] = sl.array.uniqueWithGroupIndices([3 5 3 5 5])
 %   u => [3 5]
 %   uI{1} => [1 3];
 %   uI{2} => [2 4 5];
