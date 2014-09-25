@@ -88,8 +88,6 @@ classdef obj
           
         %TODO: This could be an array of objects ...
         
-        SEP_STR = ': ';
-        
         in.show_handle_methods = false;
         in.show_constructor = false;
         in.show_hidden = false; %If true hidden props (NYI) and methods are shown
@@ -127,6 +125,7 @@ classdef obj
            meta_methods([meta_methods.Hidden]) = [];
         end
         
+
         %1.2) Remove handle methods
         if ~in.show_handle_methods && any(strcmp(superclasses(objs),'handle'))
            defining_class_names = sl.cell.getStructureField({meta_methods.DefiningClass},'Name','un',0); 
@@ -142,6 +141,7 @@ classdef obj
            method_names(strcmp(method_names,c_name)) = [];
         end
         
+        
         %Retrieval of names to display and help text
         %-------------------------------------------------
         methods_sorted = sort(method_names);
@@ -154,7 +154,7 @@ classdef obj
         method_names_lengths   = cellfun('length',methods_sorted);
         max_method_name_length = max(method_names_lengths);
 
-        space_for_help_text = n_chars_max - max_method_name_length - length(SEP_STR);
+        
         
         n_methods   = length(method_names);
         
@@ -169,11 +169,31 @@ classdef obj
            cur_method  = methods_sorted{iM};
            cur_h1_line = h1_lines{iM};
            
+           
+           %TODO: somewhere in this loop, check if the method is static, if
+           %so then change the sep_str
+           
+       
+           
+           edit_cmd         = sprintf('edit(''%s'')',sl.obj.getFullMethodName(objs,cur_method));
+           colon_link= sl.cmd_window.createLinkForCommands(':', edit_cmd);
+           period_method   = sprintf('mlint(''%s'')',sl.obj.getFullMethodName(objs,cur_method));
+           period_link= sl.cmd_window.createLinkForCommands('.', period_method);           
+           if meta_methods.Static
+               STATIC_STR= '(s)';
+           else
+               STATIC_STR= ' ';
+           end
+           
+           SEP_STR= strcat(period_link,colon_link,STATIC_STR);
+           
+           space_for_help_text = n_chars_max - max_method_name_length - length(SEP_STR);
+           
            help_cmd         = sprintf('help(''%s'')',sl.obj.getFullMethodName(objs,cur_method));
            method_with_link = sl.cmd_window.createLinkForCommands(cur_method,help_cmd);
            
            left_str  = sl.str.padText(method_with_link,max_method_name_length,...
-                        'text_loc','right','disp_len',length(cur_method));
+               'text_loc','right','disp_len',length(cur_method));
            right_str = sl.str.truncateStr(cur_h1_line,space_for_help_text);
            
            fprintf('%s%s%s\n',left_str,SEP_STR,right_str);
