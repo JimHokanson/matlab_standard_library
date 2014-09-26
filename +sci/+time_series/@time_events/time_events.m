@@ -10,11 +10,14 @@ classdef time_events < handle
     %
     %   See Also:
     %   sci.time_series.data
+    %
+    %   TODO: Handle support for time units
     
     
     properties
        name %This should be a unique identifier
-       times
+       times %in seconds, this needs to be fixed so that it matches
+       %the time object for plotting ...
        values
        msgs
     end
@@ -35,7 +38,11 @@ classdef time_events < handle
            %TODO: Implement this ...
            new_obj = old_obj;
         end
-        function shiftStartTime(obj)
+        function shiftStartTime(objs,time_to_subtract)
+            for iObj = 1:length(objs)
+               cur_obj = objs(iObj);
+               cur_obj.times = cur_obj.times - time_to_subtract;
+            end
         end
     end
     

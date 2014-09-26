@@ -24,6 +24,7 @@ classdef data < sl.obj.display_class
         n_channels
         n_reps
         channel_labels
+        y_label %Must be a string
     end
     
     %Add on properties ----------------------------------------------------
@@ -74,7 +75,8 @@ classdef data < sl.obj.display_class
             %   Inputs:
             %   -------
             %   data_in: array [samples x channels]
-            %   time_object_or_dt:
+            %       data_in must be with samples going down the rows.
+            %   time_object_or_dt: number or sci.time_series.time
             %
             %   Optional Inputs:
             %   ----------------
@@ -85,13 +87,19 @@ classdef data < sl.obj.display_class
             %   channel_labels:
             %       Not yet implemented
             %   events: array or cell array of sci.time_series.time_events
+            %       These signify discrete events that happen at a given
+            %       time and that may also carray a string or value with
+            %       the event.
+            %   y_label: string
+            %       Value for y_label when plotted. 
             %
-            %    data_in must be with samples going down the rows
+            %    
             
             in.history = {};
             in.units   = 'Unknown';
             in.channel_labels = ''; %TODO: If numeric, change to string ...
             in.events  = [];
+            in.y_label = '';
             in = sl.in.processVarargin(in,varargin);
             
             obj.n_channels = size(data_in,2);
@@ -110,6 +118,7 @@ classdef data < sl.obj.display_class
                 obj.addEventElements(in.events);
             end
             
+            obj.y_label = in.y_label;
             obj.units = in.units;
             obj.channel_labels = in.channel_labels;
             obj.history = in.history;
@@ -197,7 +206,10 @@ classdef data < sl.obj.display_class
             %i.e. don't disable it if it wasn't enabled
             hold off
             
-            %TODO: Add labels ...
+            %TODO: Depeneding upon what is defined, show different things
+            %for the ylabel
+            ylabel(sprintf('%s (%s)',cur_obj.y_label,cur_obj.units))
+            xlabel(sprintf('Time (%s)',cur_obj.time.output_units))
         end
     end
     
@@ -385,10 +397,18 @@ classdef data < sl.obj.display_class
             
             %TODO: Make this a method in the time object - shift time
             for iObj = 1:n_objects
+                %Adjust time start_offset
                 objs(iObj).time.start_offset = objs(iObj).time.start_offset - event_times(iObj);
+                
+                %Adjust event times
+                all_events = objs(iObj).devents;
+                fn = fieldnames(all_events);
+                for iField = 1:length(fn)
+                    %all_events is just a structure
+                    cur_event = all_events.(fn{iField});
+                    cur_event.shiftStartTime(event_times(iObj));
+                end
             end
-            
-            %TODO: We need to zero the times in the events as well ...
             
         end
         function event_aligned_data = getDataAlignedToEvent(obj,event_times,new_time_range,varargin)

@@ -1,7 +1,7 @@
 classdef bool_transition_info
     %
     %   Class:
-    %   sl.array.bool_transititrue_info
+    %   sl.array.bool_transition_info
     %
     %   TODO: Implement units tests for this ...
     
@@ -59,9 +59,9 @@ classdef bool_transition_info
     
     %TODO: Impelement these things ...
     % % %     properties
-    % % %         true_duratitrue_by_sample %For every on sample, the value is how
+    % % %         true_duration_by_sample %For every on sample, the value is how
     % % %         %long its duration lasted. This ends up looking a lot like a staircase
-    % % %         false_duratitrue_by_sample %Same as on, but reversed
+    % % %         false_duration_by_sample %Same as on, but reversed
     % % %
     % % %                     %Old code for doing this ...
     % % %                     %{
@@ -88,6 +88,13 @@ classdef bool_transition_info
     
     methods
         function obj = bool_transition_info(logical_data,varargin)
+            %
+            %
+            %   Optional Inputs:
+            %   ----------------
+            %   time: sci.time_series.time
+            %       TODO: We could also support a time array
+            
             
             in.time = [];
             in = sl.in.processVarargin(in,varargin);
@@ -141,7 +148,7 @@ function time_out = h__getTimeGivenIndices(time,indices)
 %
 %   Inputs:
 %   -------
-%   time: [] or sci.time_series.time
+%   time: empty array or sci.time_series.time
 if isempty(time)
     %ASSUME:
     %start_time = 0;

@@ -241,15 +241,18 @@ classdef LinePlotReducer < handle
                 
                 % For all data we manage...
                 %TODO: This needs to be fixed ...
-                for k = 1:length(obj.h_plot)
+                
                     
                     %Reduce the data.
                     %----------------------------------------
-                    [x_r, y_r] = obj.reduce_fh(obj.x{k}, obj.y{k}, width, lims);
+                    [x_r, y_r] = obj.reduce_fh(obj.x{1}, obj.y{1}, width, lims);
+                    
+                    for iChan = 1:length(obj.h_plot)
                     
                     % Update the plot.
-                    set(obj.h_plot(k), 'XData', x_r, 'YData', y_r);
-                end
+                        set(obj.h_plot(iChan), 'XData', x_r(:,iChan), 'YData', y_r(:,iChan));
+                    end
+                
             end
             
             if ~isempty(obj.post_render_callback)
