@@ -8,21 +8,37 @@ classdef time < sl.obj.display_class
     %   This was initially created for plotting where I don't want to plot
     %   the entire data set so instead of holding onto a full time series
     %   I'm holding onto "instructions" as to how to construct the full
-    %   time series
+    %   time series.
     %
     %   I'm slowly working this into functions where I really only
     %   need some of the instructions on the time series, not the whole
     %   thing.
+    %
+    %   See Also:
+    %   sci.time_series.data
     
     properties
-        start_datetime %This can be used for real dates to identify the
+        start_datetime %
+        %This can be used for real dates to identify the
         %actual time of the first sample. No support for time zones is in
         %place.
         
+        %These will always be in seconds, regardless of the output units
         start_offset = 0 %(s)
         dt %seconds
+        
         n_samples
-        %units_use
+        
+        output_units = 's'
+        %This is invoked when
+        %Options:
+        %-   s: seconds
+        %-  ms: milliseconds
+        %- min: minutes
+        %-   h: hours
+        %
+        %   See:
+        %   h__getTimeScaled
     end
     
     properties (Dependent)
@@ -38,9 +54,11 @@ classdef time < sl.obj.display_class
         end
         function value = get.end_time(obj)
             value = obj.start_offset + (obj.n_samples-1)*obj.dt;
+            value = h__getTimeScaled(obj,value);
         end
         function value = get.start_time(obj)
             value = obj.start_offset;
+            value = h__getTimeScaled(obj,value);
         end
     end
     
@@ -52,9 +70,9 @@ classdef time < sl.obj.display_class
             %
             %   Inputs:
             %   -------
-            %   dt : 
+            %   dt :
             %       Time between sample points.
-            %   n_samples : 
+            %   n_samples :
             %       # of samples in the data.
             %
             %   Optional Inputs:
@@ -95,33 +113,38 @@ classdef time < sl.obj.display_class
             obj.n_samples = n_samples;
         end
         function new_obj = copy(obj)
-           new_obj = sci.time_series.time(obj.dt,obj.n_samples,...
-               'start_datetime',obj.start_datetime,'start_offset',obj.start_offset); 
+            new_obj = sci.time_series.time(obj.dt,...
+                obj.n_samples,...
+                'start_datetime',obj.start_datetime,...
+                'start_offset',obj.start_offset);
+            new_obj.output_units = obj.output_units;
         end
         function new_time_object = getNewTimeObjectForDataSubset(obj,start_sample,n_samples,varargin)
+            %x Returns a new time object that only encompasses a subset of the original time
             %
-            %   new_time_object = obj.getNewTimeObjectForDataSubset(new_start_time,n_samples)
-            %   
+            %   new_time_object = obj.getNewTimeObjectForDataSubset(start_sample,n_samples,varargin)
+            %
+            %   This can be used
+            %
             %   Inputs:
             %   -------
-            %   start_sample : 
-            %   n_samples : 
+            %   start_sample :
+            %   n_samples :
             %
             %   Optional Inputs:
             %   ----------------
             %   first_sample_time : default (no change)
-            %       The default behavior is to keep the time offset of the 
-            %       sample. For example, with a sampling rate of 1 and a 
-            %       start offset of 0, the 1st sample occurs at time 2 and
+            %       The default behavior is to keep the time offset of the
+            %       sample. For example, with a sampling rate of 1 and a
+            %       start offset of 0, the 1st sample occurs at time 0 and
             %       the 2nd sample occurs at time 1. If we get a subset of
             %       data starting with the 2nd sample, the new start offset
             %       will be 1, such that the 2nd sample (now 1st) still
-            %       occurs at time t = 1
-            %
-            %   
-            %       
-            %   
-            %   What does this do?????
+            %       occurs at time t = 1.
+            %           We can however redefine the first_sample_time so
+            %       that it occurs at any given time. The start_datetime
+            %       property of the class is adjusted so that the actual
+            %       absolute start time is maintained.
             
             in.first_sample_time = [];
             in = sl.in.processVarargin(in,varargin);
@@ -129,11 +152,13 @@ classdef time < sl.obj.display_class
             first_sample_real_time = (start_sample-1)*obj.dt + obj.start_offset;
             
             if isempty(in.first_sample_time)
-                start_offset = first_sample_real_time; %#ok<PROP>
+                start_offset   = first_sample_real_time; %#ok<PROP>
                 start_datetime = obj.start_datetime; %#ok<PROP>
             else
-                start_offset = in.first_sample_time; %#ok<PROP>
-                time_change = first_sample_real_time - start_offset;%#ok<PROP>
+                start_offset   = in.first_sample_time; %#ok<PROP>
+                time_change    = first_sample_real_time - start_offset;%#ok<PROP>
+                
+                %TODO: I think this is wrong if the value is a datenum ...
                 start_datetime = obj.start_datetime + time_change;%#ok<PROP>
             end
             
@@ -141,12 +166,14 @@ classdef time < sl.obj.display_class
                 obj.dt,n_samples,...
                 'start_offset',start_offset,... %#ok<PROP>
                 'start_datetime',start_datetime);%#ok<PROP>
+            new_time_object.output_units = obj.output_units;
         end
     end
-
+    
     methods
         function shiftStartTime(obj)
-           %How should this be implemented 
+            %How should this be implemented???
+            %
         end
     end
     
@@ -154,9 +181,13 @@ classdef time < sl.obj.display_class
         function time_array = getTimeArray(obj)
             %Creates the full time array.
             %
-            %    In general this should be avoided if possible ...
+            %    In general this should be avoided if possible.
+            %
+            %   See Also:
+            %   getTimesFromIndices
             
             time_array = (0:obj.n_samples-1)*obj.dt + obj.start_offset;
+            time_array = h__getTimeScaled(obj,time_array);
         end
         function times = getTimesFromIndices(obj,indices)
             %x Given sample indices return times of these indices (in seconds)
@@ -176,6 +207,7 @@ classdef time < sl.obj.display_class
             %
             %
             times = obj.start_offset + (indices-1)*obj.dt;
+            times = h__getTimeScaled(obj,times);
         end
         
         %TODO: Provide interpolation indices function - ???? What does this mean????
@@ -183,7 +215,7 @@ classdef time < sl.obj.display_class
         function [indices,time_errors] = getNearestIndices(obj,times)
             %
             %   TODO: Document ...
-            %   
+            %
             %   Inputs:
             %   -------
             %   times:
@@ -192,6 +224,8 @@ classdef time < sl.obj.display_class
             %   --------
             %   indices :
             %   time_errors :
+            
+            times = h__unscaleTime(obj,times);
             
             raw_indices = (times - obj.start_offset)./obj.dt;
             indices = round(raw_indices)+1;
@@ -207,3 +241,39 @@ classdef time < sl.obj.display_class
     
 end
 
+%TODO: Document these functions
+function times_scaled = h__getTimeScaled(obj,times)
+scale_factor = h__getTimeScaleFactor(obj.output_units,true);
+if scale_factor == 1
+    times_scaled = times;
+else
+    times_scaled = times*scale_factor;
+end
+end
+
+function unscaled_times = h__unscaleTime(obj,times)
+scale_factor = h__getTimeScaleFactor(obj.output_units,false);
+if scale_factor == 1
+    unscaled_times = times;
+else
+    unscaled_times = times*scale_factor;
+end
+end
+
+function scale_factor = h__getTimeScaleFactor(unit_name,for_output)
+switch unit_name
+    case 's'
+        scale_factor = 1;
+    case 'ms'
+        scale_factor = 1000;
+    case 'min'
+        scale_factor = 1/60;
+    case 'h'
+        scale_factor = 1/3600;
+    otherwise
+        error('Unrecognized time unit: %s',unit_name)
+end
+if ~for_output
+    scale_factor = 1/scale_factor;
+end
+end

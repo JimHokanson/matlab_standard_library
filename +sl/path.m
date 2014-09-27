@@ -29,7 +29,7 @@ classdef (Hidden) path
            %If the latter, this would cause problems
            %
            %
-           value = sl.stack.getMyBasePath('',1);
+           value = sl.stack.getPackageRoot();
         end
         %NOTE: I had thought about creating a GUI which would toggle
         %beta code being on the path or not.
@@ -44,6 +44,8 @@ classdef (Hidden) path
             %Goal is to provide something that handles packages
             %
             %   This will probably need to be renamed.
+            %
+            %   This should probably be in sl.dir
             %
             %   i.e. I wanted something like:
             %   my_path\+sl\+test\file.m
