@@ -1,4 +1,4 @@
-classdef mlint < sl.obj.handle_light
+classdef (Abstract) mlint < sl.obj.handle_light
     %
     %   Class:
     %   sl.mlint
@@ -7,6 +7,8 @@ classdef mlint < sl.obj.handle_light
     %   as some notes on variables names for creating
     %   interface methods
     %
+    %   This class is meant to be inherited by other classes in the
+    %   sl.mlint package.
     %
     %   IDEAS
     %   ===================================================================
