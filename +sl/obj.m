@@ -164,73 +164,73 @@ classdef obj
             end
             
             fprintf('    Methods:\n');
-            %JAH: I know I didn't do this but it might be good to add a
-            %comment since this is getting complicated
-            
+
             %Each method will be of the form:
             %   <method name>.: <method h1 line>
             %such as:
             %   getStore.: Retrieves info about a base unit for the TDT system
+            
             for iM = 1:n_methods
                 cur_method  = methods_sorted{iM};
                 cur_h1_line = h1_lines{iM};
                 
-                
-                %TODO: somewhere in this loop, check if the method is static, if
-                %so then change the sep_str
-                
-                
-                
+                % Edit link
                 edit_cmd         = sprintf('edit(''%s'')',sl.obj.getFullMethodName(objs,cur_method));
                 colon_link= sl.cmd_window.createLinkForCommands(':', edit_cmd);
                 
+                % generates an class object using the static method
+                % meta.class and all the information with it.
+                % Also extracts input and outputnames.
                 
-                %JAH: This isn't what I had in mind. The mlint I was referring
-                %to is MUCH more advanced. We'll hold off on it for now.
-                %In the mean time just comment out this code and place a period
-                %in its place. No need to change the variale names
-                %period_link = '.'
-                period_method   = sprintf('mlint(''%s'')',sl.obj.getFullMethodName(objs,cur_method));
-                period_link= sl.cmd_window.createLinkForCommands('.', period_method);
+                mc = meta.class.fromName(fname);
+                % I eliminated the ismember and find because they did not
+                % make sense to have
+                idx = find({mc.MethodList.Name}, functionFile);
+                inputNames = mc.MethodList(idx).InputNames;
+                outputNames = mc.MethodList(idx).OutputNames;
                 
-                %JAH: Use cur_method, not meta_methods, static is something that
-                %applies to a single function, not all functions
-                %{
-           if meta_methods.Static
-               STATIC_STR= '(s)';
-           else
-               STATIC_STR= ' ';
-           end
-           
-           %JAH: Don't use strcat, just use [] to concatenate
-           %JAH: capitalized variables should only be used for constants,
-           not for intermediate variables. I would use static_str and
-           sep_str. You could move STATIC_STR = '(s)' to the top of the
-function and then use a different name for static_str down in
-           the loop - something like cur_static_str
-           %SEP_STR= strcat(period_link,colon_link,STATIC_STR);
-                %}
+                % need to generate this. 
+%                 file_pathway= mc.
+                % separate all the outputs with periods
+                outputs =sl.cellstr.join(outputNames);
+                inputs =sl.cellstr.join(inputNames);
+         
+                period_cmd = fprintf('[%s] = %s(%s) \n', outputs, file_pathway, inputs); 
+                period_link= sl.cmd_window.createLinkForCommands('.', period_cmd);
                 
                 
-                %JAH: Temp fix until above AND below is fixed
-                %SEP_STR = strcat(period_link,colon_link);
+                % DAH Generation of a static string
+                if cur_method.Static
+                    static_str= '(s)';
+                else
+                    static_str= ' ';
+                end
                 
-                SEP_STR = ':';
+                % DAH concatenation of the three links into one string variable
+                SEP_STR= [period_link,colon_link,static_str];
                 
-                %JAH: This code is no longer correct because the visible 
-                %length and the actual length of the separation string are
-                %different - introduce a variable
                 
                 space_for_help_text = n_chars_max - max_method_name_length - length(SEP_STR);
+                
+                
+                % DAH generation of the space for the string
+                space_for_str_text= length(SEP_STR);
                 
                 help_cmd         = sprintf('help(''%s'')',sl.obj.getFullMethodName(objs,cur_method));
                 method_with_link = sl.cmd_window.createLinkForCommands(cur_method,help_cmd);
                 
                 left_str  = sl.str.padText(method_with_link,max_method_name_length,...
                     'text_loc','right','disp_len',length(cur_method));
+                
                 right_str = sl.str.truncateStr(cur_h1_line,space_for_help_text);
                 
-                fprintf('%s%s%s\n',left_str,SEP_STR,right_str);
+                % Generation of a middle string with a padded right side
+                % (using the name and length as inputs for the provided
+                % class) DAH
+                middle_str= sl.str.padText(SEP_STR,space_for_str_text, ...
+                    'left');
+                
+                fprintf('%s%s%s\n',left_str,middle_str,right_str);
             end
             
             
