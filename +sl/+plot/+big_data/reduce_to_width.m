@@ -150,6 +150,8 @@ for iChan = 1:n_channels_y
     
     % Sample the original x and y at the indices we found.
     if isobject(x)
+        %TODO: Does each channel need its own time series if we only have
+        %one time???
         x_reduced(:, iChan) = x.getTimesFromIndices(indices(:));
     else
         if iChan == 1 || n_channels_x ~= 1
