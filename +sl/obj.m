@@ -124,7 +124,7 @@ classdef obj
             % DAH: FIXED- definition_class stores the methods defining
             % class. ie. whether static or hidden, etc.
             
-            definiition_class = [meta_methods.DefiningClass];
+            def_class = [meta_methods.DefiningClass];
             
             
             %Method filtering
@@ -147,16 +147,18 @@ classdef obj
             %2) Filtering by name
             %------
             method_names = {meta_methods.Name}; % DAH: in a cell array
+            
             %2.1) Remove constructor
             if ~in.show_constructor
                 c_name = sl.obj.getClassNameWithoutPackages(objs);
                 
-                % DAH- I think this does what you want it to do. Deletes it
-                % the whole array meta_methods_objs No error but not sure
-                % if you want this.
-                mask= (strcmp(method_names,c_name)== 0);
+                % DAH- I think this does what you want it to do. Not
+                % entirely sure if ConstructOnLoad is zero
+                
+                mask= (strcmp(method_names,c_name) == 0);
+                
                 if mask == true
-                meta_methods_objs= [];
+                meta_methods.DefiningClass.ConstructOnLoad= 0; 
                 end
                 
                 method_names(strcmp(method_names,c_name)) = [];
@@ -167,17 +169,21 @@ classdef obj
             %-------------------------------------------------
             method_names_sorted = sort(method_names);
             
-            method_names_sorted(2);
+            method_names_sorted_II= method_names_sorted(2); % DAH This makes sense I get the second output
             
-            method_objs_sorted= meta_methods(sort(meta_methods_objs));
-            
+%             for k=1:length(meta_methods)
+%                 methods_objs_sorted(k) = sort(meta_methods.Properties)
+%             end
+%             
             %JAH Carry the sort information with you to sort the method objects
             %See the 2nd output of sort
             %[method_names_sorted,I] = sort...
-            %method_objs_sorted = meta_methods(...
-            %DAH here I'm a little confused. You asked me to delete
-            %meta_methods_objs
+            %method_objs_sorted = meta_methods(...   
             
+            
+            %DAH how do you want me to sort these objects and for what
+            %purpose
+
             full_method_names = sl.obj.getFullMethodName(objs,method_names_sorted);
             h1_lines       = cellfun(@sl.help.getH1Line,full_method_names,'un',0);
             
@@ -205,9 +211,11 @@ classdef obj
             %   getStore.: Retrieves info about a base unit for the TDT
             %   system }%
             
+            
             for iM = 1:n_methods
                 cur_method_name = method_names_sorted{iM};
-                cur_meta_method_obj = method_objs_sorted{iM};
+%                 cur_meta_method_obj = methods_objs_sorted{iM}; 
+%       DAH: Still needs work above
                 cur_h1_line = h1_lines{iM};
                 
                 % Edit link
@@ -221,8 +229,8 @@ classdef obj
                 
                 %Use meta_methods after sorting instead
         
-                input_names = meta_methods_objs.MethodList(idx).InputNames;
-                output_names = meta_methods_objs.MethodList(idx).OutputNames;
+                input_names = methods_objs_sorted.InputNames;
+                output_names = methods_objs_sorted.OutputNames;
                 
                 % need to generate this. 
 %                 file_pathway= mc.
