@@ -4,6 +4,10 @@ classdef bool_transition_info
     %   sl.array.bool_transition_info
     %
     %   TODO: Implement units tests for this ...
+    %
+    %
+    %   TODO: Allow gettings runs of trues or falses based on linking
+    %   between
     
     properties
         
@@ -35,6 +39,7 @@ classdef bool_transition_info
         false_durations
     end
     
+    %TODO: Make these run only once ...
     methods
         function value = get.true_start_times(obj)
            value = h__getTimeGivenIndices(obj.time,obj.true_start_indices);

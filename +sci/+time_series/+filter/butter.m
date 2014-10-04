@@ -42,7 +42,7 @@ classdef butter
             %
             %   Optional Parameters:
             %   --------------------
-            %   
+            %   zero_phase : 
             
            in.zero_phase = true;
            in = sl.in.processVarargin(in,varargin);
