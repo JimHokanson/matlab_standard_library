@@ -148,15 +148,12 @@ classdef obj
             
             %2) Filtering by name
             %------
-            method_names = {meta_method_objs.Name}; % DAH: in a cell array
+            method_names = {meta_method_objs.Name};
             
             %2.1) Remove constructor
             if ~in.show_constructor
                 c_name = sl.obj.getClassNameWithoutPackages(objs);
-                
-                % DAH- I think this does what you want it to do. Not
-                % entirely sure if ConstructOnLoad is zero
-                
+
                 mask = strcmp(method_names,c_name);
                 
                 %Alternatively, to the code below
@@ -167,13 +164,9 @@ classdef obj
                 %1) method_names(mask) = []; %Remove the one we don't want
                 %2) method_names = methods_names(~mask); %
                 
-%                 if mask == true
-%                 meta_methods.DefiningClass.ConstructOnLoad= 0; 
-%                 end
-
                 meta_method_objs(mask) = [];
                 
-                method_names(mask) = []; %ask Jim what this line does
+                method_names(mask) = [];
             end
             
             
@@ -183,10 +176,6 @@ classdef obj
             
             method_objs_sorted = meta_method_objs(I);
   
-
-            %DAH how do you want me to sort these objects and for what
-            %purpose
-
             full_method_names = sl.obj.getFullMethodName(objs,method_names_sorted);
             h1_lines       = cellfun(@sl.help.getH1Line,full_method_names,'un',0);
             
@@ -256,8 +245,8 @@ classdef obj
                 %   
                 %   TODO: If static, add on path to method
                   if currrent_meta_method_obj.Static
-                      fprintf(2,'Go to display method in sl.obj, normally I would use goDebug\n');
-                      keyboard
+%                       fprintf(2,'Go to display method in sl.obj, normally I would use goDebug\n');
+%                       keyboard
                       method_name_for_function_display = '';  %do something here
                   else
                       method_name_for_function_display = currrent_method_name;
