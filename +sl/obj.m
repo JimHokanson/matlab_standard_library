@@ -225,6 +225,7 @@ classdef obj
                 edit_cmd   = sprintf('edit(''%s'')',sl.obj.getFullMethodName(objs,currrent_method_name));
                 colon_link = sl.cmd_window.createLinkForCommands(':', edit_cmd);
                 
+                
                 % generates an class object using the static method
                 % meta.class and all the information with it.
                 % Also extracts input and outputnames.
@@ -240,7 +241,7 @@ classdef obj
                 % separate all the outputs with periods
                 %
                 %   function_output_string =
-                %   sprintf('[%s]',sl.cellstr.join(outputNames)
+                %   sprintf('[%s]',sl.cellstr.join(outputNames))
                 %
                 %
                 %   Add spaces
@@ -254,7 +255,7 @@ classdef obj
                 %   method_name ???
                 %   
                 %   TODO: If static, add on path to method
-                  if currrent_meta_method_obj.Static %#note this doesn't exist yet#
+                  if currrent_meta_method_obj.Static
                       fprintf(2,'Go to display method in sl.obj, normally I would use goDebug\n');
                       keyboard
                       method_name_for_function_display = '';  %do something here
@@ -264,7 +265,7 @@ classdef obj
  
                 period_cmd = sprintf('[%s] = %s(%s)', outputs, method_name_for_function_display, inputs); 
                 period_link= sl.cmd_window.createLinkForCommands('.', period_cmd);
-         
+                
                 
  %% Code Phase I
 %                 % DAH Generation of a static string
@@ -275,13 +276,14 @@ classdef obj
                 end
                  
                 % DAH concatenation ofs the three links into one string variable
-                 SEP_STR= [period_link,colon_link,static_str];
                 
-                space_for_help_text = n_chars_max - max_method_name_length - length(SEP_STR);
+                SEP_STR= [period_link,colon_link,static_str];
+                             
+                space_for_help_text = n_chars_max - max_method_name_length - 5;
                 
                 
                 % DAH generation of the space for the string
-                space_for_str_text= length(SEP_STR);
+%                 space_for_str_text= length(SEP_STR);
                 
                 help_cmd         = sprintf('help(''%s'')',sl.obj.getFullMethodName(objs,currrent_method_name));
                 method_with_link = sl.cmd_window.createLinkForCommands(currrent_method_name,help_cmd);
@@ -291,11 +293,9 @@ classdef obj
                 
                 right_str = sl.str.truncateStr(cur_h1_line,space_for_help_text);
                 
-                % Generation of a middle string with a padded right side
-                % (using the name and length as inputs for the provided
-                % class) DAH
-                middle_str= sl.str.padText(SEP_STR,space_for_str_text, ...
-                    'centered');
+                middle_str= SEP_STR;
+%                 sl.str.padText(SEP_STR,space_for_str_text, ...
+%                     'centered');
                 
                 fprintf('%s%s%s\n',left_str,middle_str,right_str);
             end
