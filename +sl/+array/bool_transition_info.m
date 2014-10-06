@@ -42,22 +42,22 @@ classdef bool_transition_info
     %TODO: Make these run only once ...
     methods
         function value = get.true_start_times(obj)
-           value = h__getTimeGivenIndices(obj.time,obj.true_start_indices);
+            value = h__getTimeGivenIndices(obj.time,obj.true_start_indices);
         end
         function value = get.true_end_times(obj)
-           value = h__getTimeGivenIndices(obj.time,obj.true_end_indices); 
+            value = h__getTimeGivenIndices(obj.time,obj.true_end_indices);
         end
         function value = get.false_start_times(obj)
-           value = h__getTimeGivenIndices(obj.time,obj.false_start_indices); 
+            value = h__getTimeGivenIndices(obj.time,obj.false_start_indices);
         end
         function value = get.false_end_times(obj)
-           value = h__getTimeGivenIndices(obj.time,obj.false_end_indices); 
+            value = h__getTimeGivenIndices(obj.time,obj.false_end_indices);
         end
         function value = get.true_durations(obj)
-           value = obj.true_end_times - obj.true_start_times;
+            value = obj.true_end_times - obj.true_start_times;
         end
         function value = get.false_durations(obj)
-           value = obj.false_end_times - obj.false_start_times;
+            value = obj.false_end_times - obj.false_start_times;
         end
     end
     
@@ -110,19 +110,23 @@ classdef bool_transition_info
                 return
             end
             
+            %TODO: We don't even need the temp logic, we would just need to
+            %a
             if isrow(logical_data)
-                d = diff([~logical_data(1) logical_data]);
+                temp_logic = [~logical_data(1) logical_data];
             else
-                d = diff([~logical_data(1); logical_data;]);
+                temp_logic = [~logical_data(1); logical_data;];
             end
             %1 - must always be a start
             %end - must always be an end
-
-            obj.true_start_indices  = find(d == 1);
-            obj.false_start_indices = find(d == -1);
+            
+            %These could all be made dependent
+            
+            obj.true_start_indices  = find(~temp_logic(1:end-1) & temp_logic(2:end));
+            obj.false_start_indices = find(temp_logic(1:end-1) & ~temp_logic(2:end));
             
             %NOTE: We could make this faster by casing everything out ...
-            %
+            
             %Casing on the start value and end value
             % if start_is_1 and end_is_1
             % elseif start_is_1 and end_is_0
@@ -144,6 +148,44 @@ classdef bool_transition_info
                 obj.false_end_indices(end+1) = length(logical_data);
             end
             
+        end
+        function [start_run_times,stop_run_times] = getRunStartsAndStops(obj,min_time_for_new_run,varargin)
+            %
+            %    [start_run_times,stop_run_times] = obj.getRunStartsAndStops(min_time_for_new_run,varargin)
+            %
+            %    This was originally designed for getting runs of
+            %    stimulation where each stimulus pulse only lasts for a
+            %    certain amount of time, but the goal is to pull out a train
+            %    of pulses and groups them together based on the time
+            %    between pulses being relatively small, at least compared to
+            %    the time between trains which should be larger.
+            %
+            %    min_time_for_new_run :
+            %        If the amount of time between subsequent events is
+            %        greater than this value, then a new run is started.
+            %
+            %    TODO: Return an object
+            %
+            
+            
+            in.run_value = true; %or false
+            in.as_time = true; %false - as indices into the true or false
+            in = sl.in.processVarargin(in,varargin);
+            
+            %TODO: Not all of these options are implemented
+            
+            %TODO: WE need to respect the row or column nature of the data
+            
+            
+            
+            
+            mask = obj.false_durations > min_time_for_new_run;
+            
+            %TODO: This might not always be right, needs to be fixed ...
+            mask(1) = false; %Ignore long wait at the beginning
+            stop_run_times = obj.false_start_times(mask);
+            stop_stim_durations = obj.false_durations(mask);
+            start_run_times = [obj.true_start_times(1); stop_run_times(1:end-1)+stop_stim_durations(1:end-1)];
         end
     end
     
