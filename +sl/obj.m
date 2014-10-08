@@ -124,6 +124,7 @@ classdef obj
             
             meta_method_objs = meta_class_obj.MethodList;
             
+           
             %JAH:Can be used to filter by classes ...
             % DAH: FIXED- definition_class stores the methods defining
             % class. ie. whether static or hidden, etc.
@@ -203,6 +204,7 @@ classdef obj
             %   getStore.: Retrieves info about a base unit for the TDT
             %   system }%
             
+            class_name = class(objs);
             
             for iM = 1:n_methods
                 currrent_method_name = method_names_sorted{iM}; %cells
@@ -245,14 +247,12 @@ classdef obj
                 %   
                 %   TODO: If static, add on path to method
                   if currrent_meta_method_obj.Static
-%                       fprintf(2,'Go to display method in sl.obj, normally I would use goDebug\n');
-%                       keyboard
-                      method_name_for_function_display = '';  %do something here
+                      method_name_for_function_display = sprintf('%s.%s', class_name, currrent_method_name);  %do something here
                   else
                       method_name_for_function_display = currrent_method_name;
                   end
  
-                period_cmd = sprintf('[%s] = %s(%s)', outputs, method_name_for_function_display, inputs); 
+                period_cmd = sprintf('disp(''[%s] = %s(%s)'')', outputs, method_name_for_function_display, inputs); 
                 period_link= sl.cmd_window.createLinkForCommands('.', period_cmd);
                 
                 
