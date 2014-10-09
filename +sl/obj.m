@@ -207,13 +207,13 @@ classdef obj
             class_name = class(objs);
             
             for iM = 1:n_methods
-                currrent_method_name = method_names_sorted{iM}; %cells
-                currrent_meta_method_obj = method_objs_sorted(iM); %arrays
+                current_method_name = method_names_sorted{iM}; %cells
+                current_meta_method_obj = method_objs_sorted(iM); %arrays
                 
                 cur_h1_line = h1_lines{iM};
                 
                 % Edit link
-                edit_cmd   = sprintf('edit(''%s'')',sl.obj.getFullMethodName(objs,currrent_method_name));
+                edit_cmd   = sprintf('edit(''%s'')',sl.obj.getFullMethodName(objs,current_method_name));
                 colon_link = sl.cmd_window.createLinkForCommands(':', edit_cmd);
                 
                 
@@ -224,8 +224,8 @@ classdef obj
                 
                 %Use meta_methods after sorting instead
         
-                input_names = currrent_meta_method_obj.InputNames;
-                output_names = currrent_meta_method_obj.OutputNames;
+                input_names = current_meta_method_obj.InputNames;
+                output_names = current_meta_method_obj.OutputNames;
                 
                 % need to generate this. 
 %                 file_pathway= mc.
@@ -246,10 +246,10 @@ classdef obj
                 %   method_name ???
                 %   
                 %   TODO: If static, add on path to method
-                  if currrent_meta_method_obj.Static
-                      method_name_for_function_display = sprintf('%s.%s', class_name, currrent_method_name);  %do something here
+                  if current_meta_method_obj.Static
+                      method_name_for_function_display = sprintf('%s.%s', class_name, current_method_name);  %do something here
                   else
-                      method_name_for_function_display = currrent_method_name;
+                      method_name_for_function_display = current_method_name;
                   end
  
                 period_cmd = sprintf('disp(''[%s] = %s(%s)'')', outputs, method_name_for_function_display, inputs); 
@@ -258,7 +258,7 @@ classdef obj
                 
  %% Code Phase I
 %                 % DAH Generation of a static string
-                if currrent_meta_method_obj.Static
+                if current_meta_method_obj.Static
                     static_str= '(s)';
                 else
                     static_str= '   ';
@@ -275,11 +275,11 @@ classdef obj
                 % DAH generation of the space for the string
 %                 space_for_str_text= length(SEP_STR);
                 
-                help_cmd         = sprintf('help(''%s'')',sl.obj.getFullMethodName(objs,currrent_method_name));
-                method_with_link = sl.cmd_window.createLinkForCommands(currrent_method_name,help_cmd);
+                help_cmd         = sprintf('help(''%s'')',sl.obj.getFullMethodName(objs,current_method_name));
+                method_with_link = sl.cmd_window.createLinkForCommands(current_method_name,help_cmd);
                 
                 left_str  = sl.str.padText(method_with_link,max_method_name_length,...
-                    'text_loc','right','disp_len',length(currrent_method_name));
+                    'text_loc','right','disp_len',length(current_method_name));
                 
                 right_str = sl.str.truncateStr(cur_h1_line,space_for_help_text);
                 
