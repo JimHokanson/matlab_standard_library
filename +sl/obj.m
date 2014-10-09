@@ -261,14 +261,15 @@ classdef obj
                 if currrent_meta_method_obj.Static
                     static_str= '(s)';
                 else
-                    static_str= ' ';
+                    static_str= '   ';
                 end
                  
+                space= ' ';
                 % DAH concatenation ofs the three links into one string variable
                 
-                SEP_STR= [period_link,colon_link,static_str];
+                SEP_STR= [period_link, space, colon_link];
                              
-                space_for_help_text = n_chars_max - max_method_name_length - 5;
+                space_for_help_text = n_chars_max - max_method_name_length - 6;
                 
                 
                 % DAH generation of the space for the string
@@ -283,10 +284,8 @@ classdef obj
                 right_str = sl.str.truncateStr(cur_h1_line,space_for_help_text);
                 
                 middle_str= SEP_STR;
-%                 sl.str.padText(SEP_STR,space_for_str_text, ...
-%                     'centered');
-                
-                fprintf('%s%s%s\n',left_str,middle_str,right_str);
+
+                fprintf('%s%s %s%s\n',static_str, left_str,middle_str,right_str);
             end
             
             
