@@ -39,7 +39,9 @@ function [x_reduced, y_reduced] = reduce_to_width(x, y, axis_width_in_pixels, x_
 
 n_points = 2*axis_width_in_pixels;
 
-N_SAMPLES_MAX_PLOT_EVERYTHING = 2*n_points;
+N_SAMPLES_MAX_PLOT_EVERYTHING = 4*axis_width_in_pixels; %If the # of values 
+%passed is less than this amount, then we just return everything, rather 
+%than computing mins and maxes
 
 % If the data is already small, there's no need to reduce.
 %---------------------------------------------------

@@ -12,7 +12,8 @@ classdef axes
             %
             %   pixels = sl.axes.getWidthInPixels(h)
             %
-            %   ??? Does changing the units cause a figure redraw?
+            %   Changing the units triggers a change in size prior to
+            %   Matlab 2014b.
             
             % Record the current axes units setting.
             axes_units = get(h, 'Units');
