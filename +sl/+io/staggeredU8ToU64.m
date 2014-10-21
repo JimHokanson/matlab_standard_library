@@ -2,7 +2,14 @@ function output = staggeredU8ToU64(u8_data,start_indices)
 %
 %
 %   sl.io.staggeredU8ToU64
+%
+%   TODO: Convert to staggered package
+%   TODO: Document all of these as to what they do ...
 
+if isempty(start_indices)
+    output = zeros(0,1,'uint64');
+    return
+end
 
 %Transpose ???
 
