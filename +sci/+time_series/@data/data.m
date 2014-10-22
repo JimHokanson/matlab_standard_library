@@ -10,6 +10,11 @@ classdef data < sl.obj.display_class
     %       and maybe units
     %   - allow plotting of channels as stacked or as subplots
     %   - averaging to a stimulus
+    %
+    %
+    %   Examples:
+    %   ---------
+    %   1) wtf = sci.time_series.data(rand(1e8,1),0.01);
     
     properties
         d    %[samples x channels x repetitions]
@@ -101,7 +106,7 @@ classdef data < sl.obj.display_class
             in.events  = [];
             in.y_label = '';
             in = sl.in.processVarargin(in,varargin);
-            
+                        
             obj.n_channels = size(data_in,2);
             obj.n_reps     = size(data_in,3);
             
@@ -185,7 +190,7 @@ classdef data < sl.obj.display_class
                 cur_obj = objs(iObj);
                 %This might be temporary if I can fix LinePlotReducer to
                 %not constantly replot ...
-                if cur_obj.n_samples > BIG_PLOT_N_SAMPLES
+                if cur_obj.n_samples < BIG_PLOT_N_SAMPLES
                     t = cur_obj.time.getTimeArray();
                     if ischar(in.channels)
                         plot(t,cur_obj.d,plotting_options{:});
