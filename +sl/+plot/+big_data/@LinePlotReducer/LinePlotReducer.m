@@ -37,18 +37,33 @@ classdef LinePlotReducer < handle
     %
     %   It is slowly being rewritten to conform with my standards.
     %
+    
+    %Speedup approaches:
+    %--------------------------------
+    %1) On starting, let's get the widths so that they are apppropriate
+    %   for the largest monitor on which they would be displayed.
+    %   Eventually we could disable this behavior. Ideally this is not a
+    %   significant memory hog.
+    %2) Oversample the zoom, maybe by a factor of 4ish so that subsequent
+    %   zooms can use the oversampled data.
+    
+    
+    
+    
+    %External Files:
+    %sl.plot.big_data.LinePlotReducer.init
+    
     properties
         id
         
         % Handles
         %----------
-        h_figure
+        h_figure  %Figure handle. Always singular.
+        
         h_axes    %This is normally singular.
         %There might be multiple axes for plotyy.
         
-        
-        h_plot
-        
+        h_plot %cell, one for each group of x & y
         
         % Render Information
         %-------------------
@@ -56,40 +71,30 @@ classdef LinePlotReducer < handle
         extra_plot_options = {} %These are the parameters that go into
         %the end of a plot function, such as {'Linewidth', 2}
         
-        % Original data
-        %---------------
-        %Note on why non-evenly sampled data is no longer supported well.
+        x %cell Each cell corresponds to a different pair of inputs.
         %
+        %   plot(x1,y1,x2,y2)
         %
-        %NOTE: Previously there was a y to x map. This was done because
-        %we could have multiple x timelines for each y. The result of this
-        %parsing is that when we trim the data, our x 'channels' may not
-        %longer be the same size, so we do each y, with its corresponding
-        %x, separately.
-        %
-        %   Example:
-        %   x = [m x n], y = [m x n] n = # of channels, rows are samples
-        %
-        %   Since the time values for each column may be different,
-        %   returning over a filtered range may make the reduced x values
-        %   no longer a matrix. To fix this the old code split all of the
-        %   data up into single x,y pairs x = [m x 1], y = [m x 1]. To
-        %   avoid data replication all x values were aligned to the
-        %   corresponding y values by indices, something like:
-        %
-        %   x = [m x 1], y = [m x 3],
-        %
-        %   y_to_x_map = [1 1 1] %All three y's use the first x
-        %
-        %   or really x = {[m x 1]} y = {[m x 1] [m x 1] [m x 1]}
-        %
-        %   This would allow more x's and y's with more or less than 'm'
-        %   samples.
+        %   x = {x1 x2}
         
-        x %cell %NOTE: I don't think that x needs to be a cell.
-        %TODO: This inconsistency should be fixed
-        y %cell
-        linespecs %cell
+        y %cell, same format as 'x'
+        
+        x_r_orig %cell
+        y_r_orig %cell
+        
+        x_r_last
+        y_r_last
+        
+        axes_width
+        x_lim
+        x_lim_original
+        
+        linespecs %cell Each element is paired with the corresponding
+        %pair of inputs
+        %
+        %   plot(x1,y1,'r',x2,y2,'c')
+        %
+        %   linspecs = {'r' 'c'}
         
         % Status
         %-----------
@@ -101,216 +106,123 @@ classdef LinePlotReducer < handle
         %something after the data has been drawn .... Any inputs
         %should be done by binding to the anonymous function.
         
+        timers
+        
+        n_render_calls = 0 %We'll keep track of the # of renders done
+        n_x_reductions = 0
+        %for debugging purposes
+        last_redraw_used_original = true
     end
     
     properties (Dependent)
-        x_limits
-        y_limits
+        n_plot_groups %The number of sets of x-y pairs that we have. See
+        %example above for 'x'. In that data, regardless of the size of
+        %x1 and x2, we have 2 groups (x1 & x2).
     end
     
     methods
+        function value = get.n_plot_groups(obj)
+            value = length(obj.x);
+        end
+        %TODO: What does this mean when we have multiple axes???
+        %Does anything in the class use this function???
         %TODO: Allow invalid checking as well
-        function value = get.x_limits(obj)
-            if isempty(obj.h_axes)
-                value = [NaN NaN];
-            else
-                value = get(obj.h_axes,'XLim');
-            end
-        end
-        function value = get.y_limits(obj)
-            if isempty(obj.h_axes)
-                value = [NaN NaN];
-            else
-                value = get(obj.h_axes,'YLim');
-            end
-        end
+        % % % %         function value = get.x_limits(obj)
+        % % % %             if isempty(obj.h_axes)
+        % % % %                 value = [NaN NaN];
+        % % % %             else
+        % % % %                 value = get(obj.h_axes,'XLim');
+        % % % %             end
+        % % % %         end
+        % % % %         function value = get.y_limits(obj)
+        % % % %             if isempty(obj.h_axes)
+        % % % %                 value = [NaN NaN];
+        % % % %             else
+        % % % %                 value = get(obj.h_axes,'YLim');
+        % % % %             end
+        % % % %         end
     end
     
     properties
         plotted_data_once = false
     end
     
-    properties (Hidden,Constant)
-        reduce_fh = @sl.plot.big_data.reduce_to_width;
-    end
-    
     %Constructor
     %-----------------------------------------
     methods
         function obj = LinePlotReducer(varargin)
+            %
+            %   ???
+            %
             temp = now;
             obj.id = uint64(floor(1e8*(temp - floor(temp))));
             %I'm hiding the initialization details in another file to
-            %reduce the high indendtation levels and the length of this
+            %reduce the high indentation levels and the length of this
             %function.
             init(obj,varargin{:})
         end
     end
     
-    methods
-        function renderData(obj)
-            % Draws all of the data.
+    methods 
+        function resize(obj,h,event_data,axes_I)
             %
-            %   This is THE main function which actually plots data.
+            %   Called when the xlim property of an axes object changes or
+            %   when an axes is resized (or moved - older versions of
+            %   Matlab).
             %
-            %   This function is called:
-            %       1) manually
-            %       2) list is incomplete TODO: Finish this...
+            %   This callback can occur multiple times in quick succession
+            %   so we add a timer that essentially requests an update in 
+            %   rendering at a later point in time. NOTE: This is an update
+            %   in the decimation used in this plot NOT an update in the
+            %   axes changing. The look of the axes will change, it may
+            %   just look a bit funny, specifically if it is being
+            %   enlarged.
             %
-            %   See Also:
-            %   resize
+            %   Every time the callback runs the timer is stopped and the
+            %   wait to throw the actual callback begins over again.
+
+            %#DEBUG
+            %fprintf('Callback called for: %d at %g\n',obj.id,cputime);
             
-            % We're busy now.
-            obj.busy = true;
+            t = obj.timers(axes_I);
             
-            %TODO: If the figure closes, then we are in trouble ...
-            %   -???? - when is this a problem? - I think this happens if
-            %   we plot an object, then we close the figure, and then we
-            %   try to plot the object, at which point the figure and the
-            %   plotted data no longer exist, so we need to reset
-            %   - we probably also need to be careful about
-            
-            % NOTE: Due to changes in the way this function was designed,
-            % we may not have plotted the original data yet
-            if ~obj.plotted_data_once
-                %NOTE: The user may have already specified the axes ...
-                if isempty(obj.h_axes)
-                    obj.h_axes   = gca;
-                    obj.h_figure = gcf;
-                    %TODO: If only the axes are specified, then we should get
-                    %the figure handle ...
-                end
-                
-                width = sl.axes.getWidthInPixels(obj.h_axes(1));
-                
-                %Why is this happening?
-                if width <= 0
-                    width = 100;
-                end
-                
-                n_plots     = length(obj.x);
-                temp_h_plot = zeros(1,n_plots);
-                % For all data we manage...
-                
-                %TODO: We need to be able to support the following case ...
-                %plot(x1,y1,x2,y2)
-                %Where all inputs are matrices ...
-                %for k = 1:n_plots
-                k = 1;
-                %Reduce the data.
-                %----------------------------------------
-                [x_r, y_r] = obj.reduce_fh(obj.x{k}, obj.y{k}, width, [-Inf Inf]);
-                
-                plot_args = {obj.h_axes(1) x_r y_r};
-                
-                cur_linespecs = obj.linespecs{k};
-                if ~isempty(cur_linespecs)
-                    plot_args = [plot_args {cur_linespecs}]; %#ok<AGROW>
-                end
-                
-                if ~isempty(obj.extra_plot_options)
-                    plot_args = [plot_args obj.extra_plot_options]; %#ok<AGROW>
-                end
-                
-                temp_h_plot = obj.plot_fcn(plot_args{:});
-                %end
-                
-                obj.h_plot = temp_h_plot;
-                
-                % Listen for changes to the x limits of the axes.
-                for k = 1:length(obj.h_axes)
-                    addlistener(obj.h_axes(k), 'XLim',     'PostSet', @(h, event_data) obj.resize(h,event_data));
-                    addlistener(obj.h_axes(k), 'Position', 'PostSet', @(h, event_data) obj.resize(h,event_data));
-                end
-                
-                obj.plotted_data_once = true;
-                
-                
-            else
-                % Get the new limits. Sometimes there are multiple axes stacked
-                % on top of each other. Just grab the first. This is really
-                % just for plotyy.
-                lims  = get(obj.h_axes(1), 'XLim');
-                
-                width = sl.axes.getWidthInPixels(obj.h_axes(1));
-                
-                %??? - Why was the width 0?
-                if width <= 0
-                    width = 100;
-                end
-                
-                % For all data we manage...
-                %TODO: This needs to be fixed ...
-                
-                    
-                    %Reduce the data.
-                    %----------------------------------------
-                    [x_r, y_r] = obj.reduce_fh(obj.x{1}, obj.y{1}, width, lims);
-                    
-                    for iChan = 1:length(obj.h_plot)
-                    
-                    % Update the plot.
-                        set(obj.h_plot(iChan), 'XData', x_r(:,iChan), 'YData', y_r(:,iChan));
-                    end
-                
-            end
-            
-            if ~isempty(obj.post_render_callback)
-                obj.post_render_callback();
-            end
-            
-            % We're no longer busy.
-            obj.busy = false;
-            
+            %NOTE: The timer class overloads subsref which gets me nervous
+            %so I avoid calling subsref by passing t into its methods
+            %rather than doing t.() - like t.stop();
+            stop(t);
+            set(t,'TimerFcn',@(~,~)obj.resize2(h,event_data,axes_I));
+            start(t)
+            %Rules for timers:
+            %1) Delay action slightly - 0.1 s?
+            %2) On calling, delay further
+            %
+            %   Eventually, if the total delay exceeds some amount, we
+            %   should render, this occurs if for example we are panning
+            %   ...
         end
-        function resize(obj,h,event_data)
-            %
-            %   Called when things are resized or the x_limits change.
-            %
-            %   h : schema.prop
-            %             Name: 'XLim'
-            %      Description: ''
-            %         DataType: 'axesXLimType'
-            %     FactoryValue: [0 1]
-            %      AccessFlags: [1x1 struct]
-            %          Visible: 'on'
-            %      GetFunction: []
-            %      SetFunction: []
-            %
-            %   event_data : handle.PropertySetEventData
-            %               Type: 'PropertyPostSet'
-            %             Source: [1x1 schema.prop]
-            %     AffectedObject: [1x1 axes]
-            %           NewValue: [-75.0109 751.7581]
-            
-            
-            %The issue, the callback fires a ton
-            %Resizing can cause the labels to redraw to something that
-            %makes more sense i.e. from steps of 200 to 100 if the axis
-            %gets larger.
-            %
-            %See:
-            %http://undocumentedmatlab.com/blog/controlling-callback-re-entrancy
-            
-            % % % % %             fprintf('Changing: %s\n',h.Name);
-            % % % % %             disp(event_data.NewValue);
-            
-            
-            %format longg
-            
-            %TODO: This needs to be fixed ...
-            %
-            %It is being called multiple times ...
-            %
-            %???? Doesn't this approach mean that we'll miss events????
-            % If we're not already busy updating and if the plots still exist.
-            if ~obj.busy && all(ishandle(obj.h_plot))
-                %fprintf('LinePlotReducer: redraw: %d\n',obj.id);
-                obj.renderData();
-                %fprintf('Callback ran\n');
-            else
-                %fprintf('LinePlotReducer: Busy: %d\n',obj.id);
-            end
+        function resize2(obj,h,event_data,axes_I)
+           %
+           %
+           %    This event is called by the timer that is configured in
+           %    resize().
+           %
+           %    If we reach this point then we can begin the slow process
+           %    of replotting the data in response to the change in the
+           %    axes.
+           %
+           %    Where does busy fit into this? I don't think it does, we 
+           %    try and run this code regardless. 
+
+           %#DEBUG
+           fprintf('Callback 2 called for: %d at %g\n',obj.id,cputime);
+
+           s = struct;
+           s.h = h;
+           s.event_data = event_data;
+           s.axes_I = axes_I;
+           
+           obj.renderData(s);
+           
         end
     end
     

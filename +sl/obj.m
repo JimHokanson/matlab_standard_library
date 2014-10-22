@@ -93,6 +93,10 @@ classdef obj
             obj = sci.time_series.data(1:1000,0.01)
             %}
             
+            %TODO: Move this to a separate file and move the "sections"
+            %to their own helper methods:
+            %
+            % e.g. h__deleteConstructorMethod
             
             in.show_handle_methods = false;
             in.show_constructor = false;
@@ -116,15 +120,14 @@ classdef obj
             %------------------------------------------------------------------
             
             
-            meta_methods_objs = metaclass(objs(1));
+            meta_class_obj = metaclass(objs(1));
             
-            meta_methods = meta_methods_objs.MethodList;
+            meta_method_objs = meta_class_obj.MethodList;
             
+           
             %JAH:Can be used to filter by classes ...
             % DAH: FIXED- definition_class stores the methods defining
             % class. ie. whether static or hidden, etc.
-            
-            definiition_class = [meta_methods.DefiningClass];
             
             
             %Method filtering
@@ -133,51 +136,47 @@ classdef obj
             %------
             %1.1) Remove hidden
             if ~in.show_hidden
-                meta_methods([meta_methods.Hidden]) = [];
+                meta_method_objs([meta_method_objs.Hidden]) = [];
             end
             
             
             %1.2) Remove handle methods
             if ~in.show_handle_methods && any(strcmp(superclasses(objs),'handle'))
-                defining_class_names = sl.cell.getStructureField({meta_methods.DefiningClass},'Name','un',0);
-                meta_methods(strcmp(defining_class_names,'handle')) = [];
+                defining_class_names = sl.cell.getStructureField({meta_method_objs.DefiningClass},'Name','un',0);
+                meta_method_objs(strcmp(defining_class_names,'handle')) = [];
             end
             
             
             %2) Filtering by name
             %------
-            method_names = {meta_methods.Name}; % DAH: in a cell array
+            method_names = {meta_method_objs.Name};
+            
             %2.1) Remove constructor
             if ~in.show_constructor
                 c_name = sl.obj.getClassNameWithoutPackages(objs);
+
+                mask = strcmp(method_names,c_name);
                 
-                % DAH- I think this does what you want it to do. Deletes it
-                % the whole array meta_methods_objs No error but not sure
-                % if you want this.
-                mask= (strcmp(method_names,c_name)== 0);
-                if mask == true
-                meta_methods_objs= [];
-                end
+                %Alternatively, to the code below
+                %mask = ~strcmp(method_names,c_name);
+                %mask= (strcmp(method_names,c_name) == 0);
                 
-                method_names(strcmp(method_names,c_name)) = [];
+                %Two ways of filtering
+                %1) method_names(mask) = []; %Remove the one we don't want
+                %2) method_names = methods_names(~mask); %
+                
+                meta_method_objs(mask) = [];
+                
+                method_names(mask) = [];
             end
             
             
             %Retrieval of names to display and help text
             %-------------------------------------------------
-            method_names_sorted = sort(method_names);
+            [method_names_sorted, I] = sort(method_names);
             
-            method_names_sorted(2);
-            
-            method_objs_sorted= meta_methods(sort(meta_methods_objs));
-            
-            %JAH Carry the sort information with you to sort the method objects
-            %See the 2nd output of sort
-            %[method_names_sorted,I] = sort...
-            %method_objs_sorted = meta_methods(...
-            %DAH here I'm a little confused. You asked me to delete
-            %meta_methods_objs
-            
+            method_objs_sorted = meta_method_objs(I);
+  
             full_method_names = sl.obj.getFullMethodName(objs,method_names_sorted);
             h1_lines       = cellfun(@sl.help.getH1Line,full_method_names,'un',0);
             
@@ -205,14 +204,18 @@ classdef obj
             %   getStore.: Retrieves info about a base unit for the TDT
             %   system }%
             
+            class_name = class(objs);
+            
             for iM = 1:n_methods
-                cur_method_name = method_names_sorted{iM};
-                cur_meta_method_obj = method_objs_sorted{iM};
+                current_method_name = method_names_sorted{iM}; %cells
+                current_meta_method_obj = method_objs_sorted(iM); %arrays
+                
                 cur_h1_line = h1_lines{iM};
                 
                 % Edit link
-                edit_cmd   = sprintf('edit(''%s'')',sl.obj.getFullMethodName(objs,cur_method_name));
+                edit_cmd   = sprintf('edit(''%s'')',sl.obj.getFullMethodName(objs,current_method_name));
                 colon_link = sl.cmd_window.createLinkForCommands(':', edit_cmd);
+                
                 
                 % generates an class object using the static method
                 % meta.class and all the information with it.
@@ -221,15 +224,15 @@ classdef obj
                 
                 %Use meta_methods after sorting instead
         
-                input_names = meta_methods_objs.MethodList(idx).InputNames;
-                output_names = meta_methods_objs.MethodList(idx).OutputNames;
+                input_names = current_meta_method_obj.InputNames;
+                output_names = current_meta_method_obj.OutputNames;
                 
                 % need to generate this. 
 %                 file_pathway= mc.
                 % separate all the outputs with periods
                 %
                 %   function_output_string =
-                %   sprintf('[%s]',sl.cellstr.join(outputNames)
+                %   sprintf('[%s]',sl.cellstr.join(outputNames))
                 %
                 %
                 %   Add spaces
@@ -243,53 +246,46 @@ classdef obj
                 %   method_name ???
                 %   
                 %   TODO: If static, add on path to method
-                  if cur_meta_method_obj.Static %#note this doesn't exist yet#
-                      fprintf(2,'Go to display method in sl.obj, normally I would use goDebug\n');
-                      keyboard
-                      method_name_for_function_display = '';  %do something here
+                  if current_meta_method_obj.Static
+                      method_name_for_function_display = sprintf('%s.%s', class_name, current_method_name);  %do something here
                   else
-                      method_name_for_function_display = cur_method_name;
+                      method_name_for_function_display = current_method_name;
                   end
  
-                period_cmd = sprintf('[%s] = %s(%s)', outputs, method_name_for_function_display, inputs); 
+                period_cmd = sprintf('disp(''[%s] = %s(%s)'')', outputs, method_name_for_function_display, inputs); 
                 period_link= sl.cmd_window.createLinkForCommands('.', period_cmd);
                 
                 
-                
-                
  %% Code Phase I
-                % DAH Generation of a static string
-                if cur_method_name.Static
+%                 % DAH Generation of a static string
+                if current_meta_method_obj.Static
                     static_str= '(s)';
                 else
-                    static_str= ' ';
+                    static_str= '   ';
                 end
+                 
+                space= ' ';
+                % DAH concatenation ofs the three links into one string variable
                 
-                % DAH concatenation of the three links into one string variable
-                SEP_STR= [period_link,colon_link,static_str];
-                
-                
-                space_for_help_text = n_chars_max - max_method_name_length - length(SEP_STR);
+                SEP_STR= [period_link, space, colon_link];
+                             
+                space_for_help_text = n_chars_max - max_method_name_length - 6;
                 
                 
                 % DAH generation of the space for the string
-                space_for_str_text= length(SEP_STR);
+%                 space_for_str_text= length(SEP_STR);
                 
-                help_cmd         = sprintf('help(''%s'')',sl.obj.getFullMethodName(objs,cur_method_name));
-                method_with_link = sl.cmd_window.createLinkForCommands(cur_method_name,help_cmd);
+                help_cmd         = sprintf('help(''%s'')',sl.obj.getFullMethodName(objs,current_method_name));
+                method_with_link = sl.cmd_window.createLinkForCommands(current_method_name,help_cmd);
                 
                 left_str  = sl.str.padText(method_with_link,max_method_name_length,...
-                    'text_loc','right','disp_len',length(cur_method_name));
+                    'text_loc','right','disp_len',length(current_method_name));
                 
                 right_str = sl.str.truncateStr(cur_h1_line,space_for_help_text);
                 
-                % Generation of a middle string with a padded right side
-                % (using the name and length as inputs for the provided
-                % class) DAH
-                middle_str= sl.str.padText(SEP_STR,space_for_str_text, ...
-                    'left');
-                
-                fprintf('%s%s%s\n',left_str,middle_str,right_str);
+                middle_str= SEP_STR;
+
+                fprintf('%s%s %s%s\n',static_str, left_str,middle_str,right_str);
             end
             
             

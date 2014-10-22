@@ -3,6 +3,10 @@ classdef LinePlotExplorer < handle
 %   Class:
 %   sl.plot.big_data.LinePlotExplorer
 % 
+%   JAH: This code came with the LinePlotExplorer code that I've since
+%   modified. I haven't touched this code other than putting it in a
+%   package.
+%
 %
 % This tool allows users to move around quickly within a 2D plot by panning
 % (left clicking and dragging) or zoom (scrolling with a scroll wheel). 
