@@ -13,10 +13,10 @@ function renderData(obj,s)
 %
 %   This function is called:
 %       1) manually
-%       2) list is incomplete TODO: Finish this...
+%       2) from resize2()
 %
 %   See Also:
-%   resize
+%   sl.plot.big_data.LinePlotReducer.resize2
 
 %TODO: Add a callback such that when the old lines are deleted, the calls
 %associated with those lines are deleted
@@ -30,7 +30,8 @@ function renderData(obj,s)
 %you should now see 2 callbacks, even though one isn't really rendering
 %- or shouldn't be
 
-INITIAL_AXES_WIDTH = 2000;
+INITIAL_AXES_WIDTH = 2000; %Eventually the idea was to make this a function 
+%of the screen size
 TIMER_START_DELAY = 0.5;
 
 if nargin == 1
@@ -39,11 +40,8 @@ end
 
 obj.n_render_calls = obj.n_render_calls + 1;
 
-% We're busy now.
-obj.busy = true;
-
 %If the figure closes, and we ask the object to replot things, than
-%that would be a problem.
+%that would be a problem, since the graphics references wouldn't exist
 if obj.plotted_data_once
     for iG = obj.n_plot_groups
         if any(~ishandle(obj.h_plot{iG}))
@@ -57,9 +55,183 @@ end
 % NOTE: Due to changes in the way this function was designed,
 % we may not have plotted the original data yet
 if ~obj.plotted_data_once
+    disp('Running first plot code')
+    h__handleFirstPlotting(obj,INITIAL_AXES_WIDTH,TIMER_START_DELAY)
     
+else
+    
+    % Get the new limits. Sometimes there are multiple axes stacked
+    % on top of each other. Just grab the first. This is really
+    % just for plotyy.
+    
+    %For some reason this is not valid ...
+    new_x_limits  = s.new_xlim;
+    
+    %I'm worried this might not be valid. Ideally I could do it from the
+    %position. s.new_position - but 
+    new_axes_width = sl.axes.getWidthInPixels(obj.h_axes(1));
+    
+    %TODO: At this point we need to be able to short-circuit the rendering
+    %if not that much has changed.
+    %
+    %Possible changes:
+    %1) Axes is now wider    - redraw if not sufficiently oversampled
+    %2) Axes is now narrower - don't care
+    %3) Xlimits have changed :
+    %       - Gone back to original - use original values
+    %       -
+    %
+    %   Hold onto:
+    %   - last axes width
+    %   - original axes width
+    %
+    %   ???? How can we subsample appropriately???
+    
+    
+    %??? - Why was the width 0?
+    if new_axes_width <= 0
+        new_axes_width = 100;
+    end
+    
+    previous_axes_width = obj.last_rendered_axes_width;
+    
+    x_lim_changed = ~isequal(obj.last_rendered_xlim,new_x_limits);
+    %width_changed = axes_width ~= previous_axes_width;
+    
+    use_original = false;
+    
+    if x_lim_changed
+        %x_lim changed almost always means a redraw
+        %Let's build a check in here for being the original
+        %If so, go back to that
+        if new_x_limits(1) <= obj.x_lim_original(1) && new_x_limits(2) >= obj.x_lim_original(2)
+            %Then the limits span the original limits
+            %
+            %TODO: Should check that things are wide enough, but we're
+            %starting off very wide above, so for now we'll go with the
+            %original
+            %i.e. if our original was small, and now our figure is larger,
+            %then using the decimation for the original would not be
+            %appropriate
+            if obj.last_redraw_used_original
+                return
+            else
+                use_original = true;
+            end
+        end
+    else
+        %Then width changed
+        if previous_axes_width < new_axes_width
+            return
+        end
+        
+        %When we expand initially, we will assume we've oversampled enough
+        %to not warrant a redraw
+        if new_x_limits(1) <= obj.x_lim_original(1) && new_x_limits(2) >= obj.x_lim_original(2)
+            if obj.last_redraw_used_original
+                return
+            else
+                use_original = true;
+            end
+        end
+        
+    end
+    
+    if use_original
+        obj.last_redraw_used_original = true;
+    else
+        obj.n_x_reductions = obj.n_x_reductions + 1;
+    end
+    
+    obj.last_rendered_xlim = new_x_limits;
+    obj.last_rendered_axes_width = new_axes_width;
+    
+    for iG = 1:obj.n_plot_groups
+        
+        %Reduce the data.
+        %----------------------------------------
+        if use_original
+            %
+            x_r = obj.x_r_orig{iG};
+            y_r = obj.y_r_orig{iG};
+            
+        else
+            [x_r, y_r] = sl.plot.big_data.reduce_to_width(...
+                obj.x{iG}, obj.y{iG}, new_axes_width, new_x_limits);
+        end
+        
+        local_h = obj.h_plot{iG};
+        % Update the plot.
+        for iChan = 1:length(local_h)
+            set(local_h, 'XData', x_r(:,iChan), 'YData', y_r(:,iChan));
+        end
+    end
+    
+end
+
+if ~isempty(obj.post_render_callback)
+    obj.post_render_callback();
+end
+
+
+end
+
+function h__setupCallbacksAndTimers(obj,TIMER_START_DELAY)
+%In 2014b the position property no longer changes when the figure is
+%resized.
+if verLessThan('matlab', '8.4')
+    size_cb = {'Position', 'PostSet'};
+else
+    %You could guess at this call from (>= 2014b):
+    %   wtf = metaclass(gca)
+    %   {wtf.EventList.Name}
+    size_cb = {'SizeChanged'};
+end
+
+%Initialize timers
+%-----------------
+timer_ca = cell(1,length(obj.h_axes));
+for k = 1:length(obj.h_axes)
+    t = timer;
+    t.StartDelay = TIMER_START_DELAY;
+    timer_ca{k} = t;
+end
+obj.timers = [timer_ca{:}];
+
+
+
+% Listen for changes to the x limits of the axes.
+for k = 1:length(obj.h_axes)
+    l1 = addlistener(obj.h_axes(k), 'XLim', 'PostSet', @(h, event_data) obj.resize(h,event_data,k));
+    
+    l2 = addlistener(obj.h_axes(k), size_cb{:}, @(h, event_data) obj.resize(h,event_data,k));
+    
+    %TODO: Also update the object that the axes are dirty ...
+    addlistener(obj.h_axes(k), 'ObjectBeingDestroyed',@(~,~)h__handleListenerCleanups(l1,l2));
+end
+
+
+end
+
+function h__handleListenerCleanups(l1,l2)
+%This function prevents a memory leak. I'm not sure why it wasn't needed 
+%in the FEX version ...
+   delete(l1)
+   delete(l2)
+   %disp('Hi mom!')
+end
+
+function h__handleFirstPlotting(obj,INITIAL_AXES_WIDTH,TIMER_START_DELAY)
+
     %NOTE: The user may have already specified the axes ...
+    %TODO: Verify that the axes exists if specified ...
     if isempty(obj.h_axes)
+        
+        %TODO:
+%                             set(0, 'CurrentFigure', o.h_figure);
+%                     set(o.h_figure, 'CurrentAxes', o.h_axes);
+        
+        
         obj.h_axes   = gca;
         obj.h_figure = gcf;
         plot_args = {};
@@ -81,9 +253,9 @@ if ~obj.plotted_data_once
     %Generally this should be relatively small compared to the size of the
     %data.
     
-    axes_width = INITIAL_AXES_WIDTH;
+    new_axes_width = INITIAL_AXES_WIDTH;
     
-    obj.axes_width = axes_width;
+    obj.last_rendered_axes_width = new_axes_width;
     
     end_h = 0;
     temp_h_indices = cell(1,obj.n_plot_groups);
@@ -99,7 +271,7 @@ if ~obj.plotted_data_once
         %Reduce the data.
         %----------------------------------------
         [x_r, y_r] = sl.plot.big_data.reduce_to_width(...
-            obj.x{iG}, obj.y{iG}, axes_width, [-Inf Inf]);
+            obj.x{iG}, obj.y{iG}, new_axes_width, [-Inf Inf]);
         
         group_x_min(iG) = min(x_r(1,:));
         group_x_max(iG) = max(x_r(end,:));
@@ -147,7 +319,7 @@ if ~obj.plotted_data_once
     temp_h_plot = obj.plot_fcn(plot_args{:});
     
     obj.last_redraw_used_original = true;
-    obj.x_lim = get(obj.h_axes,'xlim');
+    obj.last_rendered_xlim = get(obj.h_axes,'xlim');
     
     %Break up plot handles to be grouped the same as the inputs were
     %---------------------------------------------------------------
@@ -160,155 +332,8 @@ if ~obj.plotted_data_once
     for iG = 1:obj.n_plot_groups
         obj.h_plot{iG} = temp_h_plot(temp_h_indices{iG});
     end
-    
-    
-    
+
     h__setupCallbacksAndTimers(obj,TIMER_START_DELAY)
     
     obj.plotted_data_once = true;
-    
-    
-else
-    % Get the new limits. Sometimes there are multiple axes stacked
-    % on top of each other. Just grab the first. This is really
-    % just for plotyy.
-    cur_x_lim  = get(obj.h_axes(1), 'XLim');
-    
-    axes_width = sl.axes.getWidthInPixels(obj.h_axes(1));
-    
-    %TODO: At this point we need to be able to short-circuit the rendering
-    %if not that much has changed.
-    %
-    %Possible changes:
-    %1) Axes is now wider    - redraw if not sufficiently oversampled
-    %2) Axes is now narrower - don't care
-    %3) Xlimits have changed :
-    %       - Gone back to original - use original values
-    %       -
-    %
-    %   Hold onto:
-    %   - last axes width
-    %   - original axes width
-    %
-    %   ???? How can we subsample appropriately???
-    
-    
-    %??? - Why was the width 0?
-    if axes_width <= 0
-        axes_width = 100;
-    end
-    
-    previous_axes_width = obj.axes_width;
-    
-    x_lim_changed = ~isequal(obj.x_lim,cur_x_lim);
-    %width_changed = axes_width ~= previous_axes_width;
-    
-    use_original = false;
-    
-    if x_lim_changed
-        %x_lim changed almost always means a redraw
-        %Let's build a check in here for being the original
-        %If so, go back to that
-        if cur_x_lim(1) <= obj.x_lim_original(1) && cur_x_lim(2) >= obj.x_lim_original(2)
-            %Then the limits span the original limits
-            %
-            %TODO: Should check that things are wide enough, but we're
-            %starting off very wide above, so for now we'll go with the
-            %original
-            %i.e. if our original was small, and now our figure is larger,
-            %then using the decimation for the original would not be
-            %appropriate
-            if obj.last_redraw_used_original
-                return
-            else
-                use_original = true;
-            end
-        end
-    else
-        %Then width changed
-        if previous_axes_width < axes_width
-            return
-        end
-        
-        %When we expand initially, we will assume we've oversampled enough
-        %to not warrant a redraw
-        if cur_x_lim(1) <= obj.x_lim_original(1) && cur_x_lim(2) >= obj.x_lim_original(2)
-            if obj.last_redraw_used_original
-                return
-            else
-                use_original = true;
-            end
-        end
-        
-    end
-    
-    if use_original
-        obj.last_redraw_used_original = true;
-    else
-        obj.n_x_reductions = obj.n_x_reductions + 1;
-    end
-    
-    obj.axes_width = axes_width;
-    
-    for iG = 1:obj.n_plot_groups
-        
-        %Reduce the data.
-        %----------------------------------------
-        if use_original
-            %
-            x_r = obj.x_r_orig{iG};
-            y_r = obj.y_r_orig{iG};
-            
-        else
-            [x_r, y_r] = sl.plot.big_data.reduce_to_width(...
-                obj.x{iG}, obj.y{iG}, axes_width, lims);
-        end
-        
-        local_h = obj.h_plot{iG};
-        % Update the plot.
-        for iChan = 1:length(local_h)
-            set(local_h, 'XData', x_r(:,iChan), 'YData', y_r(:,iChan));
-        end
-    end
-    
-end
-
-if ~isempty(obj.post_render_callback)
-    obj.post_render_callback();
-end
-
-% We're no longer busy.
-obj.busy = false;
-
-end
-
-function h__setupCallbacksAndTimers(obj,TIMER_START_DELAY)
-%In 2014b the position property no longer changes when the figure is
-%resized.
-if verLessThan('matlab', '8.4')
-    size_cb = {'Position', 'PostSet'};
-else
-    %You could guess at this call from:
-    %   wtf = metaclass(gca)
-    %   {wtf.EventList.Name}
-    size_cb = {'SizeChanged'};
-end
-
-
-timer_ca = cell(1,length(obj.h_axes));
-% Listen for changes to the x limits of the axes.
-for k = 1:length(obj.h_axes)
-    addlistener(obj.h_axes(k), 'XLim', 'PostSet', @(h, event_data) obj.resize(h,event_data,k));
-    
-    %In 2014b this doesn't seem to do anything ...
-    %Not sure if that was the case in earlier versions ...
-    addlistener(obj.h_axes(k), size_cb{:}, @(h, event_data) obj.resize(h,event_data,k));
-    t = timer;
-    t.StartDelay = TIMER_START_DELAY;
-    timer_ca{k} = t;
-end
-
-%TODO: For each axes, get which groups of h_plots belong to the axes
-
-obj.timers = [timer_ca{:}];
 end

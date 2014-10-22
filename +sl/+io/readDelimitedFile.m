@@ -1,4 +1,4 @@
-function [output,extras] = readDelimitedFile(filePath,delimiter,varargin)
+function [output,extras] = readDelimitedFile(file_path,delimiter,varargin)
 %readDelimitedFile  Reads a delimited file
 %
 %   Simple interface to regexp with some post-processing options for
@@ -89,13 +89,13 @@ in = sl.in.processVarargin(in,varargin);
 %Obtaining the text data - change to using an optional input ...
 %--------------------------------------------------------------------
 if in.input_is_str
-    text = filePath; 
+    text = file_path; 
 else
-    if ~exist(filePath,'file')
-        error('Missing file %s',filePath)
+    if ~exist(file_path,'file')
+        error('Missing file %s',file_path)
     end
 
-    text = fileread(filePath);
+    text = fileread(file_path);
 end
 
 %Fixing delimiters

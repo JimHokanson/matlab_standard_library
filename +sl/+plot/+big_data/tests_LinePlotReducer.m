@@ -6,14 +6,14 @@ classdef (Hidden) tests_LinePlotReducer
     %   addpath('D:\Projects\matlab_code_downloaded\LinePlotReducer')
     
     %   JAH: Things to fix:
-    %   1) 
+    %   1) I zoomed in and then zoomed out. On zooming out, I added a bit
+    %   more data, which caused a figure resize, which allowed a bit more
+    %   data to be added, which caused a figure resize. How do I detect
+    %   this and stop it from happening????
+    %   Similarly - it doesn't seem like I can zoom out to the original
+    %   values. Why is this?
     %
     
-    %??????
-    %I think resizing things previously called a position callback to fire
-    %but with normalized units, it doesn't seem to in 2014b
-    %
-    %What do we listen to? Figure resize?????
     
     properties
     end
@@ -30,11 +30,47 @@ classdef (Hidden) tests_LinePlotReducer
         %   2) plot(x1,y1,x2,y2) %See test001
         %   3) plot(ax,x1,y1)
         
+        function testSpeed()
+            
+            %sl.plot.big_data.tests_LinePlotReducer.testSpeed
+            
+            %This tests normal plotting, we need to test the same thing
+            %for the LinePlotReducer class
+            
+            n_samples = [1e5 1e6 1e7 1e8 2e8 3e8];
+            
+            reps = 10;
+            speeds = zeros(reps,length(n_samples));
+            
+            for iRep = 1:reps
+                for iSamples = 1:length(n_samples)
+                    cur_n_samples = n_samples(iSamples);
+                    tic
+                    close all
+                    plot(1:cur_n_samples);
+                    drawnow %Seems to block execution until the rendering has finished
+                    speeds(iRep,iSamples) = toc;
+                end
+            end
+            keyboard
+        end
         function test001_MatrixMultipleInputs()
             t = 1:1e8;
             y = rand(length(t),4);
             y2 = y;
             wtf = sl.plot.big_data.LinePlotReducer(t,4-y,'r',t,y2,'c','Linewidth',2);
+            wtf.renderData;
+        end
+        function interestingInput()
+           %From FEX: 40790
+            n = 1e7 + randi(1000);                          % Number of samples
+            t = sort(100*rand(1, n));                       % Non-uniform sampling
+            x = [sin(0.10 * t) + 0.05 * randn(1, n); ...
+                 cos(0.43 * t) + 0.001 * t .* randn(1, n); ...
+                 round(mod(t/10, 5))];
+            x(:, t > 40 & t < 50) = 0;                      % Drop a section of data.
+            x(randi(numel(x), 1, 20)) = randn(1, 20);       % Emulate spikes.
+            wtf = sl.plot.big_data.LinePlotReducer(t,x);
             wtf.renderData;
         end
     end

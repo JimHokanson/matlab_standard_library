@@ -37,6 +37,8 @@ classdef LinePlotReducer < handle
     %
     %   It is slowly being rewritten to conform with my standards.
     %
+    %   See Also:
+    %   sci.time_series.data
     
     %Speedup approaches:
     %--------------------------------
@@ -44,6 +46,9 @@ classdef LinePlotReducer < handle
     %   for the largest monitor on which they would be displayed.
     %   Eventually we could disable this behavior. Ideally this is not a
     %   significant memory hog.
+    %
+    %   The current approach is just to use a hardcoded value in renderData
+    %
     %2) Oversample the zoom, maybe by a factor of 4ish so that subsequent
     %   zooms can use the oversampled data.
     
@@ -54,14 +59,15 @@ classdef LinePlotReducer < handle
     %sl.plot.big_data.LinePlotReducer.init
     
     properties
-        id
+        id %A unique id that can be used to identify the plotter
+        %when working with callback optimization
         
         % Handles
         %----------
         h_figure  %Figure handle. Always singular.
         
         h_axes    %This is normally singular.
-        %There might be multiple axes for plotyy.
+        %There might be multiple axes for plotyy - NYI
         
         h_plot %cell, one for each group of x & y
         
@@ -79,14 +85,16 @@ classdef LinePlotReducer < handle
         
         y %cell, same format as 'x'
         
-        x_r_orig %cell
+        x_r_orig %cell 
+        %   This is the original reduced data for the full sized plot
         y_r_orig %cell
         
         x_r_last
+        %   This contains the last set of reduced data that was plotted
         y_r_last
         
-        axes_width
-        x_lim
+        last_rendered_axes_width
+        last_rendered_xlim
         x_lim_original
         
         linespecs %cell Each element is paired with the corresponding
@@ -95,12 +103,6 @@ classdef LinePlotReducer < handle
         %   plot(x1,y1,'r',x2,y2,'c')
         %
         %   linspecs = {'r' 'c'}
-        
-        % Status
-        %-----------
-        busy = false %Busy during:
-        %- construction
-        %- refreshData
         
         post_render_callback = []; %This can be set to render
         %something after the data has been drawn .... Any inputs
@@ -124,27 +126,11 @@ classdef LinePlotReducer < handle
         function value = get.n_plot_groups(obj)
             value = length(obj.x);
         end
-        %TODO: What does this mean when we have multiple axes???
-        %Does anything in the class use this function???
-        %TODO: Allow invalid checking as well
-        % % % %         function value = get.x_limits(obj)
-        % % % %             if isempty(obj.h_axes)
-        % % % %                 value = [NaN NaN];
-        % % % %             else
-        % % % %                 value = get(obj.h_axes,'XLim');
-        % % % %             end
-        % % % %         end
-        % % % %         function value = get.y_limits(obj)
-        % % % %             if isempty(obj.h_axes)
-        % % % %                 value = [NaN NaN];
-        % % % %             else
-        % % % %                 value = get(obj.h_axes,'YLim');
-        % % % %             end
-        % % % %         end
     end
     
     properties
-        plotted_data_once = false
+        plotted_data_once = false %Used to determine whether or not 
+        %we need to do some additional setup.
     end
     
     %Constructor
@@ -161,6 +147,10 @@ classdef LinePlotReducer < handle
             %function.
             init(obj,varargin{:})
         end
+%         function delete(obj)
+%            %http://stackoverflow.com/questions/14834040/matlab-free-memory-of-class-objects 
+%            %disp('Delete function ran')
+%         end
     end
     
     methods 
@@ -180,17 +170,39 @@ classdef LinePlotReducer < handle
             %
             %   Every time the callback runs the timer is stopped and the
             %   wait to throw the actual callback begins over again.
+            %
+            %   Inputs:
+            %   -------
+            %   h :
+            %   event_data :
+            %   axes_I :
+            %
+            %   See Also:
+            %   sl.plot.big_data.LinePlotReducer.renderData>h__setupCallbacksAndTimers
 
             %#DEBUG
             %fprintf('Callback called for: %d at %g\n',obj.id,cputime);
             
+            persistent count
+            
+            if isempty(count)
+                count = 0;
+            else
+                count = count + 1;
+            end
+            
+            cur_axes = obj.h_axes(axes_I);
+            new_xlim     = get(cur_axes,'xlim');
+            new_position = get(cur_axes,'position'); 
+            
+            fprintf(2,'Count %d:\n',count);
             t = obj.timers(axes_I);
             
             %NOTE: The timer class overloads subsref which gets me nervous
             %so I avoid calling subsref by passing t into its methods
             %rather than doing t.() - like t.stop();
             stop(t);
-            set(t,'TimerFcn',@(~,~)obj.resize2(h,event_data,axes_I));
+            set(t,'TimerFcn',@(~,~)obj.resize2(h,event_data,axes_I,count,new_xlim,new_position));
             start(t)
             %Rules for timers:
             %1) Delay action slightly - 0.1 s?
@@ -200,7 +212,7 @@ classdef LinePlotReducer < handle
             %   should render, this occurs if for example we are panning
             %   ...
         end
-        function resize2(obj,h,event_data,axes_I)
+        function resize2(obj,h,event_data,axes_I,count,new_xlim,new_position)
            %
            %
            %    This event is called by the timer that is configured in
@@ -218,35 +230,31 @@ classdef LinePlotReducer < handle
 
            s = struct;
            s.h = h;
-           s.event_data = event_data;
-           s.axes_I = axes_I;
+           s.event_data   = event_data;
+           s.axes_I       = axes_I;
+           s.count        = count;
+           s.new_xlim     = new_xlim;
+           s.new_position = new_position;
            
-           obj.renderData(s);
+           %I'm hoping this allows the memory to clear 
+           %t = obj.timers(axes_I);
+           %set(t,'TimerFcn',@(~,~)disp('Why me run????'));
+           
+           try
+              obj.renderData(s);
+           catch ME
+               %TODO: How do I display the stack without throwing an error?
+               fprintf(2,ME.getReport('extended'));
+               keyboard
+           end
            
         end
     end
     
     methods (Static)
+        %This should move to the tests class
         test_plotting_speed %sl.plot.big_data.LinePlotReducer.test_plotting_speed
     end
     
 end
-
-%dcm_obj = datacursormode(fig);
-%set(dcm_obj,'UpdateFcn',@myupdatefcn)
-%
-% % function output_txt = h__DataCursorCallback(obj,event_obj)
-% % % Display the position of the data cursor
-% % % obj          Currently not used (empty)
-% % % event_obj    Handle to event object
-% % % output_txt   Data cursor text string (string or cell array of strings).
-% %
-% % pos = get(event_obj,'Position');
-% % output_txt = {['X: ',num2str(pos(1),4)],...
-% %     ['Y: ',num2str(pos(2),4)]};
-% %
-% % % If there is a Z-coordinate in the position, display it as well
-% % if length(pos) > 2
-% %     output_txt{end+1} = ['Z: ',num2str(pos(3),4)];
-% % end
 
