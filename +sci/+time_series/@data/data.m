@@ -9,12 +9,16 @@ classdef data < sl.obj.display_class
     %       array) into a single object - must have same length and time
     %       and maybe units
     %   - allow plotting of channels as stacked or as subplots
-    %   - averaging to a stimulus
+    %   - averaging to a stimulus (JAH: I think this is done)
     %
     %
     %   Examples:
     %   ---------
     %   1) wtf = sci.time_series.data(rand(1e8,1),0.01);
+    %
+    %
+    %   See Also:
+    %   sci.time_series.tests_data
     
     properties
         d    %[samples x channels x repetitions]
@@ -25,7 +29,7 @@ classdef data < sl.obj.display_class
         %       obj.getRawDataAndTime()
         
         time     %sci.time_series.time
-        units
+        units    %string
         n_channels
         n_reps
         channel_labels
@@ -73,9 +77,11 @@ classdef data < sl.obj.display_class
     methods
         function obj = data(data_in,time_object_or_dt,varargin)
             %
-            %    obj = sci.time_series.data(data_in,time_object,varargin)
+            %   Calling Forms:
+            %   --------------
+            %   obj = sci.time_series.data(data_in,time_object,varargin)
             %
-            %    obj = sci.time_series.data(data_in,dt,varargin)
+            %   obj = sci.time_series.data(data_in,dt,varargin)
             %
             %   Inputs:
             %   -------
@@ -100,6 +106,8 @@ classdef data < sl.obj.display_class
             %
             %    
             
+            MIN_CHANNELS_FOR_WARNING = 500;
+            
             in.history = {};
             in.units   = 'Unknown';
             in.channel_labels = ''; %TODO: If numeric, change to string ...
@@ -111,6 +119,13 @@ classdef data < sl.obj.display_class
             obj.n_reps     = size(data_in,3);
             
             obj.d = data_in;
+            
+            if obj.n_samples == 1 && obj.n_channels >= MIN_CHANNELS_FOR_WARNING
+               sl.warning.formatted(['Current specification for the data is' ...
+                   ' to have %d channels all with 1 sample, perhaps you meant' ...
+                   ' to transpose the input so that you have %d samples for 1 channel'],...
+                   obj.n_channels,obj.n_channels)  
+            end
             
             if isobject(time_object_or_dt)
                 obj.time = time_object_or_dt;

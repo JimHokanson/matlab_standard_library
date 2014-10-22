@@ -39,6 +39,12 @@ function varargout = formatted(message_str,varargin)
 %   sl.warning.formatted('This code branch is in beta testing')
 %
 %   str = sl.warning.formatted('When does this code run???')
+%
+%   Improvments:
+%   ------------
+%   Implement word wrapping function
+%   http://www.mathworks.com/matlabcentral/fileexchange/9909-line-wrap-a-string/content//linewrap.m
+%   - above link doesn't honor links ...
 
 if nargin > 1
     message_str = sprintf(message_str,varargin{:});
