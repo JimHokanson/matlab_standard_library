@@ -32,7 +32,6 @@ function renderData(obj,s)
 
 INITIAL_AXES_WIDTH = 2000; %Eventually the idea was to make this a function 
 %of the screen size
-TIMER_START_DELAY = 0.5;
 
 if nargin == 1
     s = [];
@@ -55,22 +54,18 @@ end
 % NOTE: Due to changes in the way this function was designed,
 % we may not have plotted the original data yet
 if ~obj.plotted_data_once
-    disp('Running first plot code')
-    h__handleFirstPlotting(obj,INITIAL_AXES_WIDTH,TIMER_START_DELAY)
+    %#DEBUG
+    %disp('Running first plot code')
+    h__handleFirstPlotting(obj,INITIAL_AXES_WIDTH)
     
 else
-    
-    % Get the new limits. Sometimes there are multiple axes stacked
-    % on top of each other. Just grab the first. This is really
-    % just for plotyy.
-    
-    %For some reason this is not valid ...
     new_x_limits  = s.new_xlim;
     
-    %I'm worried this might not be valid. Ideally I could do it from the
-    %position. s.new_position - but 
-    new_axes_width = sl.axes.getWidthInPixels(obj.h_axes(1));
+    %TODO: I'm phasing out resizing, rendering a few thousand point
+    %line is no big deal ...
+    new_axes_width = INITIAL_AXES_WIDTH;
     
+   
     %TODO: At this point we need to be able to short-circuit the rendering
     %if not that much has changed.
     %
@@ -87,11 +82,10 @@ else
     %
     %   ???? How can we subsample appropriately???
     
-    
-    %??? - Why was the width 0?
-    if new_axes_width <= 0
-        new_axes_width = 100;
-    end
+% % %     origInfo = getappdata(gca, 'matlab_graphics_resetplotview');
+% % %     if ~isempty(origInfo)
+% % %     fprintf(2,'%s\n',mat2str(origInfo.XLim));
+% % %     end
     
     previous_axes_width = obj.last_rendered_axes_width;
     
@@ -105,19 +99,7 @@ else
         %Let's build a check in here for being the original
         %If so, go back to that
         if new_x_limits(1) <= obj.x_lim_original(1) && new_x_limits(2) >= obj.x_lim_original(2)
-            %Then the limits span the original limits
-            %
-            %TODO: Should check that things are wide enough, but we're
-            %starting off very wide above, so for now we'll go with the
-            %original
-            %i.e. if our original was small, and now our figure is larger,
-            %then using the decimation for the original would not be
-            %appropriate
-            if obj.last_redraw_used_original
-                return
-            else
-                use_original = true;
-            end
+            use_original = true;
         end
     else
         %Then width changed
@@ -128,11 +110,7 @@ else
         %When we expand initially, we will assume we've oversampled enough
         %to not warrant a redraw
         if new_x_limits(1) <= obj.x_lim_original(1) && new_x_limits(2) >= obj.x_lim_original(2)
-            if obj.last_redraw_used_original
-                return
-            else
-                use_original = true;
-            end
+            use_original = true;
         end
         
     end
@@ -163,9 +141,15 @@ else
         local_h = obj.h_plot{iG};
         % Update the plot.
         for iChan = 1:length(local_h)
-            set(local_h, 'XData', x_r(:,iChan), 'YData', y_r(:,iChan));
+            set(local_h(iChan), 'XData', x_r(:,iChan), 'YData', y_r(:,iChan));
         end
     end
+    
+% % %     origInfo = getappdata(gca, 'matlab_graphics_resetplotview');
+% % %     if ~isempty(origInfo)
+% % %         fprintf(2,'%s\n',mat2str(origInfo.XLim));
+% % %     end
+% % %     
     
 end
 
@@ -176,52 +160,29 @@ end
 
 end
 
-function h__setupCallbacksAndTimers(obj,TIMER_START_DELAY)
-%In 2014b the position property no longer changes when the figure is
-%resized.
-if verLessThan('matlab', '8.4')
-    size_cb = {'Position', 'PostSet'};
-else
-    %You could guess at this call from (>= 2014b):
-    %   wtf = metaclass(gca)
-    %   {wtf.EventList.Name}
-    size_cb = {'SizeChanged'};
-end
+function h__setupCallbacksAndTimers(obj)
 
-%Initialize timers
-%-----------------
-timer_ca = cell(1,length(obj.h_axes));
-for k = 1:length(obj.h_axes)
-    t = timer;
-    t.StartDelay = TIMER_START_DELAY;
-    timer_ca{k} = t;
-end
-obj.timers = [timer_ca{:}];
-
-
+obj.timers = cell(1,length(obj.h_axes));
 
 % Listen for changes to the x limits of the axes.
 for k = 1:length(obj.h_axes)
     l1 = addlistener(obj.h_axes(k), 'XLim', 'PostSet', @(h, event_data) obj.resize(h,event_data,k));
-    
-    l2 = addlistener(obj.h_axes(k), size_cb{:}, @(h, event_data) obj.resize(h,event_data,k));
-    
+        
     %TODO: Also update the object that the axes are dirty ...
-    addlistener(obj.h_axes(k), 'ObjectBeingDestroyed',@(~,~)h__handleListenerCleanups(l1,l2));
+    l3 = addlistener(obj.h_axes(k), 'ObjectBeingDestroyed',@(~,~)h__handleListenerCleanups(l1));
 end
 
 
 end
 
-function h__handleListenerCleanups(l1,l2)
+function h__handleListenerCleanups(l1)
 %This function prevents a memory leak. I'm not sure why it wasn't needed 
 %in the FEX version ...
    delete(l1)
-   delete(l2)
-   %disp('Hi mom!')
+   %disp('Hi mom! - listener cleanups ran')
 end
 
-function h__handleFirstPlotting(obj,INITIAL_AXES_WIDTH,TIMER_START_DELAY)
+function h__handleFirstPlotting(obj,INITIAL_AXES_WIDTH)
 
     %NOTE: The user may have already specified the axes ...
     %TODO: Verify that the axes exists if specified ...
@@ -235,7 +196,7 @@ function h__handleFirstPlotting(obj,INITIAL_AXES_WIDTH,TIMER_START_DELAY)
         obj.h_axes   = gca;
         obj.h_figure = gcf;
         plot_args = {};
-    elseif isempty(obj.h_figures)
+    elseif isempty(obj.h_figure)
         obj.h_figure = get(obj.h_axes(1),'Parent');
         plot_args = {obj.h_axes};
     else
@@ -318,6 +279,9 @@ function h__handleFirstPlotting(obj,INITIAL_AXES_WIDTH,TIMER_START_DELAY)
     %NOTE: This doesn't support stairs or plotyy
     temp_h_plot = obj.plot_fcn(plot_args{:});
     
+    %I'm being superstitious
+    drawnow();
+    
     obj.last_redraw_used_original = true;
     obj.last_rendered_xlim = get(obj.h_axes,'xlim');
     
@@ -333,7 +297,7 @@ function h__handleFirstPlotting(obj,INITIAL_AXES_WIDTH,TIMER_START_DELAY)
         obj.h_plot{iG} = temp_h_plot(temp_h_indices{iG});
     end
 
-    h__setupCallbacksAndTimers(obj,TIMER_START_DELAY)
+    h__setupCallbacksAndTimers(obj)
     
     obj.plotted_data_once = true;
 end

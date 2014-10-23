@@ -85,7 +85,7 @@ classdef LinePlotReducer < handle
         
         y %cell, same format as 'x'
         
-        x_r_orig %cell 
+        x_r_orig %cell
         %   This is the original reduced data for the full sized plot
         y_r_orig %cell
         
@@ -129,7 +129,11 @@ classdef LinePlotReducer < handle
     end
     
     properties
-        plotted_data_once = false %Used to determine whether or not 
+        %TODO: Rename to needs_initialization
+        %TODO: Add listeners to lines so that when they are deleted
+        %everything is deleted
+        %- use same objectBeingDestroyed notation as axes
+        plotted_data_once = false %Used to determine whether or not
         %we need to do some additional setup.
     end
     
@@ -148,12 +152,13 @@ classdef LinePlotReducer < handle
             init(obj,varargin{:})
         end
 %         function delete(obj)
-%            %http://stackoverflow.com/questions/14834040/matlab-free-memory-of-class-objects 
-%            %disp('Delete function ran')
+%             %http://stackoverflow.com/questions/14834040/matlab-free-memory-of-class-objects
+%             %#DEBUG
+%             %disp('Delete function ran')
 %         end
     end
     
-    methods 
+    methods
         function resize(obj,h,event_data,axes_I)
             %
             %   Called when the xlim property of an axes object changes or
@@ -161,7 +166,7 @@ classdef LinePlotReducer < handle
             %   Matlab).
             %
             %   This callback can occur multiple times in quick succession
-            %   so we add a timer that essentially requests an update in 
+            %   so we add a timer that essentially requests an update in
             %   rendering at a later point in time. NOTE: This is an update
             %   in the decimation used in this plot NOT an update in the
             %   axes changing. The look of the axes will change, it may
@@ -179,31 +184,70 @@ classdef LinePlotReducer < handle
             %
             %   See Also:
             %   sl.plot.big_data.LinePlotReducer.renderData>h__setupCallbacksAndTimers
-
+            
+            START_DELAY = 0.2;
+            
             %#DEBUG
             %fprintf('Callback called for: %d at %g\n',obj.id,cputime);
             
-            persistent count
+            %TODO: Check if our xlims are getting nudged, if so, don't
+            %rerender ...
             
-            if isempty(count)
-                count = 0;
-            else
-                count = count + 1;
+            
+            cur_axes     = obj.h_axes(axes_I);
+            new_xlim     = get(cur_axes,'xlim');
+            
+            %fprintf(2,'Count:%d - xlim:%s\n',count,mat2str(new_xlim,2));
+            
+            %This might occur if we haven't waited long enough
+            t = obj.timers{axes_I};
+            if ~isempty(t)
+                stop(t)
+                delete(t)
+                obj.timers{axes_I} = []; %Set this now in case we return early
             end
             
-            cur_axes = obj.h_axes(axes_I);
-            new_xlim     = get(cur_axes,'xlim');
-            new_position = get(cur_axes,'position'); 
+            %--------------------------------------------------------------
+            %Problem 1: If we don't replot the data and we have automatic
+            %   x-limit resizing, then when we reset the zoom via double 
+            %   clicking, the x-limits will detect there was no expansion
+            %   of the data, and shrink to the size of the original data
+            %
+            %   As a fix to this, we currently  
+            %
+            %   IMPORTANT: This means we have to rerender, even if
+            %   rerendering means only using the old plot info. Technically
+            %   we only need to rerender 1 line, but I haven't implemented
+            %   that yet.
+            %
+            %   
+            %   This makes me sick ...
+            %   This is now causing the oscilating between:
+%             Count:1 - xlim:[1.4e-06 1e+02] - position:[0.13 0.11 0.78 0.81]
+%             Count:1 - xlim:[0 1e+02] - position:[0.13 0.11 0.78 0.81]
+
+            x_width_old = diff(obj.last_rendered_xlim);
+            x_width_new = diff(new_xlim);
+            x_width_max = max(x_width_old,x_width_new);
+
+            dx_lim = sum(abs(new_xlim - obj.last_rendered_xlim)/x_width_max);
+            %#DEBUG
+            %fprintf(2,'%0.5g\n',dx_lim);
+            if dx_lim < 0.001
+                return
+            end
+            ylim = get(cur_axes,'ylim');
+            set(obj.h_plot{1}(1),'XData',new_xlim,'YData',ylim)
+            %--------------------------------------------------------------
             
-            fprintf(2,'Count %d:\n',count);
-            t = obj.timers(axes_I);
-            
-            %NOTE: The timer class overloads subsref which gets me nervous
-            %so I avoid calling subsref by passing t into its methods
-            %rather than doing t.() - like t.stop();
-            stop(t);
-            set(t,'TimerFcn',@(~,~)obj.resize2(h,event_data,axes_I,count,new_xlim,new_position));
+            t = timer;
+            set(t,'StartDelay',START_DELAY,'ExecutionMode','singleShot');
+            %t.StartDelay = 0.5;
+            set(t,'TimerFcn',@(~,~)obj.resize2(h,event_data,axes_I,new_xlim));
             start(t)
+            
+            obj.timers{axes_I} = t;
+            
             %Rules for timers:
             %1) Delay action slightly - 0.1 s?
             %2) On calling, delay further
@@ -212,42 +256,45 @@ classdef LinePlotReducer < handle
             %   should render, this occurs if for example we are panning
             %   ...
         end
-        function resize2(obj,h,event_data,axes_I,count,new_xlim,new_position)
-           %
-           %
-           %    This event is called by the timer that is configured in
-           %    resize().
-           %
-           %    If we reach this point then we can begin the slow process
-           %    of replotting the data in response to the change in the
-           %    axes.
-           %
-           %    Where does busy fit into this? I don't think it does, we 
-           %    try and run this code regardless. 
-
-           %#DEBUG
-           fprintf('Callback 2 called for: %d at %g\n',obj.id,cputime);
-
-           s = struct;
-           s.h = h;
-           s.event_data   = event_data;
-           s.axes_I       = axes_I;
-           s.count        = count;
-           s.new_xlim     = new_xlim;
-           s.new_position = new_position;
-           
-           %I'm hoping this allows the memory to clear 
-           %t = obj.timers(axes_I);
-           %set(t,'TimerFcn',@(~,~)disp('Why me run????'));
-           
-           try
-              obj.renderData(s);
-           catch ME
-               %TODO: How do I display the stack without throwing an error?
-               fprintf(2,ME.getReport('extended'));
-               keyboard
-           end
-           
+        function resize2(obj,h,event_data,axes_I,new_xlim)
+            %
+            %
+            %    This event is called by the timer that is configured in
+            %    resize().
+            %
+            %    If we reach this point then we can begin the slow process
+            %    of replotting the data in response to the change in the
+            %    axes.
+            %
+            %    Where does busy fit into this? I don't think it does, we
+            %    try and run this code regardless.
+            
+            %http://www.mathworks.com/matlabcentral/answers/22180-timers-and-thread-safety
+            
+            %#DEBUG
+            %fprintf('Callback 2 called for: %d at %g\n',obj.id,cputime);
+            
+            t = obj.timers{axes_I};
+            if ~isempty(t)
+                stop(t)
+                delete(t)
+                obj.timers{axes_I} = [];
+            end
+            
+            s = struct;
+            s.h = h;
+            s.event_data   = event_data;
+            s.axes_I       = axes_I;
+            s.new_xlim     = new_xlim;
+            
+            try
+                obj.renderData(s);
+            catch ME
+                %TODO: How do I display the stack without throwing an error?
+                fprintf(2,ME.getReport('extended'));
+                keyboard
+            end
+            
         end
     end
     
