@@ -37,10 +37,16 @@ function [x_reduced, y_reduced] = reduce_to_width(x, y, axis_width_in_pixels, x_
 %   Original Function By:
 %   Tucker McClure (Mathworks)
 
+%TO FIX ******************* TODO
+%This was recently modified to always include the first and last data
+%points due to an issue with replotting. Eventually it would be good
+%to make this optional ...
+
+
 n_points = 2*axis_width_in_pixels;
 
-N_SAMPLES_MAX_PLOT_EVERYTHING = 4*axis_width_in_pixels; %If the # of values 
-%passed is less than this amount, then we just return everything, rather 
+N_SAMPLES_MAX_PLOT_EVERYTHING = 4*axis_width_in_pixels; %If the # of values
+%passed is less than this amount, then we just return everything, rather
 %than computing mins and maxes
 
 % If the data is already small, there's no need to reduce.
@@ -61,8 +67,10 @@ end
 n_channels_y = size(y,2);
 n_channels_x = size(x,2);
 
-x_reduced = nan(n_points, n_channels_y);
-y_reduced = nan(n_points, n_channels_y);
+n_samples_y = size(y,1);
+
+x_reduced = nan(n_points+2, n_channels_y);
+y_reduced = nan(n_points+2, n_channels_y);
 
 n_edges  = axis_width_in_pixels + 1;
 % Create a place to store the indices we'll need.
@@ -81,27 +89,30 @@ for iChan = 1:n_channels_y
     if isempty(bound_indices)
         %NOTE: We've initialized with a null case so that the output will
         %still be defined even if we skip things.
-        continue
+
+        indices = [];
+%         continue
     elseif bound_indices(end) - bound_indices(1) < N_SAMPLES_MAX_PLOT_EVERYTHING
-        %Then just plot everything ...
-        short_indices = bound_indices(1):bound_indices(end);
-        n_short = length(short_indices);
-        if isobject(x)
-            x_reduced(1:n_short, iChan) = x.getTimesFromIndices(short_indices(:));
-        else
-            if iChan == 1 || n_channels_x ~= 1
-                xt = x(:, iChan);
-            end
-            x_reduced(1:n_short, iChan) = xt(short_indices(:));
-        end
-        y_reduced(1:n_short, iChan) = y(short_indices(:), iChan);
-        continue
+        %Can we quit early?
+        %------------------------------
+        %If the data present in this zoomed in case is
+        %small, we will just plot everything.
         
         
+        
+        indices = bound_indices(1):bound_indices(end);
+%         n_short = length(short_indices);
+%         if isobject(x)
+%             x_reduced(1:n_short, iChan) = x.getTimesFromIndices(short_indices(:));
+%         else
+%             if iChan == 1 || n_channels_x ~= 1
+%                 xt = x(:, iChan);
+%             end
+%             x_reduced(1:n_short, iChan) = xt(short_indices(:));
+%         end
+%         y_reduced(1:n_short, iChan) = y(short_indices(:), iChan);
+%         continue
     else
-        
-        
-        
         %For each pixel get the minimum and maximum
         %---------------------------------------------
         for iRegion = 1:axis_width_in_pixels
@@ -123,7 +134,7 @@ for iChan = 1:n_channels_y
             end
         end
     end
-
+    
     %Some mex code that just isn't ready for prime time:
     %----------------------------------------------------
     % % % %     %This can go really wrong if the input is a single ...
@@ -150,19 +161,48 @@ for iChan = 1:n_channels_y
     % % % % % % % % % % %     indices(1,[false; mask])  = indices_of_min(mask);
     % % % % % % % % % % %     indices(2,
     
+    n_indices = numel(indices);
+    
     % Sample the original x and y at the indices we found.
     if isobject(x)
-        %TODO: Does each channel need its own time series if we only have
-        %one time???
-        x_reduced(:, iChan) = x.getTimesFromIndices(indices(:));
+        if n_indices ~= 0
+            end_I = n_indices + 1;
+            x_reduced(2:end_I, iChan) = x.getTimesFromIndices(indices(:));
+        end
+        if n_indices == 0 || indices(1) ~= 1
+            x_reduced(1,iChan) = x.getTimesFromIndices(1);
+            
+        end
+        if n_indices == 0 || indices(end) ~= n_samples_y
+            x_reduced(end,iChan) = x.getTimesFromIndices(n_samples_y);
+            
+        end
     else
         if iChan == 1 || n_channels_x ~= 1
             xt = x(:, iChan);
         end
-        x_reduced(:, iChan) = xt(indices(:));
+        if n_indices ~= 0
+            end_I = n_indices + 1;
+            x_reduced(2:end_I, iChan) = xt(indices(:));
+        end
+        if n_indices == 0 || indices(1) ~= 1
+            x_reduced(1,iChan) = xt(1);
+        end
+        if n_indices == 0 || indices(end) ~= n_samples_y
+            x_reduced(end,iChan) = xt(end);
+        end
     end
-    y_reduced(:, iChan) = y(indices(:), iChan);
     
+    if n_indices == 0 || indices(1) ~= 1
+        y_reduced(1,iChan) = y(1,iChan);
+    end
+    if n_indices == 0 || indices(end) ~= n_samples_y
+        y_reduced(end,iChan) = y(end,iChan);
+    end
+    if n_indices ~= 0
+        end_I = n_indices + 1;
+        y_reduced(2:end_I, iChan) = y(indices(:), iChan);
+    end
 end
 
 end
@@ -276,10 +316,10 @@ function [L, U] = h__binary_search(x, v, L, U)
 %
 %   Inputs:
 %   -------
-%   x : 
+%   x :
 %       x data
 %   v :
-%       value to find index bordder of 
+%       value to find index bordder of
 %   L :
 %   U :
 %

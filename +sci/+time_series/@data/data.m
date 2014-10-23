@@ -176,7 +176,7 @@ classdef data < sl.obj.display_class
             %   Plotting Options: cell array
             %   ----------------------------
             
-            BIG_PLOT_N_SAMPLES = 1e7;
+            BIG_PLOT_N_SAMPLES = 5e5;
             %TODO: Plotting multiple objects on the same figure is a
             %problem as they may have completely different starting dates
             %

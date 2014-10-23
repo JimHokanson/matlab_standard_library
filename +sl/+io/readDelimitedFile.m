@@ -92,7 +92,9 @@ if in.input_is_str
     text = file_path; 
 else
     if ~exist(file_path,'file')
-        error('Missing file %s',file_path)
+        error_msg = sl.error.getMissingFileErrorMsg(file_path);
+        error(error_msg);
+        %error('Missing file %s',file_path)
     end
 
     text = fileread(file_path);

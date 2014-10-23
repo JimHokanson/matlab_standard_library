@@ -114,6 +114,10 @@ classdef LinePlotReducer < handle
         n_x_reductions = 0
         %for debugging purposes
         last_redraw_used_original = true
+        
+        busy = false
+        
+        DEBUG = false
     end
     
     properties (Dependent)
@@ -187,24 +191,34 @@ classdef LinePlotReducer < handle
             
             START_DELAY = 0.2;
             
+            cur_axes     = obj.h_axes(axes_I);
+            new_xlim     = get(cur_axes,'xlim');
+            
+            
             %#DEBUG
-            %fprintf('Callback called for: %d at %g\n',obj.id,cputime);
+            if obj.DEBUG
+                fprintf('Callback called for: %d at %g, xlim: %s: busy: %d\n',obj.id,cputime,mat2str(new_xlim,2),obj.busy);
+            end
             
             %TODO: Check if our xlims are getting nudged, if so, don't
             %rerender ...
             
             
-            cur_axes     = obj.h_axes(axes_I);
-            new_xlim     = get(cur_axes,'xlim');
             
-            %fprintf(2,'Count:%d - xlim:%s\n',count,mat2str(new_xlim,2));
             
+                        
             %This might occur if we haven't waited long enough
             t = obj.timers{axes_I};
             if ~isempty(t)
+                try
                 stop(t)
                 delete(t)
-                obj.timers{axes_I} = []; %Set this now in case we return early
+                catch
+                    %Might fail due to an invalid timer object
+                    %NOTE: This is executing asynchronously of the main
+                    %code (or is it the timer that is ..., or both)
+                    %and we might have deleted the timer in resize2
+                end
             end
             
             %--------------------------------------------------------------
@@ -230,21 +244,26 @@ classdef LinePlotReducer < handle
             x_width_new = diff(new_xlim);
             x_width_max = max(x_width_old,x_width_new);
 
-            dx_lim = sum(abs(new_xlim - obj.last_rendered_xlim)/x_width_max);
+            %dx_lim = sum(abs(new_xlim - obj.last_rendered_xlim)/x_width_max);
             %#DEBUG
             %fprintf(2,'%0.5g\n',dx_lim);
-            if dx_lim < 0.001
-                return
-            end
-            ylim = get(cur_axes,'ylim');
-            set(obj.h_plot{1}(1),'XData',new_xlim,'YData',ylim)
+%             if dx_lim < 0.001
+%                 return
+%             end
+            
+%             ylim = get(cur_axes,'ylim');
+%             set(obj.h_plot{1}(1),'XData',new_xlim,'YData',ylim)
             %--------------------------------------------------------------
             
             t = timer;
             set(t,'StartDelay',START_DELAY,'ExecutionMode','singleShot');
-            %t.StartDelay = 0.5;
             set(t,'TimerFcn',@(~,~)obj.resize2(h,event_data,axes_I,new_xlim));
             start(t)
+            
+            if obj.DEBUG
+                fprintf('New timer created at %g\n',cputime);
+            end
+            
             
             obj.timers{axes_I} = t;
             
@@ -271,8 +290,12 @@ classdef LinePlotReducer < handle
             
             %http://www.mathworks.com/matlabcentral/answers/22180-timers-and-thread-safety
             
+            
+            
             %#DEBUG
-            %fprintf('Callback 2 called for: %d at %g\n',obj.id,cputime);
+            if obj.DEBUG
+            fprintf('Callback 2 called for: %d at %g - busy: %d\n',obj.id,cputime,obj.busy);
+            end
             
             t = obj.timers{axes_I};
             if ~isempty(t)
@@ -287,6 +310,7 @@ classdef LinePlotReducer < handle
             s.axes_I       = axes_I;
             s.new_xlim     = new_xlim;
             
+            obj.busy = true;
             try
                 obj.renderData(s);
             catch ME
@@ -294,6 +318,7 @@ classdef LinePlotReducer < handle
                 fprintf(2,ME.getReport('extended'));
                 keyboard
             end
+            obj.busy = false;
             
         end
     end
