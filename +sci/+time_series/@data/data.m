@@ -3,13 +3,25 @@ classdef data < sl.obj.display_class
     %   Class:
     %   sci.time_series.data
     %
+    %   This class is meant to bind data and an associated timeline.
+    %   Generally these two things are held onto separately, even though
+    %   they are closely related.
+    %
+    %   Time manipulations done in this class are automatically tracked by
+    %   the class. Aditionally, functions that require time information
+    %   (such as filtering) are automatically provided such information by
+    %   the class.
+    %
+    %   Finally, there is some expectation that data stored in this class
+    %   could be large, so there are some aspects of this class that try
+    %   and handle this better than might typically be done by the user.
     %
     %   Methods to implement:
+    %   ---------------------
     %   - allow merging of multiple objects (input as an array or cell
     %       array) into a single object - must have same length and time
     %       and maybe units
     %   - allow plotting of channels as stacked or as subplots
-    %   - averaging to a stimulus (JAH: I think this is done)
     %
     %
     %   Examples:
@@ -19,6 +31,7 @@ classdef data < sl.obj.display_class
     %
     %   See Also:
     %   sci.time_series.tests_data
+    %   sci.time_series.time
     
     properties
         d    %[samples x channels x repetitions]
@@ -106,7 +119,10 @@ classdef data < sl.obj.display_class
             %
             %
             
-            MIN_CHANNELS_FOR_WARNING = 500;
+            MIN_CHANNELS_FOR_WARNING = 500; %The dimensions of the input
+            %data are very specific, no assumptions are made. However, if
+            %we get too many channels with only 1 sample we'll throw a
+            %warning.
             
             in.history = {};
             in.units   = 'Unknown';
@@ -551,8 +567,11 @@ classdef data < sl.obj.display_class
     
     %Basic math functions --------------- e.g. abs
     methods
+        function abs(objs)
+           objs.runFunctionsOnData({@abs});
+        end
         function power(objs,B)
-           objs.runFunctionsOnData({@(x)power(x,B)}) 
+           objs.runFunctionsOnData({@(x)power(x,B)});
         end
     end
     
