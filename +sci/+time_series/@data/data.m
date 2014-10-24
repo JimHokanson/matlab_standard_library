@@ -69,7 +69,7 @@ classdef data < sl.obj.display_class
             value = fieldnames(obj.devents);
         end
         function value = get.n_samples(obj)
-           value = size(obj.d,1); 
+            value = size(obj.d,1);
         end
     end
     
@@ -102,9 +102,9 @@ classdef data < sl.obj.display_class
             %       time and that may also carray a string or value with
             %       the event.
             %   y_label: string
-            %       Value for y_label when plotted. 
+            %       Value for y_label when plotted.
             %
-            %    
+            %
             
             MIN_CHANNELS_FOR_WARNING = 500;
             
@@ -114,17 +114,17 @@ classdef data < sl.obj.display_class
             in.events  = [];
             in.y_label = '';
             in = sl.in.processVarargin(in,varargin);
-                        
+            
             obj.n_channels = size(data_in,2);
             obj.n_reps     = size(data_in,3);
             
             obj.d = data_in;
             
             if obj.n_samples == 1 && obj.n_channels >= MIN_CHANNELS_FOR_WARNING
-               sl.warning.formatted(['Current specification for the data is' ...
-                   ' to have %d channels all with 1 sample, perhaps you meant' ...
-                   ' to transpose the input so that you have %d samples for 1 channel'],...
-                   obj.n_channels,obj.n_channels)  
+                sl.warning.formatted(['Current specification for the data is' ...
+                    ' to have %d channels all with 1 sample, perhaps you meant' ...
+                    ' to transpose the input so that you have %d samples for 1 channel'],...
+                    obj.n_channels,obj.n_channels)
             end
             
             if isobject(time_object_or_dt)
@@ -312,10 +312,35 @@ classdef data < sl.obj.display_class
                     %NOTE: Eventually we might change this ...
                     new_data(iBin,:,:) = mean(abs(temp_data));
                 end
-
+                
                 decimated_data{iObj} = new_data;
             end
             
+        end
+        function runFunctionsOnData(objs,functions)
+            %
+            %
+            %   
+            %   Example:
+            %   --------
+            %   objs.runFunctionsOnData(@abs)
+            if iscell(functions)
+                %Great, skip ahead
+            elseif ischar(functions)
+                functions = {str2func(functions)};
+            elseif isa(functions, 'function_handle')
+                functions = {functions};
+            elseif ~iscell(functions)
+                error('Unexpected type: %s, for ''functions'' input',class(functions));
+            end
+            
+            for iObj = 1:length(objs)
+                cur_obj = objs(iObj);
+                for iFunction = 1:length(functions)
+                   cur_function = functions{iFunction};
+                   cur_obj.d = cur_function(cur_obj.d);  
+                end
+            end
         end
     end
     
@@ -396,7 +421,7 @@ classdef data < sl.obj.display_class
             %        This refers to one of the internal events in the object.
             %    event_times :
             %        A single event time should be provided for each object
-            % 
+            %
             %   See Also:
             %   sci.time_series.data.getDataAlignedToEvent()
             %   sci.time_series.data.getDataSubset()
@@ -519,15 +544,23 @@ classdef data < sl.obj.display_class
             data = obj.d;
             time = obj.time.getTimeArray();
         end
-        function sample_number = timeToSample(obj)
-            error('Not yet implemented')
+%         function sample_number = timeToSample(obj)
+%             error('Not yet implemented')
+%         end
+    end
+    
+    %Basic math functions --------------- e.g. abs
+    methods
+        function power(objs,B)
+           objs.runFunctionsOnData({@(x)power(x,B)}) 
         end
     end
+    
 end
 
 %Helper functions ---------------------------------------------------------
 function new_data = h__createNewDataFromOld(obj,new_data,new_time_object)
-  new_data = sci.time_series.data(new_data,new_time_object);
+new_data = sci.time_series.data(new_data,new_time_object);
 end
 function event_times = h__getEventTimes(obj,event_name,varargin)
 %

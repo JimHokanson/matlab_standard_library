@@ -8,15 +8,15 @@ classdef obj
     end
     
     methods (Static)
-        function name = getClassNameWithoutPackages(obj)
-            %    Returns name of the class, removing package prefixes if present
+        function name = getClassNameWithoutPackages(class_name)
+            %x Returns name of the class, removing package prefixes if present
             %
-            %    name = sl.obj.getClassNameWithoutPackages(obj)
+            %    name = sl.obj.getClassNameWithoutPackages(class_name)
             %
             %    Example:
             %    --------
             %    obj = temp.package.my_object()
-            %    name = sl.obj.getClassNameWithoutPackages(obj)
+            %    name = sl.obj.getClassNameWithoutPackages(class(obj))
             %
             %    name => 'my_object'
             %
@@ -24,14 +24,12 @@ classdef obj
             %
             %    class(obj)
             %    temp.package.my_object
-            %
-            
-            temp_str = class(obj);
-            I   = strfind(temp_str,'.');
+
+            I   = strfind(class_name,'.');
             if isempty(I)
-                name = temp_str;
+                name = class_name;
             else
-                name = temp_str((I(end)+1):end);
+                name = class_name((I(end)+1):end);
             end
         end
         function output = getFullMethodName(obj,method_name_or_names)
@@ -153,7 +151,7 @@ classdef obj
             
             %2.1) Remove constructor
             if ~in.show_constructor
-                c_name = sl.obj.getClassNameWithoutPackages(objs);
+                c_name = sl.obj.getClassNameWithoutPackages(class(objs));
 
                 mask = strcmp(method_names,c_name);
                 

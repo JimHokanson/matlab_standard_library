@@ -2,12 +2,16 @@ classdef (Hidden) tests_LinePlotReducer
     %
     %   Class:
     %   sl.plot.big_data.tests_LinePlotReducer
+    %
+    %   See Also:
+    %   sl.plot.big_data.LinePlotReducer
     
-    %   addpath('D:\Projects\matlab_code_downloaded\LinePlotReducer')
     
     %   JAH: Things to fix:
     %
-    %   POINTS 1 & 2 are handled (I think) in the resize callback
+    %   POINTS 1 & 2 are handled by just always plotting the extents of the
+    %   data (1st and last data points). This is done in reduce_to_width
+    %
     %   -------------------------
     %   1) I zoomed in and then zoomed out. On zooming out, I added a bit
     %   more data, which caused a figure resize, which allowed a bit more
@@ -30,6 +34,8 @@ classdef (Hidden) tests_LinePlotReducer
     %   Count:1 - xlim:[1.4e-06 1e+02] - position:[0.13 0.11 0.78 0.81]
     %   Count:1 - xlim:[0 1e+02] - position:[0.13 0.11 0.78 0.81]
     %   Callback 2 called for: 90090430 at 273.766
+    %
+    %
     %   -------------------------
     %   3) Plotting a new object, what does that do for the old object since 
     %   presumably the listeners still exist.
