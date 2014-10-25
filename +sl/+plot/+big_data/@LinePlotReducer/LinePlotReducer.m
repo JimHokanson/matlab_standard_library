@@ -64,18 +64,43 @@ classdef LinePlotReducer < handle
         
         % Handles
         %----------
+        d1 = '--------  Handles, Listeners, & Timers ------'
         h_figure  %Figure handle. Always singular.
         
         h_axes    %This is normally singular.
         %There might be multiple axes for plotyy - NYI
         
-        h_plot %cell, one for each group of x & y
+        h_plot %cell, {1 x n_groups} one for each group of x & y
+        %
+        %   
+        %   e.g. plot(x1,y1,x2,y2,x3,y3) produces 3 groups
+        %
+        %   This should really be h_line, to be more specific
+        
+        
+        timers %cell, {1 x n_axes} - these are held onto
+        %between the callback and the final call by the timer
+        %to render the plot
+        
+        axes_listeners %cell, {1 x n_axes}
+        plot_listeners %cell, {1 x n_groups}
         
         % Render Information
         %-------------------
-        plot_fcn
+        d2 = '-------  Input Data -------'
+        plot_fcn %e.g. @plot
+        
+        
+        linespecs %cell Each element is paired with the corresponding
+        %pair of inputs
+        %
+        %   plot(x1,y1,'r',x2,y2,'c')
+        %
+        %   linspecs = {{'r'} {'c'}}
+        
         extra_plot_options = {} %These are the parameters that go into
         %the end of a plot function, such as {'Linewidth', 2}
+        
         
         x %cell Each cell corresponds to a different pair of inputs.
         %
@@ -84,6 +109,9 @@ classdef LinePlotReducer < handle
         %   x = {x1 x2}
         
         y %cell, same format as 'x'
+        
+        
+        d3 = '----- Intermediate Variables ------'
         
         x_r_orig %cell
         %   This is the original reduced data for the full sized plot
@@ -97,27 +125,36 @@ classdef LinePlotReducer < handle
         last_rendered_xlim
         x_lim_original
         
-        linespecs %cell Each element is paired with the corresponding
-        %pair of inputs
-        %
-        %   plot(x1,y1,'r',x2,y2,'c')
-        %
-        %   linspecs = {'r' 'c'}
         
+        d4 = '------ Options ------'
         post_render_callback = []; %This can be set to render
         %something after the data has been drawn .... Any inputs
         %should be done by binding to the anonymous function.
         
-        timers
+        
         
         n_render_calls = 0 %We'll keep track of the # of renders done
         n_x_reductions = 0
         %for debugging purposes
         last_redraw_used_original = true
         
-        busy = false
+        busy = false %True during resetting of data
         
-        DEBUG = false
+        %TODO:
+        %-----------------
+        earliest_unhandled_plot_callback_time = []
+        %When a callback occurs, if this is empty, it gets set
+        %It can then later be used to 
+        
+        
+
+    end
+    
+    properties (Constant,Hidden)
+        %This can be changed to throw out more or less error messages
+        DEBUG = 0 
+        %1) Things related to callbacks
+        %2) things from 1) and cleanup
     end
     
     properties (Dependent)
@@ -139,6 +176,7 @@ classdef LinePlotReducer < handle
         %- use same objectBeingDestroyed notation as axes
         plotted_data_once = false %Used to determine whether or not
         %we need to do some additional setup.
+        needs_initialization = true
     end
     
     %Constructor
@@ -189,10 +227,13 @@ classdef LinePlotReducer < handle
             %   See Also:
             %   sl.plot.big_data.LinePlotReducer.renderData>h__setupCallbacksAndTimers
             
+            %TODO: 
+            
+            
             START_DELAY = 0.2;
             
-            cur_axes     = obj.h_axes(axes_I);
-            new_xlim     = get(cur_axes,'xlim');
+            cur_axes = obj.h_axes(axes_I);
+            new_xlim = get(cur_axes,'xlim');
             
             
             %#DEBUG
@@ -200,19 +241,12 @@ classdef LinePlotReducer < handle
                 fprintf('Callback called for: %d at %g, xlim: %s: busy: %d\n',obj.id,cputime,mat2str(new_xlim,2),obj.busy);
             end
             
-            %TODO: Check if our xlims are getting nudged, if so, don't
-            %rerender ...
-            
-            
-            
-            
-                        
             %This might occur if we haven't waited long enough
             t = obj.timers{axes_I};
             if ~isempty(t)
                 try
-                stop(t)
-                delete(t)
+                    stop(t)
+                    delete(t)
                 catch
                     %Might fail due to an invalid timer object
                     %NOTE: This is executing asynchronously of the main
@@ -221,43 +255,9 @@ classdef LinePlotReducer < handle
                 end
             end
             
-            %--------------------------------------------------------------
-            %Problem 1: If we don't replot the data and we have automatic
-            %   x-limit resizing, then when we reset the zoom via double 
-            %   clicking, the x-limits will detect there was no expansion
-            %   of the data, and shrink to the size of the original data
-            %
-            %   As a fix to this, we currently  
-            %
-            %   IMPORTANT: This means we have to rerender, even if
-            %   rerendering means only using the old plot info. Technically
-            %   we only need to rerender 1 line, but I haven't implemented
-            %   that yet.
-            %
-            %   
-            %   This makes me sick ...
-            %   This is now causing the oscilating between:
-%             Count:1 - xlim:[1.4e-06 1e+02] - position:[0.13 0.11 0.78 0.81]
-%             Count:1 - xlim:[0 1e+02] - position:[0.13 0.11 0.78 0.81]
-
-            x_width_old = diff(obj.last_rendered_xlim);
-            x_width_new = diff(new_xlim);
-            x_width_max = max(x_width_old,x_width_new);
-
-            %dx_lim = sum(abs(new_xlim - obj.last_rendered_xlim)/x_width_max);
-            %#DEBUG
-            %fprintf(2,'%0.5g\n',dx_lim);
-%             if dx_lim < 0.001
-%                 return
-%             end
-            
-%             ylim = get(cur_axes,'ylim');
-%             set(obj.h_plot{1}(1),'XData',new_xlim,'YData',ylim)
-            %--------------------------------------------------------------
-            
             t = timer;
             set(t,'StartDelay',START_DELAY,'ExecutionMode','singleShot');
-            set(t,'TimerFcn',@(~,~)obj.resize2(h,event_data,axes_I,new_xlim));
+            set(t,'TimerFcn',@(~,~)obj.updateAxesData(h,event_data,axes_I,new_xlim));
             start(t)
             
             if obj.DEBUG
@@ -275,7 +275,7 @@ classdef LinePlotReducer < handle
             %   should render, this occurs if for example we are panning
             %   ...
         end
-        function resize2(obj,h,event_data,axes_I,new_xlim)
+        function updateAxesData(obj,h,event_data,axes_I,new_xlim)
             %
             %
             %    This event is called by the timer that is configured in
@@ -291,10 +291,12 @@ classdef LinePlotReducer < handle
             %http://www.mathworks.com/matlabcentral/answers/22180-timers-and-thread-safety
             
             
+            obj.earliest_unhandled_plot_callback_time = [];
+            
             
             %#DEBUG
             if obj.DEBUG
-            fprintf('Callback 2 called for: %d at %g - busy: %d\n',obj.id,cputime,obj.busy);
+                fprintf('Callback 2 called for: %d at %g - busy: %d\n',obj.id,cputime,obj.busy);
             end
             
             t = obj.timers{axes_I};

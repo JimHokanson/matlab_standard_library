@@ -17,7 +17,7 @@ classdef (Hidden) tests_LinePlotReducer
     %   more data, which caused a figure resize, which allowed a bit more
     %   data to be added, which caused a figure resize. How do I detect
     %   this and stop it from happening????
-    %   
+    %
     %   2) Similarly - it doesn't seem like I can zoom out to the original
     %   values. Why is this?
     %   Hypothesis - When zooming out, the data doesn't encompass the
@@ -37,7 +37,7 @@ classdef (Hidden) tests_LinePlotReducer
     %
     %
     %   -------------------------
-    %   3) Plotting a new object, what does that do for the old object since 
+    %   3) Plotting a new object, what does that do for the old object since
     %   presumably the listeners still exist.
     
     properties
@@ -87,12 +87,12 @@ classdef (Hidden) tests_LinePlotReducer
             wtf.renderData;
         end
         function interestingInput()
-           %From FEX: 40790
+            %From FEX: 40790
             n = 1e7 + randi(1000);                          % Number of samples
             t = sort(100*rand(1, n));                       % Non-uniform sampling
             x = [sin(0.10 * t) + 0.05 * randn(1, n); ...
-                 cos(0.43 * t) + 0.001 * t .* randn(1, n); ...
-                 round(mod(t/10, 5))];
+                cos(0.43 * t) + 0.001 * t .* randn(1, n); ...
+                round(mod(t/10, 5))];
             x(:, t > 40 & t < 50) = 0;                      % Drop a section of data.
             x(randi(numel(x), 1, 20)) = randn(1, 20);       % Emulate spikes.
             
@@ -101,6 +101,28 @@ classdef (Hidden) tests_LinePlotReducer
             %where is the correction coming into play???
             wtf = sl.plot.big_data.LinePlotReducer(t,x);
             wtf.renderData;
+        end
+        function testMemoryLeak()
+            for i = 1:200
+                n = 1e7 + randi(1000);                          % Number of samples
+                t = sort(100*rand(1, n));                       % Non-uniform sampling
+                x = [sin(0.10 * t) + 0.05 * randn(1, n); ...
+                    cos(0.43 * t) + 0.001 * t .* randn(1, n); ...
+                    round(mod(t/10, 5))];
+                x(:, t > 40 & t < 50) = 0;                      % Drop a section of data.
+                x(randi(numel(x), 1, 20)) = randn(1, 20);       % Emulate spikes.
+                
+                %TODO: Why do I get the correct orientation when I do this ...
+                %I think it should be many channels with only a few samples,
+                %where is the correction coming into play???
+                wtf = sl.plot.big_data.LinePlotReducer(t,x);
+                wtf.renderData;
+                set(gca,'xlim',[20 40])
+                drawnow
+                pause(2)
+                close all
+                
+            end
         end
         %TODO: Add axes that are linked via x
     end

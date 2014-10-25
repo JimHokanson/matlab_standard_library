@@ -1,13 +1,16 @@
 function error_msg = getMissingFileErrorMsg(file_or_folder_path)
+%x Returns a message that helps the user to understand why a file is missing
 %
 %   error_msg = sl.error.getMissingFileErrorMsg(file_or_folder_path)
 %
 %   This function is meant to facilitate handling when a file is missing.
+%   It only returns a formatted message. It does not actually display the
+%   error (or warning).
 %
 %   Inputs:
 %   -------
 %   file_or_folder_path : string
-%       path to a file or folder.
+%       Path to a file or folder.
 %
 %   Outputs:
 %   --------

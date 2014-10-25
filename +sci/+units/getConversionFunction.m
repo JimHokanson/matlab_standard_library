@@ -15,6 +15,11 @@ function fh = getConversionFunction(source_unit,output_unit)
 %http://www.mathworks.com/matlabcentral/fileexchange/9873-simple-units-and-dimensions-for-matlab
 %http://www.mathworks.com/matlabcentral/fileexchange/35258-unit-converters
 
+if strcmp(source_unit,output_unit)
+    fh = @(x)(x);
+    return
+end
+
 combined_units = sprintf('%s#%s',source_unit,output_unit);
 
 switch combined_units
