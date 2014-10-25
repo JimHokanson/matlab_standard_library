@@ -1,23 +1,27 @@
-classdef bool_transition_info
+classdef bool_transition_info < handle
     %
     %   Class:
     %   sl.array.bool_transition_info
     %
+    %   This class calculate useful information about transitions between
+    %   
+    %
     %   TODO: Implement units tests for this ...
     %
-    %
-    %   TODO: Allow gettings runs of trues or falses based on linking
-    %   between
+    %   Improvements:
+    %   1) Implement some sort of plotting methodology
+    
     
     properties
-        
-        
+        %NOTE: We assume that the first index indicates the "start"
+        %of something and that the last index indcates the "end" of an
+        %event. TODO: We could add this on as an optional input
         true_start_indices  %First instance of a 1 in a group
         %e.g. 0 0 1 1 1 0 0 1 1
         %     1 2 3 4 5 6 7 8 9
         %
         %    This would contain [3 8]
-        true_end_indices
+        true_end_indices    %Last instance of a 1 in a group
         false_start_indices %First instance of a 0
         false_end_indices
     end
@@ -26,38 +30,87 @@ classdef bool_transition_info
         time
     end
     
-    properties (Dependent)
+    %??? If I do dependent, does the value get stored or do I always
+    %have an empty value and need to do the calculation
+    properties % (Dependent)
         %------------------------------------------------------------------
         %NOTE: These things are defined better if time is well defined.
         %Otherwise, time defaults to a start time of 0 and a dt of 1.
         %------------------------------------------------------------------
+        n_true
+        n_false
         true_start_times
         true_end_times
         false_start_times
         false_end_times
-        true_durations
-        false_durations
+        true_durations %in time
+        false_durations %in time
+        true_sample_durations
+        false_sample_durations
     end
     
-    %TODO: Make these run only once ...
     methods
+        function value = get.n_true(obj)
+           value = length(obj.true_start_indices);
+        end
+        function value = get.n_false(obj)
+           value = length(obj.false_start_indices); 
+        end
         function value = get.true_start_times(obj)
-            value = h__getTimeGivenIndices(obj.time,obj.true_start_indices);
+            value = obj.true_start_times;
+            if isempty(value)
+                value = h__getTimeGivenIndices(obj.time,obj.true_start_indices);
+                obj.true_start_times = value;
+            end
         end
         function value = get.true_end_times(obj)
-            value = h__getTimeGivenIndices(obj.time,obj.true_end_indices);
+            value = obj.true_end_times;
+            if isempty(value)
+                value = h__getTimeGivenIndices(obj.time,obj.true_end_indices);
+                obj.true_end_times = value;
+            end
         end
         function value = get.false_start_times(obj)
-            value = h__getTimeGivenIndices(obj.time,obj.false_start_indices);
+            value = obj.false_start_times;
+            if isempty(value)
+                value = h__getTimeGivenIndices(obj.time,obj.false_start_indices);
+                obj.false_start_times = value;
+            end
         end
         function value = get.false_end_times(obj)
-            value = h__getTimeGivenIndices(obj.time,obj.false_end_indices);
+            value = obj.false_end_times;
+            if isempty(value)
+                value = h__getTimeGivenIndices(obj.time,obj.false_end_indices);
+                obj.false_end_times = value;
+            end
         end
         function value = get.true_durations(obj)
-            value = obj.true_end_times - obj.true_start_times;
+            value = obj.true_durations;
+            if isempty(value)
+                value = obj.true_end_times - obj.true_start_times;
+                obj.true_durations = value;
+            end
         end
         function value = get.false_durations(obj)
-            value = obj.false_end_times - obj.false_start_times;
+            value = obj.false_durations;
+            if isempty(value)
+                value = obj.false_end_times - obj.false_start_times;
+                obj.false_durations = value;
+            end
+        end
+        function value = get.true_sample_durations(obj)
+            value = obj.true_sample_durations;
+            if isempty(value)
+           value = obj.true_end_indices - obj.true_start_indices + 1;
+           obj.true_sample_durations = value;
+            end
+        end
+        function value = get.false_sample_durations(obj)
+            value = obj.false_sample_durations;
+            if isempty(value)
+                value = obj.false_end_indices - obj.false_start_indices + 1;
+                obj.false_sample_durations = value;
+            end
         end
     end
     
@@ -152,6 +205,10 @@ classdef bool_transition_info
         function [start_run_times,stop_run_times] = getRunStartsAndStops(obj,min_time_for_new_run,varargin)
             %
             %    [start_run_times,stop_run_times] = obj.getRunStartsAndStops(min_time_for_new_run,varargin)
+            %
+            %   This function was written hastily and probably needs to be
+            %   rewritten
+            %
             %
             %    This was originally designed for getting runs of
             %    stimulation where each stimulus pulse only lasts for a

@@ -91,7 +91,7 @@ classdef data < sl.obj.display_class
             value = size(obj.d,3);
         end
     end
-    
+        
     %Constructor ----------------------------------------------------------
     methods
         function obj = data(data_in,time_object_or_dt,varargin)
@@ -657,14 +657,20 @@ classdef data < sl.obj.display_class
     
     %Basic math functions --------------- e.g. abs
     methods
-        function abs(objs)
+        function objs = abs(objs)
             objs.runFunctionsOnData({@abs});
         end
-        function power(objs,B)
+        function objs = power(objs,B)
             objs.runFunctionsOnData({@(x)power(x,B)});
         end
     end
     
+    %Deep methods
+    methods
+        function event_calc_obj = getEventCalculatorMethods(objs)
+           event_calc_obj = sci.time_series.event_calculators;
+        end
+    end    
 end
 
 %Helper functions ---------------------------------------------------------
