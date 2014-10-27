@@ -63,24 +63,30 @@ classdef smoothing < handle
                 width = ceil(obj.width_value*fs);
             end
         end
-        function coeff = getCoefficients(obj,fs)
+        function [B,A] = getCoefficients(obj,fs)
+        %
+        %   [B,A] = getCoefficients(obj,fs)
+        %
+        
+            A = 1;
+        
             samples_width = obj.getWidthInSamples(fs);
             if strcmp(obj.window_type,'rect')
-                coeff = ones(1,samples_width);
-                coeff = coeff./samples_width;
+                B = ones(1,samples_width);
+                B = B./samples_width;
             else
                 n = samples_width;
                 %triangle
                 if rem(n,2)
                     %odd
                     w = 2*(1:(n+1)/2)/(n+1);
-                    coeff = [w w((n-1)/2:-1:1)];
+                    B = [w w((n-1)/2:-1:1)];
                 else
                     %even
                     w = (2*(1:(n+1)/2)-1)/n;
-                    coeff = [w w(n/2:-1:1)];
+                    B = [w w(n/2:-1:1)];
                 end
-                coeff = coeff./sum(coeff);
+                B = B./sum(B);
             end
         end
         function data_out = filter(obj,data_in,fs)
@@ -95,6 +101,28 @@ classdef smoothing < handle
             end
             
             data_out = filter_method(B,A,data_in);
+        end
+        function plotFrequencyResponse(obj,fs,varargin)
+         %
+         %
+         %  plotFrequencyResponse(obj,fs,varargin)
+         %
+         %  Optional Inputs:
+         %  ----------------
+         %
+         %  See Also:
+         %  freqz
+         
+         in.N = 1024;
+         in = sl.in.processVarargin(in,varargin);
+         
+         [B,A] = getCoefficients(obj,fs);
+
+         [H,F] = freqz(B,A,in.N,fs);
+         
+         plot(F,abs(H))
+         
+         
         end
         function str = getSummaryString(obj,fs)
            switch obj.window_type

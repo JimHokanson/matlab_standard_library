@@ -218,8 +218,13 @@ classdef data < sl.obj.display_class
                 plotting_options = {};
             end
             
+            in.axes     = {};
             in.channels = 'all';
             in = sl.in.processVarargin(in,local_options);
+            
+            if ~isempty(in.axes)
+                in.axes = {in.axes};
+            end
             
             for iObj = 1:length(objs)
                 if iObj == 2
@@ -231,15 +236,18 @@ classdef data < sl.obj.display_class
                 if cur_obj.n_samples < BIG_PLOT_N_SAMPLES
                     t = cur_obj.time.getTimeArray();
                     if ischar(in.channels)
-                        plot(t,cur_obj.d,plotting_options{:});
+                        plot(in.axes{:},t,cur_obj.d,plotting_options{:});
                     else
-                        plot(t,cur_obj.d(:,in.channels),plotting_options{:});
+                        plot(in.axes{:},t,cur_obj.d(:,in.channels),plotting_options{:});
                     end
                 else
                     if ischar(in.channels)
                         temp = sl.plot.big_data.LinePlotReducer(objs(iObj).time,objs(iObj).d,plotting_options{:});
                     else
                         temp = sl.plot.big_data.LinePlotReducer(objs(iObj).time,objs(iObj).d(:,in.channels),plotting_options{:});
+                    end
+                    if ~isempty(in.axes)
+                        temp.h_axes = in.axes{1};
                     end
                     temp.renderData();
                 end
@@ -258,7 +266,37 @@ classdef data < sl.obj.display_class
             %
             %   
             %
+            %   We could have variability between objects OR between
+            %   channels, but not both
+            
+            %???? - How much should we shift by ????
+            %Shifting ideas:
+            %---------------
+            %1) Fixed amount - specified by user
+            %2) Fixed pct - specified by user - what would this be relative to
+            
+            %How to best get CDF??? - could be a rough estimate ...
             %
+            %NOTE: For shifted lines, the CDF doesn't matter
+            %    x
+            %  x y   <= slanted lines, x & y, minimal distance needed
+            %x y   
+            %y
+            %   subtraction shifting
+            %   - this requires the same time for each ... :/
+            %
+            %   TODO: For now let's assume this ...
+            %
+            %   Unless we go by the extreme, then we are still back at the
+            %   CDF, although the CDF of the differences is much more
+            %   informative
+            %
+            %   Although, we could do this for overlaps, don't care about
+            %   the non overlaps !!!!
+            %   Although, no overlaps should have some default separation
+            %   ...
+            %
+            %   TODO: We also need to label which is which ...
             
             if nargin < 2
                 local_options = {};
@@ -267,9 +305,54 @@ classdef data < sl.obj.display_class
                 plotting_options = {};
             end 
             
-            in.channels = 'all';
+            in.shift    = []; %1 value or multiple values
+            %multiple values, absolute or relative ????
+            %- absolute for now ...
+            in.channels = 'all'; %NYI
             in = sl.in.processVarargin(in,local_options);
             
+            n_objs  = length(objs);
+            
+            %Step 1: Grab the data
+            if n_objs > 1
+                %Then plot each object shifted ...
+                local_data = cell(1,n_objs);
+                local_time = cell(1,n_objs);
+                for iObj = 1:length(objs)
+                   local_data{iObj} = objs(iObj).d; 
+                   local_time{iObj} = objs(iObj).time;
+                end
+            else
+                obj = objs;
+                n_chans = obj.n_channels;
+                local_data = cell(1,n_chans);
+                local_time = cell(1,n_chans);
+                for iChan = 1:n_chans
+                   local_data{iChan} = obj.d(:,iChan);
+                   local_time{iChan} = obj.time;
+                end
+            end
+            
+            %Step 2: Determine shift amount
+            
+            n_plots = length(local_data);
+            
+            if isempty(in.shift)
+                error('Currently this is required :/')
+            elseif length(in.shift) == 1
+                all_shifts    = zeros(1,n_plots);
+                all_shifts(1:end) = in.shift;
+                all_shifts    = cumsum(all_shifts);
+            else
+                all_shifts = in.shift; 
+            end
+            
+            hold all
+            for iPlot = 1:n_plots
+                   temp = sl.plot.big_data.LinePlotReducer(local_time{iPlot},local_data{iPlot}+all_shifts(iPlot),plotting_options{:}); 
+                   temp.renderData();
+            end
+            hold off
             
         end
     end
