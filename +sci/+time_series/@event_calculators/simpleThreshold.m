@@ -15,9 +15,10 @@ function results = simpleThreshold(data_objs,threshold_value,look_for_positive,v
 %   --------
 %   results : simple_threshold_results
 
-in.min_time    = [];
+in.min_intertime = [];
+in.min_time    = []; 
 in.min_samples = [];
-in.max_time    = [];
+in.max_time    = []; %If longer than this, reject ...
 in.max_samples = [];
 in.max_value   = []; %
 in = sl.in.processVarargin(in,varargin);
@@ -61,6 +62,31 @@ for iObj = 1:length(data_objs)
     end
     if ~isempty(in.max_samples)
         mask2(bti.true_sample_durations > in.max_samples) = false;
+    end
+    if ~isempty(in.min_intertime)
+        %TODO: We could maybe improve the speed by doing a search over
+        %valid Is first find(mask2) 
+        %
+        %for iTime = only_valid_values_I ....
+        
+        st = bti.true_start_times;
+        et = bti.true_end_times;
+        
+        min_intertime = in.min_intertime;
+        
+        last_valid_I = find(mask2,1);
+        for iTime = last_valid_I+1:length(mask2)
+           
+           if ~mask2(iTime)
+               continue
+           end 
+           
+           if st(iTime) - et(last_valid_I) > min_intertime
+               last_valid_I = iTime;
+           else
+               mask2(iTime) = false;
+           end
+        end
     end
     
     temp = sci.time_series.event_results.simple_threshold_results;
