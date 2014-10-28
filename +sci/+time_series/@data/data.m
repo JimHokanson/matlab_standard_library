@@ -91,7 +91,7 @@ classdef data < sl.obj.display_class
             value = size(obj.d,3);
         end
     end
-        
+    
     %Constructor ----------------------------------------------------------
     methods
         function obj = data(data_in,time_object_or_dt,varargin)
@@ -137,8 +137,6 @@ classdef data < sl.obj.display_class
             in.y_label = '';
             in = sl.in.processVarargin(in,varargin);
             
-            
-            
             obj.d = data_in;
             
             if obj.n_samples == 1 && obj.n_channels >= MIN_CHANNELS_FOR_WARNING
@@ -160,7 +158,7 @@ classdef data < sl.obj.display_class
             end
             
             obj.y_label = in.y_label;
-            obj.units = in.units;
+            obj.units   = in.units;
             obj.channel_labels = in.channel_labels;
             obj.history = in.history;
         end
@@ -177,9 +175,14 @@ classdef data < sl.obj.display_class
             
             for iObj = 1:n_objs
                 cur_obj = old_objs(iObj);
-                temp_objs{iObj} = sci.time_series.data(cur_obj.d,copy(cur_obj.time),...
-                    'history',cur_obj.history,'units',cur_obj.units,...
-                    'channel_labels',cur_obj.channel_labels,'events',cur_obj.devents);
+                temp_objs{iObj} = sci.time_series.data(...
+                    cur_obj.d,...
+                    copy(cur_obj.time),...
+                    'history',cur_obj.history,...
+                    'units',cur_obj.units,...
+                    'channel_labels',cur_obj.channel_labels,...
+                    'events',cur_obj.devents,...
+                    'y_label',cur_obj.y_label);
             end
             
             new_objs = [temp_objs{:}];
@@ -203,7 +206,7 @@ classdef data < sl.obj.display_class
             %
             %   Example:
             %   plot(data_objs,{},{'Linewidth',2}
-            %   
+            %
             
             BIG_PLOT_N_SAMPLES = 5e5;
             %TODO: Plotting multiple objects on the same figure is a
@@ -264,7 +267,7 @@ classdef data < sl.obj.display_class
         end
         function plotStacked(objs,local_options,plotting_options)
             %
-            %   
+            %
             %
             %   We could have variability between objects OR between
             %   channels, but not both
@@ -280,7 +283,7 @@ classdef data < sl.obj.display_class
             %NOTE: For shifted lines, the CDF doesn't matter
             %    x
             %  x y   <= slanted lines, x & y, minimal distance needed
-            %x y   
+            %x y
             %y
             %   subtraction shifting
             %   - this requires the same time for each ... :/
@@ -303,7 +306,7 @@ classdef data < sl.obj.display_class
             end
             if nargin < 3
                 plotting_options = {};
-            end 
+            end
             
             in.shift    = []; %1 value or multiple values
             %multiple values, absolute or relative ????
@@ -319,8 +322,8 @@ classdef data < sl.obj.display_class
                 local_data = cell(1,n_objs);
                 local_time = cell(1,n_objs);
                 for iObj = 1:length(objs)
-                   local_data{iObj} = objs(iObj).d; 
-                   local_time{iObj} = objs(iObj).time;
+                    local_data{iObj} = objs(iObj).d;
+                    local_time{iObj} = objs(iObj).time;
                 end
             else
                 obj = objs;
@@ -328,8 +331,8 @@ classdef data < sl.obj.display_class
                 local_data = cell(1,n_chans);
                 local_time = cell(1,n_chans);
                 for iChan = 1:n_chans
-                   local_data{iChan} = obj.d(:,iChan);
-                   local_time{iChan} = obj.time;
+                    local_data{iChan} = obj.d(:,iChan);
+                    local_time{iChan} = obj.time;
                 end
             end
             
@@ -344,13 +347,13 @@ classdef data < sl.obj.display_class
                 all_shifts(1:end) = in.shift;
                 all_shifts    = cumsum(all_shifts);
             else
-                all_shifts = in.shift; 
+                all_shifts = in.shift;
             end
             
             hold all
             for iPlot = 1:n_plots
-                   temp = sl.plot.big_data.LinePlotReducer(local_time{iPlot},local_data{iPlot}+all_shifts(iPlot),plotting_options{:}); 
-                   temp.renderData();
+                temp = sl.plot.big_data.LinePlotReducer(local_time{iPlot},local_data{iPlot}+all_shifts(iPlot),plotting_options{:});
+                temp.renderData();
             end
             hold off
             
@@ -397,7 +400,7 @@ classdef data < sl.obj.display_class
             %x Filter the data using filters specified as inputs
             %
             %   TODO: Provide a list of filters that can be used ...
-            %   Filter List: 
+            %   Filter List:
             %   -----------------------------------------------
             %   in sci.time_series.filter package
             %
@@ -736,6 +739,18 @@ classdef data < sl.obj.display_class
         %         function sample_number = timeToSample(obj)
         %             error('Not yet implemented')
         %         end
+        function removeTimeGapsBetweenObjects(objs)
+            %
+            %   removeTimeGapsBetweenObjects(objs)
+            %
+            %
+            last_time = 0;
+            for iObj = 1:length(objs)
+                cur_obj = objs(iObj);
+                cur_obj.time.start_offset = last_time;
+                last_time = cur_obj.time.end_time;
+            end
+        end
     end
     
     %Basic math functions --------------- e.g. abs
@@ -751,16 +766,16 @@ classdef data < sl.obj.display_class
     %Deep methods
     methods
         function event_calc_obj = getEventCalculatorMethods(objs)
-           event_calc_obj = sci.time_series.event_calculators;
+            event_calc_obj = sci.time_series.event_calculators;
         end
-    end    
+    end
 end
 
 %Helper functions ---------------------------------------------------------
 function new_data_obj = h__createNewDataFromOld(obj,new_data,new_time_object)
-    new_data_obj   = copy(obj);
-    new_data_obj.d = new_data;
-    new_data_obj.time = new_time_object;
+new_data_obj   = copy(obj);
+new_data_obj.d = new_data;
+new_data_obj.time = new_time_object;
 end
 function event_times = h__getEventTimes(obj,event_name,varargin)
 %
