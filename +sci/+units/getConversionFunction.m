@@ -12,6 +12,10 @@ function fh = getConversionFunction(source_unit,output_unit)
 %Eventually I want to expand all of this but for now we'll hardcode what we
 %need
 
+%IMPORTANT:
+%----------
+%Right now I am going with case sensitivity.
+
 %http://www.mathworks.com/matlabcentral/fileexchange/9873-simple-units-and-dimensions-for-matlab
 %http://www.mathworks.com/matlabcentral/fileexchange/35258-unit-converters
 
@@ -28,7 +32,7 @@ switch combined_units
     case 'V#mV'
         fh = @(x)times(x,1e3);
     otherwise
-        error('Unsupported case')
+        error('Unsupported case: From "%s" to "%s"',source_unit,output_unit)
 end
 
 end
