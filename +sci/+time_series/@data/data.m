@@ -265,7 +265,7 @@ classdef data < sl.obj.display_class
             ylabel(sprintf('%s (%s)',cur_obj.y_label,cur_obj.units))
             xlabel(sprintf('Time (%s)',cur_obj.time.output_units))
         end
-        function plotStacked(objs,local_options,plotting_options)
+        function result_object = plotStacked(objs,local_options,plotting_options)
             %
             %
             %
@@ -300,6 +300,8 @@ classdef data < sl.obj.display_class
             %   ...
             %
             %   TODO: We also need to label which is which ...
+            
+            result_object = struct;
             
             if nargin < 2
                 local_options = {};
@@ -344,11 +346,13 @@ classdef data < sl.obj.display_class
                 error('Currently this is required :/')
             elseif length(in.shift) == 1
                 all_shifts    = zeros(1,n_plots);
-                all_shifts(1:end) = in.shift;
+                all_shifts(2:end) = in.shift;
                 all_shifts    = cumsum(all_shifts);
             else
                 all_shifts = in.shift;
             end
+            
+            result_object.all_shifts = all_shifts;
             
             hold all
             for iPlot = 1:n_plots
@@ -757,6 +761,9 @@ classdef data < sl.obj.display_class
     methods
         function objs = abs(objs)
             objs.runFunctionsOnData({@abs});
+        end
+        function objs = mrdivide(objs,B)
+           objs.runFunctionsOnData({@(x)mrdivide(x,B)}); 
         end
         function objs = power(objs,B)
             objs.runFunctionsOnData({@(x)power(x,B)});
