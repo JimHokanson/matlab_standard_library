@@ -187,6 +187,26 @@ classdef data < sl.obj.display_class
             
             new_objs = [temp_objs{:}];
         end
+        function s_objs = export(objs)
+            %x Exports the object to a structure
+            %
+            %   Outputs:
+            %   --------
+            %   s_objs : structure array
+            %       
+           s_objs = sl.obj.toStruct(objs);
+           for iObj = 1:length(objs)
+              s_objs(iObj).time = export(s_objs(iObj).time);
+              
+              events = s_objs(iObj).devents;
+              fn = fieldnames(events);
+              for iField = 1:length(fn)
+                  cur_field_name = fn{iField};
+                 events.(cur_field_name) = export(events.(cur_field_name));
+              end
+              s_objs(iObj).devents = events;
+           end
+        end
     end
     
     %Visualization --------------------------------------------------------
@@ -771,6 +791,9 @@ classdef data < sl.obj.display_class
     end
     
     %Deep methods
+    %These methods are meant to provide access to functions that
+    %work with this object. Rather than providing an exhaustive list, we
+    %return an object that can be used to 
     methods
         function event_calc_obj = getEventCalculatorMethods(objs)
             event_calc_obj = sci.time_series.event_calculators;

@@ -15,11 +15,15 @@ classdef time_events < handle
     
     
     properties
-       name %This should be a unique identifier
+       name %string
+       %    This should be a unique identifier
        times %in seconds, this needs to be fixed so that it matches
        %the time object for plotting ...
        values
-       msgs
+       msgs %cellstr
+       %    Any associated strings with each event. This can be empty. This
+       %    was originally designed for comments from raw data files where
+       %    each comment has a time and a string.
     end
     
     methods
@@ -43,6 +47,9 @@ classdef time_events < handle
                cur_obj = objs(iObj);
                cur_obj.times = cur_obj.times - time_to_subtract;
             end
+        end
+        function s_obj = export(objs)
+           s_obj = sl.obj.toStruct(objs);
         end
     end
     

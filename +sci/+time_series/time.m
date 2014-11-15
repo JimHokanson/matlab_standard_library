@@ -173,6 +173,9 @@ classdef time < sl.obj.display_class
                 'start_datetime',start_datetime);%#ok<PROP>
             new_time_object.output_units = obj.output_units;
         end
+        function s_objs = export(objs)
+           s_objs = sl.obj.toStruct(objs); 
+        end
     end
     
     methods
@@ -187,10 +190,21 @@ classdef time < sl.obj.display_class
            %        obj.start_offset = obj.start_offset + start_dt;
            
            obj.start_offset   = obj.start_offset + start_dt;
+           
+           %
+           %
+           %    Samples:
+           %    
+           %    1 2 3 4 5 <= samples
+           %    0 1 2 3 4 <= time
+           %
+           
+           %TODO: Do we want + or - ????
            obj.start_datetime = obj.start_datetime + h__secondsToDays(start_dt);
         end
     end
     
+    %Raw data and index methods -------------------------------------------
     methods
         function time_array = getTimeArray(obj)
             %x Creates the full time array.
