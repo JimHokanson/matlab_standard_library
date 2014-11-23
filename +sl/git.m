@@ -1,11 +1,21 @@
 classdef git
     %
-    %   sl.git
+    %   Class: sl.git
     %
     %   http://git-scm.com/docs
     %
     %   The goal of this is to provide a bit more of an intuitive interface
     %   to git via Matlab than other submissions that I have seen.
+    %
+    %   The current approach relies on git for Java (JGit).
+    %
+    %   This code is currently unfinished.
+    %
+    %   -------------------------------------------------------------------
+    %
+    %   Initialization:
+    %   ---------------
+    %   sl.git.initialize via sl.initialize
     %
     %   http://www.eclipse.org/jgit/download/
     %
@@ -36,8 +46,10 @@ classdef git
     
     methods (Hidden,Static)
         function initialize()
-            %sl.git.initialize
-            temp = fileparts(sl.stack.getMyBasePath);
+            %
+            %   sl.git.initialize
+            temp = sl.stack.getPackageRoot;
+            
             %-3.4.1.201406201815-r
             java_jar_path = fullfile(temp,'src','java');
             jgit_jar = fullfile(java_jar_path,'org.eclipse.jgit.jar'); 
