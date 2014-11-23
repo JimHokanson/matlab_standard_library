@@ -94,11 +94,13 @@ classdef time < sl.obj.display_class
             %   See Also:
             %   sci.time_series.time.getNewTimeForDataSubset
             
-            %TODO: Document these optional inputs
-            %sample_offset - for when the
+            if nargin == 0
+                return
+            end
+            
             in.start_datetime = 0;
-            in.start_offset = [];
-            in.sample_offset = [];
+            in.start_offset   = [];
+            in.sample_offset  = [];
             in = sl.in.processVarargin(in,varargin);
             
             if ~isempty(in.sample_offset)
@@ -176,6 +178,24 @@ classdef time < sl.obj.display_class
         function s_objs = export(objs)
            s_objs = sl.obj.toStruct(objs); 
         end
+    end
+    
+    methods (Static)
+    	function objs = fromStruct(s_objs)
+            %
+            %
+            %      
+            
+            n_objs  = length(s_objs);
+            temp_ca = cell(1,n_objs);
+            
+            for iObj = 1:n_objs
+                obj = sci.time_series.time;
+                sl.struct.toObject(obj,s_objs(iObj));
+                temp_ca{iObj} = obj;
+            end
+            objs = [temp_ca{:}];
+        end 
     end
     
     methods

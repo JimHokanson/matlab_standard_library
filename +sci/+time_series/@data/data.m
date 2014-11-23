@@ -125,6 +125,11 @@ classdef data < sl.obj.display_class
             %
             %
             
+            % :/ for initialization from structures
+            if nargin == 0
+                return
+            end
+            
             MIN_CHANNELS_FOR_WARNING = 500; %The dimensions of the input
             %data are very specific, no assumptions are made. However, if
             %we get too many channels with only 1 sample we'll throw a
@@ -193,19 +198,37 @@ classdef data < sl.obj.display_class
             %   Outputs:
             %   --------
             %   s_objs : structure array
-            %       
-           s_objs = sl.obj.toStruct(objs);
-           for iObj = 1:length(objs)
-              s_objs(iObj).time = export(s_objs(iObj).time);
-              
-              events = s_objs(iObj).devents;
-              fn = fieldnames(events);
-              for iField = 1:length(fn)
-                  cur_field_name = fn{iField};
-                 events.(cur_field_name) = export(events.(cur_field_name));
-              end
-              s_objs(iObj).devents = events;
-           end
+            %
+            s_objs = sl.obj.toStruct(objs);
+            for iObj = 1:length(objs)
+                s_objs(iObj).time = export(s_objs(iObj).time);
+                
+                events = s_objs(iObj).devents;
+                fn = fieldnames(events);
+                for iField = 1:length(fn)
+                    cur_field_name = fn{iField};
+                    events.(cur_field_name) = export(events.(cur_field_name));
+                end
+                s_objs(iObj).devents = events;
+            end
+        end
+    end
+    methods (Static)
+        function objs = fromStruct(s_objs)
+            %
+            %
+            %      
+            
+            n_objs  = length(s_objs);
+            temp_ca = cell(1,n_objs);
+            
+            for iObj = 1:n_objs
+                obj = sci.time_series.data;
+                sl.struct.toObject(obj,s_objs(iObj));
+                obj.time = sci.time_series.time.fromStruct(obj.time);
+                temp_ca{iObj} = obj;
+            end
+            objs = [temp_ca{:}];
         end
     end
     
@@ -778,12 +801,14 @@ classdef data < sl.obj.display_class
     end
     
     %Basic math functions --------------- e.g. abs
-    methods
+    %
+    %   NOTE: I'm slowly adding onto these methods as I need them
+    methods (Hidden)
         function objs = abs(objs)
             objs.runFunctionsOnData({@abs});
         end
         function objs = mrdivide(objs,B)
-           objs.runFunctionsOnData({@(x)mrdivide(x,B)}); 
+            objs.runFunctionsOnData({@(x)mrdivide(x,B)});
         end
         function objs = power(objs,B)
             objs.runFunctionsOnData({@(x)power(x,B)});
@@ -793,7 +818,7 @@ classdef data < sl.obj.display_class
     %Deep methods
     %These methods are meant to provide access to functions that
     %work with this object. Rather than providing an exhaustive list, we
-    %return an object that can be used to 
+    %return an object that can be used to
     methods
         function event_calc_obj = getEventCalculatorMethods(objs)
             event_calc_obj = sci.time_series.event_calculators;
@@ -803,6 +828,15 @@ end
 
 %Helper functions ---------------------------------------------------------
 function new_data_obj = h__createNewDataFromOld(obj,new_data,new_time_object)
+%
+%   This should be used internally when creating a new data object.
+%
+%   Inputs:
+%   -------
+%   new_data : array
+%       The actual data from the new object.
+%   new_time_object : sci.time_series.time
+
 new_data_obj   = copy(obj);
 new_data_obj.d = new_data;
 new_data_obj.time = new_time_object;
