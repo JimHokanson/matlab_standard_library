@@ -443,7 +443,29 @@ classdef data < sl.obj.display_class
     
     %Data changing --------------------------------------------------------
     methods
-        function filter(obj,filters,varargin)
+        function objs = resample(objs,new_fs)
+            
+            %TODO: If nargout present, then copy, not replace           
+           %TODO: Could expose filter options
+           %TODO: 
+           for iObj = 1:length(objs)
+              cur_obj  = objs(iObj);
+              old_fs = cur_obj.time.fs;
+              if new_fs > old_fs
+                  P = new_fs/old_fs;
+                  %TODO: check integer
+                  Q = 1;
+              else
+                  Q = old_fs/new_fs;
+                  P = 1;
+              end
+                  
+              cur_obj.d = resample(cur_obj.d,P,Q);
+              cur_obj.time.dt = 1/new_fs;
+              cur_obj.time.n_samples = cur_obj.n_samples;
+           end
+        end
+        function objs = filter(objs,filters,varargin)
             %x Filter the data using filters specified as inputs
             %
             %   TODO: Provide a list of filters that can be used ...
@@ -472,7 +494,7 @@ classdef data < sl.obj.display_class
             in = sl.in.processVarargin(in,varargin);
             
             df = sci.time_series.data_filterer('filters',filters);
-            df.filter(obj,'subtract_filter_result',in.subtract_filter_result);
+            df.filter(objs,'subtract_filter_result',in.subtract_filter_result);
         end
         function decimated_data = decimateData(objs,bin_width,varargin)
             %x Resample time series after some smoothing function is applied
@@ -804,6 +826,12 @@ classdef data < sl.obj.display_class
     %
     %   NOTE: I'm slowly adding onto these methods as I need them
     methods (Hidden)
+        function objs = meanSubtract(objs)
+           for iObj = 1:length(objs)
+              cur_obj   = objs(iObj);
+              cur_obj.d = bsxfun(@minus,cur_obj.d,mean(cur_obj.d));
+           end
+        end
         function objs = abs(objs)
             objs.runFunctionsOnData({@abs});
         end
@@ -822,6 +850,10 @@ classdef data < sl.obj.display_class
     methods
         function event_calc_obj = getEventCalculatorMethods(objs)
             event_calc_obj = sci.time_series.event_calculators;
+        end
+        function spect_calc = getSpectrogramCalculatorMethods(objs)
+           %sci.time_series.spectrogram_calculators 
+           spect_calc = sci.time_series.spectrogram_calculators;
         end
     end
 end

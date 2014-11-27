@@ -13,6 +13,10 @@ classdef spectrogram_calculators
         function ml_spectrogram(data_obj,window_width,varargin)
             %
             %
+            %   sci.time_series.spectrogram_calculators.ml_spectrogram(data_obj,window_width,varargin)
+            %
+            %   ml_spectrogram - matlab spectrogram
+            %
             %   Inputs:
             %   -------
             %   data_obj : sci.time_series.data
@@ -26,8 +30,14 @@ classdef spectrogram_calculators
             
             %Step 1: Determine overlap width
             
+            keyboard
             
-            [S,F,T] = spectrogram
+            x = data_obj.d;
+            
+            %window - integer
+            %
+            
+            [S,F,T] = spectrogram(x,window,noverlap,nfft,fs);
             
            %TODO: Implement nicer access to spectrogram function 
         end
