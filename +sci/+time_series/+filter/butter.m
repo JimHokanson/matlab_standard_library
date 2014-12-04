@@ -43,6 +43,10 @@ classdef butter
             %   Optional Parameters:
             %   --------------------
             %   zero_phase : 
+            %
+            %   Examples:
+            %   ---------
+            %   f = sci.time_series.filter.butter(2,100,'low');
             
            in.zero_phase = true;
            in = sl.in.processVarargin(in,varargin);

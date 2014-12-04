@@ -45,6 +45,11 @@ classdef smoothing < handle
             %   zero_phase : logical (default true)
             %       If true the data are filtered forwards and backwards
             %       using filtfilt() instead of filter()
+            %
+            %   Examples:
+            %   ---------
+            %   Create a rectangular filter of width 100 samples
+            %   obj = sci.time_series.filter.smoothing(100,'type','rect','width_type','samples')
             
             in.type = 'tri';
             in.width_type = 'seconds';
