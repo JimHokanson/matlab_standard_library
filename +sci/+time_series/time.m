@@ -30,7 +30,7 @@ classdef time < sl.obj.display_class
         n_samples
         
         output_units = 's'
-        %This is invoked when
+        %This requires A LOT of work still
         %Options:
         %-   s: seconds
         %-  ms: milliseconds
@@ -49,6 +49,7 @@ classdef time < sl.obj.display_class
         %property.
         end_time
         start_time
+        elapsed_time
     end
     
     %Dependent Methods ----------------------------------------------------
@@ -63,6 +64,9 @@ classdef time < sl.obj.display_class
         function value = get.start_time(obj)
             value = obj.start_offset;
             value = h__getTimeScaled(obj,value);
+        end
+        function value = get.elapsed_time(obj)
+           value = obj.end_time - obj.start_time; 
         end
     end
     
@@ -199,6 +203,15 @@ classdef time < sl.obj.display_class
     end
     
     methods
+% %         function n_samples = samplesPerTimeDuration(obj,time_duration)
+% %            %
+% %            %
+% %            %
+% %            
+% %            n_samples = round(time_duration*obj.fs);
+% %            
+% %            
+% %         end
         function shiftStartTime(obj,start_dt)
            %x Shifts the start time
            %
