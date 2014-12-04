@@ -217,7 +217,7 @@ classdef data < sl.obj.display_class
         function objs = fromStruct(s_objs)
             %
             %
-            %      
+            %
             
             n_objs  = length(s_objs);
             temp_ca = cell(1,n_objs);
@@ -234,6 +234,25 @@ classdef data < sl.obj.display_class
     
     %Visualization --------------------------------------------------------
     methods
+        function plotRows(objs,varargin)
+            %
+            %
+            
+            in.link_option = 'x';
+            in.plot_options = {};
+            in = sl.in.processVarargin(in,varargin);
+            
+            n_objs = length(objs);
+            
+            for iObj = 1:n_objs
+                subplot(n_objs,1,iObj)
+                plot(objs(iObj),{},in.plot_options);
+            end
+            
+            sl.plot.postp.linkFigureAxes(gcf,in.link_option);
+            
+            %TODO: Build in cleanup code ...
+        end
         function plot(objs,local_options,plotting_options)
             %x Plot the data, nicely!
             %
@@ -445,25 +464,25 @@ classdef data < sl.obj.display_class
     methods
         function objs = resample(objs,new_fs)
             
-            %TODO: If nargout present, then copy, not replace           
-           %TODO: Could expose filter options
-           %TODO: 
-           for iObj = 1:length(objs)
-              cur_obj  = objs(iObj);
-              old_fs = cur_obj.time.fs;
-              if new_fs > old_fs
-                  P = new_fs/old_fs;
-                  %TODO: check integer
-                  Q = 1;
-              else
-                  Q = old_fs/new_fs;
-                  P = 1;
-              end
-                  
-              cur_obj.d = resample(cur_obj.d,P,Q);
-              cur_obj.time.dt = 1/new_fs;
-              cur_obj.time.n_samples = cur_obj.n_samples;
-           end
+            %TODO: If nargout present, then copy, not replace
+            %TODO: Could expose filter options
+            %TODO:
+            for iObj = 1:length(objs)
+                cur_obj  = objs(iObj);
+                old_fs = cur_obj.time.fs;
+                if new_fs > old_fs
+                    P = new_fs/old_fs;
+                    %TODO: check integer
+                    Q = 1;
+                else
+                    Q = old_fs/new_fs;
+                    P = 1;
+                end
+                
+                cur_obj.d = resample(cur_obj.d,P,Q);
+                cur_obj.time.dt = 1/new_fs;
+                cur_obj.time.n_samples = cur_obj.n_samples;
+            end
         end
         function objs = filter(objs,filters,varargin)
             %x Filter the data using filters specified as inputs
@@ -617,20 +636,27 @@ classdef data < sl.obj.display_class
             %
             %   getDataSubset(objs,start_time,[],stop_time,[],varargin)
             %
+            %   getDataSubset(objs,start_sample,[],stop_sample,[],'times_are_samples',true,varargin)
+            %
             %   Inputs:
             %   -------
             %
             %   Optional Inputs:
             %   ----------------
             %   align_time_to_start : logical (default false)
-            %       If this value is true, the zero point of the time is
-            %       shifted such that
+            %       If this value is true, the start time is set to the
+            %       time of the first sample in the subset, rather than
+            %       the first sample in the original data set
+            %   times_are_samples : logical
+            %       If true, then the input values are treated as samples,
+            %       not as time values i.e. 1 means sample 1, not 1s
             %
             %   See Also:
             %   sci.time_series.data.getDataAlignedToEvent()
             %   sci.time_series.data.zeroTimeByEvent()
             
             in.align_time_to_start = false;
+            in.times_are_samples = false;
             in = sl.in.processVarargin(in,varargin);
             
             if in.align_time_to_start
@@ -647,12 +673,23 @@ classdef data < sl.obj.display_class
             for iObj = 1:n_objs
                 cur_obj = objs(iObj);
                 
-                start_time = cur_obj.devents.(start_event).times(start_event_index);
-                end_time   = cur_obj.devents.(stop_event).times(stop_event_index);
+                if ischar(start_event)
+                    start_time = cur_obj.devents.(start_event).times(start_event_index);
+                    end_time   = cur_obj.devents.(stop_event).times(stop_event_index);
+                elseif in.times_are_samples
+                    start_time = start_event;
+                    end_time   = stop_event;
+                end
                 
-                %TODO: Make this a function ...
-                start_index = h__timeToSamples(cur_obj,start_time);
-                end_index   = h__timeToSamples(cur_obj,end_time);
+                if ~in.times_are_samples
+                    %TODO: Make this a function ...
+                    %??? - what a function ????
+                    start_index = h__timeToSamples(cur_obj,start_time);
+                    end_index   = h__timeToSamples(cur_obj,end_time);
+                else
+                   start_index = start_event;
+                   end_index  = stop_event;
+                end
                 
                 new_data        = cur_obj.d(start_index:end_index,:,:);
                 
@@ -827,10 +864,10 @@ classdef data < sl.obj.display_class
     %   NOTE: I'm slowly adding onto these methods as I need them
     methods (Hidden)
         function objs = meanSubtract(objs)
-           for iObj = 1:length(objs)
-              cur_obj   = objs(iObj);
-              cur_obj.d = bsxfun(@minus,cur_obj.d,mean(cur_obj.d));
-           end
+            for iObj = 1:length(objs)
+                cur_obj   = objs(iObj);
+                cur_obj.d = bsxfun(@minus,cur_obj.d,mean(cur_obj.d));
+            end
         end
         function objs = abs(objs)
             objs.runFunctionsOnData({@abs});
@@ -852,8 +889,8 @@ classdef data < sl.obj.display_class
             event_calc_obj = sci.time_series.event_calculators;
         end
         function spect_calc = getSpectrogramCalculatorMethods(objs)
-           %sci.time_series.spectrogram_calculators 
-           spect_calc = sci.time_series.spectrogram_calculators;
+            %sci.time_series.spectrogram_calculators
+            spect_calc = sci.time_series.spectrogram_calculators;
         end
     end
 end
