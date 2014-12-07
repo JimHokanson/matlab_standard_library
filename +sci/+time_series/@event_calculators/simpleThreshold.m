@@ -1,19 +1,46 @@
 function results = simpleThreshold(data_objs,threshold_value,look_for_positive,varargin)
-%
+%x Thresholds a time series and groups consecutive true values as events
 %
 %   sci.time_series.event_calculators.simpleThreshold(data_obj,threshold_value,look_for_positive,varargin)
 %
-%   Calculates 
 %   
 %   Inputs:
 %   -------
+%   data_objs :
+%   threshold_value :
+%   look_for_positive :
 %
-%   Optional Inputs:
+%   Optional Inputs: (Note, the majority of these are not used by default)
 %   ----------------
+%   min_intertime : 
+%       Nullifies an event if it occurs too soon
+%   min_time :
+%       Nullifies an event if it is too short
+%   min_samples :
+%       Nullifies an event if it has too few samples
+%   max_time :
+%       Nullifies an event if it is too long
+%   max_samples :
+%       Nullifies an event if it has too many samples
+%   max_value : 
+%       A data point is not considered logically true, and thus elligible to
+%       be grouped into an event, if it exceeds this value. The default
+%       behavior is to allow any data value that exceeds a threshold. This
+%       essentially allows a between comparison, rather than just an 
+%       exceeds/threshold comparision.
+%   join_time : 
+%       Intertimes that are less than this value allow are combined.
+%
+%
+%   TODO: We could allow a custom data to logical function
 %
 %   Outputs:
 %   --------
-%   results : simple_threshold_results
+%   results : sci.time_series.event_results.simple_threshold_results
+%       One object for every input data object is returned.
+%
+%   See Also:
+%   sl.array.bool_transition_info
 
 in.min_intertime = [];
 in.min_time    = []; 
@@ -21,6 +48,7 @@ in.min_samples = [];
 in.max_time    = []; %If longer than this, reject ...
 in.max_samples = [];
 in.max_value   = []; %
+in.join_time   = [];
 in = sl.in.processVarargin(in,varargin);
 
 %We might be able to borrow ideas from:
@@ -48,6 +76,13 @@ for iObj = 1:length(data_objs)
     mask = mask_fh(cur_data_obj.d);
     
     bti = sl.array.bool_transition_info(mask,'time',cur_data_obj.time);
+    
+    %This might not be the most efficient, but it works ...
+    if ~isempty(in.join_time)
+        keyboard
+        %The idea was to modify the mask and pass it back into the
+        %bool_transition_info function
+    end
     
     mask2 = true(1,bti.n_true);
     
@@ -95,6 +130,8 @@ for iObj = 1:length(data_objs)
     temp.threshold_start_I     = bti.true_start_indices(mask2);
     temp.threshold_end_times   = bti.true_end_times(mask2);
     temp.threshold_end_I       = bti.true_end_indices(mask2);
+    
+    
     
     results_ca{iObj} = temp;
 end

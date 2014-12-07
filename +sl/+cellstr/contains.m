@@ -3,7 +3,7 @@ function mask = contains(data,str_or_pattern,varargin)
 %
 %   mask = sl.cellstr.contains(data,str_or_pattern,varargin)
 %
-%   This is mainly meant to avoid
+%   TODO: Insert usage example and finish documentation
 
 in.case_sensitive = false;
 in.regexp = false;

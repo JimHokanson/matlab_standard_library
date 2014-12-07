@@ -4,6 +4,9 @@ classdef simple_threshold_results < handle
     %   sci.time_series.event_results.simple_threshold_results
     %
     %   TODO: Do we want to inherit from some event_results class????
+    %
+    %
+    %   TODO: We might want to hold onto the time information
     
     properties
        %TODO: We could do lazy evaluation if we hold onto the

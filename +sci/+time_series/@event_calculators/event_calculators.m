@@ -1,4 +1,4 @@
-classdef event_calculators
+classdef event_calculators < sl.obj.display_class
     %
     %   Class:
     %   sci.time_series.event_calculators

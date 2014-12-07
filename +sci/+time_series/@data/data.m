@@ -687,8 +687,8 @@ classdef data < sl.obj.display_class
                     start_index = h__timeToSamples(cur_obj,start_time);
                     end_index   = h__timeToSamples(cur_obj,end_time);
                 else
-                   start_index = start_event;
-                   end_index  = stop_event;
+                    start_index = start_event;
+                    end_index  = stop_event;
                 end
                 
                 new_data        = cur_obj.d(start_index:end_index,:,:);
@@ -862,11 +862,52 @@ classdef data < sl.obj.display_class
     %Basic math functions --------------- e.g. abs
     %
     %   NOTE: I'm slowly adding onto these methods as I need them
+    %
+    %   TODO: If output requested, make a copy first (see minus)
     methods (Hidden)
-        function objs = meanSubtract(objs)
-            for iObj = 1:length(objs)
-                cur_obj   = objs(iObj);
-                cur_obj.d = bsxfun(@minus,cur_obj.d,mean(cur_obj.d));
+        function varargout = minus(objs,B)
+            %TODO: B might be objects, and this would need to be handled
+            if nargout
+                temp = copy(objs);
+            else
+                temp = objs;
+            end
+            if ~isobject(B)
+                temp.runFunctionsOnData({@(x)minus(x,B)});
+            end
+            if nargout
+                varargout{1} = temp;
+            end
+        end
+        function varargout = meanSubtract(objs,varargin)
+            %
+            %   Optional Inputs:
+            %   ----------------
+            %   dim :
+            in.dim = [];
+            in = sl.in.processVarargin(in,varargin);
+            
+            if nargout
+                temp = copy(objs);
+            else
+                temp = objs;
+            end
+            
+            if isempty(in.dim)
+                for iObj = 1:length(objs)
+                    cur_obj   = temp(iObj);
+                    cur_obj.d = bsxfun(@minus,cur_obj.d,mean(cur_obj.d));
+                end
+            else
+                dim_use = in.dim;
+                for iObj = 1:length(objs)
+                    cur_obj   = temp(iObj);
+                    cur_obj.d = bsxfun(@minus,cur_obj.d,mean(cur_obj.d,dim_use));
+                end
+            end
+            
+            if nargout
+                varargout{1} = temp;
             end
         end
         function objs = abs(objs)
