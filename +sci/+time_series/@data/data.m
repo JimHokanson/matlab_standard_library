@@ -16,22 +16,64 @@ classdef data < sl.obj.display_class
     %   could be large, so there are some aspects of this class that try
     %   and handle this better than might typically be done by the user.
     %
-    %   Methods to implement:
-    %   ---------------------
-    %   - allow merging of multiple objects (input as an array or cell
-    %       array) into a single object - must have same length and time
-    %       and maybe units
-    %   - allow plotting of channels as stacked or as subplots
+    %   Handle vs Value Classing
+    %   ------------------------
+    %   This class is setup to be used as a handle class. It also however
+    %   carries many of the usages of a value class. For example, you can
+    %   compute the absolute value of the data.
+    %
+    %   When using math operations, it is typical to get a copy of the
+    %   value, not to modify a value in place. In other words, let's say we
+    %   have something like:
+    %
+    %       a = -1;
+    %       b = abs(a);
+    %
+    %   In this case we would expect 'a' to have the value -1 still. But what
+    %   if 'a' were a handle class. Then the assignment:
+    %
+    %       b = abs(a);
+    %
+    %   modifies the value of a, and passes the handle reference to b. Thus
+    %   'a' would have the value 1.
+    %
+    %   Since this is generally not desirable, I'm trying to modify all
+    %   functions that are of this nature so that the following happens:
+    %
+    %   b = abs(a); a => -1, b => 1
+    %
+    %   abs(a); a => 1
+    %
+    %   In other words, the presence of an output means that the handle
+    %   should first be copied and then modified, so that the original
+    %   value is not changed.
     %
     %
-    %   Examples:
-    %   ---------
-    %   1) wtf = sci.time_series.data(rand(1e8,1),0.01);
     %
     %
     %   See Also:
     %   sci.time_series.tests_data
     %   sci.time_series.time
+    %
+    %
+    %   Examples:
+    %   ---------
+    %   1)
+    %       wtf = sci.time_series.data(rand(1e8,1),0.01);
+    %
+    
+    %{
+    %   2)
+          dt = 0.001;
+          t  = -2:dt:2;
+          time_obj = sci.time_series.time(dt,length(t));
+          y = chirp(-2:dt:2,100,1,200,'q');
+          wtf = sci.time_series.data(y',time_obj);
+          sc = wtf.getSpectrogramCalculatorMethods;
+          sd = sc.ml_spectrogram(wtf,dt*100);
+          plot(pd
+    %}
+    
     
     properties
         d    %[samples x channels x repetitions]
@@ -461,29 +503,7 @@ classdef data < sl.obj.display_class
     end
     
     %Data changing --------------------------------------------------------
-    methods
-        function objs = resample(objs,new_fs)
-            
-            %TODO: If nargout present, then copy, not replace
-            %TODO: Could expose filter options
-            %TODO:
-            for iObj = 1:length(objs)
-                cur_obj  = objs(iObj);
-                old_fs = cur_obj.time.fs;
-                if new_fs > old_fs
-                    P = new_fs/old_fs;
-                    %TODO: check integer
-                    Q = 1;
-                else
-                    Q = old_fs/new_fs;
-                    P = 1;
-                end
-                
-                cur_obj.d = resample(cur_obj.d,P,Q);
-                cur_obj.time.dt = 1/new_fs;
-                cur_obj.time.n_samples = cur_obj.n_samples;
-            end
-        end
+    methods     
         function objs = filter(objs,filters,varargin)
             %x Filter the data using filters specified as inputs
             %

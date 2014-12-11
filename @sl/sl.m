@@ -1,14 +1,14 @@
 classdef (Hidden) sl
     %
-    %   Class: sl
-    %   
+    %   Class:
+    %   sl
+    %
+    %   sl => standard library
     
-    properties
-    end
     
     methods (Static,Hidden)
         %sl.initialize
-       initialize()
+        initialize()
     end
     
 end
