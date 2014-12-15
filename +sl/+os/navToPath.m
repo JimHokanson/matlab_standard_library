@@ -10,12 +10,12 @@ function navToPath(file_or_folder_path)
 %
 %   Folders are opened directly (not shown in their parent). 
 %
-%   INPUT
-%   =======================================================================
+%   Inputs:
+%   -------
 %   file_or_folder_path : The path to a file or a folder.
 %
-%   IMPROVEMENTS:
-%   =======================================================================
+%   Improvements:
+%   -------------
 %   1) Documentation
 %   2) File support for unix and macs
 %   3) Provide root support - show folder in parent folder
@@ -28,7 +28,7 @@ function navToPath(file_or_folder_path)
 
 %Resolution to file or folder
 %--------------------------------------------------------------------------
-%NOTE: exist dir tests for file or folder :/
+%NOTE: exist(input,'dir') tests for file or folder :/
 %We need to first test for a file, then test for a folder ...
 if exist(file_or_folder_path,'file')
     file_path = file_or_folder_path;
@@ -37,7 +37,8 @@ elseif exist(file_or_folder_path,'dir')
     folder_path = file_or_folder_path;
     is_file     = false;
 else
-    error('Specified file/folder not found')
+    error_msg = sl.error.getMissingFileErrorMsg(file_or_folder_path);
+    error(error_msg);
 end
 
 if is_file

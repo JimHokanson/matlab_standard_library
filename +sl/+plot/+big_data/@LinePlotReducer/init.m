@@ -3,9 +3,6 @@ function init(o,varargin)
 %   sl.plot.big_data.LinePlotReducer.init
 %
 
-% We're busy. Ignore resizing and things.
-o.busy = true;
-
 % The first argument might be a function handle or it might
 % just be the start of the data.
 start = 1;
@@ -35,8 +32,6 @@ if isscalar(varargin{start}) && ishandle(varargin{start}) && ...
 end
 
 h__parseDataAndLinespecs(o,varargin{start:end})
-
-o.busy = false;
 
 end
 

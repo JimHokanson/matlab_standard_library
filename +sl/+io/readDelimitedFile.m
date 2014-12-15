@@ -1,4 +1,4 @@
-function [output,extras] = readDelimitedFile(filePath,delimiter,varargin)
+function [output,extras] = readDelimitedFile(file_path,delimiter,varargin)
 %readDelimitedFile  Reads a delimited file
 %
 %   Simple interface to regexp with some post-processing options for
@@ -7,23 +7,25 @@ function [output,extras] = readDelimitedFile(filePath,delimiter,varargin)
 %   sl.io.readDelimitedFile
 %
 %
-%   FORMS ===========================================================
+%   Calling Forms:
+%   --------------
 %   [output,extras] = readDelimitedFile(filePath,delimiter,varargin)
 %
 %   [output,extras] = readDelimitedFile(str_data,delimiter,'input_is_str',true,varargin)   
 %   
-%   EXAMPLES
-%   ========================================================
-%   readDelimitedFile(filePath,'\s*:\s*') - read file with a ':' delimiter
-%       that might have space on either side ...
+%   Examples:
+%   ---------
+%   readDelimitedFile(filePath,'\s*:\s*') 
+%       - read file with a ':' delimiter that might have space on 
+%         either side ...
 %
-%   INPUT
-%   ========================================================
+%   Inputs:
+%   -------
 %   filePath  : path to the file to read
 %   delimiter : delimiter to use in reading the file
 %
-%   OPTIONAL INPUTS
-%   ========================================================
+%   Optional Inputs:
+%   ----------------
 %   merge_lines  : (default true), if true returns a cell array matrix
 %                  if false, returns a cell array of cell arrays
 %   header_lines : (default 0), if non-zero then the lines should be
@@ -45,12 +47,12 @@ function [output,extras] = readDelimitedFile(filePath,delimiter,varargin)
 %   single_delimiter_match : (default false), true can be used
 %       for property value files ...
 %
-%   OUTPUTS
-%   ========================================================
+%   Outputs:
+%   --------
 %   output : either a 
 %               - cellstr matrix {'a' 'b'; 'c' 'd'}
 %               - cell array of cellstr {{'a' 'b'} {'c' 'd'}}
-%               See merge_lines input
+%               See 'merge_lines' optional input
 %   extras : (structure)
 %       .raw           - raw text from file
 %       .header_lines  - first n lines, see "header_lines" optional input
@@ -89,13 +91,15 @@ in = sl.in.processVarargin(in,varargin);
 %Obtaining the text data - change to using an optional input ...
 %--------------------------------------------------------------------
 if in.input_is_str
-    text = filePath; 
+    text = file_path; 
 else
-    if ~exist(filePath,'file')
-        error('Missing file %s',filePath)
+    if ~exist(file_path,'file')
+        error_msg = sl.error.getMissingFileErrorMsg(file_path);
+        error(error_msg);
+        %error('Missing file %s',file_path)
     end
 
-    text = fileread(filePath);
+    text = fileread(file_path);
 end
 
 %Fixing delimiters

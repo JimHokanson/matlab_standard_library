@@ -3,8 +3,13 @@ function help2
 %
 %   This function should expose better help methods:
 %
+%   Determine help type then call helper functions
+%
 %   1) A better help function for functions
 %       sl.help.func
+%
+%       - show function prototype
+%       - add on optional inputs ...
 %   
 %   2) Instance based help
 %       helpm <- needs to be renamed

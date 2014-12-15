@@ -1,4 +1,4 @@
-classdef (Hidden) toObject < sl.obj.handle_light
+classdef toObject < sl.obj.handle_light
     %
     %   Class:
     %   sl.struct.toObject
@@ -37,17 +37,21 @@ classdef (Hidden) toObject < sl.obj.handle_light
             %   Inputs first, then pointers ...
             %
             %
-            %   INPUTS
-            %   =======================================================================
-            %   old_obj : handle or value object, for value objects the result will need to
-            %         be obtained from the result object
+            %   Inputs:
+            %   -------
+            %   old_obj : handle or value object
+            %       For value objects the result will need to be obtained 
+            %       from the result object. For handle objects the object
+            %       is modified in place.
             %
             %
-            %   OPTIONAL INPUTS
-            %   =======================================================================
-            %   remove_classes : (default true), if true then Matlab objects are
-            %   IMPROVEMENTS:
-            %   =======================================================================
+            %   Optional Inputs:
+            %   ----------------
+            %   remove_classes : logical (default true),
+            %       If true then Matlab objects are
+            %
+            %   Improvements:
+            %   -------------
             %   1) Allow option to error when field doesn't exist
             %   2) Allow option to error when fields to ignore don't exist (lower
             %       priority)
@@ -57,6 +61,7 @@ classdef (Hidden) toObject < sl.obj.handle_light
             in.remove_classes = true;
             in = sl.in.processVarargin(in,varargin);
             
+            %sl.struct.toObject.init
             obj.init(old_obj,s,in)
         end
     end

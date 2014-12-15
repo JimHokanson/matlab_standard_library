@@ -30,6 +30,11 @@ function output = staggeredU8ToU32(u8_data,start_indices)
 %   ----------------------------------------------------
 %   output : [n x 1], uint32
 
+if isempty(start_indices)
+   output = zeros(0,1,'uint32');
+   return
+end
+
 temp = zeros(length(start_indices),4,'uint8');
 temp(:,1) = u8_data(start_indices);
 temp(:,2) = u8_data(start_indices+1);

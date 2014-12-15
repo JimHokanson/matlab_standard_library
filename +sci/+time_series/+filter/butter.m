@@ -42,7 +42,11 @@ classdef butter
             %
             %   Optional Parameters:
             %   --------------------
-            %   
+            %   zero_phase : 
+            %
+            %   Examples:
+            %   ---------
+            %   f = sci.time_series.filter.butter(2,100,'low');
             
            in.zero_phase = true;
            in = sl.in.processVarargin(in,varargin);
@@ -58,10 +62,17 @@ classdef butter
            obj.cutoff_or_cutoffs = cutoff_or_cutoffs;
         end
         function data_out = filter(obj,data_in,fs)
+           %x Filter the data
+           %
+           %    Inputs:
+           %    -------
+           %    fs : scalar
+           %        Sampling rate
+           %
             
            %TODO: Check cutoffs vs fs ... 
             
-           [B,A] = butter(obj.order,obj.cutoff_or_cutoffs/(fs/2),obj.type);
+           [B,A] = obj.getCoefficients(fs);
            
            if obj.zero_phase
                filter_method = @filtfilt;
@@ -70,6 +81,22 @@ classdef butter
            end
            
            data_out = filter_method(B,A,data_in);
+        end
+        function [B,A] = getCoefficients(obj,fs)
+           %x Compute the coefficients
+           %
+           %    Inputs:
+           %    -------
+           %    fs : scalar
+           %        Sampling rate
+           %
+           [B,A] = butter(obj.order,obj.cutoff_or_cutoffs/(fs/2),obj.type); 
+        end
+        function disp(obj)
+%            fprintf('xxxxxxx\n')
+%            fprintf(inputname(1))
+%            fprintf('xxxxxxx\n') 
+           sl.obj.dispObject_v1(obj) 
         end
     end
 end

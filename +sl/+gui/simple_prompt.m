@@ -33,6 +33,13 @@ classdef simple_prompt < sl.obj.handle_light
             %
             %
             %   obj = simple_prompt(fig_path,prop_value_pairs)
+            %
+            %   Inputs:
+            %   -------
+            %   fig_path: string
+            %       The idea is that a GUI is preconstructed before calling
+            %       this code.
+            %   prop_value_pairs: 
             
             %TODO: Load figure
             obj.fig_handle = hgload(fig_path);

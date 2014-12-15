@@ -3,13 +3,77 @@ classdef data < sl.obj.display_class
     %   Class:
     %   sci.time_series.data
     %
+    %   This class is meant to bind data and an associated timeline.
+    %   Generally these two things are held onto separately, even though
+    %   they are closely related.
     %
-    %   Methods to implement:
-    %   - allow merging of multiple objects (input as an array or cell
-    %       array) into a single object - must have same length and time
-    %       and maybe units
-    %   - allow plotting of channels as stacked or as subplots
-    %   - averaging to a stimulus
+    %   Time manipulations done in this class are automatically tracked by
+    %   the class. Aditionally, functions that require time information
+    %   (such as filtering) are automatically provided such information by
+    %   the class.
+    %
+    %   Finally, there is some expectation that data stored in this class
+    %   could be large, so there are some aspects of this class that try
+    %   and handle this better than might typically be done by the user.
+    %
+    %   Handle vs Value Classing
+    %   ------------------------
+    %   This class is setup to be used as a handle class. It also however
+    %   carries many of the usages of a value class. For example, you can
+    %   compute the absolute value of the data.
+    %
+    %   When using math operations, it is typical to get a copy of the
+    %   value, not to modify a value in place. In other words, let's say we
+    %   have something like:
+    %
+    %       a = -1;
+    %       b = abs(a);
+    %
+    %   In this case we would expect 'a' to have the value -1 still. But what
+    %   if 'a' were a handle class. Then the assignment:
+    %
+    %       b = abs(a);
+    %
+    %   modifies the value of a, and passes the handle reference to b. Thus
+    %   'a' would have the value 1.
+    %
+    %   Since this is generally not desirable, I'm trying to modify all
+    %   functions that are of this nature so that the following happens:
+    %
+    %   b = abs(a); a => -1, b => 1
+    %
+    %   abs(a); a => 1
+    %
+    %   In other words, the presence of an output means that the handle
+    %   should first be copied and then modified, so that the original
+    %   value is not changed.
+    %
+    %
+    %
+    %
+    %   See Also:
+    %   sci.time_series.tests_data
+    %   sci.time_series.time
+    %
+    %
+    %   Examples:
+    %   ---------
+    %   1)
+    %       wtf = sci.time_series.data(rand(1e8,1),0.01);
+    %
+    
+    %{
+    %   2)
+          dt = 0.001;
+          t  = -2:dt:2;
+          time_obj = sci.time_series.time(dt,length(t));
+          y = chirp(-2:dt:2,100,1,200,'q');
+          wtf = sci.time_series.data(y',time_obj);
+          sc = wtf.getSpectrogramCalculatorMethods;
+          sd = sc.ml_spectrogram(wtf,dt*100);
+          plot(pd
+    %}
+    
     
     properties
         d    %[samples x channels x repetitions]
@@ -20,9 +84,7 @@ classdef data < sl.obj.display_class
         %       obj.getRawDataAndTime()
         
         time     %sci.time_series.time
-        units
-        n_channels
-        n_reps
+        units    %string
         channel_labels
         y_label %Must be a string
     end
@@ -51,6 +113,8 @@ classdef data < sl.obj.display_class
     
     properties (Dependent)
         event_names
+        n_channels
+        n_reps
         n_samples
     end
     
@@ -60,7 +124,13 @@ classdef data < sl.obj.display_class
             value = fieldnames(obj.devents);
         end
         function value = get.n_samples(obj)
-           value = size(obj.d,1); 
+            value = size(obj.d,1);
+        end
+        function value = get.n_channels(obj)
+            value = size(obj.d,2);
+        end
+        function value = get.n_reps(obj)
+            value = size(obj.d,3);
         end
     end
     
@@ -68,9 +138,11 @@ classdef data < sl.obj.display_class
     methods
         function obj = data(data_in,time_object_or_dt,varargin)
             %
-            %    obj = sci.time_series.data(data_in,time_object,varargin)
+            %   Calling Forms:
+            %   --------------
+            %   obj = sci.time_series.data(data_in,time_object,varargin)
             %
-            %    obj = sci.time_series.data(data_in,dt,varargin)
+            %   obj = sci.time_series.data(data_in,dt,varargin)
             %
             %   Inputs:
             %   -------
@@ -91,9 +163,19 @@ classdef data < sl.obj.display_class
             %       time and that may also carray a string or value with
             %       the event.
             %   y_label: string
-            %       Value for y_label when plotted. 
+            %       Value for y_label when plotted.
             %
-            %    
+            %
+            
+            % :/ for initialization from structures
+            if nargin == 0
+                return
+            end
+            
+            MIN_CHANNELS_FOR_WARNING = 500; %The dimensions of the input
+            %data are very specific, no assumptions are made. However, if
+            %we get too many channels with only 1 sample we'll throw a
+            %warning.
             
             in.history = {};
             in.units   = 'Unknown';
@@ -102,10 +184,14 @@ classdef data < sl.obj.display_class
             in.y_label = '';
             in = sl.in.processVarargin(in,varargin);
             
-            obj.n_channels = size(data_in,2);
-            obj.n_reps     = size(data_in,3);
-            
             obj.d = data_in;
+            
+            if obj.n_samples == 1 && obj.n_channels >= MIN_CHANNELS_FOR_WARNING
+                sl.warning.formatted(['Current specification for the data is' ...
+                    ' to have %d channels all with 1 sample, perhaps you meant' ...
+                    ' to transpose the input so that you have %d samples for 1 channel'],...
+                    obj.n_channels,obj.n_channels)
+            end
             
             if isobject(time_object_or_dt)
                 obj.time = time_object_or_dt;
@@ -119,32 +205,98 @@ classdef data < sl.obj.display_class
             end
             
             obj.y_label = in.y_label;
-            obj.units = in.units;
+            obj.units   = in.units;
             obj.channel_labels = in.channel_labels;
             obj.history = in.history;
         end
         function new_objs = copy(old_objs)
+            %x Creates a deep copy of the object
+            %
+            %   This allows someone to make changes to the properties
+            %   without it also changing the original object.
+            %
+            %
             
-            %TODO: Eventually delink the history and events as well
-            n_objs = length(old_objs);
+            n_objs    = length(old_objs);
             temp_objs = cell(1,n_objs);
+            
             for iObj = 1:n_objs
                 cur_obj = old_objs(iObj);
-                temp_objs{iObj} = sci.time_series.data(cur_obj.d,copy(cur_obj.time),...
-                    'history',cur_obj.history,'units',cur_obj.units,...
-                    'channel_labels',cur_obj.channel_labels,'events',cur_obj.devents);
+                temp_objs{iObj} = sci.time_series.data(...
+                    cur_obj.d,...
+                    copy(cur_obj.time),...
+                    'history',cur_obj.history,...
+                    'units',cur_obj.units,...
+                    'channel_labels',cur_obj.channel_labels,...
+                    'events',cur_obj.devents,...
+                    'y_label',cur_obj.y_label);
             end
             
             new_objs = [temp_objs{:}];
+        end
+        function s_objs = export(objs)
+            %x Exports the object to a structure
+            %
+            %   Outputs:
+            %   --------
+            %   s_objs : structure array
+            %
+            s_objs = sl.obj.toStruct(objs);
+            for iObj = 1:length(objs)
+                s_objs(iObj).time = export(s_objs(iObj).time);
+                
+                events = s_objs(iObj).devents;
+                fn = fieldnames(events);
+                for iField = 1:length(fn)
+                    cur_field_name = fn{iField};
+                    events.(cur_field_name) = export(events.(cur_field_name));
+                end
+                s_objs(iObj).devents = events;
+            end
+        end
+    end
+    methods (Static)
+        function objs = fromStruct(s_objs)
+            %
+            %
+            %
+            
+            n_objs  = length(s_objs);
+            temp_ca = cell(1,n_objs);
+            
+            for iObj = 1:n_objs
+                obj = sci.time_series.data;
+                sl.struct.toObject(obj,s_objs(iObj));
+                obj.time = sci.time_series.time.fromStruct(obj.time);
+                temp_ca{iObj} = obj;
+            end
+            objs = [temp_ca{:}];
         end
     end
     
     %Visualization --------------------------------------------------------
     methods
-        function plot(objs,local_options,plotting_options)
+        function plotRows(objs,varargin)
             %
             %
             
+            in.link_option = 'x';
+            in.plot_options = {};
+            in = sl.in.processVarargin(in,varargin);
+            
+            n_objs = length(objs);
+            
+            for iObj = 1:n_objs
+                subplot(n_objs,1,iObj)
+                plot(objs(iObj),{},in.plot_options);
+            end
+            
+            sl.plot.postp.linkFigureAxes(gcf,in.link_option);
+            
+            %TODO: Build in cleanup code ...
+        end
+        function plot(objs,local_options,plotting_options)
+            %x Plot the data, nicely!
             %
             %   plot(obj,local_options,plotting_options)
             %
@@ -155,8 +307,12 @@ classdef data < sl.obj.display_class
             %
             %   Plotting Options: cell array
             %   ----------------------------
+            %
+            %   Example:
+            %   plot(data_objs,{},{'Linewidth',2}
+            %
             
-            BIG_PLOT_N_SAMPLES = 1e7;
+            BIG_PLOT_N_SAMPLES = 5e5;
             %TODO: Plotting multiple objects on the same figure is a
             %problem as they may have completely different starting dates
             %
@@ -169,34 +325,36 @@ classdef data < sl.obj.display_class
                 plotting_options = {};
             end
             
-            %TODO: Determine x bounds and set them before hand
-            %I want to prevent x axis changing redraws
-            %
-            %Perhaps I can disable plotting until all objects have plotted
-            %...
-            
+            in.axes     = {};
             in.channels = 'all';
             in = sl.in.processVarargin(in,local_options);
+            
+            if ~isempty(in.axes)
+                in.axes = {in.axes};
+            end
             
             for iObj = 1:length(objs)
                 if iObj == 2
                     hold all
                 end
                 cur_obj = objs(iObj);
-                %This might be temporary if I can fix LinePlotReducer to
-                %not constantly replot ...
-                if cur_obj.n_samples > BIG_PLOT_N_SAMPLES
+                %Ideally this decision would be pushed to the
+                %LinePlotReducer class ...
+                if cur_obj.n_samples < BIG_PLOT_N_SAMPLES
                     t = cur_obj.time.getTimeArray();
                     if ischar(in.channels)
-                        plot(t,cur_obj.d,plotting_options{:});
+                        plot(in.axes{:},t,cur_obj.d,plotting_options{:});
                     else
-                        plot(t,cur_obj.d(:,in.channels),plotting_options{:});
+                        plot(in.axes{:},t,cur_obj.d(:,in.channels),plotting_options{:});
                     end
                 else
                     if ischar(in.channels)
                         temp = sl.plot.big_data.LinePlotReducer(objs(iObj).time,objs(iObj).d,plotting_options{:});
                     else
                         temp = sl.plot.big_data.LinePlotReducer(objs(iObj).time,objs(iObj).d(:,in.channels),plotting_options{:});
+                    end
+                    if ~isempty(in.axes)
+                        temp.h_axes = in.axes{1};
                     end
                     temp.renderData();
                 end
@@ -210,6 +368,103 @@ classdef data < sl.obj.display_class
             %for the ylabel
             ylabel(sprintf('%s (%s)',cur_obj.y_label,cur_obj.units))
             xlabel(sprintf('Time (%s)',cur_obj.time.output_units))
+        end
+        function result_object = plotStacked(objs,local_options,plotting_options)
+            %
+            %
+            %
+            %   We could have variability between objects OR between
+            %   channels, but not both
+            
+            %???? - How much should we shift by ????
+            %Shifting ideas:
+            %---------------
+            %1) Fixed amount - specified by user
+            %2) Fixed pct - specified by user - what would this be relative to
+            
+            %How to best get CDF??? - could be a rough estimate ...
+            %
+            %NOTE: For shifted lines, the CDF doesn't matter
+            %    x
+            %  x y   <= slanted lines, x & y, minimal distance needed
+            %x y
+            %y
+            %   subtraction shifting
+            %   - this requires the same time for each ... :/
+            %
+            %   TODO: For now let's assume this ...
+            %
+            %   Unless we go by the extreme, then we are still back at the
+            %   CDF, although the CDF of the differences is much more
+            %   informative
+            %
+            %   Although, we could do this for overlaps, don't care about
+            %   the non overlaps !!!!
+            %   Although, no overlaps should have some default separation
+            %   ...
+            %
+            %   TODO: We also need to label which is which ...
+            
+            result_object = struct;
+            
+            if nargin < 2
+                local_options = {};
+            end
+            if nargin < 3
+                plotting_options = {};
+            end
+            
+            in.shift    = []; %1 value or multiple values
+            %multiple values, absolute or relative ????
+            %- absolute for now ...
+            in.channels = 'all'; %NYI
+            in = sl.in.processVarargin(in,local_options);
+            
+            n_objs  = length(objs);
+            
+            %Step 1: Grab the data
+            if n_objs > 1
+                %Then plot each object shifted ...
+                local_data = cell(1,n_objs);
+                local_time = cell(1,n_objs);
+                for iObj = 1:length(objs)
+                    local_data{iObj} = objs(iObj).d;
+                    local_time{iObj} = objs(iObj).time;
+                end
+            else
+                obj = objs;
+                n_chans = obj.n_channels;
+                local_data = cell(1,n_chans);
+                local_time = cell(1,n_chans);
+                for iChan = 1:n_chans
+                    local_data{iChan} = obj.d(:,iChan);
+                    local_time{iChan} = obj.time;
+                end
+            end
+            
+            %Step 2: Determine shift amount
+            
+            n_plots = length(local_data);
+            
+            if isempty(in.shift)
+                error('Currently this is required :/')
+            elseif length(in.shift) == 1
+                all_shifts    = zeros(1,n_plots);
+                all_shifts(2:end) = in.shift;
+                all_shifts    = cumsum(all_shifts);
+            else
+                all_shifts = in.shift;
+            end
+            
+            result_object.all_shifts = all_shifts;
+            
+            hold all
+            for iPlot = 1:n_plots
+                temp = sl.plot.big_data.LinePlotReducer(local_time{iPlot},local_data{iPlot}+all_shifts(iPlot),plotting_options{:});
+                temp.renderData();
+            end
+            hold off
+            
         end
     end
     
@@ -248,12 +503,28 @@ classdef data < sl.obj.display_class
     end
     
     %Data changing --------------------------------------------------------
-    methods
-        function filter(obj,filters,varargin)
-            %
-            %   This is a shortcut for calling the data_filterer.
+    methods     
+        function objs = filter(objs,filters,varargin)
+            %x Filter the data using filters specified as inputs
             %
             %   TODO: Provide a list of filters that can be used ...
+            %   Filter List:
+            %   -----------------------------------------------
+            %   in sci.time_series.filter package
+            %
+            %   - butter   - i.e. sci.time_series.filter.butter
+            %   - ellip
+            %   - max
+            %   - min
+            %   - smoothing
+            %
+            %   Optional Inputs:
+            %   ----------------
+            %   subtract_filter_result : logical (Default false)
+            %       If true, the returned signal is the result of taking
+            %       the filtered signal and subtracting it from the
+            %       original signal.
+            %           i.e. data = data - filter(data)
             %
             %   See Also:
             %   sci.time_series.data_filterer
@@ -262,47 +533,114 @@ classdef data < sl.obj.display_class
             in = sl.in.processVarargin(in,varargin);
             
             df = sci.time_series.data_filterer('filters',filters);
-            df.filter(obj,'subtract_filter_result',in.subtract_filter_result);
+            df.filter(objs,'subtract_filter_result',in.subtract_filter_result);
         end
         function decimated_data = decimateData(objs,bin_width,varargin)
+            %x Resample time series after some smoothing function is applied
+            %
+            %   decimated_data = objs.decimateData(bin_width,varargin)
+            %
+            %   Currently decimation is done after taking the mean absolute
+            %   value.
+            %
+            %   Inputs:
+            %   -------
+            %   bin_width : scalar (s)
+            %       The width of each bin for decimation
             
-            in.method = 'mean';
-            in = sl.in.processVarargin(in,varargin);
             
-            n_objs = length(objs);
+            
+            %in.max_samples = [];
+            %in = sl.in.processVarargin(in,varargin);
+            
+            n_objs         = length(objs);
             decimated_data = cell(1,n_objs);
             
             for iObj = 1:n_objs
-                cur_obj = objs(iObj);
+                cur_obj      = objs(iObj);
                 sample_width = ceil(bin_width/cur_obj.time.dt);
+                dt_exact     = cur_obj.time.dt*sample_width;
+                
                 
                 n_samples = size(cur_obj.d,1);
                 
                 %We'll change this eventually to allow the last bin
-                start_Is = 1:sample_width:n_samples;
-                start_Is(end) = [];
-                end_Is = start_Is + sample_width-1;
+                start_Is      = 1:sample_width:n_samples;
+                start_Is(end) = []; %Drop the last one, might not be as accurate
+                end_Is        = start_Is + sample_width-1;
                 
-                n_bins = length(start_Is);
+                n_bins   = length(start_Is);
                 new_data = zeros(n_bins,cur_obj.n_channels,cur_obj.n_reps);
                 
                 cur_data = cur_obj.d;
                 
-                if strcmp(in.method,'mean')
-                    for iBin = 1:n_bins
-                        temp_data = cur_data(start_Is(iBin):end_Is(iBin),:,:);                        
-                        new_data(iBin,:,:) = mean(abs(temp_data));
-                    end
-                else %rms
-                    for iBin = 1:n_bins
-                        temp_data = cur_data(start_Is(iBin):end_Is(iBin),:,:);                        
-                        new_data(iBin,:,:) = rms(temp_data);
-                    end
+                new_obj  = cur_obj.copy();
+                
+                for iBin = 1:n_bins
+                    temp_data = cur_data(start_Is(iBin):end_Is(iBin),:,:);
+                    %NOTE: Eventually we might want additional methods
+                    new_data(iBin,:,:) = mean(abs(temp_data),1);
                 end
                 
-                decimated_data{iObj} = new_data;
+                new_time_object = copy(cur_obj.time);
+                
+                new_time_object.n_samples = n_bins;
+                new_time_object.dt = dt_exact;
+                new_time_object.shiftStartTime(dt_exact/2);
+                
+                new_data_obj = h__createNewDataFromOld(cur_obj,new_data,new_time_object);
+                
+                decimated_data{iObj} = new_data_obj;
             end
             
+            decimated_data = [decimated_data{:}];
+            
+        end
+        function runFunctionsOnData(objs,functions)
+            %
+            %
+            %
+            %   Example:
+            %   --------
+            %   objs.runFunctionsOnData(@abs)
+            if iscell(functions)
+                %Great, skip ahead
+            elseif ischar(functions)
+                functions = {str2func(functions)};
+            elseif isa(functions, 'function_handle')
+                functions = {functions};
+            elseif ~iscell(functions)
+                error('Unexpected type: %s, for ''functions'' input',class(functions));
+            end
+            
+            for iObj = 1:length(objs)
+                cur_obj = objs(iObj);
+                for iFunction = 1:length(functions)
+                    cur_function = functions{iFunction};
+                    cur_obj.d = cur_function(cur_obj.d);
+                end
+            end
+        end
+        function changeUnits(objs,new_units)
+            %
+            %   Inputs:
+            %   -------
+            %   new_units : string
+            %
+            %
+            
+            %TODO: We could make new_units a cell array of values, 1 for
+            %each object
+            
+            %TODO: Check that all objs have the same units ...
+            
+            fh = sci.units.getConversionFunction(objs(1).units,new_units);
+            
+            for iObj = 1:length(objs)
+                cur_obj = objs(iObj);
+                cur_obj.d = fh(cur_obj.d);
+                cur_obj.units = new_units;
+            end
         end
     end
     
@@ -318,20 +656,27 @@ classdef data < sl.obj.display_class
             %
             %   getDataSubset(objs,start_time,[],stop_time,[],varargin)
             %
+            %   getDataSubset(objs,start_sample,[],stop_sample,[],'times_are_samples',true,varargin)
+            %
             %   Inputs:
             %   -------
             %
             %   Optional Inputs:
             %   ----------------
             %   align_time_to_start : logical (default false)
-            %       If this value is true, the zero point of the time is
-            %       shifted such that
+            %       If this value is true, the start time is set to the
+            %       time of the first sample in the subset, rather than
+            %       the first sample in the original data set
+            %   times_are_samples : logical
+            %       If true, then the input values are treated as samples,
+            %       not as time values i.e. 1 means sample 1, not 1s
             %
             %   See Also:
             %   sci.time_series.data.getDataAlignedToEvent()
             %   sci.time_series.data.zeroTimeByEvent()
             
             in.align_time_to_start = false;
+            in.times_are_samples = false;
             in = sl.in.processVarargin(in,varargin);
             
             if in.align_time_to_start
@@ -348,16 +693,27 @@ classdef data < sl.obj.display_class
             for iObj = 1:n_objs
                 cur_obj = objs(iObj);
                 
-                start_time = cur_obj.devents.(start_event).times(start_event_index);
-                end_time   = cur_obj.devents.(stop_event).times(stop_event_index);
+                if ischar(start_event)
+                    start_time = cur_obj.devents.(start_event).times(start_event_index);
+                    end_time   = cur_obj.devents.(stop_event).times(stop_event_index);
+                elseif in.times_are_samples
+                    start_time = start_event;
+                    end_time   = stop_event;
+                end
                 
-                %TODO: Make this a function ...
-                start_index = h__timeToSamples(cur_obj,start_time);
-                end_index   = h__timeToSamples(cur_obj,end_time);
+                if ~in.times_are_samples
+                    %TODO: Make this a function ...
+                    %??? - what a function ????
+                    start_index = h__timeToSamples(cur_obj,start_time);
+                    end_index   = h__timeToSamples(cur_obj,end_time);
+                else
+                    start_index = start_event;
+                    end_index  = stop_event;
+                end
                 
                 new_data        = cur_obj.d(start_index:end_index,:,:);
                 
-                new_time_object = h__getNewTimeObject(cur_obj,start_index,end_index,'first_sample_time',first_sample_time);
+                new_time_object = h__getNewTimeObjectForDataSubset(cur_obj,start_index,end_index,'first_sample_time',first_sample_time);
                 
                 temp_objs_ca{iObj} = h__createNewDataFromOld(cur_obj,new_data,new_time_object);
             end
@@ -383,7 +739,7 @@ classdef data < sl.obj.display_class
             %        This refers to one of the internal events in the object.
             %    event_times :
             %        A single event time should be provided for each object
-            % 
+            %
             %   See Also:
             %   sci.time_series.data.getDataAlignedToEvent()
             %   sci.time_series.data.getDataSubset()
@@ -506,15 +862,114 @@ classdef data < sl.obj.display_class
             data = obj.d;
             time = obj.time.getTimeArray();
         end
-        function sample_number = timeToSample(obj)
-            error('Not yet implemented')
+        %         function sample_number = timeToSample(obj)
+        %             error('Not yet implemented')
+        %         end
+        function removeTimeGapsBetweenObjects(objs)
+            %
+            %   removeTimeGapsBetweenObjects(objs)
+            %
+            %
+            last_time = 0;
+            for iObj = 1:length(objs)
+                cur_obj = objs(iObj);
+                cur_obj.time.start_offset = last_time;
+                last_time = cur_obj.time.end_time;
+            end
+        end
+    end
+    
+    %Basic math functions --------------- e.g. abs
+    %
+    %   NOTE: I'm slowly adding onto these methods as I need them
+    %
+    %   TODO: If output requested, make a copy first (see minus)
+    methods (Hidden)
+        function varargout = minus(objs,B)
+            %TODO: B might be objects, and this would need to be handled
+            if nargout
+                temp = copy(objs);
+            else
+                temp = objs;
+            end
+            if ~isobject(B)
+                temp.runFunctionsOnData({@(x)minus(x,B)});
+            end
+            if nargout
+                varargout{1} = temp;
+            end
+        end
+        function varargout = meanSubtract(objs,varargin)
+            %
+            %   Optional Inputs:
+            %   ----------------
+            %   dim :
+            in.dim = [];
+            in = sl.in.processVarargin(in,varargin);
+            
+            if nargout
+                temp = copy(objs);
+            else
+                temp = objs;
+            end
+            
+            if isempty(in.dim)
+                for iObj = 1:length(objs)
+                    cur_obj   = temp(iObj);
+                    cur_obj.d = bsxfun(@minus,cur_obj.d,mean(cur_obj.d));
+                end
+            else
+                dim_use = in.dim;
+                for iObj = 1:length(objs)
+                    cur_obj   = temp(iObj);
+                    cur_obj.d = bsxfun(@minus,cur_obj.d,mean(cur_obj.d,dim_use));
+                end
+            end
+            
+            if nargout
+                varargout{1} = temp;
+            end
+        end
+        function objs = abs(objs)
+            objs.runFunctionsOnData({@abs});
+        end
+        function objs = mrdivide(objs,B)
+            objs.runFunctionsOnData({@(x)mrdivide(x,B)});
+        end
+        function objs = power(objs,B)
+            objs.runFunctionsOnData({@(x)power(x,B)});
+        end
+    end
+    
+    %Deep methods
+    %These methods are meant to provide access to functions that
+    %work with this object. Rather than providing an exhaustive list, we
+    %return an object that can be used to
+    methods
+        function event_calc_obj = getEventCalculatorMethods(objs)
+            event_calc_obj = sci.time_series.event_calculators;
+        end
+        function spect_calc = getSpectrogramCalculatorMethods(objs)
+            %sci.time_series.spectrogram_calculators
+            spect_calc = sci.time_series.spectrogram_calculators;
         end
     end
 end
 
 %Helper functions ---------------------------------------------------------
-function new_data = h__createNewDataFromOld(obj,new_data,new_time_object)
-  new_data = sci.time_series.data(new_data,new_time_object);
+function new_data_obj = h__createNewDataFromOld(obj,new_data,new_time_object)
+%
+%   This should be used internally when creating a new data object.
+%
+%   Inputs:
+%   -------
+%   new_data : array
+%       The actual data from the new object.
+%   new_time_object : sci.time_series.time
+
+new_data_obj   = copy(obj);
+new_data_obj.d = new_data;
+new_data_obj.time = new_time_object;
 end
 function event_times = h__getEventTimes(obj,event_name,varargin)
 %
@@ -547,7 +1002,11 @@ end
 function samples = h__timeToSamples(obj,times)
 samples = obj.time.getNearestIndices(times);
 end
-function new_time_object = h__getNewTimeObject(obj,first_sample,last_sample,varargin)
+function new_time_object = h__getNewTimeObjectForDataSubset(obj,first_sample,last_sample,varargin)
+%
+%
+%   Optional Inputs:
+%   ----------------
 
 in.first_sample_time = [];
 %empty - keeps its time

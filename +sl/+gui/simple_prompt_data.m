@@ -5,6 +5,9 @@ classdef (Hidden) simple_prompt_data < dynamicprops
     %
     %   This class holds the user data for the gui interface. It also
     %   allows implementation of get methods
+    %
+    %   See Also:
+    %   simple_prompt
     
     %{
         TEST_CODE
@@ -15,7 +18,7 @@ classdef (Hidden) simple_prompt_data < dynamicprops
     %}
     
     properties (Access = private,Hidden)
-        spd__p
+        spd__p  %spd => simple_prompt_data
         spd__names
         spd__h
     end

@@ -1,4 +1,4 @@
-classdef tests_ellip
+classdef (Hidden) tests_ellip
     %
     %   Class:
     %   sci.time_series.filter.tests_ellip
@@ -27,14 +27,14 @@ classdef tests_ellip
 %             tone_freq1= input('tone frequency 1');
 %             tone_freq2= input('tone frequency 2');
             
-            t = 0:1/fs:numsec;
+            t  = 0:1/fs:numsec;
             w1 = 2*pi*f1;
             w2 = 2*pi*f2;
             %y = sin(wt+p)
             %w = 2*pi*fs
 
             y1 = sin(w1*t);
-            y2= sin(w2*t);
+            y2 = sin(w2*t);
             
             
             figure(1);
@@ -48,7 +48,7 @@ classdef tests_ellip
             
             d1 = sci.time_series.data(y1',1/fs);
             
-            keyboard
+            
             
             ellip_filter = sci.time_series.filter.ellip(2, 10, 10, 20, 'high');
             ellip_filter.plot(fs)

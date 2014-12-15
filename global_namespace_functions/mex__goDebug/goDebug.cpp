@@ -11,8 +11,13 @@
  *
  */
 
+//Edited in mexopts.sh
+//- replaced 10.7 with 10.8
+//- added -std=c++11 to the CXXFLAGS
+//- renamed file from .c to .cpp
+//http://stackoverflow.com/questions/22440523/mex-files-using-xcode-5-1-under-os-x-10-9-with-matlab-2012a
+#define char16_t UINT16_T
 #include "mex.h"
-
 
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[] )
 {

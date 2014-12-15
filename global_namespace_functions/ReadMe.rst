@@ -1,1 +1,1 @@
-These are functions that I want to be able directly without digging deep into packages. These are typically functions that will be called from the command window.
+These are functions that I want to be able call directly without digging deep into packages (i.e. without first typing sl.). These are typically functions that will be called from the command window.

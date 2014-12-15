@@ -30,7 +30,7 @@ classdef time < sl.obj.display_class
         n_samples
         
         output_units = 's'
-        %This is invoked when
+        %This requires A LOT of work still
         %Options:
         %-   s: seconds
         %-  ms: milliseconds
@@ -43,8 +43,13 @@ classdef time < sl.obj.display_class
     
     properties (Dependent)
         fs
+        
+        %These values are relative, they don't include the 'start_datetime'
+        %property. They DO however take into account the 'output_units'
+        %property.
         end_time
         start_time
+        elapsed_time
     end
     
     %Dependent Methods ----------------------------------------------------
@@ -59,6 +64,9 @@ classdef time < sl.obj.display_class
         function value = get.start_time(obj)
             value = obj.start_offset;
             value = h__getTimeScaled(obj,value);
+        end
+        function value = get.elapsed_time(obj)
+           value = obj.end_time - obj.start_time; 
         end
     end
     
@@ -90,11 +98,13 @@ classdef time < sl.obj.display_class
             %   See Also:
             %   sci.time_series.time.getNewTimeForDataSubset
             
-            %TODO: Document these optional inputs
-            %sample_offset - for when the
+            if nargin == 0
+                return
+            end
+            
             in.start_datetime = 0;
-            in.start_offset = [];
-            in.sample_offset = [];
+            in.start_offset   = [];
+            in.sample_offset  = [];
             in = sl.in.processVarargin(in,varargin);
             
             if ~isempty(in.sample_offset)
@@ -113,6 +123,7 @@ classdef time < sl.obj.display_class
             obj.n_samples = n_samples;
         end
         function new_obj = copy(obj)
+            %x Creates a deep copy
             new_obj = sci.time_series.time(obj.dt,...
                 obj.n_samples,...
                 'start_datetime',obj.start_datetime,...
@@ -155,11 +166,11 @@ classdef time < sl.obj.display_class
                 start_offset   = first_sample_real_time; %#ok<PROP>
                 start_datetime = obj.start_datetime; %#ok<PROP>
             else
+                
                 start_offset   = in.first_sample_time; %#ok<PROP>
                 time_change    = first_sample_real_time - start_offset;%#ok<PROP>
                 
-                %TODO: I think this is wrong if the value is a datenum ...
-                start_datetime = obj.start_datetime + time_change;%#ok<PROP>
+                start_datetime = obj.start_datetime + h__secondsToDays(time_change);%#ok<PROP>
             end
             
             new_time_object = sci.time_series.time(...
@@ -168,18 +179,68 @@ classdef time < sl.obj.display_class
                 'start_datetime',start_datetime);%#ok<PROP>
             new_time_object.output_units = obj.output_units;
         end
-    end
-    
-    methods
-        function shiftStartTime(obj)
-            %How should this be implemented???
-            %
+        function s_objs = export(objs)
+           s_objs = sl.obj.toStruct(objs); 
         end
     end
     
+    methods (Static)
+    	function objs = fromStruct(s_objs)
+            %
+            %
+            %      
+            
+            n_objs  = length(s_objs);
+            temp_ca = cell(1,n_objs);
+            
+            for iObj = 1:n_objs
+                obj = sci.time_series.time;
+                sl.struct.toObject(obj,s_objs(iObj));
+                temp_ca{iObj} = obj;
+            end
+            objs = [temp_ca{:}];
+        end 
+    end
+    
+    methods
+% %         function n_samples = samplesPerTimeDuration(obj,time_duration)
+% %            %
+% %            %
+% %            %
+% %            
+% %            n_samples = round(time_duration*obj.fs);
+% %            
+% %            
+% %         end
+        function shiftStartTime(obj,start_dt)
+           %x Shifts the start time
+           %
+           %    Inputs:
+           %    -------
+           %    start_dt : scalar
+           %        Get's added to the start_offset.
+           %    
+           %        obj.start_offset = obj.start_offset + start_dt;
+           
+           obj.start_offset   = obj.start_offset + start_dt;
+           
+           %
+           %
+           %    Samples:
+           %    
+           %    1 2 3 4 5 <= samples
+           %    0 1 2 3 4 <= time
+           %
+           
+           %TODO: Do we want + or - ????
+           obj.start_datetime = obj.start_datetime + h__secondsToDays(start_dt);
+        end
+    end
+    
+    %Raw data and index methods -------------------------------------------
     methods
         function time_array = getTimeArray(obj)
-            %Creates the full time array.
+            %x Creates the full time array.
             %
             %    In general this should be avoided if possible.
             %
@@ -208,11 +269,9 @@ classdef time < sl.obj.display_class
             %
             times = obj.start_offset + (indices-1)*obj.dt;
             times = h__getTimeScaled(obj,times);
-        end
-        
-        %TODO: Provide interpolation indices function - ???? What does this mean????
-        
+        end        
         function [indices,time_errors] = getNearestIndices(obj,times)
+            %x Given a set of times, return the closest indices
             %
             %   TODO: Document ...
             %
@@ -224,6 +283,13 @@ classdef time < sl.obj.display_class
             %   --------
             %   indices :
             %   time_errors :
+            %
+            %   Improvements:
+            %   -------------
+            %   1) Handle out of range data - somehow
+            %   2) Provide rounding options - expansive, contractive, or
+            %   nearest
+            
             
             times = h__unscaleTime(obj,times);
             
@@ -241,7 +307,12 @@ classdef time < sl.obj.display_class
     
 end
 
+function days = h__secondsToDays(seconds)
+   days = seconds/86400;
+end
+
 %TODO: Document these functions
+%This should all be moved to sci.units ...
 function times_scaled = h__getTimeScaled(obj,times)
 scale_factor = h__getTimeScaleFactor(obj.output_units,true);
 if scale_factor == 1
@@ -277,3 +348,4 @@ if ~for_output
     scale_factor = 1/scale_factor;
 end
 end
+

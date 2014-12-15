@@ -1,7 +1,10 @@
 function init(obj,old_obj,s,in)
 %   TODO: DOCUMENTATION OUT OF DATE ----------------
 %
-%
+%   Inputs:
+%   -------
+%   old_obj
+%   
 
 initial_struct_fn = fieldnames(s);
 
@@ -56,11 +59,13 @@ end
 
 %TODO: Include a try/catch on private assigments
 
+new_obj = old_obj;
+
 %Final assignment ...
 %--------------------------------------------------------------------------
 for iFN = 1:length(struct_fn)
     curField = struct_fn{iFN};
-    old_obj.(curField) = s.(curField);
+    new_obj.(curField) = s.(curField);
 end
 
 
@@ -68,6 +73,6 @@ end
 %--------------------------------------------------------------------------
 class_props_not_in_struct = prop_names(~ismember(prop_names,initial_struct_fn));
 
-obj.updated_object            = old_obj;
+obj.updated_object            = new_obj;
 obj.unassigned_struct_props   = unassigned_struct_props;
 obj.class_props_not_in_struct = class_props_not_in_struct;

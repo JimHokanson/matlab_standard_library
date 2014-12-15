@@ -1,0 +1,1 @@
+This package has to do with points in space. My plan is to move it to the science package at some point. It was also written with great haste so it is most likely very unorganized and poorly planned.
