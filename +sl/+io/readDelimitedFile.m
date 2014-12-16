@@ -7,23 +7,28 @@ function [output,extras] = readDelimitedFile(file_path,delimiter,varargin)
 %   sl.io.readDelimitedFile
 %
 %
-%   FORMS ===========================================================
-%   [output,extras] = readDelimitedFile(filePath,delimiter,varargin)
+%   Calling Forms:
+%   --------------
+%   1)
+%   [output,extras] = readDelimitedFile(file_path,delimiter,varargin)
 %
+%   2)
 %   [output,extras] = readDelimitedFile(str_data,delimiter,'input_is_str',true,varargin)   
 %   
-%   EXAMPLES
-%   ========================================================
+%   Examples:
+%   ---------
 %   readDelimitedFile(filePath,'\s*:\s*') - read file with a ':' delimiter
 %       that might have space on either side ...
 %
-%   INPUT
-%   ========================================================
-%   filePath  : path to the file to read
-%   delimiter : delimiter to use in reading the file
+%   Inputs:
+%   -------
+%   file_path : 
+%       Path to the file to read
+%   delimiter : 
+%       Delimiter to use in reading the file
 %
-%   OPTIONAL INPUTS
-%   ========================================================
+%   Optional Inputs:
+%   ----------------
 %   merge_lines  : (default true), if true returns a cell array matrix
 %                  if false, returns a cell array of cell arrays
 %   header_lines : (default 0), if non-zero then the lines should be
@@ -45,28 +50,22 @@ function [output,extras] = readDelimitedFile(file_path,delimiter,varargin)
 %   single_delimiter_match : (default false), true can be used
 %       for property value files ...
 %
-%   OUTPUTS
-%   ========================================================
+%   Outputs:
+%   --------
 %   output : either a 
 %               - cellstr matrix {'a' 'b'; 'c' 'd'}
 %               - cell array of cellstr {{'a' 'b'} {'c' 'd'}}
-%               See merge_lines input
+%               See 'merge_lines' input
 %   extras : (structure)
 %       .raw           - raw text from file
 %       .header_lines  - first n lines, see "header_lines" optional input
 %   
-%   IMPLEMENTATION NOTES
-%   =========================================================
+%   Implementation Notes:
+%   ---------------------
 %   1) The last line if empty is always removed ...
 %   2) Removal of empty lines is done before delimiter parsing, not
 %   aftewards, i.e. a row with only delimiters will not be removed ...
-%   
-%   IMPROVEMENTS
-%   =======================================================================
-%
-%
-%   See Also:
-%       
+    
 
 in.input_is_str  = false; %If true, then 
 in.merge_lines   = true;
