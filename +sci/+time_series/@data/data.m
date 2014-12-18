@@ -333,6 +333,22 @@ classdef data < sl.obj.display_class
                 in.axes = {in.axes};
             end
             
+            time_objs = [objs.time];
+            start_datetimes = [time_objs.start_datetime];
+            if ~all(start_datetimes == start_datetimes(1))
+               %TODO: Change time objects for plotting
+                time_objs_for_plot = copy(time_objs);
+                base_datetime = min(start_datetimes);
+                dt = sl.datetime.datenumToSeconds(start_datetimes-base_datetime);
+                for iObj = 1:length(time_objs_for_plot)
+                    cur_time_obj = time_objs_for_plot(iObj);
+                    cur_time_obj.shiftStartTime(dt(iObj));
+                end
+            else
+                time_objs_for_plot = time_objs;
+            end
+            
+            
             for iObj = 1:length(objs)
                 if iObj == 2
                     hold all
@@ -341,7 +357,7 @@ classdef data < sl.obj.display_class
                 %Ideally this decision would be pushed to the
                 %LinePlotReducer class ...
                 if cur_obj.n_samples < BIG_PLOT_N_SAMPLES
-                    t = cur_obj.time.getTimeArray();
+                    t = time_objs_for_plot(iObj).getTimeArray();
                     if ischar(in.channels)
                         plot(in.axes{:},t,cur_obj.d,plotting_options{:});
                     else
@@ -349,9 +365,9 @@ classdef data < sl.obj.display_class
                     end
                 else
                     if ischar(in.channels)
-                        temp = sl.plot.big_data.LinePlotReducer(objs(iObj).time,objs(iObj).d,plotting_options{:});
+                        temp = sl.plot.big_data.LinePlotReducer(time_objs_for_plot(iObj),objs(iObj).d,plotting_options{:});
                     else
-                        temp = sl.plot.big_data.LinePlotReducer(objs(iObj).time,objs(iObj).d(:,in.channels),plotting_options{:});
+                        temp = sl.plot.big_data.LinePlotReducer(time_objs_for_plot(iObj),objs(iObj).d(:,in.channels),plotting_options{:});
                     end
                     if ~isempty(in.axes)
                         temp.h_axes = in.axes{1};
@@ -874,6 +890,7 @@ classdef data < sl.obj.display_class
             for iObj = 1:length(objs)
                 cur_obj = objs(iObj);
                 cur_obj.time.start_offset = last_time;
+                cur_obj.time.start_datetime = 0;
                 last_time = cur_obj.time.end_time;
             end
         end

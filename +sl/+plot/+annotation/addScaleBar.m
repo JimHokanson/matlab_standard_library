@@ -1,9 +1,15 @@
 function addScaleBar(axes_h,start_xy,y_height,x_width,y_label,x_label,varargin)
 %
 %   sl.plot.annotation.addScaleBar(axes_h,start_xy,y_height,x_length,y_label,x_label,varargin)
+%
+%   Optional Inputs:
+%   ----------------
+%   
+%
 
 %There's a lot we could customize here ...
 
+in.no_y = false;
 in.remove_ticks = true;
 in.line_specs = {'Color','k','Linewidth',2};
 
@@ -13,7 +19,11 @@ in.y_label_shift_pct = 0.05; %TODO: Document this ...
 in = sl.in.processVarargin(in,varargin);
 
 if in.remove_ticks
-    set(axes_h,'XTick',[],'XTickLabel',{},'YTick',[],'YTickLabel',{})
+    if in.no_y
+        set(axes_h,'XTick',[],'XTickLabel',{})
+    else
+        set(axes_h,'XTick',[],'XTickLabel',{},'YTick',[],'YTickLabel',{})
+    end
 end
 
 %
@@ -39,6 +49,11 @@ y(1) = start_xy(2)+y_height;
 y(2) = start_xy(2);
 y(3) = start_xy(2);
 
+if in.no_y
+    x(1) = [];
+    y(1) = [];
+end
+
 %TODO: Pas
 line(x,y,'Parent',axes_h,in.line_specs{:});
 
@@ -56,7 +71,10 @@ final_x_label = sprintf('%0g %s',x_width,x_label);
 x_lim_temp = get(axes_h,'XLim');
 x_width    = x_lim_temp(2) - x_lim_temp(1);
 
-text(y_label_pos_x-in.y_label_shift_pct*x_width,y_label_pos_y,final_y_label,'Parent',axes_h,'HorizontalAlignment','right',in.text_specs{:});
+if ~in.no_y
+    text(y_label_pos_x-in.y_label_shift_pct*x_width,y_label_pos_y,final_y_label,'Parent',axes_h,'HorizontalAlignment','right',in.text_specs{:});
+end
+
 text(x_label_pos_x,x_label_pos_y,final_x_label,'Parent',axes_h,'VerticalAlignment','top','HorizontalAlignment','center',in.text_specs{:});
 
 

@@ -100,6 +100,8 @@ for iObj = 1:n_objs
         P = 1;
     end
     
+    %TODO: I want to rewrite this resample to be nicer
+    
     %Main call to the resample() function of the signal
     %processing toolbox
     cur_obj.d = resample(cur_obj.d,P,Q);
@@ -108,17 +110,38 @@ for iObj = 1:n_objs
 end
 
 %Adjust data lengths so that we have the same length data
+%---------------------------------------------------------------
 if ~isempty(in.data_lengths_to_match)
    %Let's currently assume a 1 to 1 ratio
    d2 = in.data_lengths_to_match;
-   keyboard
    if length(d2) ~= length(temp)
        error('Lengths must match')
    end
    for iObj = 1:length(temp)
       cur_obj = temp(iObj);
       cur_ref = d2(iObj);
-      n_samples_temp = tem 
+      n_samples_temp = cur_obj.n_samples;
+      n_samples_ref  = cur_ref.n_samples;
+      %
+      %Approaches:
+      %- shorten ref  - maybe, would rather not
+      %- shorten obj  - easy
+      %- lengthen ref - NO
+      %- lengthen obj - how?
+      if n_samples_temp == n_samples_ref
+          %Great!
+      elseif n_samples_temp > n_samples_ref
+          %shorten
+          cur_obj.d(n_samples_ref+1:end,:,:) = [];
+          %Adjust time
+          %perhaps eventually place a listener on this ...
+          cur_obj.time.n_samples = n_samples_ref;
+      else
+          %lengthen cur_obj OR shorten ref
+          %
+          % - perhaps lengthen if relatively little difference
+          %otherwise consider shortening the ref
+      end
    end
 end
 
