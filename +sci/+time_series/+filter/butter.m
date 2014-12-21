@@ -5,11 +5,8 @@ classdef butter
     %   
     %   A Butterworth filter is maximially flat in the pass band with the 
     %   trade off of not being very steep in transition, thus typically
-    %   requiring a higher order filter ...
+    %   requiring a higher order filter.
     %
-    %   TODO: Decide on an interface that these things must have for
-    %   actually filtering the data ...
-    %   
     %   Filter ToDos:
     %   - plot filter response
     %   - create filter display string
@@ -28,6 +25,9 @@ classdef butter
     
     methods
         function obj = butter(order,cutoff_or_cutoffs,type,varargin)
+            %x
+            %
+            %   obj = butter(order,cutoff_or_cutoffs,type,varargin)
             %
             %   Inputs:
             %   ------- 
@@ -42,11 +42,16 @@ classdef butter
             %
             %   Optional Parameters:
             %   --------------------
-            %   zero_phase : 
+            %   zero_phase : (default true)
+            %       If true, the function filtfilt is used.
             %
             %   Examples:
             %   ---------
             %   f = sci.time_series.filter.butter(2,100,'low');
+            %   f = sci.time_series.filter.butter(1,10,'high');
+            %   f = sci.time_series.filter.butter(1,[300 3000],'pass');
+            %   f = sci.time_series.filter.butter(2,[55 65],'stop');
+            %
             
            in.zero_phase = true;
            in = sl.in.processVarargin(in,varargin);

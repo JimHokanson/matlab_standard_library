@@ -1,6 +1,11 @@
 function [i1,i2] = computeEdgeIndices(ts,t1,t2,check)
 %computeEdgeIndices
 %
+%
+%   TODO: This needs to be moved
+%   
+%
+%
 %   [I1,I2] = computeEdgeIndices(TS,T1,T2,*CHECK) computes the edge indices 
 %   for every T1 & T2 pair where T1 < TS <= T2.  I1 is the first value
 %   where this is true, and I2 is the last, and is equivalent to

@@ -14,10 +14,10 @@ classdef display_class < handle
         function disp(obj)
            %This is the new method that was added on from handle_light
            %to make this the display class.
-%            fprintf('xxxxxxx\n')
-%            fprintf(inputname(obj))
-%            fprintf('xxxxxxx\n')
            sl.obj.dispObject_v1(obj)
+        end
+        function methods(obj)
+            
         end
         function lh = addlistener(varargin)
             lh = addlistener@handle(varargin{:});

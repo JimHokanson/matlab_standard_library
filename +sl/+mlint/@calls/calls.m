@@ -3,10 +3,13 @@ classdef calls < sl.mlint
     %   Class:
     %   sl.mlint.calls
     %
-    %   This class exposes the mlintmex function with the '-calls' input.
+    %   'calls' identifies function calls within a file.
     %
+    %
+    %
+    %   This class exposes the mlintmex function with the '-calls' input.
     %   From what I can tell, this is equivalent to the '-callops' input.
-    
+    %
     %
     %   ISSUES:
     %   ==================================================================
@@ -19,6 +22,7 @@ classdef calls < sl.mlint
     %   whether it is logically arranged.
     %
     %   See Also:
+    %   sl.mlint
     
     %Assumptions:
     %----------------------------------------------------------------------
@@ -30,14 +34,14 @@ classdef calls < sl.mlint
     %
     %   The declarations definitely show up as calls. These are resolved.
     %   The calls to these functions show up as unresolved.
-        
+    
     properties
         d0 = '----  From raw mlintmex call   ----'
         %Following are properties that are parsed from the mlintmex call.
         %-------------------------------------------------------------------
         line_numbers         %[1 x n]
         column_start_indices %[1 x n]
-        fcn_call_types       %[1 x n], this describes the type of 
+        fcn_call_types       %[1 x n], this describes the type of
         %function call such as a main function, anonymous, or sub-function
         %
         %A - anonymous function
@@ -45,7 +49,7 @@ classdef calls < sl.mlint
         %E - end of function
         %    I think this doesn't exist for anonymous functions
         %N - nested functions
-        %S - subfunction, functions in classdef including constructors 
+        %S - subfunction, functions in classdef including constructors
         %    show up as this, not as M
         %U - called function, unresolved
         
@@ -55,16 +59,38 @@ classdef calls < sl.mlint
         %Anonymous functions lack a name.
     end
     
-%     properties (Dependent)
-%         d1 = '----  Higher order processing   ----'
-%         fcn_end_mask
-%     end
-%     
-%     methods
-%         function value = get.fcn_end_mask(obj)
-%            value = 
-%         end
-%     end
+    properties
+        unique_fcn_names
+        unique_fcn_I
+    end
+    
+    methods
+        function value = get.unique_fcn_names(obj)
+            value = obj.unique_fcn_names;
+            if isempty(value)
+                h__populateUniqueFcns(obj);
+                value = obj.unique_fcn_names;
+            end
+        end
+        function value = get.unique_fcn_I(obj)
+            value = obj.unique_fcn_I;
+            if isempty(value)
+                h__populateUniqueFcns(obj);
+                value = obj.unique_fcn_I;
+            end
+        end
+    end
+    
+    %     properties (Dependent)
+    %         d1 = '----  Higher order processing   ----'
+    %         fcn_end_mask
+    %     end
+    %
+    %     methods
+    %         function value = get.fcn_end_mask(obj)
+    %            value =
+    %         end
+    %     end
     
     %Possible analysis
     %------------------------------------------------------------
@@ -72,7 +98,7 @@ classdef calls < sl.mlint
     %- is_anonymous
     %- is_nested
     %- fcn end line
-
+    
     methods
         function obj = calls(file_path)
             obj.file_path = file_path;
@@ -88,15 +114,32 @@ classdef calls < sl.mlint
             c2 = regexp(obj.raw_mex_string,'^(?<type>\w+)(?<depth>\d+)','lineanchors','names');
             
             obj.fcn_call_types  = {c2.type};
-
+            
             obj.depths = cellfun(@helper_str2int,{c2.depth});
+        end
+        function fcn_call = getFunctionCallInfo(obj,I)
+            %
+            %   f = getFunctionCallInfo(obj,I);
+            %
+            %   Inputs:
+            %   -------
+            %   I : scaler
+            %
+            
+            fcn_call = sl.mlint.fcn_call(obj,I);
         end
     end
     
 end
 
+function h__populateUniqueFcns(obj)
+[u,uI] = sl.array.uniqueWithGroupIndices(obj.call_names);
+obj.unique_fcn_names = u;
+obj.unique_fcn_I = uI;
+end
+
 function output = helper_str2int(str)
-    output = sscanf(str,'%d',1);
+output = sscanf(str,'%d',1);
 end
 
 function helper_examples()
@@ -110,9 +153,9 @@ for iWild = 1:length(wild_paths);
     cur_file_path = wild_paths{iWild};
     wtf = sl.mlint.calls(cur_file_path);
     temp_types = wtf.fcn_call_types;
-%     if any(strcmp(temp_types,'A'))
-%        keyboard 
-%     end
+    %     if any(strcmp(temp_types,'A'))
+    %        keyboard
+    %     end
     all_types{iWild} = temp_types;
     types_with_ends{iWild} = wtf.fcn_call_types(find(strcmp(temp_types,'E'))-1);
 end
