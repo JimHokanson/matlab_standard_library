@@ -26,10 +26,8 @@ cur_raw_doc_data = raw_doc_data{iEntry};
 temp = sl.io.parseJSON(cur_raw_doc_data);
  */
 
-//This line was added due to a compile error for the Mac on 2013a
-//Hopefuly this doesn't cause a problem elsewhere
+//
 #define char16_t UINT16_T
-
 #include "matrix.h"
 #include "mex.h"
 
