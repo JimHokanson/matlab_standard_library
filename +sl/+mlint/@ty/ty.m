@@ -13,6 +13,12 @@ classdef ty < sl.mlint
     %   restricting ourselves to the extents of property blocks, we'd know
     %   where the property declarations are.
     %
+    %   Status:
+    %   -------
+    %   The code has been finished although the implementation is a bit
+    %   rough. We also are not pulling out line numbers by type (cell,
+    %   struct, ???, flint)
+    %
     
     %{
     FUNCTIONS:  data sl.obj.display_class get.event_names fieldnames get.n_samples size get.n_channels size get.n_reps size data nargin sl isobject sci struct isempty copy length cell sci copy export sl length export fieldnames fromStruct length cell sci sl plotRows sl length subplot plot gcf plot nargin sl isempty all copy min length hold ischar plot ylabel sprintf xlabel plotStacked struct nargin sl length cell isempty error zeros end cumsum hold addEventElements iscell isstruct struct2cell length addHistoryElements iscell size ischar error getDataSubset false sl length zeros cell ischar <VOID> <VOID> <VOID> zeroTimeByEvent length isnumeric zeros error fieldnames getDataAlignedToEvent size error true sl <VOID> length zeros sci getRawDataAndTime removeTimeGapsBetweenObjects length filter nargout copy false sl sci decimateData length cell ceil size end zeros mean abs copy <VOID> runFunctionsOnData iscell ischar str2func isa error class length changeUnits sci length add isobject copy length minus isobject copy length meanSubtract sl nargout copy isempty length bsxfun minus mean abs nargout copy abs mrdivide nargout copy mrdivide power nargout copy power getEventCalculatorMethods sci getSpectrogramCalculatorMethods sci h__createNewDataFromOld copy h__getEventTimes sl isfield error ischar h__timeToSamples h__getNewTimeObjectForDataSubset sl

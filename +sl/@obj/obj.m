@@ -3,6 +3,7 @@ classdef obj
     %   Class:
     %   sl.obj
     %
+    %   Holds simple static methods for object related functionality
     
     properties
     end

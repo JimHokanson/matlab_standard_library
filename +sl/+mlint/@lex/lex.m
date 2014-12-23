@@ -5,8 +5,11 @@ classdef lex < sl.mlint
     %
     %   This class exposes the mlintmex function with the '-lex' input.
     %
+    %   Usefulness
+    %   ----------
     %   This class is good for identifying different lexical operators
     %   such as: %, /, +, ', :, <EOL> (end of line), etc
+    %
     
     
     %Properties Per Entry

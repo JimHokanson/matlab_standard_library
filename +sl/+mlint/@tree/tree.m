@@ -3,15 +3,46 @@ classdef tree < sl.mlint
     %   Class:
     %   sl.mlint.tree
     %
+    %   Parse tree
+    %
+    %   Tells us:
+    %   - where property definitons are
+    
     
     %No idea what this stuff means ...
+    
+    %Format:
+    %id: row/column #?|  name
 
+    %{
+    0:   1/ 1    1|        CLASSDEF |   1 |   5 | 2825 |  -  |  -  |  -  |V=39929, 0/0
+                                   | 
+   1:   1/ 1    1|         <CEXPR> |  -  |   2 |  -  |   0 |  -  |  -  |
+                                   | 
+   2:   1/15   15|             '<' |   3 |   4 |  -  |   1 |  -  |  -  |
+                                   | 
+   3:   1/10   10|          <NAME> |  -  |  -  |  -  |   2 |  -  |  -  | data
+                                   | #1 4     ClassDef
+   4:   1/17   17|          <NAME> |  -  |  -  |  -  |   2 |  -  |  -  | sl.obj.display_class
+                                   | #2 20     ClassRef
+   5:  87/ 5 2641|      PROPERTIES |  -  |   6 |  16 |   0 |  -  |  -  |V=3000
+                                   | 
+   6:  88/ 9 2660|             '=' |   7 |  -  |   8 |   5 |  -  |  -  |
+                                   | 
+   7:  88/ 9 2660|          <NAME> |  -  |  -  |  -  |   6 |  -  |  -  | d
+                                   | #3 1      PropDef
+   8:  95/ 9 
+    %}
+    
+    
     properties
 
     end
     
     methods
         function obj = tree(file_path)
+            %
+            %   obj = sl.mlint.tree(file_path)
             
             obj.file_path      = file_path;
             obj.raw_mex_string = mlintmex(file_path,'-tree','-m3');
