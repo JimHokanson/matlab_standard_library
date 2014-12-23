@@ -1,7 +1,7 @@
 classdef lex < sl.mlint
     %
     %   Class:
-    %   sl.mlint.lex
+    %   sl.mlint.mex.lex
     %
     %   This class exposes the mlintmex function with the '-lex' input.
     %
@@ -76,18 +76,18 @@ classdef lex < sl.mlint
         function obj = lex(file_path)
             %
             %
-            %   obj = sl.mlint.lex(file_path)
+            %   obj = sl.mlint.mex.lex(file_path)
             %
             %   Inputs:
             %   -------
-            %   file_path :
+            %   file_path : string
+            %       Path of file to parse
             
             obj.file_path = file_path;
             
             %NOTE: The -m3 specifies not to return mlint messages
             obj.raw_mex_string = mlintmex(file_path,'-lex','-m3');
 
-            %Consider: textscan(par.lex,'%d/%d(%d):%[^:]:%s');
             c = textscan(obj.raw_mex_string,'%f / %f ( %f ): %s %[^\n]','MultipleDelimsAsOne',true);
             %1 %f
             %2 %f
