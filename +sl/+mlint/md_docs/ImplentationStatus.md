@@ -48,7 +48,7 @@ See also: [mlintmex](mlintmex.md)
 		 what information this class provides.
 - id MLINT
 - ja NOT VALID
-+ lex TODO: Add documentation
++ lex : Gives position of all operators as well as certain (all?) reserved words
 - m0   : MLINT
 - m1   : MLINT
 - m2   : MLINT

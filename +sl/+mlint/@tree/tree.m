@@ -1,7 +1,7 @@
-classdef tree < mlintlib
+classdef tree < sl.mlint
     %
     %   Class:
-    %   mlintlib.tree
+    %   sl.mlint.tree
     %
     
     %No idea what this stuff means ...

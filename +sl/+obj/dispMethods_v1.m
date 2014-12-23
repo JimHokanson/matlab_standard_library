@@ -1,7 +1,9 @@
-function dispMethods_v1(objs)
+function dispMethods_v1(objs,varargin)
 %
 %
 %   sl.obj.dispMethods_v1(objs)
+%
+%   1) TODO: Allow showing of hidden methods via clicking on link
 
 in.show_handle_methods = false;
 in.show_constructor = false;

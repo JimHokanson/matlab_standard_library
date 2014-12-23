@@ -3,6 +3,9 @@ classdef editc < sl.mlint
     %   Class:
     %   sl.mlint.editc
     %
+    %   This looks a lot like 'tab' but a lot simpler. Like tab, I'm not
+    %   sure how useful it actually is for what I need.
+    %   
     %   Improvements
     %   ===================================================================
     %   1) Can pull out groupings

@@ -24,6 +24,18 @@ classdef calls < sl.mlint
     %   See Also:
     %   sl.mlint
     
+    %{
+          dt = 0.001;
+          t  = -2:dt:2;
+          time_obj = sci.time_series.time(dt,length(t));
+          y = chirp(-2:dt:2,100,1,200,'q');
+          wtf = sci.time_series.data(y',time_obj);
+    
+          w = sl.mlint.all(which(class(wtf)));
+          c = w.calls
+    
+    %}
+    
     %Assumptions:
     %----------------------------------------------------------------------
     %1) End functions always immediately follow the start function
@@ -40,7 +52,13 @@ classdef calls < sl.mlint
         %Following are properties that are parsed from the mlintmex call.
         %-------------------------------------------------------------------
         line_numbers         %[1 x n]
-        column_start_indices %[1 x n]
+        %1 based?
+        column_I %[1 x n]
+        %1 based?
+        absolute_I %[1 x n]
+        
+        n_calls 
+        
         fcn_call_types       %[1 x n], this describes the type of
         %function call such as a main function, anonymous, or sub-function
         %
@@ -55,8 +73,18 @@ classdef calls < sl.mlint
         
         depths           %[1 x n], depth in the file of the function call,
         %Top most functions are at depth 0.
-        call_names       %{1 x n} Name of the function or call being made.
+        fcn_names       %{1 x n} Name of the function or call being made.
         %Anonymous functions lack a name.
+    end
+    
+    methods
+        function value = get.absolute_I(obj)
+           value = obj.absolute_I;
+           if isempty(value)
+              value = obj.getAbsIndicesFromLineAndColumn(obj.line_numbers,obj.column_I);
+              obj.absolute_I = value;
+           end
+        end
     end
     
     properties
@@ -81,35 +109,24 @@ classdef calls < sl.mlint
         end
     end
     
-    %     properties (Dependent)
-    %         d1 = '----  Higher order processing   ----'
-    %         fcn_end_mask
-    %     end
-    %
-    %     methods
-    %         function value = get.fcn_end_mask(obj)
-    %            value =
-    %         end
-    %     end
-    
-    %Possible analysis
-    %------------------------------------------------------------
-    %- fcn start line
-    %- is_anonymous
-    %- is_nested
-    %- fcn end line
-    
     methods
         function obj = calls(file_path)
+            %
+            %   obj = sl.mlint.calls(file_path)
+            
+            
             obj.file_path = file_path;
             
+            %NOTE: The -m3 specifies not to return mlint messages
             obj.raw_mex_string    = mlintmex(file_path,'-calls','-m3');
             
             c = textscan(obj.raw_mex_string,'%*s %f %f %s');
             
-            obj.line_numbers         = c{1}';
-            obj.column_start_indices = c{2}';
-            obj.call_names           = c{3}';
+            obj.line_numbers = c{1}';
+            obj.column_I     = c{2}';
+            obj.fcn_names    = c{3}';
+            
+            obj.n_calls = length(obj.fcn_names);
             
             c2 = regexp(obj.raw_mex_string,'^(?<type>\w+)(?<depth>\d+)','lineanchors','names');
             
@@ -124,6 +141,10 @@ classdef calls < sl.mlint
             %   Inputs:
             %   -------
             %   I : scaler
+            %   
+            %   Outputs:
+            %   --------
+            %   f : 
             %
             
             fcn_call = sl.mlint.fcn_call(obj,I);
@@ -133,7 +154,7 @@ classdef calls < sl.mlint
 end
 
 function h__populateUniqueFcns(obj)
-[u,uI] = sl.array.uniqueWithGroupIndices(obj.call_names);
+[u,uI] = sl.array.uniqueWithGroupIndices(obj.fcn_names);
 obj.unique_fcn_names = u;
 obj.unique_fcn_I = uI;
 end

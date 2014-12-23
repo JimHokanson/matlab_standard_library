@@ -9,6 +9,11 @@ classdef all < sl.obj.handle_light
     %
     %   TODO:
     %   This class should include all mlint objects ...
+    %
+    %   See Also:
+    %   sl.mlint.calls
+    %   sl.mlint.lex
+    %   sl.mlint.tab
     
     properties
         file_path
@@ -19,16 +24,40 @@ classdef all < sl.obj.handle_light
     end
     
     properties
-        calls
-        lex
+        calls %sl.mlint.calls
+        lex %sl.mlint.lex
+        tab
+        editc
     end
     
     methods
         function value = get.calls(obj)
-            if isempty(obj.calls)
-                obj.calls = sl.mlint.calls(obj.file_path);
-            end
             value = obj.calls;
+            if isempty(value)
+                value = sl.mlint.calls(obj.file_path);
+                obj.calls = value;
+            end
+        end
+        function value = get.lex(obj)
+           value = obj.lex;
+           if isempty(value)
+              value = sl.mlint.lex(obj.file_path);
+              obj.lex = value;
+           end
+        end
+        function value = get.tab(obj)
+           value = obj.tab;
+           if isempty(value)
+               value   = sl.mlint.tab(obj.file_path);
+               obj.tab = value;
+           end
+        end
+        function value = get.editc(obj)
+            value = obj.editc;
+            if isempty(value)
+                value = sl.mlint.editc(obj.file_path);
+                obj.calls = value;
+            end
         end
     end
     

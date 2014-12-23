@@ -50,6 +50,8 @@ classdef (Abstract) mlint < sl.obj.display_class
        raw_file_newline_indices %[1 x n_lines]
        %Indices in the raw text of newlines
        
+       raw_file_line_start_I
+       
        raw_file_lines %{1 x n_lines}
        %Text of the originl file, broken up as 
     end
@@ -57,6 +59,13 @@ classdef (Abstract) mlint < sl.obj.display_class
     %Get Methods ==========================================================
     methods
         %raw file methods ---------------------------
+        %
+        %
+        %   TODO: We might want to make all of this a class
+        %   with some initialization
+        %
+        %
+        %   regexp(...,'split') I
         function value = get.raw_file_string(obj)
             value = obj.raw_file_string;
             if isempty(value)
@@ -69,6 +78,13 @@ classdef (Abstract) mlint < sl.obj.display_class
            if isempty(value)
               value = strfind(obj.raw_file_string,sprintf('\n'));
               obj.raw_file_newline_indices = value;
+           end
+        end
+        function value = get.raw_file_line_start_I(obj)
+           value = obj.raw_file_line_start_I;
+           if isempty(value)
+              value = [1 obj.raw_file_newline_indices + 1];
+              obj.raw_file_line_start_I = value;
            end
         end
         function value = get.raw_file_lines(obj)
@@ -92,8 +108,10 @@ classdef (Abstract) mlint < sl.obj.display_class
     
     %Shared Methods =======================================================
     methods
-        function getAbsStartIndicesFromColStartIndices(obj)
-            
+        function I = getAbsIndicesFromLineAndColumn(obj,line_numbers,column_numbers)
+           I = obj.raw_file_line_start_I(line_numbers) + column_numbers - 1;
+           %I(end) = [];
+           %words = arrayfun(@(x,y) obj.raw_file_string(x:y),I,I+5,'un',0);
         end
     end
 end

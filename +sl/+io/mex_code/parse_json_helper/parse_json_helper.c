@@ -1,6 +1,7 @@
 /*
  *
- * Status: This code is currently unfinished.
+ *  See Also:
+ *  sl.io.parseJSON
  *
  */
 

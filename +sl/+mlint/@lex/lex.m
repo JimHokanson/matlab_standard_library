@@ -4,6 +4,10 @@ classdef lex < sl.mlint
     %   sl.mlint.lex
     %
     %   This class exposes the mlintmex function with the '-lex' input.
+    %
+    %   This class is good for identifying different lexical operators
+    %   such as: %, /, +, ', :, <EOL> (end of line), etc
+    
     
     %Properties Per Entry
     %----------------------------------------------------------------------
@@ -11,12 +15,16 @@ classdef lex < sl.mlint
         d0 = '----  From raw mlintmex call ----'
         %Following are the properties that are parsed the mlint call.
         %------------------------------------------------------------------
-        line_numbers            %[1 x n], For each parsed entry, this 
-        %indicates the line number that the entry is on
-        column_start_indices    %[1 x n], For each parsed entry
-        lengths                 %[1 x n], " " length of content, for some
+        line_numbers %[1 x n], For each parsed entry this indicates the 
+        %line number that the entry is on
+        
+        column_I %[1 x n], For each parsed entry this indicates the 
+        %column at which the parsed entry starts
+        
+        lengths %[1 x n], " " length of content, for some
         %types this is the type itself (if,end,+,-, etc), for others 
-        types                   %[1 x n], string name indicating type
+        
+        types %{1 x n}, string name indicating type
         %For example types include:
         %   '{' 
         %   ']' 
@@ -24,23 +32,31 @@ classdef lex < sl.mlint
         %   ';' etc.
         %
         %See private\type_notes for more details
-        strings                 %[1 x n], NOT YET IMPLEMENTED
         
-        d1 = '-----  Processed Variables -----'
-        %NOTE: This should probably be a shared method ...
-        %TODO: Lazy evaluation
-        absolute_start_indices %[1 x n], Instead of a line number and column
+        strings %{1 x n}, the actual string that is in the file. In many
+        %cases the type and string values are identical.
+        %
+        %Notable differences include the following types:
+        %<NAME> : indicates a variable, function etc. e.g. processVarargin
+        %  %    : indicates a comment, string contains the comment text
+        %<INT>
+        %<Cmd Arg> : e.g. all in: hold all
+        %<DOUBLE>
+        %<STRING>
+        
+        absolute_I %[1 x n], Instead of a line number and column
         %index, this provides an absolute index into the string of the file
         %as to where the content starts.
     end
     
-    
-    %TODO: Make things below private????
-    %Would like local tab completion but hidden display
-    %Might need to finish help display class to get this ...
-    properties
-       %.getAbsoluteStartIndices() 
-       newline_indices %Indices of '\n'
+    methods
+        function value = get.absolute_I(obj)
+           value = obj.absolute_I;
+           if isempty(value)
+              value = obj.getAbsIndicesFromLineAndColumn(obj.line_numbers,obj.column_I);
+              obj.absolute_I = value;
+           end
+        end
     end
     
     properties
@@ -57,43 +73,45 @@ classdef lex < sl.mlint
         function obj = lex(file_path)
             %
             %
-            %   obj = mlintlib.lex(file_path)
+            %   obj = sl.mlint.lex(file_path)
             %
-            %   INPUTS
-            %   -----------------------------------------------------------
-            %   file_string : (default, reread from path), this variable
-            %       should be read using fileread or similar mechanism
-            %       without parsing otherwise a mismatch will occur between
-            %       the mlintmex output and 
+            %   Inputs:
+            %   -------
+            %   file_path :
             
             obj.file_path = file_path;
+            
             %NOTE: The -m3 specifies not to return mlint messages
             obj.raw_mex_string = mlintmex(file_path,'-lex','-m3');
 
             %Consider: textscan(par.lex,'%d/%d(%d):%[^:]:%s');
-            
             c = textscan(obj.raw_mex_string,'%f / %f ( %f ): %s %[^\n]','MultipleDelimsAsOne',true);
+            %1 %f
+            %2 %f
+            %3(%f):
+            %4 %s Just grabb all text until a space
+            %5 Everything else remaining until a newline
             
-            %NOTE: Our delimeter is the default (a space). The middle part
-            %which specifies the type ends in a colon which is not meant to
-            %be included, but filtering on a colon messes up the situation
-            %in which the colon character is the type (i.e. '':'':  ). We 
-            %use a regular expression below to tease this apart ...
+            %Our delimeter is the default (a space). The middle part
+            %which specifies the type ends in a colon.
+            %
+            %Filtering on a colon messes up the situation in which the 
+            %colon character is the type, i.e. 
+            %   '':'':  
+            %
+            %   We use a regular expression below to tease this apart.
             
-            obj.line_numbers         = c{1}';
-            obj.column_start_indices = c{2}';
-            obj.lengths              = c{3}';
+            obj.line_numbers = c{1}';
+            obj.column_I     = c{2}';
+            obj.lengths      = c{3}';
             
-            %NOTE: At this point, some of these are invalid as they
-            %get truncated when they are too long. We can use the length
-            %observed versus their specified lengths to determine when this
-            %happens and fix them. See .fixStrings
-            obj.strings              = c{5}';
-            
-            %NOTE: I had a hard time extracting the lexical content using
+            %I had a hard time extracting the lexical content using
             %just textscan. The general format is space, followed by text 
-            %followed by a colon, followed by spaces. 
-            %For example:
+            %followed by a colon, followed by spaces. We have currently
+            %grabbed all non space characters.
+            %
+            %Examples of c{4} values:
+            %
             %   '(':
             %   IF:
             %   <NAME>:
@@ -102,14 +120,65 @@ classdef lex < sl.mlint
             %   ':':
             %
             %   In c{4} we have the text, followed by a colon.
-            %
-            %   
-            obj.types = regexp(c{4},'[^''][^:'']*','match','once')';
+            
+            %Tricky cases:
+            %-------------
+            %1) Transpose
+            %   520/56(1): ':  '
+            %2) 363/26(3): <Cmd Arg>:  all
+            
+            
+            is_colon = cellfun(@(x)x(end) == ':',c{4});
+            if ~all(is_colon)
+               %TODO: Move this into a function 
+               %-----------------------------------------------------------
+               %This
+               temp_types = c{4};
+               temp_strings = c{5};
+               I_broken = find(~is_colon);
+               
+               n_broken = length(I_broken);
+               fixed_types   = cell(1,n_broken);
+               fixed_strings = cell(1,n_broken);
+               for iLine = 1:n_broken
+                   cur_I = I_broken(iLine);
+                   cur_partial_type = temp_types{cur_I};
+                   cur_string = temp_strings{cur_I};  
+                   %We are assuming that we only removed 1 space via
+                   %textscan. 
+                   %
+                   %An alternative approach would be to take the raw mex
+                   %lines and reparse them. If this is done, we would also
+                   %need to remove empty lines in the mex output as these
+                   %empty lines cause a misalignment between the textscan
+                   %output and the strings output from the mex call.
+                   full_line = [cur_partial_type ' ' cur_string];
+                   temp = regexp(full_line,'([^:]+:)\s+(.*)','tokens','once');
+                   fixed_types{iLine}   = temp{1};
+                   fixed_strings{iLine} = temp{2};
+               end
+               c{4}(I_broken) = fixed_types;
+               c{5}(I_broken) = fixed_strings;
+            end
+            
+            obj.types = cellfun(@(x)x(1:end-1),c{4},'un',0)';
+                        
+            %Check on length is to handle the transpose case '
+            has_quote = cellfun(@(x) x(1) == '''' && length(x) > 1,obj.types);
+            obj.types(has_quote) = cellfun(@h__removeQuotes,obj.types(has_quote),'un',0);
+            
+            
+            %At this point, some of these are invalid as they
+            %get truncated when they are too long. We can use the length
+            %observed versus their specified lengths to determine when this
+            %happens and fix them. See .fixStrings
+            obj.strings = c{5}';
+            obj.strings(has_quote) = cellfun(@h__removeQuotes,obj.strings(has_quote),'un',0);
+            
             
             %TODO: Eventually these should undergo lazy evaluation
             %At its base level, the class should just return information
             %from the mex function
-            obj.getAbsoluteStartIndices();
             obj.getUniqueGroups();
             obj.fixStrings();
         end
@@ -120,13 +189,18 @@ classdef lex < sl.mlint
            %
            %
            %    fixStrings(obj)
+           %
+           %    This is necessary as some strings in the lex parsing are
+           %    truncated. We thus go to the original source
             
            observed_lengths     = cellfun('length',obj.strings);
-           short_string_indices = find(obj.lengths > observed_lengths);
+           needs_fixin          = obj.lengths > observed_lengths;
            
-           if isempty(short_string_indices)
+           if ~any(needs_fixin)
                return
            end
+           
+           short_string_I = find(needs_fixin);
            
            %??? Would the addition of the ellipsis ever cause the lengths
            %to match????? Presumably not as otherwise the string itself
@@ -134,40 +208,23 @@ classdef lex < sl.mlint
            %
            %    i.e. my short string t...
            %    ->   my short string test
+           %
+           %    This has yet to be tested ...
            
-           short_starts = obj.absolute_start_indices(short_string_indices);
-           short_ends   = short_starts + obj.lengths(short_string_indices) - 1;
+           short_starts = obj.absolute_I(short_string_I);
+           short_ends   = short_starts + obj.lengths(short_string_I) - 1;
            
-           str = obj.raw_file_string;
+           raw_file_string = obj.raw_file_string;
            
            %Grab full strings based on start and end ...
            %---------------------------------------------------------------
-           all_strings = obj.strings;
-           obj.strings = {}; %Not sure if this helps, idea was to try
-           %and prevent data duplication by object trying to hold onto
-           %to versions ...
-           for iShort = 1:length(short_string_indices)
-              all_strings{short_string_indices(iShort)} = str(short_starts(iShort):short_ends(iShort));
+           n_strings_to_fix = length(short_string_I);
+           
+           fixed_strings = cell(1,n_strings_to_fix);
+           for iShort = 1:n_strings_to_fix
+              fixed_strings{iShort} = raw_file_string(short_starts(iShort):short_ends(iShort));
            end
-           obj.strings = all_strings;
-        end
-        function getAbsoluteStartIndices(obj)
-           %getAbsoluteStartIndices
-           % 
-           %    getAbsoluteStartIndices(obj)
-           
-           %NOTE: We can't rely on EOL parsing for returning all 
-           %end of lines, as EOL signifies the line with the end of the
-           %statement, and ignores ... lines
-           I_newline = obj.raw_file_newline_indices();
-           
-           index_of_previous_line_end = [0 I_newline];
-           
-           obj.absolute_start_indices = ...
-                        index_of_previous_line_end(obj.line_numbers) ...
-                                    + obj.column_start_indices;
-                                
-           obj.newline_indices = I_newline;                     
+           obj.strings(needs_fixin) = fixed_strings;
         end
         function getUniqueGroups(obj)
            %
@@ -180,16 +237,25 @@ classdef lex < sl.mlint
            obj.unique_types_map = containers.Map(unique_types,unique_types__indices_ca);
 
         end
-        function showAsDocument(obj)
-           temp_doc = matlab.desktop.editor.newDocument;
-           
-           %The idea with this method is to show each line
-           %and if it is not a comment line, the parsed
-           %lex output ...
-           
-           %Ideally I could generalize this to other functions as well
-           
-        end
+% % %         function showAsDocument(obj)
+% % %            temp_doc = matlab.desktop.editor.newDocument;
+% % %            
+% % %            %The idea with this method is to show each line
+% % %            %and if it is not a comment line, the parsed
+% % %            %lex output ...
+% % %            
+% % %            %Ideally I could generalize this to other functions as well
+% % %            
+% % %         end
     end
+end
+
+function string_out = h__removeQuotes(string_in)
+   %
+   %    Goes from:
+   %    'text'
+   %    to:
+   %    text
+   string_out = string_in(2:end-1);
 end
 

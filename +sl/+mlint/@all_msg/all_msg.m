@@ -12,13 +12,6 @@ classdef all_msg < sl.obj.handle_light
     %   ===================================================================
     %   1. Consider using msg by default instead of all msg
     
-    %   TODO: I think there is a bug when a static method in a object
-    %   that is in a package
-    %   calls the same object in a different object
-    %   I want to write this up and submit to TMW
-    %   This occured when the getInstance was calling the old
-    %   mlintlib.all_msg
-    
     properties
        raw_string %output from mlintmex('-allmsg')
     end
