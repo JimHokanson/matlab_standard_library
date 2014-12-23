@@ -13,19 +13,6 @@
  *
  */
 
-/*
- um = mendeley.user_manager.getInstance;
-user = um.getUser(1);
-dm = mendeley.library.raw_doc_manager.getInstance(user);
-rdm = dm;
-raw_doc_data = rdm.doc_data;
-n_raw_docs   = length(raw_doc_data);
-parsed_json_local = cell(1,n_raw_docs);
-iEntry = 1
-cur_raw_doc_data = raw_doc_data{iEntry};
-temp = sl.io.parseJSON(cur_raw_doc_data);
- */
-
 //This line was added due to a compile error for the Mac on 2013a
 //Hopefuly this doesn't cause a problem elsewhere
 #define char16_t UINT16_T
