@@ -107,7 +107,7 @@ classdef (Abstract) mlint < sl.obj.display_class
     end
     
     %Shared Methods =======================================================
-    methods
+    methods (Hidden)
         function I = getAbsIndicesFromLineAndColumn(obj,line_numbers,column_numbers)
            I = obj.raw_file_line_start_I(line_numbers) + column_numbers - 1;
            %I(end) = [];

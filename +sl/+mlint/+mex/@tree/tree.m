@@ -6,32 +6,32 @@ classdef tree < sl.mlint
     %   Parse tree
     %
     %   Tells us:
-    %   - where property definitons are
+    %   - which lines property definitions are on
     
     
     %No idea what this stuff means ...
     
     %Format:
     %id: row/column #?|  name
-
+    
     %{
     0:   1/ 1    1|        CLASSDEF |   1 |   5 | 2825 |  -  |  -  |  -  |V=39929, 0/0
-                                   | 
+                                   |
    1:   1/ 1    1|         <CEXPR> |  -  |   2 |  -  |   0 |  -  |  -  |
-                                   | 
+                                   |
    2:   1/15   15|             '<' |   3 |   4 |  -  |   1 |  -  |  -  |
-                                   | 
+                                   |
    3:   1/10   10|          <NAME> |  -  |  -  |  -  |   2 |  -  |  -  | data
                                    | #1 4     ClassDef
    4:   1/17   17|          <NAME> |  -  |  -  |  -  |   2 |  -  |  -  | sl.obj.display_class
                                    | #2 20     ClassRef
    5:  87/ 5 2641|      PROPERTIES |  -  |   6 |  16 |   0 |  -  |  -  |V=3000
-                                   | 
+                                   |
    6:  88/ 9 2660|             '=' |   7 |  -  |   8 |   5 |  -  |  -  |
-                                   | 
+                                   |
    7:  88/ 9 2660|          <NAME> |  -  |  -  |  -  |   6 |  -  |  -  | d
                                    | #3 1      PropDef
-   8:  95/ 9 
+   8:  95/ 9
     %}
     
     
@@ -52,6 +52,11 @@ classdef tree < sl.mlint
         c6
         first_string
         second_string
+        
+        %Some more advanced processing
+        %-----------------------------
+        method_def_I
+        property_def_I
     end
     
     methods
@@ -62,17 +67,11 @@ classdef tree < sl.mlint
             obj.file_path      = file_path;
             obj.raw_mex_string = mlintmex(file_path,'-tree','-m3');
             
-            %In order to read across multiple lines, I move each second line
-            %into the first ones. I'd rather not do this but it works for
-            %now.
-            fixed_string = regexprep(obj.raw_mex_string,'\n\s{10,}|','    ');
-            %fixed_string = regexprep(
-            
-            
             %0:   1/ 1    1|        CLASSDEF |   1 |   5 | 2825 |  -  |  -  |  -  |V=39929, 0/0
-            %                       |             
-            c = textscan(fixed_string,...
-                '%f: %f/%f %f|      %[^|]   | %f | %f | %f | %f | %f | %f |    %[^\n]',...
+            %
+            
+            c = textscan(obj.raw_mex_string,...
+                '%f: %f/%f %f|      %[^|]   | %f | %f | %f | %f | %f | %f | %[^\n] \n | %[^\n]',...
                 'MultipleDelimsAsOne',true,'treatAsEmpty', {'-'});
             
             obj.line_numbers = c{2}';
@@ -87,10 +86,30 @@ classdef tree < sl.mlint
             obj.c5 = c{10}';
             obj.c6 = c{11}';
             
-            temp = regexp(c{12},'\s*\|\s*','split','once');
+            obj.first_string  = c{12};
+            obj.second_string = c{13};
             
-            obj.first_string = cellfun(@(x) x(1),temp,'un',0);
-            obj.second_string = cellfun(@(x) x(2),temp,'un',0);
+            %???? How can I extract out which entries have
+            %MethDef and PropDef???
+            %strfind on raw mex, then back out row
+            
+            %This entire approach is to try and avoid doing string searches
+            %on all parsed entries. We need to verify that this is faster.
+            
+            
+            %TODO: Break this up
+            method_def_raw_I   = strfind(obj.raw_mex_string,' MethDef');
+            
+            newline_I = [0 strfind(obj.raw_mex_string,sprintf('\n')) length(obj.raw_mex_string)];
+            
+            property_def_raw_I = strfind(obj.raw_mex_string,' PropDef');
+            
+            I = sl.array.indices.ofEdgesBoundingData(method_def_raw_I,newline_I);
+            obj.method_def_I = I/2;
+            
+            I = sl.array.indices.ofEdgesBoundingData(property_def_raw_I,newline_I);
+            obj.property_def_I = I/2;
+            
         end
     end
     
