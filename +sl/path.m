@@ -17,6 +17,16 @@ classdef (Hidden) path
        LIBRARY_BETA_PATH   = sl.path.getBetaPath();
     end
     
+    methods (Static)
+        function reset()
+           %x sl.path.reset 
+           %
+           %    This doesn't do what I want it to
+           %    TODO: Build a hook into the initialization
+           %    userpath('reset') 
+        end
+    end
+    
     methods (Static,Hidden)
         function value = getBetaPath()
            value = fullfile(sl.path.LIBRARY_PARENT_PATH,'beta_code');
