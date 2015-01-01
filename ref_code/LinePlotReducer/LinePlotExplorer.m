@@ -1,12 +1,6 @@
 classdef LinePlotExplorer < handle
-%
-%   Class:
-%   sl.plot.big_data.LinePlotExplorer
-% 
-%   JAH: This code came with the LinePlotExplorer code that I've since
-%   modified. I haven't touched this code other than putting it in a
-%   package.
-%
+    
+% LinePlotExplorer
 %
 % This tool allows users to move around quickly within a 2D plot by panning
 % (left clicking and dragging) or zoom (scrolling with a scroll wheel). 
@@ -62,7 +56,6 @@ classdef LinePlotExplorer < handle
         % Interactivity parameters
         button_down = false;
         button_down_point;
-        button_down_limits;
         button_down_axes;
         
         wbdf; % Pass-through WindowButtonDownFcn
@@ -72,8 +65,6 @@ classdef LinePlotExplorer < handle
         
     end
     
-    %Constructor
-    %-----------------------------------------
     methods
         
         % Create a ReductiveViewer for the x and y variables.
@@ -137,8 +128,6 @@ classdef LinePlotExplorer < handle
         
     end
     
-    %Callback methods
-    %-------------------------------------------------------
     methods (Access = protected)
         
         % When the user moves the mouse wheel...
@@ -164,7 +153,7 @@ classdef LinePlotExplorer < handle
             end
             
             % Get where and in what direction user scrolled.
-            exponent = event.VerticalScrollCount;
+            exponent = double(event.VerticalScrollCount);
             
             % Calculate new limits.
             range    = diff(old_x_lims);
@@ -188,7 +177,6 @@ classdef LinePlotExplorer < handle
             % Record what the axes were when the user clicked and where the
             % user clicked.
             o.button_down_axes   = get(o.h_fig, 'CurrentAxes');
-            o.button_down_limits = get(o.button_down_axes, 'XLim');
             point                = get(o.button_down_axes, 'CurrentPoint');
             o.button_down_point  = point(1, 1:2);
             o.button_down        = true;
@@ -215,10 +203,11 @@ classdef LinePlotExplorer < handle
 
                 % Get the mouse position and movement from original point.
                 point    = get(o.button_down_axes, 'CurrentPoint');
-                movement = point(1, 1:2) - o.button_down_point;
+                movement = point(1, 1) - o.button_down_point(1);
+                xlims    = get(o.button_down_axes, 'XLim');
                 
                 % Don't let the user pan too far.
-                new_lims = o.button_down_limits - movement(1);
+                new_lims = xlims - movement;
                 if new_lims(1) < o.x_min
                     new_lims = o.x_min + [0 diff(new_lims)];
                 end

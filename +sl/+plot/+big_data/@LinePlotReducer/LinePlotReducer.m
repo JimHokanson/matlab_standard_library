@@ -21,7 +21,7 @@ classdef LinePlotReducer < handle
     %   the data that they would if they had plotted every single point.
     %
     %   Examples:
-    %   ---------------------------------
+    %   ---------
     %   LinePlotReducer(t, x)
     %
     %   LinePlotReducer(t, x, 'r:', t, y, 'b', 'LineWidth', 3);
@@ -39,6 +39,12 @@ classdef LinePlotReducer < handle
     %
     %   See Also:
     %   sci.time_series.data
+    
+    
+    %External Files:
+    %---------------
+    %1) sl.plot.big_data.LinePlotReducer.init
+    %2) sl.plot.big_data.LinePlotReducer.renderData
     
     %Speedup approaches:
     %--------------------------------
@@ -60,14 +66,15 @@ classdef LinePlotReducer < handle
     
     properties
         id %A unique id that can be used to identify the plotter
-        %when working with callback optimization
+        %when working with callback optimization, i.e. to identify which
+        %object is throwing the callback (debugging)
         
         % Handles
-        %----------
+        %--------
         d1 = '--------  Handles, Listeners, & Timers ------'
         h_figure  %Figure handle. Always singular.
         
-        h_axes    %This is normally singular.
+        h_axes %This is normally singular.
         %There might be multiple axes for plotyy - NYI
         
         h_plot %cell, {1 x n_groups} one for each group of x & y
@@ -78,9 +85,8 @@ classdef LinePlotReducer < handle
         %   This should really be h_line, to be more specific
         
         
-        timers %cell, {1 x n_axes} - these are held onto
-        %between the callback and the final call by the timer
-        %to render the plot
+        timers %cell, {1 x n_axes} - these are held onto between the 
+        %callback and the final call by the timer to render the plot
         
         axes_listeners %cell, {1 x n_axes}
         plot_listeners %cell, {1 x n_groups}
@@ -89,17 +95,17 @@ classdef LinePlotReducer < handle
         %-------------------
         d2 = '-------  Input Data -------'
         plot_fcn %e.g. @plot
-        
-        
-        linespecs %cell Each element is paired with the corresponding
-        %pair of inputs
+
+        linespecs %cell 
+        %Each element is paired with the corresponding pair of inputs
         %
         %   plot(x1,y1,'r',x2,y2,'c')
         %
         %   linspecs = {{'r'} {'c'}}
         
-        extra_plot_options = {} %These are the parameters that go into
-        %the end of a plot function, such as {'Linewidth', 2}
+        extra_plot_options = {} %cell
+        %These are the parameters that go into the end of a plot function, 
+        %such as {'Linewidth', 2}
         
         
         x %cell Each cell corresponds to a different pair of inputs.
@@ -130,9 +136,13 @@ classdef LinePlotReducer < handle
         post_render_callback = []; %This can be set to render
         %something after the data has been drawn .... Any inputs
         %should be done by binding to the anonymous function.
+        %
+        %   e.g. obj.post_render_callback = @()doStuffs(obj)
+        %
+        %   Object will now be available in the callback
         
         
-        
+        d5 = '------ Debugging ------'
         n_render_calls = 0 %We'll keep track of the # of renders done
         n_x_reductions = 0
         %for debugging purposes

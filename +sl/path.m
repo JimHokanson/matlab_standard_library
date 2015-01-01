@@ -14,7 +14,8 @@ classdef (Hidden) path
     properties (Constant)
        LIBRARY_PARENT_PATH = sl.path.getLibraryParentPath(); %Points to folder
        %that contains the '+sl' folder
-       LIBRARY_BETA_PATH   = sl.path.getBetaPath();
+       LIBRARY_BETA_PATH   = sl.path.getBetaPath()
+       LIBRARY_REF_PATH    = sl.path.getRefPath()
     end
     
     methods (Static)
@@ -30,6 +31,9 @@ classdef (Hidden) path
     methods (Static,Hidden)
         function value = getBetaPath()
            value = fullfile(sl.path.LIBRARY_PARENT_PATH,'beta_code');
+        end
+        function value = getRefPath()
+           value = fullfile(sl.path.LIBRARY_PARENT_PATH,'ref_code'); 
         end
         function value = getLibraryParentPath()
            %%??? - when is the class definition loaded? On first call?
@@ -48,6 +52,16 @@ classdef (Hidden) path
         end
         function removeBeta()
            rmpath(sl.path.LIBRARY_BETA_PATH);
+        end
+        function addRef()
+           %It might be nice to make a GUI for selecting particular folders
+           %and subfolders
+           addpath(sl.path.LIBRARY_REF_PATH);
+           initializeRefCode();
+        end
+        function removeRef()
+           %TODO: Build in removal
+            
         end
         function [base_path,file_name,ext] = fileparts()
             %This is only meant to be used on files

@@ -89,9 +89,8 @@ for iChan = 1:n_channels_y
     if isempty(bound_indices)
         %NOTE: We've initialized with a null case so that the output will
         %still be defined even if we skip things.
-
+        
         indices = [];
-%         continue
     elseif bound_indices(end) - bound_indices(1) < N_SAMPLES_MAX_PLOT_EVERYTHING
         %Can we quit early?
         %------------------------------
@@ -101,66 +100,43 @@ for iChan = 1:n_channels_y
         
         
         indices = bound_indices(1):bound_indices(end);
-%         n_short = length(short_indices);
-%         if isobject(x)
-%             x_reduced(1:n_short, iChan) = x.getTimesFromIndices(short_indices(:));
-%         else
-%             if iChan == 1 || n_channels_x ~= 1
-%                 xt = x(:, iChan);
-%             end
-%             x_reduced(1:n_short, iChan) = xt(short_indices(:));
-%         end
-%         y_reduced(1:n_short, iChan) = y(short_indices(:), iChan);
-%         continue
+        %         n_short = length(short_indices);
+        %         if isobject(x)
+        %             x_reduced(1:n_short, iChan) = x.getTimesFromIndices(short_indices(:));
+        %         else
+        %             if iChan == 1 || n_channels_x ~= 1
+        %                 xt = x(:, iChan);
+        %             end
+        %             x_reduced(1:n_short, iChan) = xt(short_indices(:));
+        %         end
+        %         y_reduced(1:n_short, iChan) = y(short_indices(:), iChan);
+        %         continue
     else
         %For each pixel get the minimum and maximum
         %---------------------------------------------
+        %         keyboard
+        %         n_samples = diff(bound_indices)+1;
+        %         yt = max(
+        
+        %What about doing a 2d reshaping then max and min
+        
+        lefts  = bound_indices(1:end-1);
+        rights = [bound_indices(2:end-1)-1 bound_indices(end)];
+        
+        
         for iRegion = 1:axis_width_in_pixels
-            left  = bound_indices(iRegion);
-            right = bound_indices(iRegion+1);
-            
-            yt = y(left:right, iChan);
-            [~, index_of_max]     = max(yt);
-            [~, index_of_min]     = min(yt);
-            
-            % Record those indices.
-            %Shift back to absolute indices due to subindexing into yt
-            if index_of_max > index_of_min
-                indices(1,iRegion) = index_of_min + left - 1;
-                indices(2,iRegion) = index_of_max + left - 1;
-            else
-                indices(2,iRegion) = index_of_min + left - 1;
-                indices(1,iRegion) = index_of_max + left - 1;
-            end
+            yt = y(lefts(iRegion):rights(iRegion), iChan);
+            [~, indices(1,iRegion)] = min(yt);
+            [~, indices(2,iRegion)] = max(yt);
         end
+        
+        indices = bsxfun(@plus,indices,lefts-1);
+        swap_rows = indices(1,:) > indices(2,:);
+        temp = indices(1,swap_rows);
+        indices(1,swap_rows) = indices(2,swap_rows);
+        indices(2,swap_rows) = temp;
+        
     end
-    
-    %Some mex code that just isn't ready for prime time:
-    %----------------------------------------------------
-    % % % %     %This can go really wrong if the input is a single ...
-    % % % %     %------------------------------------------------------
-    % % % %     if ~isa(bound_indices,'double')
-    % % % %         error('Bound indices must be of type double currently ...')
-    % % % %     end
-    % % % %
-    % % % %     if ~isa(y,'double')
-    % % % %        error('Data must currently be of type double')
-    % % % %     end
-    % % % %
-    % % % %     [~,~,indices_of_max,indices_of_min] = minMax_fh(y,bound_indices(1:end-1),...
-    % % % %         bound_indices(2:end),iChan,iChan,1);
-    % % % %
-    % % % %     %%%%TODO: Test vs merge and sort
-    % % % %
-    % % % %     indices_both = [indices_of_max indices_of_min];
-    % % % %     indices = sort(indices_both,2)';
-    % % % % % % %
-    % % % % % % % % % % %     mask = [false; indices_of_max > indices_of_min; false];
-    % % % % % % % % % % %
-    % % % % % % % % % % %     indices(1,[false; ~mask]) = indices_of_max(~mask);
-    % % % % % % % % % % %     indices(1,[false; mask])  = indices_of_min(mask);
-    % % % % % % % % % % %     indices(2,
-    
     n_indices = numel(indices);
     
     % Sample the original x and y at the indices we found.

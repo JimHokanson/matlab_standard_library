@@ -71,24 +71,15 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     double *init_offset;
     double *data_offset;
         
-    if (dim_use == 1){
-        n_chans  = (mwSize)(*ends2 - *starts2 + 1);
-        n_groups = mxGetNumberOfElements(prhs[1]);
-        plhs[0]  = mxCreateNumericMatrix(n_groups,n_chans,mxDOUBLE_CLASS,mxREAL);
-        plhs[1]  = mxCreateNumericMatrix(n_groups,n_chans,mxDOUBLE_CLASS,mxREAL);
-        plhs[2]  = mxCreateNumericMatrix(n_groups,n_chans,mxDOUBLE_CLASS,mxREAL);
-        plhs[3]  = mxCreateNumericMatrix(n_groups,n_chans,mxDOUBLE_CLASS,mxREAL);
-    } else {
-        n_chans  = (mwSize)(*ends1 - *starts1 + 1);
-        n_groups = mxGetNumberOfElements(prhs[3]);
-        plhs[0]  = mxCreateNumericMatrix(n_chans,n_groups,mxDOUBLE_CLASS,mxREAL);
-        plhs[1]  = mxCreateNumericMatrix(n_chans,n_groups,mxDOUBLE_CLASS,mxREAL);
-        plhs[2]  = mxCreateNumericMatrix(n_chans,n_groups,mxDOUBLE_CLASS,mxREAL);
-        plhs[3]  = mxCreateNumericMatrix(n_chans,n_groups,mxDOUBLE_CLASS,mxREAL);
-    }
+    n_chans  = (mwSize)(*ends2 - *starts2 + 1);
+    n_groups = mxGetNumberOfElements(prhs[1]);
+    plhs[0]  = mxCreateNumericMatrix(n_groups,n_chans,mxDOUBLE_CLASS,mxREAL);
+    plhs[1]  = mxCreateNumericMatrix(n_groups,n_chans,mxDOUBLE_CLASS,mxREAL);
+    plhs[2]  = mxCreateNumericMatrix(n_groups,n_chans,mxDOUBLE_CLASS,mxREAL);
+    plhs[3]  = mxCreateNumericMatrix(n_groups,n_chans,mxDOUBLE_CLASS,mxREAL);
+
     
-    
-    double *xp, *xend, *minp, *maxp;
+    double *xp;
     double *all_max, *all_min, *all_max_I, *all_min_I;
     
     double  *xr;
@@ -109,20 +100,21 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
         
         xr = mxGetPr(x);
         //mxFree(mxGetPr(x))
-        
-        lhs[0] = mxCreateDoubleScalar(0);
-        lhs[1] = mxCreateDoubleScalar(1);
-        
+
         for (mwSize iChan = 0; iChan < n_chans; iChan++){
 
             //We are looping over the subset of data which we are working with
             for (mwSize iGroup = 0; iGroup < n_groups; iGroup++){
                 row_start = (mwSize) starts1[iGroup];
                 
+                mexPrintf("iG: %d, row: %d\n",iGroup,row_start);
+                
                 xp = data_offset + row_start - 1;
                 //n_values = row_end - row_start + 1;
-                                
-                mxSetPr(x,xp);
+                  
+                //mxSetPr(x,data_offset);
+                mxSetData(x,xp);
+                //mxSetPr(x,xp);
                 mxSetM(x,1);
                 mxSetN(x,1);
                 
@@ -140,11 +132,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
         }
         
           /* Free allocated matrices */
-//     mxSetPr(x,xr);
-//     mxDestroyArray(x);
-//     mxDestroyArray(lhs[0]);
-//     mxDestroyArray(lhs[1]);
-    //plhs[0] = lhs[0];  
+    mxSetPr(x,xr);
+    mxDestroyArray(x);
+    mxDestroyArray(lhs[0]);
+    mxDestroyArray(lhs[1]);
     
 }
 

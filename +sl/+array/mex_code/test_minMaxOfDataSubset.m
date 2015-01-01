@@ -9,13 +9,13 @@ bound_indices = round(linspace(1,N,100));
 
 
 
-n_repeats = 100;
+n_repeats = 10;
 
 tic
 for iRepeat = 1:n_repeats
     
     
-    [~,~,indices_of_max,indices_of_min] = minMaxOfDataSubset(data,...
+    [a,b,indices_of_max,indices_of_min] = sl.array.minMaxOfDataSubset(data,...
         bound_indices(1:end-1),...
         bound_indices(2:end),1,1,1);
     
@@ -34,8 +34,8 @@ for iRepeat = 1:n_repeats
         right = bound_indices(iRegion+1);
         
         yt = data(left:right, 1);
-        [~, index_of_max]     = max(yt);
-        [~, index_of_min]     = min(yt);
+        [c, index_of_max]     = max(yt);
+        [d, index_of_min]     = min(yt);
         
         %Record those indices.
         %Shift back to absolute indices due to subindexing into yt
