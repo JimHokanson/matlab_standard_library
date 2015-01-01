@@ -23,7 +23,7 @@ subplot(2,2,3)
 plot(1:30)
 subplot(2,2,4)
 plot(1:40)
-s = sl.figure.getSubplotAxesHandles(gcf)
+s = sl.hg.figure.getSubplotAxesHandles(gcf)
 
 %}
   

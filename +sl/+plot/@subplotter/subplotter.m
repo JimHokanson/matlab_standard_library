@@ -136,7 +136,7 @@ classdef subplotter < sl.obj.display_class
         function obj = fromFigure(fig_handle)
             %
             %   sp = sl.plot.subplotter.fromFigure(fig_handle)
-           temp = sl.figure.getSubplotAxesHandles(fig_handle);
+           temp = sl.hg.figure.getSubplotAxesHandles(fig_handle);
            
            sz = size(temp.grid_handles);
            
