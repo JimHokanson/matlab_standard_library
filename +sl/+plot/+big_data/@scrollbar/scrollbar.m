@@ -7,6 +7,7 @@ classdef scrollbar < handle
     %   sl.plot.big_data.LinePlotReducer
     
     %{
+        close all
         n = 1e7 + randi(1000);                          % Number of samples
         t = sort(100*rand(1, n));                       % Non-uniform sampling
         x = [sin(0.10 * t) + 0.05 * randn(1, n); ...
@@ -17,7 +18,10 @@ classdef scrollbar < handle
 
         wtf = sl.plot.big_data.LinePlotReducer(t,x);
         wtf.renderData;   
-        sl.plot.big_data.scrollbar(wtf)
+        s = sl.plot.big_data.scrollbar(wtf)
+    
+       %Testing
+    s.h_slider.slider_width_pct = 0.4
     
     %}
     
@@ -35,9 +39,9 @@ classdef scrollbar < handle
             
            %A scrollbar normally manipulates the xlim of the figure
             
-           INITIAL_WIDTH = 1; %Pct
+           INITIAL_WIDTH = 0.5; %Pct
            
-           DEFAULT_POSITION = [0.03 0.05 0.25 0.03];
+           DEFAULT_POSITION = [NaN 0.02 NaN 0.03];
            
            %TODO: Set extents based on figure extents (left and right)
            
@@ -57,8 +61,7 @@ classdef scrollbar < handle
            
            %set(obj.h_axes,'xlim',
            
-           obj.h_slider = ...
-                uicontrol('style','slider',...
+           obj.h_slider = sl.gui.scrollbar(lpr.h_figure,...
                 'units','normalized',...
                 'position',DEFAULT_POSITION,...
                 'Value',0.5*diff(xlim_temp) + xlim_temp(1),...
@@ -68,7 +71,7 @@ classdef scrollbar < handle
             
         end
         function CB_sliderValueChanged(obj)
-           keyboard 
+           disp('callback ran') 
         end
     end
     
