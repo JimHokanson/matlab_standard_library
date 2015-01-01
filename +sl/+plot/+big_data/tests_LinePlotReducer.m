@@ -5,6 +5,7 @@ classdef (Hidden) tests_LinePlotReducer
     %
     %   See Also:
     %   sl.plot.big_data.LinePlotReducer
+    %   sl.plot.big_data.reduceToWidth
     
     
     %   JAH: Things to fix:

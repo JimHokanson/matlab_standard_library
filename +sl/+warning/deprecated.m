@@ -59,7 +59,7 @@ display_str = [source_str in_favor_of_str '. Please change your code' reason_str
 % file wrong.
 link_txt = sprintf('%s.m:%d',info.name,info.line_number);
 if usejava('desktop')
-    link_str = sl.cmd_window.createOpenToLineLink(info.file_path,info.line_number,link_txt);
+    link_str = sl.ml.cmd_window.createOpenToLineLink(info.file_path,info.line_number,link_txt);
 else
     link_str = link_txt;
 end

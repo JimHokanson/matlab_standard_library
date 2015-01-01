@@ -64,7 +64,7 @@ else
     start_I = length(existing_base_path)+1;
     remaining_str = file_or_folder_path(start_I:end);
     
-    link_to_existing_path = sl.cmd_window.createNavToPathLink(existing_base_path);
+    link_to_existing_path = sl.ml.cmd_window.createNavToPathLink(existing_base_path);
     
     error_msg = sprintf('Missing file:\n%s%s\n',link_to_existing_path,remaining_str);
 end

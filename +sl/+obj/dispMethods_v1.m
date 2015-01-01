@@ -57,7 +57,7 @@ full_method_names = sl.obj.getFullMethodName(objs,method_names_sorted);
 h1_lines = cellfun(@sl.help.getH1Line,full_method_names,'un',0);
 
 %Size setup
-n_chars_max = sl.cmd_window.getMaxCharsBeforeScroll();
+n_chars_max = sl.ml.cmd_window.getMaxCharsBeforeScroll();
 
 method_names_lengths   = cellfun('length',method_names_sorted);
 max_method_name_length = max(method_names_lengths);
@@ -87,7 +87,7 @@ for iM = 1:n_methods
     
     % Edit link
     edit_cmd   = sprintf('edit(''%s'')',sl.obj.getFullMethodName(objs,current_method_name));
-    colon_link = sl.cmd_window.createLinkForCommands(':', edit_cmd);
+    colon_link = sl.ml.cmd_window.createLinkForCommands(':', edit_cmd);
     
     
     % generates an class object using the static method
@@ -126,7 +126,7 @@ for iM = 1:n_methods
     end
     
     period_cmd = sprintf('disp(''[%s] = %s(%s)'')', outputs, method_name_for_function_display, inputs);
-    period_link= sl.cmd_window.createLinkForCommands('.', period_cmd);
+    period_link= sl.ml.cmd_window.createLinkForCommands('.', period_cmd);
     
     
     %% Code Phase I
@@ -149,7 +149,7 @@ for iM = 1:n_methods
     %                 space_for_str_text= length(SEP_STR);
     
     help_cmd         = sprintf('help(''%s'')',sl.obj.getFullMethodName(objs,current_method_name));
-    method_with_link = sl.cmd_window.createLinkForCommands(current_method_name,help_cmd);
+    method_with_link = sl.ml.cmd_window.createLinkForCommands(current_method_name,help_cmd);
     
     left_str  = sl.str.padText(method_with_link,max_method_name_length,...
         'text_loc','right','disp_len',length(current_method_name));

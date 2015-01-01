@@ -24,36 +24,62 @@ classdef scrollbar < handle
     %
     %   TO FIX:
     %   -------
-    %   1) Resizing the figure changes the width and the value ...
+    %   1) FIXED Resizing the figure changes the width and the value ...
     %
     %   Tests:
     %   ------
     %   1) Change width
+    %   2) Resize figure, does width and value stay the same????
+    %
+    %   Improvements:
+    %   -------------
+    %   1) allow updating value while sliding
+    %
+    %
+    %   Callback behavior:
+    %   ------------------
+    %   1) Thrown when setting value
+    %   2) Not thrown for width, unless value unexpectedly changes
+    %   3) Not thrown when setting span
     
     
-    %TODO: Allow updating value while sliding ...
-    
-    %Default slider:
     %{
-                  Style: 'slider'
-             String: ''
-    BackgroundColor: [0.9400 0.9400 0.9400]
-           Callback: ''
-              Value: 0
-           Position: [20 20 60 20]
-              Units: 'pixels'
-
+    clear all
+    close all
+    plot(0:100)
+    p = get(gca,'position');
+    set(gca,'xlim',[0 100])
+    s = sl.gui.scrollbar(gcf,...
+                'units','normalized',...
+                'position',[p(1) 0.02 p(3) 0.03],...
+                'Value',50,...
+                'min',0,...
+                'max',100,...
+                'callback',@(~,~)disp('callback ran'));
+    
+    s.slider_width_pct = 0.4;
+    s.slider_width = 60;
+    s.j_visible_amount = 1;
+    s.j_visible_amount = 0.00001; %This is apparently fine
+    s.value_span = [10 70];
+    
+    %TODO: Try testing changing max and mins
     
     %}
     
-    properties
+    %Matlab and Java handles ----------------------------------------------
+    properties (Hidden)
+        %In general the user of this class should never manipulate these
+        %values
         m_handle %Matlab handle
         j_handle %Java handle
     end
     
     %TODO: Some of these should be observable ...
+    %Main properties to edit/interact with --------------------------------
     properties (Dependent)
-        value
+        value %We're relating this to j_centered_value
+        value_span
         min
         max
         slider_width_pct
@@ -64,19 +90,28 @@ classdef scrollbar < handle
         major_step
         callback
     end
+    
     properties (Hidden)
         user_callback %alias for callback
     end
     
-    
-    
+    %Get & Set methods for above properties -------------------------------
     methods
         %Get Functions
         %--------------------------------------------
         function value = get.value(obj)
             %We rely on the Java value since the Matlab value is not
             %always in sync
-            value = obj.min + (obj.max - obj.min)*obj.j_value_pct;
+            value = obj.min + (obj.max - obj.min)*obj.j_centered_value_pct;
+        end
+        function value = get.value_span(obj)
+            
+            j_centered_local = obj.j_centered_value;
+            j_visible_local = obj.j_visible_amount;
+            j_values = [...
+                j_centered_local - 0.5*j_visible_local ...
+                j_centered_local + 0.5*j_visible_local];
+            value = h__jValuesToValues(obj,j_values);
         end
         function value = get.min(obj)
             value = get(obj.m_handle,'Min');
@@ -95,12 +130,60 @@ classdef scrollbar < handle
         end
         %Set Functions
         %--------------------------------------------
+        function set.value(obj,new_value)
+            %NOTE: Our value range is limited by the width
+            %of the slider
+            half_range = 0.5*(obj.max - obj.min);
+            if new_value - half_range < obj.min
+                %NOPE
+                disp('too left')
+            elseif new_value + half_range > obj.min
+                %NOPE
+                disp('too right')
+            end
+            temp = h__valuesToJValues(obj,new_value);
+            obj.j_centered_value = temp;
+        end
+        function set.value_span(obj,value)
+           
+           %TODO: Check span values - 2, 2nd is greater than the first
+           
+           %Design Decision: We won't throw the callback when this is set
+           %...
+           
+           width = value(2)-value(1);
+           centered_value = value(1)+0.5*width;
+           
+           %We need to adjust the value and width. The order of these calls
+           %is chosen very carefully
+           obj.slider_width_pct = 0.00001; %very small so that any value
+           %is hopefully valid
+           obj.allow_running_callback = false;
+           obj.j_centered_value = h__valuesToJValues(obj,centered_value);
+           obj.allow_running_callback = true;
+           obj.slider_width = width;
+        end
         function set.callback(obj,value)
             obj.user_callback = value;
         end
         function set.slider_width_pct(obj,value)
-            %TODO: Enforce max and min ...
+            %This value isn't super critical, as Java has a check
+            %as well for too small values
+            MIN_SLIDER_PCT = 0.00001;
+            
+            if value > 1
+                %TODO: Throw warning
+                value = 1;
+            elseif value < MIN_SLIDER_PCT
+                if value < 0
+                    %TODO: throw warning
+                end
+                value = MIN_SLIDER_PCT;
+            end
             obj.j_visible_amount_pct = value;
+        end
+        function set.slider_width(obj,value)
+            obj.slider_width_pct = value/(obj.max - obj.min);
         end
         function set.minor_step(obj,value)
             obj.minor_step = value;
@@ -110,50 +193,36 @@ classdef scrollbar < handle
         end
     end
     
-    %Hidden Java Stuffs
+    %Java Stuffs ---------------------------------------------------
     properties
         d1 = '-------  Java Stuffs - Debug only ------'
     end
     properties (Dependent)
         j_value %The actual value associated with the slider
-        j_value_pct  %This is how far along the slider we are, expressed
-        %as a value from 0 to 1 where 0 indicates being all the way to
-        %the left and 1 indicates being all the way to the right.
+        
+        %The above value is aligned to the left of the slider, these are
+        %based on the center of the slider.
+        
         j_centered_value
-        j_minimum
-        j_maximum
+        j_centered_value_pct
+        
+        j_min
+        j_max
         j_range
+        
+        %Slider widths:
         j_visible_amount
         %Settable
         j_visible_amount_pct
         %Settable
     end
-    
-    properties
-        resize_fix_timer
-        temp_callback_holder
-        allow_running_callback = true
-        lh %listener handles
-        last_valid_j_centered
-        last_valid_j_visible_amount
-    end
-    
-    methods
-        function delete(obj)
-            delete(obj.lh)
-            try %#ok<TRYNC>
-                delete(obj.resize_fix_timer)
-            end
-        end
-    end
-    
-    
-    
+
+    %Get & Set methods for Java properties -------------------------------
     methods
         function handleSetRunningCallback(obj,value)
-           %This was moved here to remove the mlint warnings when
-           %it was in set.allow_running_callback
-           if value
+            %This was moved here to remove the mlint warnings when
+            %it was in set.allow_running_callback
+            if value
                 if ~isempty(obj.temp_callback_holder)
                     set(obj.m_handle,'callback',obj.temp_callback_holder);
                     obj.temp_callback_holder = [];
@@ -177,32 +246,35 @@ classdef scrollbar < handle
                     obj.temp_callback_holder = cb;
                     set(obj.m_handle,'callback','');
                 end
-            end 
+            end
         end
         function set.allow_running_callback(obj,value)
-            handleSetRunningCallback(obj,value) 
+            handleSetRunningCallback(obj,value)
         end
         %Get methods
         %------------------------------------------------
         function value = get.j_value(obj)
             value = obj.j_handle.getValue;
         end
-        function value = get.j_value_pct(obj)
-            value = (obj.j_centered_value-obj.j_minimum)/obj.j_range;
-        end
+        %         function value = get.j_value_pct(obj)
+        %             value = (obj.j_value-obj.j_min)/obj.j_range;
+        %         end
         function value = get.j_centered_value(obj)
             %The slider seems to be aligned to the left edge of the slider.
             %I want the value to correspond to the center of the slider.
             value = obj.j_value + 0.5*obj.j_visible_amount;
         end
-        function value = get.j_minimum(obj)
+        function value = get.j_centered_value_pct(obj)
+            value = (obj.j_centered_value-obj.j_min)/obj.j_range;
+        end
+        function value = get.j_min(obj)
             value = obj.j_handle.getMinimum;
         end
-        function value = get.j_maximum(obj)
+        function value = get.j_max(obj)
             value = obj.j_handle.getMaximum;
         end
         function value = get.j_range(obj)
-            value = obj.j_maximum-obj.j_minimum;
+            value = obj.j_max-obj.j_min;
         end
         function value = get.j_visible_amount(obj)
             value = obj.j_handle.getVisibleAmount;
@@ -213,28 +285,26 @@ classdef scrollbar < handle
         %Set methods
         %-------------------------------------------------
         function set.j_value(obj,value)
-            %Where does this get set ...
-            %1) By anything setting this manually
             obj.j_handle.setValue(value);
+            
             %This needs to occur after the setting has occured,
             %because we need the most up to date value from
             %get.j_value()
             obj.last_valid_j_centered = obj.j_centered_value;
         end
-        function set.j_value_pct(obj,value)
-            actual_value = value*obj.j_range + obj.j_minimum;
-            obj.j_value = actual_value;
-        end
         function set.j_centered_value(obj,value)
             left_value = value - 0.5*obj.j_visible_amount;
             obj.j_value = left_value;
         end
-        function set.j_minimum(obj,value)
+        function set.j_centered_value_pct(obj,value)
+            obj.j_centered_value = value*obj.j_range + obj.j_min;
+        end
+        function set.j_min(obj,value)
             %???? How does this change the slider value and
             %the width of the slider ????
             obj.j_handle.setMinimum(value);
         end
-        function set.j_maximum(obj,value)
+        function set.j_max(obj,value)
             obj.j_handle.setMaximum(value);
         end
         function set.j_visible_amount(obj,new_visible_amount)
@@ -245,7 +315,7 @@ classdef scrollbar < handle
             %If the width expands too much, then we need to adjust the
             %value as well.
             
-            cur_centered_value = obj.j_centered_value;
+            cur_pct_location = obj.j_centered_value_pct;
             
             %Computed new value if width is too large
             %
@@ -254,21 +324,20 @@ classdef scrollbar < handle
             %   exceed 100%
             %-----------------------------------------
             new_visible_pct  = new_visible_amount/obj.j_range;
-            cur_pct_location = obj.j_value_pct;
             if cur_pct_location + 0.5*new_visible_pct > 1
                 %Shift left to accomodate
                 value_changed = true;
-                cur_centered_value = 1-0.5*new_visible_amount;
+                cur_pct_location = 1-0.5*new_visible_pct;
             elseif cur_pct_location - 0.5*new_visible_pct < 0
                 %Shift right to accomodate
                 value_changed = true;
-                cur_centered_value = 0+0.5*new_visible_amount;
+                cur_pct_location = 0+0.5*new_visible_pct;
             else
                 value_changed = false;
             end
             
             obj.allow_running_callback = false;
-            obj.j_value = obj.j_minimum;
+            obj.j_value = obj.j_min;
             
             %Make the actual change to the underlying java object
             obj.j_handle.setVisibleAmount(new_visible_amount);
@@ -278,9 +347,9 @@ classdef scrollbar < handle
             if value_changed
                 drawnow
                 obj.allow_running_callback = true;
-                obj.j_centered_value = cur_centered_value;
+                obj.j_centered_value_pct = cur_pct_location;
             else
-                obj.j_centered_value = cur_centered_value;
+                obj.j_centered_value_pct = cur_pct_location;
                 drawnow
                 obj.allow_running_callback = true;
             end
@@ -292,8 +361,22 @@ classdef scrollbar < handle
             obj.j_visible_amount = value_to_set;
         end
     end
+  
+    %Internal Properties  --------------------------------------
+    properties
+        d2 = '------   Internal Properties - Debug Only --------'
+        resize_fix_timer %Holds a timer so that the timer stays in scope.
+        %The timer fixes what Matlab breaks after the function is resized
+        temp_callback_holder
+        allow_running_callback = true %We can this to be false when
+        %we are doing things that we know will cause the callback to run
+        %(such as adjusting the slider width)
+        lh %listener handles
+        last_valid_j_centered
+        last_valid_j_visible_amount
+    end
     
-    %Constructor ----------------------------------------
+    %Constructor & Delete ----------------------------------
     methods
         function obj = scrollbar(figure_handle,varargin)
             %
@@ -319,11 +402,22 @@ classdef scrollbar < handle
             set(obj.m_handle,'callback',@obj.cb_valueChanged);
             
             %Why is this sometimes an array????
+            %I think because it does position matching for filtering
+            %and if we create two instances of the scrollbar then we get
+            %two results
+            %
+            %TODO: We should do an explicit check for a found result
             obj.j_handle = sl.java.findjobj(obj.m_handle);
             
             obj.last_valid_j_centered = obj.j_centered_value;
             obj.last_valid_j_visible_amount = obj.j_visible_amount;
             
+        end
+        function delete(obj)
+            delete(obj.lh)
+            try %#ok<TRYNC>
+                delete(obj.resize_fix_timer)
+            end
         end
     end
     
@@ -335,7 +429,6 @@ classdef scrollbar < handle
             %   where we are doing something that would cause the callback
             %   to fire (that we can't stop) and where we don't really
             %   want the callback to run
-            disp('Trying callback')
             if obj.allow_running_callback
                 obj.last_valid_j_centered = obj.j_centered_value;
                 h__execute_callback(obj.user_callback,h,event,varargin{:})
@@ -378,16 +471,11 @@ classdef scrollbar < handle
         end
     end
     
-    
-    
-    methods (Hidden)
-        
-    end
-    
 end
 
 
 function h__execute_callback(cb, h, event, varargin)
+%Borrowed from LinePlotReducer
 if ~isempty(cb)
     if isa(cb, 'function_handle')
         cb(h, event)
@@ -397,4 +485,12 @@ if ~isempty(cb)
         eval(cb);
     end
 end
+end
+function j_values = h__valuesToJValues(obj,values)
+value_pct = (values - obj.min)/(obj.max - obj.min);
+j_values = obj.j_min + value_pct*obj.j_range;
+end
+function values = h__jValuesToValues(obj,j_values)
+j_value_pcts = (j_values - obj.j_min)/obj.j_range;
+values = obj.min + j_value_pcts*(obj.max - obj.min);
 end

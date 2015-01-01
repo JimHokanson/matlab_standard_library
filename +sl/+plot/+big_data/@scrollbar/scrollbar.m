@@ -5,6 +5,19 @@ classdef scrollbar < handle
     %
     %   See Also:
     %   sl.plot.big_data.LinePlotReducer
+    %
+    %   Notes:
+    %   ------
+    %   
+    %
+    
+    %Improvements:
+    %-------------
+    %1) DONE y limits should be static
+    %2) Add key listeners to scroll and zoom in and out????
+    %3) Allow switching the zoom type - edit window or 2nd slider
+    %4) On zooming, ... not sure what I want to do
+    %5) Add on ability to change y limits
     
     %{
         close all
@@ -21,13 +34,15 @@ classdef scrollbar < handle
         s = sl.plot.big_data.scrollbar(wtf)
     
        %Testing
-    s.h_slider.slider_width_pct = 0.4
+        s.h_slider.slider_width_pct = 0.4
     
     %}
     
     properties
        h_axes
-       h_slider
+       s %handle to slider
+       h_edit_zoom_exact %Not yet implemented
+       h_edit_zoom_pct
     end
     
     methods
@@ -42,9 +57,7 @@ classdef scrollbar < handle
            INITIAL_WIDTH = 0.5; %Pct
            
            DEFAULT_POSITION = [NaN 0.02 NaN 0.03];
-           
-           %TODO: Set extents based on figure extents (left and right)
-           
+                      
            %Starting points:
            %----------------
            %1) How far to zoom in
@@ -54,6 +67,8 @@ classdef scrollbar < handle
            %TODO: Do we want to round based on step size???
            
            obj.h_axes = lpr.h_axes;
+           set(obj.h_axes,'YLimMode','manual')
+           
            axes_extents = get(obj.h_axes,'position');
            DEFAULT_POSITION(1) = axes_extents(1);
            DEFAULT_POSITION(3) = axes_extents(3);
@@ -61,20 +76,48 @@ classdef scrollbar < handle
            
            %set(obj.h_axes,'xlim',
            
-           obj.h_slider = sl.gui.scrollbar(lpr.h_figure,...
+           obj.s = sl.gui.scrollbar(lpr.h_figure,...
                 'units','normalized',...
                 'position',DEFAULT_POSITION,...
                 'Value',0.5*diff(xlim_temp) + xlim_temp(1),...
                 'min',xlim_temp(1),...
                 'max',xlim_temp(2),...
-                'callback',@(~,~)obj.CB_sliderValueChanged()); 
+                'callback',@(~,~)obj.CB_sliderValueChanged());
+            
+           edit_position = zeros(1,4);
+           edit_position(1) = DEFAULT_POSITION(1)+DEFAULT_POSITION(3)+0.01;
+           edit_position(2) = DEFAULT_POSITION(2);
+           edit_position(3) = 0.05; %We'll change this
+           edit_position(4) = DEFAULT_POSITION(4);
+           obj.h_edit_zoom_pct = uicontrol('style','edit',...
+               'String',sprintf('%0.1f',100*INITIAL_WIDTH),...
+               'units','normalized',...
+               'FontSize',14,...
+               'position',edit_position,...
+               'callback',@(~,~)obj.CB_changeSliderWidth(true));
+            
+            obj.s.slider_width_pct = INITIAL_WIDTH;
+            set(obj.h_axes,'xlim',obj.s.value_span);
             
         end
+        function CB_changeSliderWidth(obj,is_pct)
+            if is_pct
+                width_pct = str2double(get(obj.h_edit_zoom_pct,'String'))/100;
+                obj.s.slider_width_pct = width_pct;
+                h__updateAxesView(obj)
+            else
+                error('Not yet implmented')
+            end
+        end
         function CB_sliderValueChanged(obj)
-           disp('callback ran') 
+           h__updateAxesView(obj)
         end
     end
     
+end
+
+function h__updateAxesView(obj)
+   set(obj.h_axes,'xlim',obj.s.value_span);
 end
 
 %{

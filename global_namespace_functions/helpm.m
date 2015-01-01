@@ -25,5 +25,5 @@ full_method_name = [class_type '.' parts{end}];
 
 help(full_method_name)
 
-str = sl.cmd_window.createLinkForCommands('[Click to edit]',sprintf('edit %s',full_method_name));
+str = sl.ml.cmd_window.createLinkForCommands('[Click to edit]',sprintf('edit %s',full_method_name));
 disp(str);

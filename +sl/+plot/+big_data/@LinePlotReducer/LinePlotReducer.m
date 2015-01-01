@@ -139,7 +139,7 @@ classdef LinePlotReducer < handle
         %
         %   e.g. obj.post_render_callback = @()doStuffs(obj)
         %
-        %   Object will now be available in the callback
+        %   'obj' will now be available in the callback
         
         
         d5 = '------ Debugging ------'
@@ -193,15 +193,18 @@ classdef LinePlotReducer < handle
     %-----------------------------------------
     methods
         function obj = LinePlotReducer(varargin)
+            %x 
             %
-            %   ???
+            %   obj = sl.plot.big_data.LinePlotReducer(varargin)
+            %
+            %   TODO: Add examples
             %
             temp = now;
             obj.id = uint64(floor(1e8*(temp - floor(temp))));
             %I'm hiding the initialization details in another file to
             %reduce the high indentation levels and the length of this
             %function.
-            init(obj,varargin{:})
+            obj.init(varargin{:});
         end
 %         function delete(obj)
 %             %http://stackoverflow.com/questions/14834040/matlab-free-memory-of-class-objects

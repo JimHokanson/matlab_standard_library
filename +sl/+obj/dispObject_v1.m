@@ -116,7 +116,7 @@ end
 function edit_link = h__createEditLink(disp_str,edit_str)
 
 edit_cmd  = sprintf('edit %s',edit_str);
-edit_link = sl.cmd_window.createLinkForCommands(disp_str,edit_cmd);
+edit_link = sl.ml.cmd_window.createLinkForCommands(disp_str,edit_cmd);
 
 end
 

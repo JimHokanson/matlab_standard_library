@@ -2,6 +2,11 @@ function init(o,varargin)
 %
 %   sl.plot.big_data.LinePlotReducer.init
 %
+%   The initialization only serves to parse the input data. Nothing is
+%   rendered (plotted).
+%
+%   See Also:
+%   sl.plot.big_data.LinePlotReducer.renderData
 
 % The first argument might be a function handle or it might
 % just be the start of the data.
@@ -11,7 +16,7 @@ start = 1;
 %---------------------------------------
 if isa(varargin{start}, 'function_handle')
     o.plot_fcn = varargin{1};
-    start    = start + 1;
+    start = start + 1;
 else
     o.plot_fcn = @plot;
 end
@@ -22,13 +27,10 @@ end
 if isscalar(varargin{start}) && ishandle(varargin{start}) && ...
         strcmp(get(varargin{start}, 'Type'), 'axes')
     
-    o.h_axes = varargin{start};
-
-    % Get the figure.
+    o.h_axes   = varargin{start};
     o.h_figure = get(o.h_axes, 'Parent');
 
     start = start + 1;
-
 end
 
 h__parseDataAndLinespecs(o,varargin{start:end})
@@ -135,73 +137,3 @@ o.y = temp_y;
 o.linespecs = temp_specs;
 
 end
-
-
-%{
-
-    
-% Make the plot arguments.
-plot_args = {};
-
-% Add the axes handle if the user supplied it.
-if axes_specified
-    plot_args{end+1} = o.h_axes;
-end
-
-% Add the lines.
-for k = 1:length(o.y)
-    plot_args{end+1} = x_r{k}; %#ok<AGROW>
-    plot_args{end+1} = y_r{k}; %#ok<AGROW>
-    if k <= length(linespecs) && ~isempty(linespecs{k})
-        plot_args{end+1} = linespecs{k}; %#ok<AGROW>
-    end
-end
-
-% Add any other arguments.
-plot_args = [plot_args, varargin(start:end)];
-
-% Plot it!
-try
-
-    % plotyy
-    if isequal(plot_fcn, @plotyy)
-
-        [o.h_axes, h1, h2] = plot_fcn(plot_args{:});
-        o.h_plot = [h1 h2];
-
-        % stairs
-    elseif isequal(plot_fcn, @stairs) && length(o.y) > 1
-
-        error(['Function ''stairs'' cannot plot ' ...
-            'multiple lines at once using ' ...
-            'LinePlotReducer. Try using ''hold on'' '...
-            'and calling LinePlotReducer once for ' ...
-            'each line.']);
-
-        % All other lineseries functions.
-    else
-        o.h_plot = plot_fcn(plot_args{:});
-    end
-
-catch err
-    fprintf(['LinePlotReducer had trouble managing the '...
-        '%s function. Perhaps the arguments are ' ...
-        'incorrect. The error is below.\n'], ...
-        func2str(plot_fcn));
-    rethrow(err);
-end
-    
-
-
-% Listen for changes to the x limits of the axes.
-for k = 1:length(o.h_axes)
-    addlistener(o.h_axes(k), 'XLim',     'PostSet', @(~, ~) o.resize);
-    addlistener(o.h_axes(k), 'Position', 'PostSet', @(~, ~) o.resize);
-end
-
-% No longer busy.
-
-
-end
-
-%}

@@ -159,13 +159,6 @@ for iG = 1:obj.n_plot_groups
     end
 end
 
-% % %     origInfo = getappdata(gca, 'matlab_graphics_resetplotview');
-% % %     if ~isempty(origInfo)
-% % %         fprintf(2,'%s\n',mat2str(origInfo.XLim));
-% % %     end
-% % %
-
-
 end
 
 function h__setupCallbacksAndTimers(obj)
@@ -245,8 +238,6 @@ if obj.DEBUG
   disp('Listener cleanup ran')  
 end
 end
-
-
 
 function h__handleFirstPlotting(obj,initial_axes_width)
 %
