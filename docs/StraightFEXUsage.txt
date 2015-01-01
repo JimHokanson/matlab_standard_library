@@ -1,0 +1,3 @@
+List of FEX submissions used without significant edits:
+
+http://www.mathworks.com/matlabcentral/fileexchange/14317-findjobj-find-java-handles-of-matlab-graphic-objects
