@@ -2,6 +2,8 @@
 *.bin
 *.m~
 
+./global_namespace_functions/temp_file_for_code_execution.m
+
 #Copied from:
 #https://help.github.com/articles/ignoring-files
 

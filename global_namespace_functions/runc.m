@@ -3,6 +3,14 @@ function runc(show_code)
 %
 %   runc()
 %
+%   I wrote this function to facilitae running multi-line examples from
+%   files. I would normally need to uncomment the lines, evaluating the
+%   selection (being careful not to save the file), and then undo the
+%   changes so that the file wasn't changed.
+%
+%   The alternative approach here is just to copy the 
+%
+%
 %   To Run:
 %   -------
 %   1) Find some example text to run
@@ -16,6 +24,10 @@ function runc(show_code)
 %   disp('And select this one!')
 %   
 %   %Then type "runc()" into the command window
+%
+%   Improvments:
+%   ------------
+%   1) Write to a temporary file
 
 %{
   disp('Select this line')

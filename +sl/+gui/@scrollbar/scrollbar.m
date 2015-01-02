@@ -3,24 +3,29 @@ classdef scrollbar < handle
     %   Class:
     %   sl.gui.scrollbar
     %
+    %   This class wraps the uicontrol('style','slider') object. Unlike
+    %   that version, this one supports modification of the slider width.
     %
-    %   Goal was to allow modifying the width of the slider of the
-    %   scrollbar.
-    %
-    %
-    %   NOTES:
-    %   ------
-    %   1) Changing the visible amount changes the value. Special steps
+    %   Development Notes:
+    %   ------------------
+    %   1) Changing the slider width changes the value. Special steps
     %   were taken to reset the value to its appropriate location AND
     %   not to cause a callback during this process.
     %
     %   2) Changing the 'Value' via set(obj.m_handle,'Value',<new_value>)
-    %   changes the scroll width. When we scroll however things are fine.
+    %   changes the scroll width. When we scroll however the scroll width
+    %   does not change. Since this change occurs, we only work with the 
+    %   underlying Java value, instead of making the above call to the
+    %   Matlab value.
     %
     %
     %   Questions:
     %   ----------
     %   1) Does changing the j_value update the current_value????
+    %
+    %       It doesn't matter, since we rely on the Java value to give us
+    %       the correct value. It does not currently throw a callback
+    %       event.
     %
     %   TO FIX:
     %   -------
