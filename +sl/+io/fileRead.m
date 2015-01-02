@@ -1,29 +1,43 @@
 function out = fileRead(file_path,type,varargin)
-%fileRead
+%x Read a file as a given data type
 %
 %   out = sl.io.fileRead(file_path,type,varargin)
 %
 %   Similiar to fileread() except that it allows specification of a single
-%   fread type, like uint8
+%   fread type, like uint8.
 %
-%   Required Inputs
+%   This is basically a very thin wrapper around fread that also takes
+%   care of opening and closing the file.
+%
+%   Inputs:
+%   -------
+%   type : 
+%       Passed directly into fread.
+%       Notes on type from fread documentation:
+%       'uint8' read as uint8 but output as double
+%       'uint8=>single' read as uint8, output as single
+%       '*uint8' read and return as uint8
+%       
+%
+%   Optional Inputs:
 %   ----------------
-%   type   : 
-%       Passed directly into fread
-%
-%   Optional Inputs
-%   ---------------
 %   endian : (default 'n')
 %
 %   Examples:
 %   ---------
+%   1) Read and return as uint8
 %   out = sl.io.fileRead(file_path,'*uint8')
+%
+%   2) Read and return as characters
 %   out = sl.io.fileRead(file_path,'*char')
 %
 %   See Also:
+%   ---------
 %   fread
 
+in.mode = 'r';
 in.endian = 'n';
+in.encoding = '';
 in = sl.in.processVarargin(in,varargin);
 
 % 'native'      or 'n' - local machine format - the default
@@ -36,20 +50,12 @@ in = sl.in.processVarargin(in,varargin);
 % 'ieee-be.l64' or 's' - IEEE floating point with big-endian byte
 %                        ordering and 64 bit long data type.
 
+mode = in.mode;
+in = rmfield(in,'mode');
 
 % open the file
 if ischar(file_path)
-    [fid, msg] = fopen(file_path,'r',in.endian);
-    
-    if fid == (-1)
-        %NOTE: I've run into problems with unicode ...
-        %http://www.mathworks.com/matlabcentral/answers/86186-working-with-unicode-paths
-        if ~exist(file_path,'file')
-            error('Specified file does not exist:\n%s\n',file_path)
-        else
-            error(message('sl:io:fileRead:cannotOpenFile', filename, msg));
-        end
-    end
+    fid = sl.io.fopenWithErrorHandling(file_path,mode,in);
     
     try
         % read file
@@ -63,6 +69,7 @@ if ischar(file_path)
     % close file
     fclose(fid);
 else
+    %I think this code as a brief foray into reading Java files
     
     %'source' - output as double
     %'source=>output'
