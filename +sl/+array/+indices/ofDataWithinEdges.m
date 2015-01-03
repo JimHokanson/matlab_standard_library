@@ -1,5 +1,9 @@
-function [i1,i2] = ofDataWithinEdges(ts,bound_values,varargin)
-%x Computes indices that bound each element of the input array
+function [i1,i2] = ofDataWithinEdges(data,edges,varargin)
+%x Compute data indices that bound either side of each 
+%
+%   ofDataWithinEdges or ofEdgesBoundingData?
+%   -----------------------------------------
+%   I had a really hard time 
 %
 %   NOTE: This implementation is suboptimal because it uses histc instead
 %   of a merge sort approach (possibly, although histc may have an alternte 
@@ -8,15 +12,17 @@ function [i1,i2] = ofDataWithinEdges(ts,bound_values,varargin)
 %   Regardless, we should move the mex_computeEdgeIndices code into place
 %   so that it is used by default instead ...
 %
+%   OLD NAME: computeEdgeIndices
+%
 %   TODO: DOCUMENATION BELOW IS OUT OF DATE
 %
 %   Calling forms:
 %   --------------
 %   1)
-%   [I1,I2] = sl.array.computeEdgeIndices(ts,bound_values,varargin)
+%   [I1,I2] = sl.array.computeEdgeIndices(ts,edges,varargin)
 %   
 %   2)
-%   [I1,I2] = sl.array.computeEdgeIndices(ts,t1,t2,varargin)
+%   [I1,I2] = sl.array.computeEdgeIndices(ts,left_edges,right_edges,varargin)
 %
 %
 %
@@ -125,12 +131,12 @@ function [i1,i2] = ofDataWithinEdges(ts,bound_values,varargin)
 %
 
 if nargin > 2 && isnumeric(varargin{1})
-    t1 = bound_values;
+    t1 = edges;
     t2 = varargin{1};
     varargin(1) = [];
 else
-    t1 = bound_values(1:end-1);
-    t2 = bound_values(2:end);    
+    t1 = edges(1:end-1);
+    t2 = edges(2:end);    
 end
 
 if length(t1) ~= length(t2)
@@ -142,7 +148,7 @@ end
 in.check = false;
 in = sl.in.processVarargin(in,varargin);
 
-if isempty(ts)
+if isempty(data)
     %Maintains size
     i1 = ones(size(t1));
     i2 = zeros(size(t2));
@@ -152,14 +158,14 @@ end
 
 
 
-I = find(t1 >= ts(end),1);
+I = find(t1 >= data(end),1);
 
 %MAGIC, BEWARE :)
 %I forgot where I first saw this trick being used
-if size(ts,1) > 1
-    [~,i1] = histc(t1,[-inf; ts]);
+if size(data,1) > 1
+    [~,i1] = histc(t1,[-inf; data]);
 else
-    [~,i1] = histc(t1,[-inf ts]);
+    [~,i1] = histc(t1,[-inf data]);
 end
 i1(I:end) = 1;
 
@@ -171,10 +177,10 @@ if t2(end) == inf
     t2(end) = datatypemax(t2(1));
 end
 
-if size(ts,1) > 1
-    [~,i2] = histc(t2,[ts; inf]);
+if size(data,1) > 1
+    [~,i2] = histc(t2,[data; inf]);
 else
-    [~,i2] = histc(t2,[ts inf]);
+    [~,i2] = histc(t2,[data inf]);
 end
 i2(I:end) = 0; %This provides empty indexing and lengths of 0
 

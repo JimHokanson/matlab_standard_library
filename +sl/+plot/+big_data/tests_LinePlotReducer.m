@@ -58,6 +58,12 @@ classdef (Hidden) tests_LinePlotReducer
         %   2) plot(x1,y1,x2,y2) %See test001
         %   3) plot(ax,x1,y1)
         
+        function bugTestingInFEXVersion()
+           y=[0 1 zeros(1,1e6) 1 zeros(1,1e6) 1 0]; 
+           x=1:length(y);
+           wtf = sl.plot.big_data.LinePlotReducer(x,y,'*-');
+           wtf.renderData;
+        end
         function testSpeed()
             
             %sl.plot.big_data.tests_LinePlotReducer.testSpeed
@@ -100,6 +106,21 @@ classdef (Hidden) tests_LinePlotReducer
             toc;
             %profile off
             %profile viewer
+        end
+        function test002_singleLongChannel()
+            profile on
+            tic;
+            t = 1:1e8;
+            t_fast = sci.time_series.time(1,length(t));
+            y = rand(length(t),4);
+            y2 = y;
+            wtf = sl.plot.big_data.LinePlotReducer(t_fast,4-y,'r',t_fast,y2,'c','Linewidth',2);
+            %wtf = sl.plot.big_data.LinePlotReducer(t,4-y,'r',t,y2,'c','Linewidth',2);
+            wtf.renderData;
+            set(gca,'ylim',[-1 5])
+            toc;
+            %profile off
+            %profile viewer 
         end
         function interestingInput()
             %From FEX: 40790

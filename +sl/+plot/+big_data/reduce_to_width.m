@@ -1,4 +1,5 @@
 function [x_reduced, y_reduced] = reduce_to_width(x, y, axis_width_in_pixels, x_limits)
+%x
 %
 %   [x_reduced, y_reduced] = sl.plot.big_data.reduce_to_width(x, y, axis_width_in_pixels, x_limits)
 %
@@ -29,42 +30,45 @@ function [x_reduced, y_reduced] = reduce_to_width(x, y, axis_width_in_pixels, x_
 %
 %   Example
 %   -------
+%   plot(x,y)
+%   hold all
 %   [xr, yr] = sl.plot.big_data.reduce_to_width(x, y, 500, [5 10]);
 %
 %   plot(xr, yr); % This contains many fewer points than plot(x, y)
 %                 %but looks the same.
+%   hold off
 %
 %   Original Function By:
 %   Tucker McClure (Mathworks)
 
-%TO FIX ******************* TODO
-%This was recently modified to always include the first and last data
-%points due to an issue with replotting. Eventually it would be good
-%to make this optional ...
 
+
+%TODO: This should be based on how long it takes to plot a set of points
+%versus how long it takes to run this code ...
+N_SAMPLES_MAX_PLOT_EVERYTHING = 10000;
 
 n_points = 2*axis_width_in_pixels;
 
-N_SAMPLES_MAX_PLOT_EVERYTHING = 4*axis_width_in_pixels; %If the # of values
-%passed is less than this amount, then we just return everything, rather
-%than computing mins and maxes
-
+%Early exit for small data
+%--------------------------
 % If the data is already small, there's no need to reduce.
-%---------------------------------------------------
-if size(y, 1) <= n_points
+% Note that this check also serves to prevent indexing edge cases.
+if size(y, 1) <= N_SAMPLES_MAX_PLOT_EVERYTHING
     y_reduced = y;
     if isobject(x)
         x_reduced = x.getTimeArray();
     else
         x_reduced = x;
     end
-    
     return;
 end
 
 % Reduce the data to the new axis size.
 %---------------------------------------------------
 n_channels_y = size(y,2);
+
+%This value should either be 1, or the same as n_channels_y, indicating a
+%1:1 correspondance between x and y.
 n_channels_x = size(x,2);
 
 n_samples_y = size(y,1);
@@ -72,127 +76,184 @@ n_samples_y = size(y,1);
 x_reduced = nan(n_points+2, n_channels_y);
 y_reduced = nan(n_points+2, n_channels_y);
 
+%We add on the extremes of the data so that Matlab doesn't zoom in and out
+%constantly.
+
+y_reduced(1,:) = y(1,:);
+y_reduced(end,:) = y(end,:);
+
+if isobject(x)
+    
+else
+    x_reduced(1,:) = x(1,:);
+    x_reduced(end,:) = x(end,:);
+end
+
+%Questions:
+%----------
+%1) Are the data evenly sampled in time
+%2) Are we plotting all data
+%3) # of channels
+
+evenly_sampled = isobject(x);
+plot_all_data = h__checkForPlottingAllData(x,x_limits);
+
+if evenly_sampled && plot_all_data && n_channels_y == 1
+    %Run reshape code
+    
+    return
+end
+
+
+keyboard
+
 n_edges  = axis_width_in_pixels + 1;
 % Create a place to store the indices we'll need.
-%NOTE: This size allows us to use indices(:) appropriately.
+%This size allows us to use indices(:) appropriately.
 indices  = zeros(2,axis_width_in_pixels);
-
-% minMax_fh = @sl.array.minMaxOfDataSubset;
 
 for iChan = 1:n_channels_y
     
     if iChan == 1 || n_channels_x ~= 1
         bound_indices = h__getBoundIndices(x,iChan,n_edges,x_limits);
+        %bound_indices is an array of indices that
     end
     
     
     if isempty(bound_indices)
         %NOTE: We've initialized with a null case so that the output will
         %still be defined even if we skip things.
-        
-        indices = [];
+        continue
     elseif bound_indices(end) - bound_indices(1) < N_SAMPLES_MAX_PLOT_EVERYTHING
-        %Can we quit early?
-        %------------------------------
-        %If the data present in this zoomed in case is
-        %small, we will just plot everything.
-        
-        
+        %This occurs when the zoom level is such that we don't actually
+        %have that much data from the channel to show.
         
         indices = bound_indices(1):bound_indices(end);
-        %         n_short = length(short_indices);
-        %         if isobject(x)
-        %             x_reduced(1:n_short, iChan) = x.getTimesFromIndices(short_indices(:));
-        %         else
-        %             if iChan == 1 || n_channels_x ~= 1
-        %                 xt = x(:, iChan);
-        %             end
-        %             x_reduced(1:n_short, iChan) = xt(short_indices(:));
-        %         end
-        %         y_reduced(1:n_short, iChan) = y(short_indices(:), iChan);
-        %         continue
     else
-        %For each pixel get the minimum and maximum
-        %---------------------------------------------
-        %         keyboard
-        %         n_samples = diff(bound_indices)+1;
-        %         yt = max(
-        
-        %What about doing a 2d reshaping then max and min
-        
-        lefts  = bound_indices(1:end-1);
-        rights = [bound_indices(2:end-1)-1 bound_indices(end)];
-        
-        
-        for iRegion = 1:axis_width_in_pixels
-            yt = y(lefts(iRegion):rights(iRegion), iChan);
-            [~, indices(1,iRegion)] = min(yt);
-            [~, indices(2,iRegion)] = max(yt);
-        end
-        
-        indices = bsxfun(@plus,indices,lefts-1);
-        swap_rows = indices(1,:) > indices(2,:);
-        temp = indices(1,swap_rows);
-        indices(1,swap_rows) = indices(2,swap_rows);
-        indices(2,swap_rows) = temp;
-        
+        indices = h__getMinMax_approach1(indices,bound_indices);
     end
-    n_indices = numel(indices);
+    
+    x_reduced = h__getXReducedGivenIndices(x,x_reduced,iChan,indices);
+    y_reduced = h__getYReducedGivenIndices(y,y_reduced,iChan,indices);
     
     % Sample the original x and y at the indices we found.
-    if isobject(x)
-        if n_indices ~= 0
-            end_I = n_indices + 1;
-            x_reduced(2:end_I, iChan) = x.getTimesFromIndices(indices(:));
-        end
-        if n_indices == 0 || indices(1) ~= 1
-            x_reduced(1,iChan) = x.getTimesFromIndices(1);
-            
-        end
-        if n_indices == 0 || indices(end) ~= n_samples_y
-            x_reduced(end,iChan) = x.getTimesFromIndices(n_samples_y);
-            
-        end
-    else
-        if iChan == 1 || n_channels_x ~= 1
-            xt = x(:, iChan);
-        end
-        if n_indices ~= 0
-            end_I = n_indices + 1;
-            x_reduced(2:end_I, iChan) = xt(indices(:));
-        end
-        if n_indices == 0 || indices(1) ~= 1
-            x_reduced(1,iChan) = xt(1);
-        end
-        if n_indices == 0 || indices(end) ~= n_samples_y
-            x_reduced(end,iChan) = xt(end);
-        end
-    end
     
-    if n_indices == 0 || indices(1) ~= 1
-        y_reduced(1,iChan) = y(1,iChan);
-    end
-    if n_indices == 0 || indices(end) ~= n_samples_y
-        y_reduced(end,iChan) = y(end,iChan);
-    end
+    
+    
     if n_indices ~= 0
-        end_I = n_indices + 1;
+        
         y_reduced(2:end_I, iChan) = y(indices(:), iChan);
     end
 end
 
 end
 
+function plot_all_data = h__checkForPlottingAllData(x,x_limits)
+
+if isobject(x)
+    plot_all_data =  x_limits(1) <= x.start_time && x_limits(2) >= x.end_time;
+else
+    plot_all_data = all(x_limits(1) <= x(1,:) & x_limits(2) >= x(end,:));
+end
+
+
+end
+
+function indices = h__getMinMax_approach1(indices,bound_indices)
+
+lefts  = bound_indices(1:end-1);
+rights = [bound_indices(2:end-1)-1 bound_indices(end)];
+
+for iRegion = 1:length(lefts)
+    yt = y(lefts(iRegion):rights(iRegion), iChan);
+    [~, indices(1,iRegion)] = min(yt);
+    [~, indices(2,iRegion)] = max(yt);
+end
+
+indices = bsxfun(@plus,indices,lefts-1);
+swap_rows = indices(1,:) > indices(2,:);
+temp = indices(1,swap_rows);
+indices(1,swap_rows) = indices(2,swap_rows);
+indices(2,swap_rows) = temp;
+
+end
+
+function indices = h__getMinMax_approach2(data,n_output_points)
+
+new_m = floor(length(data)/n_output_points);
+
+extra_samples = length(data) - new_m*n_output_points;
+
+indices = zeros(2,n_output_points);
+
+[~,indices(1,:),~,indices(2,:)] = minMaxViaResizing(data,new_m,n_chunks);
+
+if extra_samples ~= 0
+    extra_samples_m1 = extra_samples-1;
+   leftover_samples = data(end-extra_samples_m1:end);
+   [~,last_min_I] = min(leftover_samples);
+   last_min_I = last_min_I + extra_samples_m1;
+   [~,last_max_I] = max(leftover_samples);
+   last_max_I = last_max_I + extra_samples_m1;
+   %TODO: Put together
+   last_column = [last_min_I; last_max_I];
+   indices = [indices last_column];
+end
+
+%TODO: Make this a function
+swap_rows = indices(1,:) > indices(2,:);
+temp = indices(1,swap_rows);
+indices(1,swap_rows) = indices(2,swap_rows);
+indices(2,swap_rows) = temp;
+
+
+end
+
+function x_reduced = h__getXReducedGivenIndices(x,x_reduced,iChan,indices)
+
+%Note that the # of indices
+n_indices = numel(indices);
+
+if isobject(x)
+    if n_indices ~= 0
+        end_I = n_indices + 1;
+        x_reduced(2:end_I, iChan) = x.getTimesFromIndices(indices(:));
+    end
+    %We set the x_reduced to always encompass the full range of the
+    %original x data set so that Matlab doesn't try and resize the
+    %figure. Note, since we are zooming, we will normally not see these
+    %values.
+    %
+    %   TODO: This can be moved outside of the loop
+    x_reduced(1,iChan)   = x.getTimesFromIndices(1);
+    x_reduced(end,iChan) = x.getTimesFromIndices(n_samples_y);
+else
+    xt = x(:, iChan);
+    if n_indices ~= 0
+        end_I = n_indices + 1;
+        x_reduced(2:end_I, iChan) = xt(indices(:));
+    end
+    %   TODO: This can be moved outside of the loop
+    x_reduced(1,iChan) = xt(1);
+    x_reduced(end,iChan) = xt(end);
+end
+
+
+
+end
+
 function bound_indices = h__getBoundIndices(x,cur_chan_I,n_points,x_limits)
+%x Returns the start and stop indices of data that spans a given time
 %
 %   Inputs:
 %   -------
-%   x: sci.time_series.time
+%   x: sci.time_series.time or array
+%       Time points for each data sample or time specification for the data
 %   cur_chan_I:
 %   n_points:
 %       # of boundaries to have
 %   x_limits:
-%
+%       Two element vector
 %
 %   Outputs:
 %   --------
@@ -219,6 +280,8 @@ if isobject(x)
     %pixel. This gives us roughly 100 points (1000/10). We update our
     %start to be 900 so we know have roughly 1 point per pixel instead
     %of 10 (100 samples/100 points).
+    %
+    %TODO: Update the # of bound_indices appropriately ...
     if x_limits(1) < x.start_time
         x_limits(1) = x.start_time;
     end
@@ -264,6 +327,9 @@ else
     
     xt = x(:, cur_chan_I);
     
+    %TODO: Below should use:
+    %sl.array.indices.ofEdgesBoundingData
+    
     % Map the lower and upper limits to indices.
     nx = size(x, 1);
     lower_limit      = h__binary_search(xt, x_limits(1), 1,           nx);
@@ -307,6 +373,9 @@ function [L, U] = h__binary_search(x, v, L, U)
 %       Upper index that encompasses the value 'v'
 %
 %
+
+%TODO: This is not the best way of doing this for sorted data ...
+
 while L < U - 1                 % While there's space between them...
     C = floor((L+U)/2);         % Find the midpoint
     if x(C) < v                 % Move the lower or upper bound in.
