@@ -123,6 +123,8 @@ if evenly_sampled && plot_all_data && ~multiple_channels
     return
 end
 
+%THIS NOW IS THE OLD APPROACH
+
 
 n_edges  = axis_width_in_pixels + 1;
 % Create a place to store the indices we'll need.
@@ -146,8 +148,14 @@ for iChan = 1:n_channels_y
         
         indices = bound_indices(1):bound_indices(end);
     else
-        %This is where we could try 
-        indices = h__getMinMax_approach1(y,indices,bound_indices,iChan);
+        %This is where we could try the mex ...
+        
+        indices = h__getMinMax_approach3(y,indices,bound_indices,iChan);
+        %indices2 = h__getMinMax_approach1(y,indices,bound_indices,iChan);
+        
+%         if ~isequal(indices2,indices)
+%             error('Approaches are not equal')
+%         end
     end
     
     x_reduced = h__getXReducedGivenIndices(x,x_reduced,iChan,indices);
@@ -170,7 +178,8 @@ end
 
 function indices = h__getMinMax_approach1(y,indices,bound_indices,iChan)
 %
-%   This approach is quite
+%   This is the simple approach where we just loop through and compute max
+%   and min values.
 %
 
 lefts  = bound_indices(1:end-1);
@@ -183,10 +192,7 @@ for iRegion = 1:length(lefts)
 end
 
 indices = bsxfun(@plus,indices,lefts-1);
-swap_rows = indices(1,:) > indices(2,:);
-temp = indices(1,swap_rows);
-indices(1,swap_rows) = indices(2,swap_rows);
-indices(2,swap_rows) = temp;
+indices = h__orderIndices(indices);
 
 end
 
@@ -210,7 +216,6 @@ extra_samples = length(data) - new_m*n_output_points;
 
 indices = zeros(2,n_output_points);
 
-%Mex call - todo: make this more obvious with mex naming scheme
 %TODO: Update mex documentation
 [~,indices(1,:),~,indices(2,:)] = pmex__minMaxViaResizing(data,new_m,n_output_points);
 
@@ -228,14 +233,37 @@ if extra_samples ~= 0
    indices = [indices last_column];
 end
 
-%TODO: Make this a function
+indices = h__orderIndices(indices);
+
+end
+
+function indices = h__getMinMax_approach3(y,indices,bound_indices,iChan)
+%
+%   This approach is quite
+%
+
+%linearize indices
+bound_indices = bound_indices + (iChan-1)*size(y,1);
+
+lefts  = bound_indices(1:end-1);
+rights = [bound_indices(2:end-1)-1 bound_indices(end)];
+
+[~,~,indices(1,:),indices(2,:)] = pmex__chunkMinMax(y,lefts,rights);
+
+%delinearize indices
+indices = indices - (iChan-1)*size(y,1);
+
+indices = h__orderIndices(indices);
+
+end
+
+function indices = h__orderIndices(indices)
 swap_rows = indices(1,:) > indices(2,:);
 temp = indices(1,swap_rows);
 indices(1,swap_rows) = indices(2,swap_rows);
 indices(2,swap_rows) = temp;
-
-
 end
+
 
 function y_reduced = h__getYReducedGivenIndices(y,y_reduced,iChan,indices)
     if ~isempty(indices)
@@ -258,7 +286,11 @@ if isobject(x)
 else
     if n_indices ~= 0
         end_I = n_indices + 1;
-        x_reduced(2:end_I, iChan) = x(indices(:), iChan);
+        if size(x,2) > 1
+            x_reduced(2:end_I, iChan) = x(indices(:), iChan);
+        else
+            x_reduced(2:end_I, iChan) = x(indices(:), 1);
+        end
     end
 end
 

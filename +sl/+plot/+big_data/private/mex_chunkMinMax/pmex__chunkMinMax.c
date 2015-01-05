@@ -1,4 +1,5 @@
-// ChunkMinMax.c
+// pmex__ChunkMinMax.c
+//
 // Find min and max element of sub-vectors
 // [Mins, Maxs] = ChunkMinMax(X, Start, Stop)
 // INPUT:
@@ -22,7 +23,7 @@
 //   [mins, maxs] = ChunkMinMax(data, starts, stops);
 //
 // COMPILATION:
-//   mex -O ChunkMinMax.c
+//   mex -O pmex__chunkMinMax.c
 // If the NaN detection fails, try:
 //   mex -O -DFPCHECK_64 ChunkMinMax.c     (or -DFPCHECK_32)
 // MSVC 2008/32 profits from these optimization flags in mexopts.bat:
@@ -52,8 +53,8 @@
 #include "MachineDep.h"
 
 // A header for error messages:
-#define ERR_HEAD "*** ChunkMinMax[mex]: "
-#define ERR_ID   "JSimon:ChunkMinMax:"
+#define ERR_HEAD "*** pmex__chunkMinMax[mex]: "
+#define ERR_ID   "JSimon:pmex__ChunkMinMax:"
 #define ERROR(id,msg) mexErrMsgIdAndTxt(ERR_ID id, ERR_HEAD msg);
 
 void CoreConsiderNaN(double *Data, mwSize nData,
@@ -78,8 +79,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   if (nrhs < 3 || nrhs > 4) {
     ERROR("BadNArgin", "3 or 4 inputs required.");
   }
-  if (nlhs > 2) {
-    ERROR("BadNArgout", "1 or 2 outputs allowed.");
+  if (nlhs > 4) {
+    ERROR("BadNArgout", "1 to 4 outputs allowed.");
   }
   
   Data   = mxGetPr(prhs[0]);
@@ -154,14 +155,18 @@ void CoreConsiderNaN(double *Data, mwSize nData,
      if (iStop >= iStart) {
         min = Data[iStart];
         max = min;                // Min==Max for 1st element
+        OutMinI[i] = iStart;
+        OutMaxI[i] = iStart;
         
         for (j = iStart + 1; j <= iStop; j++) {
            if (ISNAN_D(Data[j])) {
               valid = false;
            } else if (Data[j] < min) {
               min = Data[j];
+              OutMinI[i] = j;
            } else if (Data[j] > max) {
               max = Data[j];
+              OutMaxI[i] = j;
            }
         }
   
@@ -201,12 +206,16 @@ void CoreIgnoreNaN(double *Data, mwSize nData,
      if (iStop >= iStart) {
         min = Data[iStart];
         max = min;                // Min==Max for 1st element
+        OutMinI[i] = iStart;
+        OutMaxI[i] = iStart;
         
         for (j = iStart + 1; j <= iStop; j++) {
            if (Data[j] < min) {
               min = Data[j];
+              OutMinI[i] = j;
            } else if (Data[j] > max) {
               max = Data[j];
+              OutMaxI[i] = j;
            }
         }
   

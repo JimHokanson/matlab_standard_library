@@ -128,7 +128,7 @@ classdef (Hidden) tests_LinePlotReducer
         end
         function interestingInput()
             %From FEX: 40790
-            tic
+            
             n = 1e7 + randi(1000);                          % Number of samples
             t = sort(100*rand(1, n));                       % Non-uniform sampling
             x = [sin(0.10 * t) + 0.05 * randn(1, n); ...
@@ -137,7 +137,7 @@ classdef (Hidden) tests_LinePlotReducer
             x(:, t > 40 & t < 50) = 0;                      % Drop a section of data.
             x(randi(numel(x), 1, 20)) = randn(1, 20);       % Emulate spikes.
             
-            %TODO: Why do I get the correct orientation when I do this ...
+            %Why do I get the correct orientation when I do this ...
             %I think it should be many channels with only a few samples,
             %where is the correction coming into play???
             %
@@ -145,6 +145,7 @@ classdef (Hidden) tests_LinePlotReducer
             %   the size of x, because they only match in the long
             %   direction then x becomes by 3 channels, instead of having 
             %   tons of channels
+            tic
             wtf = sl.plot.big_data.LinePlotReducer(t,x);
             wtf.renderData;
             toc
