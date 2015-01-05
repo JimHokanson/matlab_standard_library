@@ -118,7 +118,6 @@ if evenly_sampled && plot_all_data && ~multiple_channels
     %Run reshape code
     extras.method = '2: Single Channel Reshape';
     indices = h__getMinMax_approach2(y,n_points);
-    %TODO: populate xr and yr
     x_reduced = h__getXReducedGivenIndices(x,x_reduced,1,indices);
     y_reduced = h__getYReducedGivenIndices(y,y_reduced,1,indices);
     return
@@ -214,6 +213,9 @@ indices = zeros(2,n_output_points);
 %Mex call - todo: make this more obvious with mex naming scheme
 %TODO: Update mex documentation
 [~,indices(1,:),~,indices(2,:)] = pmex__minMaxViaResizing(data,new_m,n_output_points);
+
+%All of the indices need to be shifted ...
+indices = bsxfun(@plus,indices,0:new_m:new_m*(n_output_points-1));
 
 if extra_samples ~= 0
     extra_samples_m1 = extra_samples-1;

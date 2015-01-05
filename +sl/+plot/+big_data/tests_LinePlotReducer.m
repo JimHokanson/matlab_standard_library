@@ -93,12 +93,15 @@ classdef (Hidden) tests_LinePlotReducer
             %
             %   This works but it is still a bit slow
             
+            
             profile on
-            tic;
+            
             t = 1:1e8;
             t_fast = sci.time_series.time(1,length(t));
             y = rand(length(t),4);
             y2 = y;
+            
+            tic;
             wtf = sl.plot.big_data.LinePlotReducer(t_fast,4-y,'r',t_fast,y2,'c','Linewidth',2);
             %wtf = sl.plot.big_data.LinePlotReducer(t,4-y,'r',t,y2,'c','Linewidth',2);
             wtf.renderData;
@@ -109,11 +112,12 @@ classdef (Hidden) tests_LinePlotReducer
         end
         function test002_singleLongChannel()
             profile on
-            tic;
             t = 1:1e8;
             t_fast = sci.time_series.time(1,length(t));
-            y = rand(length(t),4);
+            y = rand(length(t),1);
             y2 = y;
+            
+            tic;
             wtf = sl.plot.big_data.LinePlotReducer(t_fast,4-y,'r',t_fast,y2,'c','Linewidth',2);
             %wtf = sl.plot.big_data.LinePlotReducer(t,4-y,'r',t,y2,'c','Linewidth',2);
             wtf.renderData;
