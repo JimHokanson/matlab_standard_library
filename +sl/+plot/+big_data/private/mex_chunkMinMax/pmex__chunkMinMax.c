@@ -29,7 +29,7 @@
 // MSVC 2008/32 profits from these optimization flags in mexopts.bat:
 //   OPTIMFLAGS = ... /arch:SSE2 /fp:fast ...
 // Linux: Consider c99 comments:
-//   mex -O CFLAGS="\$CFLAGS -std=c99" ChunkMinMax.c
+//   mex -O CFLAGS="\$CFLAGS -std=c99" pmex__chunkMinMax.c
 // Precompiled Mex files:
 //   http://www.n-simon.de/mex
 // Run uTest_ChunkMinMax after compiling to test validity and speed!
@@ -47,6 +47,8 @@
 % 001: 01-Jan-2015 14:50, First version.
 */
 
+#define char16_t UINT16_T
+
 #include "mex.h"
 
 // Machine dependent parameters:
@@ -59,10 +61,10 @@
 
 void CoreConsiderNaN(double *Data, mwSize nData,
           double *Start, double *Stop, mwSize nStart,
-          double *OutMin, double *OutMax);
+          double *OutMin, double *OutMax, double *OutMinI, double *OutMaxI);
 void CoreIgnoreNaN(double *Data, mwSize nData,
           double *Start, double *Stop, mwSize nStart,
-          double *OutMin, double *OutMax);
+          double *OutMin, double *OutMax, double *OutMinI, double *OutMaxI);
 
 // Main function ===============================================================
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])

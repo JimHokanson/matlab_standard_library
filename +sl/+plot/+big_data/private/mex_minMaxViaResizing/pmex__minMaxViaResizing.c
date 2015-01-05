@@ -7,6 +7,8 @@
  *
  */
 
+#define char16_t UINT16_T
+
 #include <math.h>
 #include "mex.h"
 

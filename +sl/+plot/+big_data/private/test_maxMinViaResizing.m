@@ -11,7 +11,7 @@ extra_samples = length(r) - new_m*n_chunks;
 
 tic
 for i = 1:N
-[a,b,c,d] = minMaxViaResizing(r,new_m,n_chunks);
+[a,b,c,d] = pmex__minMaxViaResizing(r,new_m,n_chunks);
 end
 if extra_samples ~= 0
     extra_samples_m1 = extra_samples-1;
@@ -46,5 +46,8 @@ for iRegion = 1:length(lefts)
 end
 end
 toc
+
+isequal(b,b2)
+isequal(d,d2)
 
 keyboard
