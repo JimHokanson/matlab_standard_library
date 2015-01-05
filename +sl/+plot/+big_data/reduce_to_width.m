@@ -44,9 +44,12 @@ function [x_reduced, y_reduced, extras] = reduce_to_width(x, y, axis_width_in_pi
 
 %{
 %This 
-tic; [xr,yr] = sl.plot.big_data.reduce_to_width(sci.time_series.time(0.01,1e8),rand(1e7,1),4000,[0 1e7]); toc;
+N = 1e8;
+r = rand(N,1);
+tic; [xr,yr] = sl.plot.big_data.reduce_to_width(sci.time_series.time(0.01,N),r,4000,[0 Inf]); toc;
 
-tic; [xr,yr] = sl.plot.big_data.reduce_to_width(sci.time_series.time(0.01,1e8),rand(1e7,2),4000,[0 1e7]); toc;
+r = rand(N,2);
+tic; [xr,yr] = sl.plot.big_data.reduce_to_width(sci.time_series.time(0.01,N),r,4000,[0 Inf]); toc;
 %}
 
 extras = struct;
@@ -210,7 +213,7 @@ indices = zeros(2,n_output_points);
 
 %Mex call - todo: make this more obvious with mex naming scheme
 %TODO: Update mex documentation
-[~,indices(1,:),~,indices(2,:)] = minMaxViaResizing(data,new_m,n_output_points);
+[~,indices(1,:),~,indices(2,:)] = pmex__minMaxViaResizing(data,new_m,n_output_points);
 
 if extra_samples ~= 0
     extra_samples_m1 = extra_samples-1;
