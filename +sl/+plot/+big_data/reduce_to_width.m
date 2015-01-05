@@ -1,4 +1,4 @@
-function [x_reduced, y_reduced] = reduce_to_width(x, y, axis_width_in_pixels, x_limits)
+function [x_reduced, y_reduced, extras] = reduce_to_width(x, y, axis_width_in_pixels, x_limits)
 %x
 %
 %   [x_reduced, y_reduced] = sl.plot.big_data.reduce_to_width(x, y, axis_width_in_pixels, x_limits)
@@ -38,10 +38,18 @@ function [x_reduced, y_reduced] = reduce_to_width(x, y, axis_width_in_pixels, x_
 %                 %but looks the same.
 %   hold off
 %
-%   Original Function By:
+%   Based on code by:
 %   Tucker McClure (Mathworks)
 
 
+%{
+%This 
+tic; [xr,yr] = sl.plot.big_data.reduce_to_width(sci.time_series.time(0.01,1e8),rand(1e7,1),4000,[0 1e7]); toc;
+
+tic; [xr,yr] = sl.plot.big_data.reduce_to_width(sci.time_series.time(0.01,1e8),rand(1e7,2),4000,[0 1e7]); toc;
+%}
+
+extras = struct;
 
 %TODO: This should be based on how long it takes to plot a set of points
 %versus how long it takes to run this code ...
@@ -73,17 +81,21 @@ n_channels_x = size(x,2);
 
 n_samples_y = size(y,1);
 
+%+2 for min and max, see note below on extremes
 x_reduced = nan(n_points+2, n_channels_y);
 y_reduced = nan(n_points+2, n_channels_y);
 
+%Add data extremes
+%----------------------------------
+%TODO: Make this a method
 %We add on the extremes of the data so that Matlab doesn't zoom in and out
 %constantly.
-
 y_reduced(1,:) = y(1,:);
 y_reduced(end,:) = y(end,:);
 
 if isobject(x)
-    
+    x_reduced(1,:)   = x.getTimesFromIndices(1);
+    x_reduced(end,:) = x.getTimesFromIndices(n_samples_y);   
 else
     x_reduced(1,:) = x(1,:);
     x_reduced(end,:) = x(end,:);
@@ -95,17 +107,20 @@ end
 %2) Are we plotting all data
 %3) # of channels
 
-evenly_sampled = isobject(x);
-plot_all_data = h__checkForPlottingAllData(x,x_limits);
+evenly_sampled = isobject(x); %We could also test the input data as well
+plot_all_data  = h__checkForPlottingAllData(x,x_limits);
+multiple_channels = n_channels_y > 1;
 
-if evenly_sampled && plot_all_data && n_channels_y == 1
+if evenly_sampled && plot_all_data && ~multiple_channels
     %Run reshape code
-    
+    extras.method = '2: Single Channel Reshape';
+    indices = h__getMinMax_approach2(y,n_points);
+    %TODO: populate xr and yr
+    x_reduced = h__getXReducedGivenIndices(x,x_reduced,1,indices);
+    y_reduced = h__getYReducedGivenIndices(y,y_reduced,1,indices);
     return
 end
 
-
-keyboard
 
 n_edges  = axis_width_in_pixels + 1;
 % Create a place to store the indices we'll need.
@@ -119,31 +134,23 @@ for iChan = 1:n_channels_y
         %bound_indices is an array of indices that
     end
     
-    
     if isempty(bound_indices)
         %NOTE: We've initialized with a null case so that the output will
         %still be defined even if we skip things.
         continue
     elseif bound_indices(end) - bound_indices(1) < N_SAMPLES_MAX_PLOT_EVERYTHING
         %This occurs when the zoom level is such that we don't actually
-        %have that much data from the channel to show.
+        %have that much data from the channel to show
         
         indices = bound_indices(1):bound_indices(end);
     else
-        indices = h__getMinMax_approach1(indices,bound_indices);
+        %This is where we could try 
+        indices = h__getMinMax_approach1(y,indices,bound_indices,iChan);
     end
     
     x_reduced = h__getXReducedGivenIndices(x,x_reduced,iChan,indices);
     y_reduced = h__getYReducedGivenIndices(y,y_reduced,iChan,indices);
-    
-    % Sample the original x and y at the indices we found.
-    
-    
-    
-    if n_indices ~= 0
-        
-        y_reduced(2:end_I, iChan) = y(indices(:), iChan);
-    end
+
 end
 
 end
@@ -159,7 +166,10 @@ end
 
 end
 
-function indices = h__getMinMax_approach1(indices,bound_indices)
+function indices = h__getMinMax_approach1(y,indices,bound_indices,iChan)
+%
+%   This approach is quite
+%
 
 lefts  = bound_indices(1:end-1);
 rights = [bound_indices(2:end-1)-1 bound_indices(end)];
@@ -179,6 +189,18 @@ indices(2,swap_rows) = temp;
 end
 
 function indices = h__getMinMax_approach2(data,n_output_points)
+%
+%   This approach reshapes a single channel array and calculates
+%   the min and max values over the first dimension of the resulting
+%   matrix.
+%
+%   Since the arrray may not be reshapeable nicely - i.e. evenly divisible
+%   by the # of output points - we truncate the array (in mex) before
+%   calculating min and max. After this we untruncate the array.
+%
+%   Some extra Matlab code is used to calculate the max and min over the
+%   resulting smaller chunk of data at the end of the array if necessary.
+%
 
 new_m = floor(length(data)/n_output_points);
 
@@ -186,7 +208,9 @@ extra_samples = length(data) - new_m*n_output_points;
 
 indices = zeros(2,n_output_points);
 
-[~,indices(1,:),~,indices(2,:)] = minMaxViaResizing(data,new_m,n_chunks);
+%Mex call - todo: make this more obvious with mex naming scheme
+%TODO: Update mex documentation
+[~,indices(1,:),~,indices(2,:)] = minMaxViaResizing(data,new_m,n_output_points);
 
 if extra_samples ~= 0
     extra_samples_m1 = extra_samples-1;
@@ -195,7 +219,6 @@ if extra_samples ~= 0
    last_min_I = last_min_I + extra_samples_m1;
    [~,last_max_I] = max(leftover_samples);
    last_max_I = last_max_I + extra_samples_m1;
-   %TODO: Put together
    last_column = [last_min_I; last_max_I];
    indices = [indices last_column];
 end
@@ -209,6 +232,13 @@ indices(2,swap_rows) = temp;
 
 end
 
+function y_reduced = h__getYReducedGivenIndices(y,y_reduced,iChan,indices)
+    if ~isempty(indices)
+        end_I = numel(indices)+1;
+        y_reduced(2:end_I, iChan) = y(indices(:), iChan);
+    end
+end
+
 function x_reduced = h__getXReducedGivenIndices(x,x_reduced,iChan,indices)
 
 %Note that the # of indices
@@ -219,23 +249,12 @@ if isobject(x)
         end_I = n_indices + 1;
         x_reduced(2:end_I, iChan) = x.getTimesFromIndices(indices(:));
     end
-    %We set the x_reduced to always encompass the full range of the
-    %original x data set so that Matlab doesn't try and resize the
-    %figure. Note, since we are zooming, we will normally not see these
-    %values.
-    %
-    %   TODO: This can be moved outside of the loop
-    x_reduced(1,iChan)   = x.getTimesFromIndices(1);
-    x_reduced(end,iChan) = x.getTimesFromIndices(n_samples_y);
+
 else
-    xt = x(:, iChan);
     if n_indices ~= 0
         end_I = n_indices + 1;
-        x_reduced(2:end_I, iChan) = xt(indices(:));
+        x_reduced(2:end_I, iChan) = x(indices(:), iChan);
     end
-    %   TODO: This can be moved outside of the loop
-    x_reduced(1,iChan) = xt(1);
-    x_reduced(end,iChan) = xt(end);
 end
 
 
