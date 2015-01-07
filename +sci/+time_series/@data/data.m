@@ -360,6 +360,7 @@ classdef data < sl.obj.display_class
             
             for iObj = 1:length(objs)
                 if iObj == 2
+                    hold_state = sl.hg.axes.hold_state(gca);
                     hold all
                 end
                 cur_obj = objs(iObj);
@@ -385,12 +386,12 @@ classdef data < sl.obj.display_class
                 end
             end
             
-            %TODO: Do this only if not already in this state
-            %i.e. don't disable it if it wasn't enabled
-            hold off
+            if length(objs) > 1
+                hold_state.restore();
+            end
             
             %TODO: Depeneding upon what is defined, show different things
-            %for the ylabel
+            %for the ylabel - e.g. if units are present or not
             ylabel(sprintf('%s (%s)',cur_obj.y_label,cur_obj.units))
             xlabel(sprintf('Time (%s)',cur_obj.time.output_units))
         end

@@ -117,7 +117,7 @@ multiple_channels = n_channels_y > 1;
 if evenly_sampled && plot_all_data && ~multiple_channels
     %Run reshape code
     extras.method = '2: Single Channel Reshape';
-    indices = h__getMinMax_approach2(y,n_points);
+    indices   = h__getMinMax_approach2(y,n_points);
     x_reduced = h__getXReducedGivenIndices(x,x_reduced,1,indices);
     y_reduced = h__getYReducedGivenIndices(y,y_reduced,1,indices);
     return
@@ -223,12 +223,12 @@ indices = zeros(2,n_output_points);
 indices = bsxfun(@plus,indices,0:new_m:new_m*(n_output_points-1));
 
 if extra_samples ~= 0
-    extra_samples_m1 = extra_samples-1;
+   extra_samples_m1 = extra_samples-1;
    leftover_samples = data(end-extra_samples_m1:end);
    [~,last_min_I] = min(leftover_samples);
-   last_min_I = last_min_I + extra_samples_m1;
+   last_min_I = last_min_I + new_m*n_output_points;
    [~,last_max_I] = max(leftover_samples);
-   last_max_I = last_max_I + extra_samples_m1;
+   last_max_I = last_max_I + new_m*n_output_points;
    last_column = [last_min_I; last_max_I];
    indices = [indices last_column];
 end

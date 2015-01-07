@@ -13,7 +13,7 @@ function renderData(obj,s)
 %
 %   This function is called:
 %       1) manually
-%       2) from resize2()
+%       2) from updateAxesData()
 %
 %   See Also:
 %   sl.plot.big_data.LinePlotReducer.resize2
@@ -30,9 +30,6 @@ function renderData(obj,s)
 %you should now see 2 callbacks, even though one isn't really rendering
 %- or shouldn't be
 
-INITIAL_AXES_WIDTH = 2000; %Eventually the idea was to make this a function
-%of the screen size
-
 if nargin == 1
     s = [];
 end
@@ -41,43 +38,98 @@ obj.n_render_calls = obj.n_render_calls + 1;
 
 %If the figure closes, and we ask the object to replot things, than
 %that would be a problem, since the graphics references wouldn't exist
-if obj.plotted_data_once
+if ~obj.needs_initialization
     for iG = obj.n_plot_groups
         if any(~ishandle(obj.h_plot{iG}))
             obj.h_axes = [];
-            obj.plotted_data_once = false;
+            obj.needs_initialization = true;
             break
         end
     end
 end
 
-% NOTE: Due to changes in the way this function was designed,
-% we may not have plotted the original data yet
-if ~obj.plotted_data_once
-    %#DEBUG
-    %disp('Running first plot code')
-    h__handleFirstPlotting(obj,INITIAL_AXES_WIDTH)
-    
+if obj.needs_initialization
+    h__handleFirstPlotting(obj,obj.max_axes_width)
 else
-    h__replotData(obj,s,INITIAL_AXES_WIDTH)
-    
+    h__replotData(obj,s,obj.max_axes_width)
 end
 
 if ~isempty(obj.post_render_callback)
     obj.post_render_callback();
 end
 
+end
+
+function h__replotData(obj,s,new_axes_width)
+%
+%   
+%
+%
+
+redraw_option = h__determineRedrawCase(obj,s);
+
+use_original = false;
+switch redraw_option
+    case 0
+        return
+    case 1
+        use_original = true;
+        obj.last_redraw_used_original = true;
+    case 2
+        obj.last_redraw_used_original = false;
+        obj.n_x_reductions = obj.n_x_reductions + 1;
+    otherwise
+        error('Uh oh, Jim broke the code')
+end
+
+new_x_limits  = s.new_xlim;
+obj.last_rendered_xlim = new_x_limits;
+obj.last_rendered_axes_width = new_axes_width;
+
+for iG = 1:obj.n_plot_groups
+    
+    %Reduce the data.
+    %----------------------------------------
+    if use_original
+        %
+        x_r = obj.x_r_orig{iG};
+        y_r = obj.y_r_orig{iG};
+    else
+        [x_r, y_r] = sl.plot.big_data.reduce_to_width(...
+            obj.x{iG}, obj.y{iG}, new_axes_width, new_x_limits);
+    end
+    
+    local_h = obj.h_plot{iG};
+    % Update the plot.
+    for iChan = 1:length(local_h)
+        set(local_h(iChan), 'XData', x_r(:,iChan), 'YData', y_r(:,iChan));
+    end
+end
 
 end
 
-function h__replotData(obj,s,INITIAL_AXES_WIDTH)
+function redraw_option = h__determineRedrawCase(obj,s)
+%
+%   redraw_option = h__determineRedrawCase(obj,s)
+%
+%   Outputs:
+%   --------
+%   redraw_option:
+%       - 0 - no change needed
+%       - 1 - reset data to original view
+%       - 2 - recompute data for plotting
+%       - 3 - partial window overlap (NOT YET IMPLEMENTED)
 
 
-new_x_limits  = s.new_xlim;
 
-%TODO: I'm phasing out resizing, rendering a few thousand point
-%line is no big deal ...
-new_axes_width = INITIAL_AXES_WIDTH;
+%Possible changes and approaches:
+%--------------------------------
+%1) Axes wider: 
+%       Our current approach is to oversample at a given location, so no
+%       change is needed
+%2) TODO: Finish this based on below
+
+
 
 
 %TODO: At this point we need to be able to short-circuit the rendering
@@ -96,68 +148,45 @@ new_axes_width = INITIAL_AXES_WIDTH;
 %
 %   ???? How can we subsample appropriately???
 
-% % %     origInfo = getappdata(gca, 'matlab_graphics_resetplotview');
-% % %     if ~isempty(origInfo)
-% % %     fprintf(2,'%s\n',mat2str(origInfo.XLim));
-% % %     end
-
-previous_axes_width = obj.last_rendered_axes_width;
-
+new_x_limits  = s.new_xlim;
 x_lim_changed = ~isequal(obj.last_rendered_xlim,new_x_limits);
-%width_changed = axes_width ~= previous_axes_width;
-
-use_original = false;
 
 if x_lim_changed
     %x_lim changed almost always means a redraw
     %Let's build a check in here for being the original
     %If so, go back to that
     if new_x_limits(1) <= obj.x_lim_original(1) && new_x_limits(2) >= obj.x_lim_original(2)
-        use_original = true;
-    end
-else
-    %Then width changed
-    if previous_axes_width < new_axes_width
-        return
-    end
-    
-    %When we expand initially, we will assume we've oversampled enough
-    %to not warrant a redraw
-    if new_x_limits(1) <= obj.x_lim_original(1) && new_x_limits(2) >= obj.x_lim_original(2)
-        use_original = true;
-    end
-    
-end
-
-if use_original
-    obj.last_redraw_used_original = true;
-else
-    obj.n_x_reductions = obj.n_x_reductions + 1;
-end
-
-obj.last_rendered_xlim = new_x_limits;
-obj.last_rendered_axes_width = new_axes_width;
-
-for iG = 1:obj.n_plot_groups
-    
-    %Reduce the data.
-    %----------------------------------------
-    if use_original
-        %
-        x_r = obj.x_r_orig{iG};
-        y_r = obj.y_r_orig{iG};
-        
+        redraw_option = 1;
     else
-        [x_r, y_r] = sl.plot.big_data.reduce_to_width(...
-            obj.x{iG}, obj.y{iG}, new_axes_width, new_x_limits);
+        redraw_option = 2;
     end
+else
+    %Width changed:
+    %NOTE: We are currently not doing any width based changes, so we really
+    %don't know if the axes changed or not
+    redraw_option = 0;
     
-    local_h = obj.h_plot{iG};
-    % Update the plot.
-    for iChan = 1:length(local_h)
-        set(local_h(iChan), 'XData', x_r(:,iChan), 'YData', y_r(:,iChan));
-    end
+% % % % % %     previous_axes_width = obj.last_rendered_axes_width;
+% % % % % % 
+% % % % % %     
+% % % % % %     %TODO: Should we check for this, does changing the y-axis cause a
+% % % % % %     %change?????
+% % % % % %     
+% % % % % %     %Then the width changed
+% % % % % %     if previous_axes_width < new_axes_width
+% % % % % %         return
+% % % % % %     end
+% % % % % %     
+% % % % % %     %When we expand initially, we will assume we've oversampled enough
+% % % % % %     %to not warrant a redraw
+% % % % % %     if new_x_limits(1) <= obj.x_lim_original(1) && new_x_limits(2) >= obj.x_lim_original(2)
+% % % % % %         use_original = true;
+% % % % % %     end
+    
 end
+
+
+
 
 end
 
@@ -243,29 +272,36 @@ function h__handleFirstPlotting(obj,initial_axes_width)
 %
 %
 %
+%
+%   TODO: This code needs to be cleaned up!!!!!!!!!
 
 
-%NOTE: The user may have already specified the axes ...
-%TODO: Verify that the axes exists if specified ...
+%Axes and figure initialization
+%------------------------------
+%The user may have already specified the axes.
+
+%TODO: Move all of this to a helper function ...
 if isempty(obj.h_axes)
     
     %TODO:
-    %                             set(0, 'CurrentFigure', o.h_figure);
-    %                     set(o.h_figure, 'CurrentAxes', o.h_axes);
+    %   set(0, 'CurrentFigure', o.h_figure);
+    %   set(o.h_figure, 'CurrentAxes', o.h_axes);
     
     
     obj.h_axes   = gca;
     obj.h_figure = gcf;
     plot_args = {};
-elseif isempty(obj.h_figure)
-    obj.h_figure = get(obj.h_axes(1),'Parent');
-    plot_args = {obj.h_axes};
 else
-    plot_args = {obj.h_axes};
+    %TODO: Verify that the axes exists if specified ...
+    if isempty(obj.h_figure)
+        obj.h_figure = get(obj.h_axes(1),'Parent');
+        plot_args = {obj.h_axes};
+    else
+        plot_args = {obj.h_axes};
+    end
+
 end
 
-%Will there ever be more than one axes with this approach?
-%axes_width = sl.axes.getWidthInPixels(obj.h_axes);
 
 %NOTE: Going large here will only impact initial memory requirements.
 %---------------------------------------------------------------------
@@ -275,6 +311,8 @@ end
 %Generally this should be relatively small compared to the size of the
 %data.
 
+%TODO: Make all of this a function ...
+%--------------------------------------------------------------------------
 new_axes_width = initial_axes_width;
 
 obj.last_rendered_axes_width = new_axes_width;
@@ -314,13 +352,17 @@ for iG = 1:obj.n_plot_groups
 end
 obj.x_lim_original = [min(group_x_min) max(group_x_max)];
 
-%Don't set to 1, figure could close and then
-%we rerun this section of code
+%Don't set to 1 as the figure could close. Calling renderData would
+%again run this code. Instead the value is initialized to 0 and we keep
+%counting up from there.
 obj.n_x_reductions = obj.n_x_reductions + 1;
 
 if ~isempty(obj.extra_plot_options)
     plot_args = [plot_args obj.extra_plot_options];
 end
+%--------------------------------------------------------------------------
+
+
 
 %NOTE: We plot everything at once, as failing to do so can
 %cause lines to be dropped.
@@ -360,5 +402,5 @@ end
 
 h__setupCallbacksAndTimers(obj)
 
-obj.plotted_data_once = true;
+obj.needs_initialization = false;
 end

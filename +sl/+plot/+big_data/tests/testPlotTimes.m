@@ -1,7 +1,17 @@
 function testPlotTimes
 %
+%   Question:
+%   ---------
+%   How long does it take to normally plot 
+%
 %   Results:
-%   No incrase in time is seen until 1e6
+%   --------
+%   No increase in time is seen until 1e6. This suggests that if we keep our
+%   the size of plotted data to 1e5 or less, we will get relatively quick
+%   plots. 
+%
+%   This test might be biased by the relatively fast computer I ran this
+%   code on. I should try running this on my laptop.
 
 %????
 %1) How does this compare for random data instead of a straight line?

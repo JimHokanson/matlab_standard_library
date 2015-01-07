@@ -126,7 +126,7 @@ classdef (Hidden) tests_LinePlotReducer
             %profile off
             %profile viewer 
         end
-        function interestingInput()
+        function test003_interestingInput()
             %From FEX: 40790
             
             n = 1e7 + randi(1000);                          % Number of samples
@@ -147,6 +147,22 @@ classdef (Hidden) tests_LinePlotReducer
             %   tons of channels
             tic
             wtf = sl.plot.big_data.LinePlotReducer(t,x);
+            wtf.renderData;
+            toc
+        end
+        function test004_simpleLine()
+           y = 1:1e8+3457;
+           x = y;
+           tic
+            wtf = sl.plot.big_data.LinePlotReducer(x,y);
+            wtf.renderData;
+            toc
+        end
+        function test004_simpleLineWithTimeObject()
+           y = 1:1e8+3457;
+           x = sci.time_series.time(0.01,length(y));
+           tic
+            wtf = sl.plot.big_data.LinePlotReducer(x,y);
             wtf.renderData;
             toc
         end

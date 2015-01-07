@@ -1,4 +1,4 @@
-function init(o,varargin)
+function init(obj,varargin)
 %
 %   sl.plot.big_data.LinePlotReducer.init
 %
@@ -15,10 +15,10 @@ start = 1;
 %Function handle determination
 %---------------------------------------
 if isa(varargin{start}, 'function_handle')
-    o.plot_fcn = varargin{1};
+    obj.plot_fcn = varargin{1};
     start = start + 1;
 else
-    o.plot_fcn = @plot;
+    obj.plot_fcn = @plot;
 end
 
 %Axes specified??
@@ -27,13 +27,13 @@ end
 if isscalar(varargin{start}) && ishandle(varargin{start}) && ...
         strcmp(get(varargin{start}, 'Type'), 'axes')
     
-    o.h_axes   = varargin{start};
-    o.h_figure = get(o.h_axes, 'Parent');
+    obj.h_axes   = varargin{start};
+    obj.h_figure = get(obj.h_axes, 'Parent');
 
     start = start + 1;
 end
 
-h__parseDataAndLinespecs(o,varargin{start:end})
+h__parseDataAndLinespecs(obj,varargin{start:end})
 
 end
 
@@ -47,6 +47,8 @@ temp_specs = {};
 temp_x = {};
 temp_y = {};
 
+%TODO: This needs to handle poor inputs better
+%case : flipping plot(x,y) with plot(y,x) where x is an object
 % Loop through all of the inputs.
 %------------------------------------------
 previous_type = 's'; %s - start

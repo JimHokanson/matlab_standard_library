@@ -1,9 +1,16 @@
 function reduce_to_width_tests
+%
+%   This file was used to evaluate different approacehs for computing
+%   min and max values
+%
+%
 
 n_loops = 40;
 n_samples = 1e8;
 %Random data
 %----------------------
+%     total time   
+%          t2/t1 t3/t1 t4/t1 t5/t1
 %1e3 - 24.7 81% 12% 12% 19%
 %1e4 - 94% 28% 27% 36%
 %1e5 - 89% 35% 34% 45%

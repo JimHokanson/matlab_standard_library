@@ -57,17 +57,36 @@ classdef LinePlotReducer < handle
     %
     %2) Oversample the zoom, maybe by a factor of 4ish so that subsequent
     %   zooms can use the oversampled data.
+ 
     
-    
-    
-    
-    %External Files:
-    %sl.plot.big_data.LinePlotReducer.init
+    properties (Constant,Hidden)
+        %This can be changed to throw out more or less error messages
+        DEBUG = 0 
+        %1) Things related to callbacks
+        %2) things from 1) and cleanup
+    end
     
     properties
-        id %A unique id that can be used to identify the plotter
-        %when working with callback optimization, i.e. to identify which
-        %object is throwing the callback (debugging)
+        d0 = '------- User options --------'
+        update_delay = 0.1 %This is how long after a zoom request the code
+        %should wait before rendering the update. Ideally this is just long
+        %enough to capture all resizing events.
+        %
+        %For example, if multiple axes are linked, there can be many
+        %10s of resize events per single axes resize. Ideally the axes
+        %resize is only rendered once.
+        
+        post_render_callback = [] %This can be set to render
+        %something after the data has been drawn .... Any inputs
+        %should be done by binding to the anonymous function.
+        %
+        %   e.g. obj.post_render_callback = @()doStuffs(obj)
+        %
+        %   'obj' will now be available in the callback
+        
+        max_axes_width = 4000 %Eventually the idea was to make this a function
+        %of the screen size
+        
         
         % Handles
         %--------
@@ -76,10 +95,13 @@ classdef LinePlotReducer < handle
         
         h_axes %This is normally singular.
         %There might be multiple axes for plotyy - NYI
+        %
+        %   The value is assigned either as an input to the constructor
+        %   or during the first call to renderData()
+        %
         
         h_plot %cell, {1 x n_groups} one for each group of x & y
         %
-        %   
         %   e.g. plot(x1,y1,x2,y2,x3,y3) produces 3 groups
         %
         %   This should really be h_line, to be more specific
@@ -127,44 +149,20 @@ classdef LinePlotReducer < handle
         %   This contains the last set of reduced data that was plotted
         y_r_last
         
-        last_rendered_axes_width
+        last_rendered_axes_width %This is currently not valid as we have
+        %hardcoded the render width
         last_rendered_xlim
         x_lim_original
-        
-        
-        d4 = '------ Options ------'
-        post_render_callback = []; %This can be set to render
-        %something after the data has been drawn .... Any inputs
-        %should be done by binding to the anonymous function.
-        %
-        %   e.g. obj.post_render_callback = @()doStuffs(obj)
-        %
-        %   'obj' will now be available in the callback
-        
-        
-        d5 = '------ Debugging ------'
-        n_render_calls = 0 %We'll keep track of the # of renders done
-        n_x_reductions = 0
-        %for debugging purposes
-        last_redraw_used_original = true
-        
-        busy = false %True during resetting of data
-        
-        %TODO:
-        %-----------------
-        earliest_unhandled_plot_callback_time = []
-        %When a callback occurs, if this is empty, it gets set
-        %It can then later be used to 
-        
-        
 
-    end
-    
-    properties (Constant,Hidden)
-        %This can be changed to throw out more or less error messages
-        DEBUG = 0 
-        %1) Things related to callbacks
-        %2) things from 1) and cleanup
+        busy %This will be used when quick drawing is enabled to prevent
+        %quick drawing from ever getting piled up.
+        %
+        %Right now it is only being used in the timer callback and even
+        %there it is only being set, not really used.
+       
+        %TODO: Add listeners to lines so that when they are deleted
+        %everything is deleted
+        needs_initialization = true
     end
     
     properties (Dependent)
@@ -180,15 +178,26 @@ classdef LinePlotReducer < handle
     end
     
     properties
-        %TODO: Rename to needs_initialization
-        %TODO: Add listeners to lines so that when they are deleted
-        %everything is deleted
-        %- use same objectBeingDestroyed notation as axes
-        plotted_data_once = false %Used to determine whether or not
-        %we need to do some additional setup.
-        needs_initialization = true
+        d4 = '------ Debugging ------'
+        id %A unique id that can be used to identify the plotter
+        %when working with callback optimization, i.e. to identify which
+        %object is throwing the callback (debugging)
+        n_resize_calls = 0 %# of times the figure detected a resize
+        n_render_calls = 0 %We'll keep track of the # of renders done
+        n_x_reductions = 0 %# of times we needed to reduce the data
+        %This is the slow part of the code and ideally this is not called
+        %very often.
+        %
+        last_redraw_used_original = true
+        
+        %The goal here is to force a maximum time that occurs
+        %before a quick redraw occurs
+        %-----------------
+        earliest_unhandled_plot_callback_time = []
+        %When a callback occurs, if this is empty, it gets set
+        %It can then later be used to 
     end
-    
+
     %Constructor
     %-----------------------------------------
     methods
@@ -222,14 +231,15 @@ classdef LinePlotReducer < handle
             %
             %   This callback can occur multiple times in quick succession
             %   so we add a timer that essentially requests an update in
-            %   rendering at a later point in time. NOTE: This is an update
+            %   rendering at a later point in time. Note, this is an update
             %   in the decimation used in this plot NOT an update in the
             %   axes changing. The look of the axes will change, it may
             %   just look a bit funny, specifically if it is being
             %   enlarged.
             %
-            %   Every time the callback runs the timer is stopped and the
-            %   wait to throw the actual callback begins over again.
+            %   Every time this callback runs the timer is stopped and the
+            %   wait to throw the actual callback begins over again (i.e.
+            %   we wait just a bit longer).
             %
             %   Inputs:
             %   -------
@@ -240,22 +250,18 @@ classdef LinePlotReducer < handle
             %   See Also:
             %   sl.plot.big_data.LinePlotReducer.renderData>h__setupCallbacksAndTimers
             
-            %TODO: 
+            obj.n_resize_calls = obj.n_resize_calls + 1;
             
-            
-            START_DELAY = 0.2;
-            
-            cur_axes = obj.h_axes(axes_I);
-            new_xlim = get(cur_axes,'xlim');
-            
+            new_xlim = get(obj.h_axes(axes_I),'xlim');
             
             %#DEBUG
             if obj.DEBUG
-                fprintf('Callback called for: %d at %g, xlim: %s: busy: %d\n',obj.id,cputime,mat2str(new_xlim,2),obj.busy);
+                fprintf('Callback called for: %d at %g, xlim: %s: busy: %d\n',...
+                    obj.id,cputime,mat2str(new_xlim,2),obj.busy);
             end
             
-            %This might occur if we haven't waited long enough
             t = obj.timers{axes_I};
+            %This might occur if we haven't waited long enough
             if ~isempty(t)
                 try
                     stop(t)
@@ -269,7 +275,7 @@ classdef LinePlotReducer < handle
             end
             
             t = timer;
-            set(t,'StartDelay',START_DELAY,'ExecutionMode','singleShot');
+            set(t,'StartDelay',obj.update_delay,'ExecutionMode','singleShot');
             set(t,'TimerFcn',@(~,~)obj.updateAxesData(h,event_data,axes_I,new_xlim));
             start(t)
             
@@ -279,17 +285,9 @@ classdef LinePlotReducer < handle
             
             
             obj.timers{axes_I} = t;
-            
-            %Rules for timers:
-            %1) Delay action slightly - 0.1 s?
-            %2) On calling, delay further
-            %
-            %   Eventually, if the total delay exceeds some amount, we
-            %   should render, this occurs if for example we are panning
-            %   ...
+         
         end
         function updateAxesData(obj,h,event_data,axes_I,new_xlim)
-            %
             %
             %    This event is called by the timer that is configured in
             %    resize().
