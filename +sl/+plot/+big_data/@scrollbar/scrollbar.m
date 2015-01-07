@@ -10,11 +10,16 @@ classdef scrollbar < handle
     %   ------
     %   
     %
+    %   See Also:
+    %   ---------
+    %   sl.gui.scrollbar
     
     %Improvements:
     %-------------
     %1) DONE y limits should be static
     %2) Add key listeners to scroll and zoom in and out????
+    %       - This may already be enabled by default, although
+    %         hopefully it doesn't screw up the width
     %3) Allow switching the zoom type - edit window or 2nd slider
     %4) On zooming, ... not sure what I want to do
     %5) Add on ability to change y limits
@@ -46,7 +51,9 @@ classdef scrollbar < handle
     end
     
     methods
-        function obj = scrollbar(lpr)
+        function obj = scrollbar(h_axes)
+            %
+            %   obj = sl.plot.big_data.scrollbar(h_axes)
             %
             %   Inputs:
             %   -------
@@ -63,20 +70,24 @@ classdef scrollbar < handle
            %1) How far to zoom in
            %2) Where to start
                       
-           xlim_temp = lpr.x_lim_original;
+           %TODO: We might want to query the data rather than the axes ...
+           
+           xlim_temp = get(h_axes,'xlim');
            %TODO: Do we want to round based on step size???
            
-           obj.h_axes = lpr.h_axes;
+           obj.h_axes = h_axes;
            set(obj.h_axes,'YLimMode','manual')
            
            axes_extents = get(obj.h_axes,'position');
            DEFAULT_POSITION(1) = axes_extents(1);
            DEFAULT_POSITION(3) = axes_extents(3);
            %TODO: Show window width and limits somewhere ...
+                      
+           h_figure = get(h_axes,'parent');
            
-           %set(obj.h_axes,'xlim',
-           
-           obj.s = sl.gui.scrollbar(lpr.h_figure,...
+           %This is the underlying scrollbar object which we had to tweak
+           %significantly to behave as expected
+           obj.s = sl.gui.scrollbar(h_figure,...
                 'units','normalized',...
                 'position',DEFAULT_POSITION,...
                 'Value',0.5*diff(xlim_temp) + xlim_temp(1),...
@@ -113,7 +124,13 @@ classdef scrollbar < handle
            h__updateAxesView(obj)
         end
     end
-    
+    methods (Static)
+        function obj = fromLinePlotReducer(lpr)
+           %    sl.plot.big_data.scrollbar.fromLinePlotReducer(lpr)
+           
+           obj = sl.plot.big_data.scrollbar(lpr.h_axes);
+        end
+    end
 end
 
 function h__updateAxesView(obj)
