@@ -52,8 +52,10 @@ classdef scrollbar < handle
     %   ----------------
     %   1) On resize, width and value are lost
     %   2) ResizeFcn callback doesn't work
+    %       - it seems to after adding a drawnow
     %   3) Single shot timer after callback is inconsistent
-    %   4) Continuous timer prevents value from being updated ...
+    %   4) Continuous timer prevents value from being updated properly
+    %       when the user is interacting with it
     
     %{
     clear all
@@ -87,6 +89,10 @@ classdef scrollbar < handle
         j_handle %Java handle
     end
     
+    properties
+       update_value_when_sliding 
+    end
+    
     %TODO: Some of these should be observable ...
     %Main properties to edit/interact with --------------------------------
     properties (Dependent)
@@ -101,10 +107,12 @@ classdef scrollbar < handle
         minor_step %In user units
         major_step
         callback
+        continuous_callback
     end
     
     properties (Hidden)
         user_callback %alias for callback
+        user_quick_callback
     end
     
     %Get & Set methods for above properties -------------------------------
@@ -139,6 +147,9 @@ classdef scrollbar < handle
         end
         function value = get.callback(obj)
             value = obj.user_callback;
+        end
+        function value = get.continuous_callback(obj)
+           value = obj.user_quick_callback; 
         end
         %Set Functions
         %--------------------------------------------
@@ -177,6 +188,9 @@ classdef scrollbar < handle
         end
         function set.callback(obj,value)
             obj.user_callback = value;
+        end
+        function set.continuous_callback(obj,value)
+            obj.user_quick_callback = value;
         end
         function set.slider_width_pct(obj,value)
             %This value isn't super critical, as Java has a check
@@ -231,38 +245,38 @@ classdef scrollbar < handle
     
     %Get & Set methods for Java properties -------------------------------
     methods
-        function handleSetRunningCallback(obj,value)
-            %This was moved here to remove the mlint warnings when
-            %it was in set.allow_running_callback
-            if value
-                if ~isempty(obj.temp_callback_holder)
-                    set(obj.m_handle,'callback',obj.temp_callback_holder);
-                    obj.temp_callback_holder = [];
-                end
-            else
-                cb = get(obj.m_handle,'callback');
-                if ~isempty(cb)
-                    %This check is important as nested disables could set
-                    %an already cleared callback to the temporary holding
-                    %property, thus removing the actual callback
-                    %
-                    %    i.e. the following would be problamatic and would
-                    %    occur with no isempty checks
-                    %
-                    %    obj.temp_callback_holder = real_callback
-                    %    set(obj.m_handle,'callback','');
-                    %    null_callback = get(obj.m_handle,'callback');
-                    %    obj.temp_callback_holder = null_callback;
-                    %
-                    
-                    obj.temp_callback_holder = cb;
-                    set(obj.m_handle,'callback','');
-                end
-            end
-        end
-        function set.allow_running_callback(obj,value)
-            handleSetRunningCallback(obj,value)
-        end
+%         function handleSetRunningCallback(obj,value)
+%             %This was moved here to remove the mlint warnings when
+%             %it was in set.allow_running_callback
+%             if value
+%                 if ~isempty(obj.temp_callback_holder)
+%                     set(obj.m_handle,'callback',obj.temp_callback_holder);
+%                     obj.temp_callback_holder = [];
+%                 end
+%             else
+%                 cb = get(obj.m_handle,'callback');
+%                 if ~isempty(cb)
+%                     %This check is important as nested disables could set
+%                     %an already cleared callback to the temporary holding
+%                     %property, thus removing the actual callback
+%                     %
+%                     %    i.e. the following would be problamatic and would
+%                     %    occur with no isempty checks
+%                     %
+%                     %    obj.temp_callback_holder = real_callback
+%                     %    set(obj.m_handle,'callback','');
+%                     %    null_callback = get(obj.m_handle,'callback');
+%                     %    obj.temp_callback_holder = null_callback;
+%                     %
+%                     
+%                     obj.temp_callback_holder = cb;
+%                     set(obj.m_handle,'callback','');
+%                 end
+%             end
+%         end
+%         function set.allow_running_callback(obj,value)
+%             handleSetRunningCallback(obj,value)
+%         end
         %Get methods
         %------------------------------------------------
         function value = get.j_value(obj)
@@ -377,13 +391,12 @@ classdef scrollbar < handle
     %Internal Properties  --------------------------------------
     properties
         d2 = '------   Internal Properties - Debug Only --------'
-        resize_fix_timer %Holds a timer so that the timer stays in scope.
-        %The timer fixes what Matlab breaks after the function is resized
-        temp_callback_holder
+% % % %         resize_fix_timer %Holds a timer so that the timer stays in scope.
+% % % %         %The timer fixes what Matlab breaks after the function is resized
+% % % %         temp_callback_holder
         allow_running_callback = true %We can this to be false when
         %we are doing things that we know will cause the callback to run
         %(such as adjusting the slider width)
-        lh %listener handles
         last_valid_j_centered
         last_valid_j_visible_amount
     end
@@ -392,33 +405,27 @@ classdef scrollbar < handle
     methods
         function obj = scrollbar(h_figure,varargin)
             %
+            %   obj = sl.gui.scrollbar(h_figure,varargin)
             %
-            %    NOTE:
+            %   Optional Inputs:
+            %   ----------------
+            %   All optional inputs are passed to the uicontrol input
+            %
+            %   Example:
+            %   --------
+            %       obj.s = sl.gui.scrollbar(h_figure,...
+            %           'units','normalized',...
+            %           'position',DEFAULT_POSITION,...
+            %           'Value',0.5*diff(xlim_temp) + xlim_temp(1),...
+            %           'min',xlim_temp(1),...
+            %           'max',xlim_temp(2),...
+            %           'callback',@(~,~)obj.CB_sliderValueChanged());
+            % 
+          
             
             %obj.figure_handle = figure_handle;
             
-            
-            %Approach 1
-                        set(h_figure,'ResizeFcn',@(~,~)cb_figureSizeChanged(obj));
-                        obj.lh = [];
-            
-                        
-%            	if verLessThan('matlab', '8.4')
-%                 size_cb = {'Position', 'PostSet'};
-%             else
-%                 size_cb = {'SizeChanged'};
-%             end
-            
-            %Approach 2
-%             obj.lh = addlistener(h_figure,size_cb{:},@obj.cb_figureSizeChanged);
-            
-            
-            
-            % % % %             set(t,'StartDelay',TIMER_START_DELAY,'ExecutionMode','singleShot');
-            % % % %             set(t,'TimerFcn',@(~,~)obj.fixFigureResizeIssues)
-            % % % %             start(t)
-            % % % %             obj.resize_fix_timer = t;
-            
+            set(h_figure,'ResizeFcn',@(~,~)cb_figureSizeChanged(obj));
             
             obj.m_handle = uicontrol('style','slider',varargin{:});
             
@@ -427,9 +434,7 @@ classdef scrollbar < handle
             %which is an alias for obj.user_callback
             obj.user_callback = get(obj.m_handle,'callback');
             set(obj.m_handle,'callback',@obj.cb_valueChanged);
-            
-            
-            
+
             %Why is this sometimes an array????
             %I think because it does position matching for filtering
             %and if we create two instances of the scrollbar then we get
@@ -438,25 +443,12 @@ classdef scrollbar < handle
             %TODO: We should do an explicit check for a found result
             obj.j_handle = sl.java.findjobj(obj.m_handle);
             
+            %http://undocumentedmatlab.com/blog/continuous-slider-callback
+            obj.j_handle.AdjustmentValueChangedCallback = @obj.cb_quickValueChanged;
+            
             obj.last_valid_j_centered = obj.j_centered_value;
             obj.last_valid_j_visible_amount = obj.j_visible_amount;
             
-            %THIS MUST BE LAST
-            t = timer;
-            set(t,'ExecutionMode','fixedRate','Period',0.1)
-            set(t,'TimerFcn',@(~,~)fixFigureResizeIssues(obj))
-            start(t)
-            obj.resize_fix_timer = t;
-            
-            
-            
-        end
-        function delete(obj)
-            delete(obj.lh)
-            try %#ok<TRYNC>
-                stop(obj.resize_fix_timer)
-                delete(obj.resize_fix_timer)
-            end
         end
     end
     
@@ -481,7 +473,21 @@ classdef scrollbar < handle
                 obj.allow_running_callback = true;
             end
         end
+        function cb_quickValueChanged(obj,varargin)
+           %This gets executed whenever the  
+           if obj.allow_running_callback
+              obj.allow_running_callback = false;
+              %NO: DONT SET THIS HERE
+              %obj.last_valid_j_centered = obj.j_centered_value;
+              h__execute_callback(obj.user_quick_callback,varargin{:})
+              obj.allow_running_callback = true;
+           end
+        end
         function cb_figureSizeChanged(obj,varargin)
+
+            %I think this is critical for ensuring that any changes to the
+            %slider made by Matlab come before the corrections that I am
+            %trying to make in this function
             drawnow
             
             obj.allow_running_callback = false;
@@ -493,54 +499,6 @@ classdef scrollbar < handle
             
             obj.allow_running_callback = true;
             
-        end
-        
-        
-        % % % %         function cb_figureSizeChanged(obj)
-        % % % %             %
-        % % % %             %   This took way too long to get somewhat working.
-        % % % %             %   Unfortunately I still don't understand how to properly fix
-        % % % %             %   the problem, I've only applied a hack which should
-        % % % %             %   hopefully work 99% of the time.
-        % % % %
-        % % % %             TIMER_START_DELAY = 0.1;
-        % % % %
-        % % % %             %Timer handling
-        % % % %             %--------------
-        % % % %             try %#ok<TRYNC>
-        % % % %                 temp_timer = obj.resize_fix_timer;
-        % % % %                 stop(temp_timer);
-        % % % %                 delete(temp_timer)
-        % % % %                 obj.resize_fix_timer = [];
-        % % % %             end
-        % % % %
-        % % % %             t = timer;
-        % % % %             set(t,'StartDelay',TIMER_START_DELAY,'ExecutionMode','singleShot');
-        % % % %             set(t,'TimerFcn',@(~,~)obj.fixFigureResizeIssues)
-        % % % %             start(t)
-        % % % %             obj.resize_fix_timer = t;
-        % % % %         end
-        function fixFigureResizeIssues(obj)
-            
-            % % % % % %             if obj.allow_running_callback
-            % % % % % %                 if obj.j_centered_value ~= obj.last_valid_j_centered || ...
-            % % % % % %                       obj.j_visible_amount ~= obj.last_valid_j_visible_amount
-            % % % % % %
-            % % % % % %                 	obj.j_centered_value = obj.last_valid_j_centered;
-            % % % % % %                     obj.j_visible_amount = obj.last_valid_j_visible_amount;
-            % % % % % %
-            % % % % % %                 end
-            % % % % % %             end
-            
-            %             obj.allow_running_callback = false;
-            %
-            %             %Move back to value first, then adjust width
-            %             %Reversing this order could mean that the width is too big
-            %             %and that the value subsequently gets changed
-            %             obj.j_centered_value = obj.last_valid_j_centered;
-            %             obj.j_visible_amount = obj.last_valid_j_visible_amount;
-            %
-            %             obj.allow_running_callback = true;
         end
     end
     

@@ -68,6 +68,11 @@ classdef LinePlotReducer < handle
     
     properties
         d0 = '------- User options --------'
+        quick_callback_max_wait = 0.1; %If we've waited this long we'll
+        %do a quick plot to update. If this were not in place continuous
+        %callback events would mean that the plot would never update since
+        %its always trying to wait for silence (no events) but events keep
+        %coming
         update_delay = 0.1 %This is how long after a zoom request the code
         %should wait before rendering the update. Ideally this is just long
         %enough to capture all resizing events.
@@ -109,6 +114,7 @@ classdef LinePlotReducer < handle
         
         timers %cell, {1 x n_axes} - these are held onto between the 
         %callback and the final call by the timer to render the plot
+        quick_timers
         
         axes_listeners %cell, {1 x n_axes}
         plot_listeners %cell, {1 x n_groups}
@@ -145,6 +151,10 @@ classdef LinePlotReducer < handle
         %   This is the original reduced data for the full sized plot
         y_r_orig %cell
         
+        
+        %TODO: These 2 properties aren't being used
+        %We will need to use them for sliding
+        %----------------------------------------------------
         x_r_last
         %   This contains the last set of reduced data that was plotted
         y_r_last
@@ -154,6 +164,8 @@ classdef LinePlotReducer < handle
         last_rendered_xlim
         x_lim_original
 
+        last_render_time = now
+        
         busy %This will be used when quick drawing is enabled to prevent
         %quick drawing from ever getting piled up.
         %
@@ -189,6 +201,7 @@ classdef LinePlotReducer < handle
         %very often.
         %
         last_redraw_used_original = true
+        last_redraw_was_quick = false
         
         %The goal here is to force a maximum time that occurs
         %before a quick redraw occurs
@@ -260,7 +273,129 @@ classdef LinePlotReducer < handle
                     obj.id,cputime,mat2str(new_xlim,2),obj.busy);
             end
             
-            t = obj.timers{axes_I};
+            
+            s = struct;
+            s.h = h;
+            s.event_data   = event_data;
+            s.axes_I       = axes_I;
+            s.new_xlim     = new_xlim;
+            
+            t2 = obj.quick_timers{axes_I};
+            if isempty(obj.last_render_time)
+                try
+                   stop(t2)
+                   delete(t2)
+                catch
+                   %Not sure why this would run 
+                end
+                
+                t2 = timer;
+                set(t2,'StartDelay',obj.quick_callback_max_wait,'ExecutionMode','singleShot');
+                set(t2,'TimerFcn',@(~,~)obj.updateAxesQuick(s));
+                start(t2)
+                
+                obj.quick_timers{axes_I} = t2;
+                
+                
+                obj.last_render_time = now;
+% % % % %             elseif now - obj.last_render_time > obj.quick_callback_max_wait/86400
+% % % % %                 %NOTE: Now is a days comparison, we need to convert
+% % % % %                 %seconds to days
+% % % % %                 if ~obj.busy
+% % % % %                     obj.last_render_time = now;
+% % % % %                     obj.busy = true;
+% % % % %                     obj.renderData(s,true);
+% % % % %                     obj.busy = false;
+% % % % %                 end
+            end
+            
+           h__initializeSlowTimer(obj,s,axes_I)
+         
+        end
+        function updateAxesQuick(obj,s)
+            
+            t2 = obj.quick_timers{s.axes_I};
+            if ~isempty(t2)
+                stop(t2)
+                delete(t2)
+                obj.quick_timers{s.axes_I} = [];
+            end
+            
+            %TODO: We need to make sure we are always getting a slow one
+            %in there as well
+             try
+                %We clear this so that on the next change we don't
+                %automatically fire an event
+                obj.last_render_time = [];
+                obj.renderData(s,true);
+            catch ME
+                %TODO: How do I display the stack without throwing an error?
+                fprintf(2,ME.getReport('extended'));
+                keyboard
+             end
+             
+             %Make sure we get a slow render ...
+             h__initializeSlowTimer(obj,s,s.axes_I)
+             
+        end
+        function updateAxesData(obj,s)
+            %
+            %    This event is called by the timer that is configured in
+            %    resize().
+            %
+            %    If we reach this point then we can begin the slow process
+            %    of replotting the data in response to the change in the
+            %    axes.
+            %
+            %    Where does busy fit into this? I don't think it does, we
+            %    try and run this code regardless.
+            
+            %http://www.mathworks.com/matlabcentral/answers/22180-timers-and-thread-safety
+                        
+            %#DEBUG
+            if obj.DEBUG
+                fprintf('Callback 2 called for: %d at %g - busy: %d\n',obj.id,cputime,obj.busy);
+            end
+            
+            t = obj.timers{s.axes_I};
+            if ~isempty(t)
+                stop(t)
+                delete(t)
+                obj.timers{s.axes_I} = [];
+            end
+            
+%             if obj.busy
+%              	t = timer;
+%                 set(t,'StartDelay',0.05,'ExecutionMode','singleShot');
+%                 set(t,'TimerFcn',@(~,~)obj.updateAxesData(s));
+%                 start(t)
+%             else
+                obj.busy = true;
+                try
+                    %We clear this so that on the next change we don't
+                    %automatically fire an event
+                    obj.last_render_time = [];
+                    obj.renderData(s,false);
+                catch ME
+                    %TODO: How do I display the stack without throwing an error?
+                    fprintf(2,ME.getReport('extended'));
+                    keyboard
+                end
+                obj.busy = false;
+%             end
+            
+        end
+    end
+    
+    methods (Static)
+        %This should move to the tests class
+        test_plotting_speed %sl.plot.big_data.LinePlotReducer.test_plotting_speed
+    end
+    
+end
+
+function h__initializeSlowTimer(obj,s,axes_I)
+  t = obj.timers{axes_I};
             %This might occur if we haven't waited long enough
             if ~isempty(t)
                 try
@@ -276,70 +411,8 @@ classdef LinePlotReducer < handle
             
             t = timer;
             set(t,'StartDelay',obj.update_delay,'ExecutionMode','singleShot');
-            set(t,'TimerFcn',@(~,~)obj.updateAxesData(h,event_data,axes_I,new_xlim));
+            set(t,'TimerFcn',@(~,~)obj.updateAxesData(s));
             start(t)
             
-            if obj.DEBUG
-                fprintf('New timer created at %g\n',cputime);
-            end
-            
-            
             obj.timers{axes_I} = t;
-         
-        end
-        function updateAxesData(obj,h,event_data,axes_I,new_xlim)
-            %
-            %    This event is called by the timer that is configured in
-            %    resize().
-            %
-            %    If we reach this point then we can begin the slow process
-            %    of replotting the data in response to the change in the
-            %    axes.
-            %
-            %    Where does busy fit into this? I don't think it does, we
-            %    try and run this code regardless.
-            
-            %http://www.mathworks.com/matlabcentral/answers/22180-timers-and-thread-safety
-            
-            
-            obj.earliest_unhandled_plot_callback_time = [];
-            
-            
-            %#DEBUG
-            if obj.DEBUG
-                fprintf('Callback 2 called for: %d at %g - busy: %d\n',obj.id,cputime,obj.busy);
-            end
-            
-            t = obj.timers{axes_I};
-            if ~isempty(t)
-                stop(t)
-                delete(t)
-                obj.timers{axes_I} = [];
-            end
-            
-            s = struct;
-            s.h = h;
-            s.event_data   = event_data;
-            s.axes_I       = axes_I;
-            s.new_xlim     = new_xlim;
-            
-            obj.busy = true;
-            try
-                obj.renderData(s);
-            catch ME
-                %TODO: How do I display the stack without throwing an error?
-                fprintf(2,ME.getReport('extended'));
-                keyboard
-            end
-            obj.busy = false;
-            
-        end
-    end
-    
-    methods (Static)
-        %This should move to the tests class
-        test_plotting_speed %sl.plot.big_data.LinePlotReducer.test_plotting_speed
-    end
-    
 end
-

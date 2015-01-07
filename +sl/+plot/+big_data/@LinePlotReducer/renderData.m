@@ -1,4 +1,4 @@
-function renderData(obj,s)
+function renderData(obj,s,is_quick)
 % Draws all of the data.
 %
 %   This is THE main function which actually plots data.
@@ -10,6 +10,8 @@ function renderData(obj,s)
 %       event_data : matlab.graphics.eventdata.SizeChanged (2014b)
 %                    ??? (pre 2014b)
 %       axes_I :
+%   is_quick : logical
+%       If true this is a request to update the plot
 %
 %   This function is called:
 %       1) manually
@@ -32,6 +34,7 @@ function renderData(obj,s)
 
 if nargin == 1
     s = [];
+    is_quick = false;
 end
 
 obj.n_render_calls = obj.n_render_calls + 1;
@@ -51,7 +54,7 @@ end
 if obj.needs_initialization
     h__handleFirstPlotting(obj,obj.max_axes_width)
 else
-    h__replotData(obj,s,obj.max_axes_width)
+    h__replotData(obj,s,obj.max_axes_width,is_quick)
 end
 
 if ~isempty(obj.post_render_callback)
@@ -60,22 +63,33 @@ end
 
 end
 
-function h__replotData(obj,s,new_axes_width)
+function h__replotData(obj,s,new_axes_width,is_quick)
 %
 %   
 %
-%
+
+obj.last_redraw_was_quick = is_quick;
 
 redraw_option = h__determineRedrawCase(obj,s);
 
+fprintf('----------------\nNext draw for %d\n',obj.id);
+if is_quick
+    fprintf('is quick\n')
+else
+    fprintf('is slow\n')
+end
+fprintf('Redraw option was: %d\n',redraw_option)
 use_original = false;
 switch redraw_option
     case 0
+        %no change needed
         return
     case 1
+        %reset data to original view
         use_original = true;
         obj.last_redraw_used_original = true;
     case 2
+        %recompute data for plotting
         obj.last_redraw_used_original = false;
         obj.n_x_reductions = obj.n_x_reductions + 1;
     otherwise
@@ -96,7 +110,7 @@ for iG = 1:obj.n_plot_groups
         y_r = obj.y_r_orig{iG};
     else
         [x_r, y_r] = sl.plot.big_data.reduce_to_width(...
-            obj.x{iG}, obj.y{iG}, new_axes_width, new_x_limits);
+            obj.x{iG}, obj.y{iG}, new_axes_width, new_x_limits, 'use_quick',is_quick);
     end
     
     local_h = obj.h_plot{iG};
@@ -108,7 +122,7 @@ end
 
 end
 
-function redraw_option = h__determineRedrawCase(obj,s)
+function redraw_option = h__determineRedrawCase(obj,s,is_quick)
 %
 %   redraw_option = h__determineRedrawCase(obj,s)
 %
@@ -164,7 +178,11 @@ else
     %Width changed:
     %NOTE: We are currently not doing any width based changes, so we really
     %don't know if the axes changed or not
-    redraw_option = 0;
+    if obj.last_redraw_was_quick
+        redraw_option = 2;
+    else
+        redraw_option = 0;
+    end
     
 % % % % % %     previous_axes_width = obj.last_rendered_axes_width;
 % % % % % % 
@@ -201,6 +219,7 @@ function h__setupCallbacksAndTimers(obj)
 n_axes = length(obj.h_axes);
 
 obj.timers = cell(1,length(obj.h_axes));
+obj.quick_timers = cell(1,length(obj.h_axes));
 
 %I had setup timers in this function previously, but I was running into
 %issues, so I moved them to the callback functions ...

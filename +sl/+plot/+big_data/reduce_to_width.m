@@ -1,4 +1,4 @@
-function [x_reduced, y_reduced, extras] = reduce_to_width(x, y, axis_width_in_pixels, x_limits)
+function [x_reduced, y_reduced, extras] = reduce_to_width(x, y, axis_width_in_pixels, x_limits, varargin)
 %x
 %
 %   [x_reduced, y_reduced] = sl.plot.big_data.reduce_to_width(x, y, axis_width_in_pixels, x_limits)
@@ -41,6 +41,8 @@ function [x_reduced, y_reduced, extras] = reduce_to_width(x, y, axis_width_in_pi
 %   Based on code by:
 %   Tucker McClure (Mathworks)
 
+in.use_quick = false;
+in = sl.in.processVarargin(in,varargin);
 
 %{
 %This 
@@ -116,8 +118,14 @@ multiple_channels = n_channels_y > 1;
 
 if evenly_sampled && plot_all_data && ~multiple_channels
     %Run reshape code
-    extras.method = '2: Single Channel Reshape';
-    indices   = h__getMinMax_approach2(y,n_points);
+    
+    if in.use_quick
+        indices = h__getQuickIndices(1,length(y),n_points);
+    else
+        extras.method = '2: Single Channel Reshape';
+        indices = h__getMinMax_approach2(y,n_points);
+    end
+
     x_reduced = h__getXReducedGivenIndices(x,x_reduced,1,indices);
     y_reduced = h__getYReducedGivenIndices(y,y_reduced,1,indices);
     return
@@ -149,8 +157,11 @@ for iChan = 1:n_channels_y
         indices = bound_indices(1):bound_indices(end);
     else
         %This is where we could try the mex ...
-        
-        indices = h__getMinMax_approach3(y,indices,bound_indices,iChan);
+        if in.use_quick
+           indices = h__getQuickIndices(bound_indices(1),bound_indices(end),axis_width_in_pixels);    
+        else
+           indices = h__getMinMax_approach3(y,indices,bound_indices,iChan);
+        end
         %indices2 = h__getMinMax_approach1(y,indices,bound_indices,iChan);
         
 %         if ~isequal(indices2,indices)
@@ -407,6 +418,15 @@ else
         bound_indices(iDivision) = right;
     end
 end
+end
+
+function indices = h__getQuickIndices(start_I,end_I,n_points)   
+   indices = zeros(2,n_points);
+   
+   temp = round(linspace(start_I,end_I,n_points*2));
+   indices(1,:) = temp(1:2:end);
+   indices(2,:) = temp(2:2:end);
+   
 end
 
 % Binary search to find boundaries of the ordered x data.

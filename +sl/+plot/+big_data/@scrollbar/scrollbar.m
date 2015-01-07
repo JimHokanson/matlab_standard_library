@@ -95,6 +95,8 @@ classdef scrollbar < handle
                 'max',xlim_temp(2),...
                 'callback',@(~,~)obj.CB_sliderValueChanged());
             
+           obj.s.continuous_callback = @(~,~,~)obj.CB_sliderValueChanged()
+            
            edit_position = zeros(1,4);
            edit_position(1) = DEFAULT_POSITION(1)+DEFAULT_POSITION(3)+0.01;
            edit_position(2) = DEFAULT_POSITION(2);
@@ -122,6 +124,9 @@ classdef scrollbar < handle
         end
         function CB_sliderValueChanged(obj)
            h__updateAxesView(obj)
+        end
+        function CB_sliderValueChangedQuickly(obj)
+           h__updateAxesView(obj) 
         end
     end
     methods (Static)
