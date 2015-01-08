@@ -235,6 +235,10 @@ classdef LinePlotReducer < handle
 %         end
     end
     
+    properties
+       last_callback_time
+    end
+    
     methods
         function resize(obj,h,event_data,axes_I)
             %
@@ -267,6 +271,58 @@ classdef LinePlotReducer < handle
             
             new_xlim = get(obj.h_axes(axes_I),'xlim');
             
+            s = struct;
+            s.h = h;
+            s.event_data   = event_data;
+            s.axes_I       = axes_I;
+            s.new_xlim     = new_xlim;
+            
+            
+            t = obj.timers{axes_I};
+            %This might occur if we haven't waited long enough
+            if ~isempty(t)
+                try
+                    stop(t)
+                    delete(t)
+                catch
+                    %Might fail due to an invalid timer object
+                    %NOTE: This is executing asynchronously of the main
+                    %code (or is it the timer that is ..., or both)
+                    %and we might have deleted the timer in resize2
+                end
+            end
+            
+            last_callback_local = obj.last_callback_time;
+            if isempty(last_callback_local)
+                obj.last_callback_time = now;
+            elseif now - last_callback_local > obj.quick_callback_max_wait/86400
+                
+                if ~obj.busy
+                    obj.busy = true;
+                    obj.renderData(s,true);
+                    obj.last_redraw_was_quick = true;
+                    obj.busy = false;
+                    obj.last_callback_time = now;
+                end
+            end
+                
+            t = timer;
+            set(t,'StartDelay',obj.update_delay,'ExecutionMode','singleShot');
+            set(t,'TimerFcn',@(~,~)obj.updateAxesData(s));
+            start(t)
+
+            obj.timers{axes_I} = t; 
+            
+            
+            
+            %OPTIONS:
+            %--------
+            %1) Restart a waiting timer
+            %
+            %   OR
+            %
+            %2) 
+            
             %#DEBUG
             if obj.DEBUG
                 fprintf('Callback called for: %d at %g, xlim: %s: busy: %d\n',...
@@ -274,69 +330,30 @@ classdef LinePlotReducer < handle
             end
             
             
-            s = struct;
-            s.h = h;
-            s.event_data   = event_data;
-            s.axes_I       = axes_I;
-            s.new_xlim     = new_xlim;
             
-            t2 = obj.quick_timers{axes_I};
-            if isempty(obj.last_render_time)
-                try
-                   stop(t2)
-                   delete(t2)
-                catch
-                   %Not sure why this would run 
-                end
-                
-                t2 = timer;
-                set(t2,'StartDelay',obj.quick_callback_max_wait,'ExecutionMode','singleShot');
-                set(t2,'TimerFcn',@(~,~)obj.updateAxesQuick(s));
-                start(t2)
-                
-                obj.quick_timers{axes_I} = t2;
-                
-                
-                obj.last_render_time = now;
-% % % % %             elseif now - obj.last_render_time > obj.quick_callback_max_wait/86400
-% % % % %                 %NOTE: Now is a days comparison, we need to convert
-% % % % %                 %seconds to days
-% % % % %                 if ~obj.busy
-% % % % %                     obj.last_render_time = now;
-% % % % %                     obj.busy = true;
-% % % % %                     obj.renderData(s,true);
-% % % % %                     obj.busy = false;
+% % % % %             
+% % % % %             t2 = obj.quick_timers{axes_I};
+% % % % %             if isempty(obj.last_render_time)
+% % % % %                 try
+% % % % %                    stop(t2)
+% % % % %                    delete(t2)
+% % % % %                 catch
+% % % % %                    %Not sure why this would run 
 % % % % %                 end
-            end
-            
-           h__initializeSlowTimer(obj,s,axes_I)
+% % % % %                 
+% % % % %                 obj.last_render_time = now;
+% % % % %                 
+% % % % %                 t2 = timer;
+% % % % %                 set(t2,'StartDelay',obj.quick_callback_max_wait,'ExecutionMode','singleShot');
+% % % % %                 set(t2,'TimerFcn',@(~,~)obj.updateAxesQuick(s));
+% % % % %                 start(t2)
+% % % % %                 
+% % % % %                 obj.quick_timers{axes_I} = t2;
+% % % % %                 
+% % % % %             end
+% % % % %             
+% % % % %            h__initializeSlowTimer(obj,s,axes_I)
          
-        end
-        function updateAxesQuick(obj,s)
-            
-            t2 = obj.quick_timers{s.axes_I};
-            if ~isempty(t2)
-                stop(t2)
-                delete(t2)
-                obj.quick_timers{s.axes_I} = [];
-            end
-            
-            %TODO: We need to make sure we are always getting a slow one
-            %in there as well
-             try
-                %We clear this so that on the next change we don't
-                %automatically fire an event
-                obj.last_render_time = [];
-                obj.renderData(s,true);
-            catch ME
-                %TODO: How do I display the stack without throwing an error?
-                fprintf(2,ME.getReport('extended'));
-                keyboard
-             end
-             
-             %Make sure we get a slow render ...
-             h__initializeSlowTimer(obj,s,s.axes_I)
-             
         end
         function updateAxesData(obj,s)
             %
@@ -353,36 +370,35 @@ classdef LinePlotReducer < handle
             %http://www.mathworks.com/matlabcentral/answers/22180-timers-and-thread-safety
                         
             %#DEBUG
-            if obj.DEBUG
-                fprintf('Callback 2 called for: %d at %g - busy: %d\n',obj.id,cputime,obj.busy);
-            end
-            
-            t = obj.timers{s.axes_I};
-            if ~isempty(t)
-                stop(t)
-                delete(t)
-                obj.timers{s.axes_I} = [];
-            end
-            
-%             if obj.busy
-%              	t = timer;
-%                 set(t,'StartDelay',0.05,'ExecutionMode','singleShot');
-%                 set(t,'TimerFcn',@(~,~)obj.updateAxesData(s));
-%                 start(t)
-%             else
+            if obj.busy
+                h__initializeSlowTimer(obj,s,s.axes_I)
+            else
                 obj.busy = true;
-                try
-                    %We clear this so that on the next change we don't
-                    %automatically fire an event
-                    obj.last_render_time = [];
-                    obj.renderData(s,false);
-                catch ME
-                    %TODO: How do I display the stack without throwing an error?
-                    fprintf(2,ME.getReport('extended'));
-                    keyboard
+                if obj.DEBUG
+                    fprintf('Callback 2 called for: %d at %g - busy: %d\n',obj.id,cputime,obj.busy);
                 end
-                obj.busy = false;
-%             end
+
+                t = obj.timers{s.axes_I};
+                if ~isempty(t)
+                    stop(t)
+                    delete(t)
+                    obj.timers{s.axes_I} = [];
+                end
+
+                    try
+                        %We clear this so that on the next change we don't
+                        %automatically fire an event
+                        obj.last_callback_time = [];
+                        obj.renderData(s,false);
+                        obj.last_redraw_was_quick = false;
+                    catch ME
+                        %TODO: How do I display the stack without throwing an error?
+                        fprintf(2,ME.getReport('extended'));
+                        keyboard
+                    end
+                    obj.busy = false;
+    %             end
+            end
             
         end
     end
@@ -395,24 +411,24 @@ classdef LinePlotReducer < handle
 end
 
 function h__initializeSlowTimer(obj,s,axes_I)
-  t = obj.timers{axes_I};
-            %This might occur if we haven't waited long enough
-            if ~isempty(t)
-                try
-                    stop(t)
-                    delete(t)
-                catch
-                    %Might fail due to an invalid timer object
-                    %NOTE: This is executing asynchronously of the main
-                    %code (or is it the timer that is ..., or both)
-                    %and we might have deleted the timer in resize2
-                end
-            end
-            
-            t = timer;
-            set(t,'StartDelay',obj.update_delay,'ExecutionMode','singleShot');
-            set(t,'TimerFcn',@(~,~)obj.updateAxesData(s));
-            start(t)
-            
-            obj.timers{axes_I} = t;
+t = obj.timers{axes_I};
+%This might occur if we haven't waited long enough
+if ~isempty(t)
+try
+stop(t)
+delete(t)
+catch
+%Might fail due to an invalid timer object
+%NOTE: This is executing asynchronously of the main
+%code (or is it the timer that is ..., or both)
+%and we might have deleted the timer in resize2
+end
+end
+
+t = timer;
+set(t,'StartDelay',obj.update_delay,'ExecutionMode','singleShot');
+set(t,'TimerFcn',@(~,~)obj.updateAxesData(s));
+start(t)
+
+obj.timers{axes_I} = t;
 end

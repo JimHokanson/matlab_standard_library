@@ -37,6 +37,8 @@ if nargin == 1
     is_quick = false;
 end
 
+%obj.last_redraw_was_quick = is_quick;
+
 obj.n_render_calls = obj.n_render_calls + 1;
 
 %If the figure closes, and we ask the object to replot things, than
@@ -67,8 +69,6 @@ function h__replotData(obj,s,new_axes_width,is_quick)
 %
 %   
 %
-
-obj.last_redraw_was_quick = is_quick;
 
 redraw_option = h__determineRedrawCase(obj,s);
 
