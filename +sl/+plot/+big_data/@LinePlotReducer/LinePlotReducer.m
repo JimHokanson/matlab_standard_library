@@ -57,11 +57,11 @@ classdef LinePlotReducer < handle
     %
     %2) Oversample the zoom, maybe by a factor of 4ish so that subsequent
     %   zooms can use the oversampled data.
- 
+    
     
     properties (Constant,Hidden)
         %This can be changed to throw out more or less error messages
-        DEBUG = 0 
+        DEBUG = 0
         %1) Things related to callbacks
         %2) things from 1) and cleanup
     end
@@ -112,7 +112,7 @@ classdef LinePlotReducer < handle
         %   This should really be h_line, to be more specific
         
         
-        timers %cell, {1 x n_axes} - these are held onto between the 
+        timers %cell, {1 x n_axes} - these are held onto between the
         %callback and the final call by the timer to render the plot
         quick_timers
         
@@ -123,8 +123,8 @@ classdef LinePlotReducer < handle
         %-------------------
         d2 = '-------  Input Data -------'
         plot_fcn %e.g. @plot
-
-        linespecs %cell 
+        
+        linespecs %cell
         %Each element is paired with the corresponding pair of inputs
         %
         %   plot(x1,y1,'r',x2,y2,'c')
@@ -132,7 +132,7 @@ classdef LinePlotReducer < handle
         %   linspecs = {{'r'} {'c'}}
         
         extra_plot_options = {} %cell
-        %These are the parameters that go into the end of a plot function, 
+        %These are the parameters that go into the end of a plot function,
         %such as {'Linewidth', 2}
         
         
@@ -163,7 +163,7 @@ classdef LinePlotReducer < handle
         %hardcoded the render width
         last_rendered_xlim
         x_lim_original
-
+        
         last_render_time = now
         
         busy %This will be used when quick drawing is enabled to prevent
@@ -171,7 +171,7 @@ classdef LinePlotReducer < handle
         %
         %Right now it is only being used in the timer callback and even
         %there it is only being set, not really used.
-       
+        
         %TODO: Add listeners to lines so that when they are deleted
         %everything is deleted
         needs_initialization = true
@@ -208,14 +208,14 @@ classdef LinePlotReducer < handle
         %-----------------
         earliest_unhandled_plot_callback_time = []
         %When a callback occurs, if this is empty, it gets set
-        %It can then later be used to 
+        %It can then later be used to
     end
-
+    
     %Constructor
     %-----------------------------------------
     methods
         function obj = LinePlotReducer(varargin)
-            %x 
+            %x
             %
             %   obj = sl.plot.big_data.LinePlotReducer(varargin)
             %
@@ -228,15 +228,15 @@ classdef LinePlotReducer < handle
             %function.
             obj.init(varargin{:});
         end
-%         function delete(obj)
-%             %http://stackoverflow.com/questions/14834040/matlab-free-memory-of-class-objects
-%             %#DEBUG
-%             %disp('Delete function ran')
-%         end
+        %         function delete(obj)
+        %             %http://stackoverflow.com/questions/14834040/matlab-free-memory-of-class-objects
+        %             %#DEBUG
+        %             %disp('Delete function ran')
+        %         end
     end
     
     properties
-       last_callback_time
+        last_callback_time
     end
     
     methods
@@ -300,28 +300,18 @@ classdef LinePlotReducer < handle
                 if ~obj.busy
                     obj.busy = true;
                     obj.renderData(s,true);
-                    obj.last_redraw_was_quick = true;
+                    %obj.last_redraw_was_quick = true;
                     obj.busy = false;
                     obj.last_callback_time = now;
                 end
             end
-                
+            
             t = timer;
             set(t,'StartDelay',obj.update_delay,'ExecutionMode','singleShot');
             set(t,'TimerFcn',@(~,~)obj.updateAxesData(s));
             start(t)
-
-            obj.timers{axes_I} = t; 
             
-            
-            
-            %OPTIONS:
-            %--------
-            %1) Restart a waiting timer
-            %
-            %   OR
-            %
-            %2) 
+            obj.timers{axes_I} = t;
             
             %#DEBUG
             if obj.DEBUG
@@ -329,31 +319,6 @@ classdef LinePlotReducer < handle
                     obj.id,cputime,mat2str(new_xlim,2),obj.busy);
             end
             
-            
-            
-% % % % %             
-% % % % %             t2 = obj.quick_timers{axes_I};
-% % % % %             if isempty(obj.last_render_time)
-% % % % %                 try
-% % % % %                    stop(t2)
-% % % % %                    delete(t2)
-% % % % %                 catch
-% % % % %                    %Not sure why this would run 
-% % % % %                 end
-% % % % %                 
-% % % % %                 obj.last_render_time = now;
-% % % % %                 
-% % % % %                 t2 = timer;
-% % % % %                 set(t2,'StartDelay',obj.quick_callback_max_wait,'ExecutionMode','singleShot');
-% % % % %                 set(t2,'TimerFcn',@(~,~)obj.updateAxesQuick(s));
-% % % % %                 start(t2)
-% % % % %                 
-% % % % %                 obj.quick_timers{axes_I} = t2;
-% % % % %                 
-% % % % %             end
-% % % % %             
-% % % % %            h__initializeSlowTimer(obj,s,axes_I)
-         
         end
         function updateAxesData(obj,s)
             %
@@ -368,7 +333,7 @@ classdef LinePlotReducer < handle
             %    try and run this code regardless.
             
             %http://www.mathworks.com/matlabcentral/answers/22180-timers-and-thread-safety
-                        
+            
             %#DEBUG
             if obj.busy
                 h__initializeSlowTimer(obj,s,s.axes_I)
@@ -377,27 +342,27 @@ classdef LinePlotReducer < handle
                 if obj.DEBUG
                     fprintf('Callback 2 called for: %d at %g - busy: %d\n',obj.id,cputime,obj.busy);
                 end
-
+                
                 t = obj.timers{s.axes_I};
                 if ~isempty(t)
                     stop(t)
                     delete(t)
                     obj.timers{s.axes_I} = [];
                 end
-
-                    try
-                        %We clear this so that on the next change we don't
-                        %automatically fire an event
-                        obj.last_callback_time = [];
-                        obj.renderData(s,false);
-                        obj.last_redraw_was_quick = false;
-                    catch ME
-                        %TODO: How do I display the stack without throwing an error?
-                        fprintf(2,ME.getReport('extended'));
-                        keyboard
-                    end
-                    obj.busy = false;
-    %             end
+                
+                try
+                    %We clear this so that on the next change we don't
+                    %automatically fire an event
+                    obj.last_callback_time = [];
+                    obj.renderData(s,false);
+                    %obj.last_redraw_was_quick = false;
+                catch ME
+                    %TODO: How do I display the stack without throwing an error?
+                    fprintf(2,ME.getReport('extended'));
+                    keyboard
+                end
+                obj.busy = false;
+                %             end
             end
             
         end
@@ -414,15 +379,15 @@ function h__initializeSlowTimer(obj,s,axes_I)
 t = obj.timers{axes_I};
 %This might occur if we haven't waited long enough
 if ~isempty(t)
-try
-stop(t)
-delete(t)
-catch
-%Might fail due to an invalid timer object
-%NOTE: This is executing asynchronously of the main
-%code (or is it the timer that is ..., or both)
-%and we might have deleted the timer in resize2
-end
+    try
+        stop(t)
+        delete(t)
+    catch
+        %Might fail due to an invalid timer object
+        %NOTE: This is executing asynchronously of the main
+        %code (or is it the timer that is ..., or both)
+        %and we might have deleted the timer in resize2
+    end
 end
 
 t = timer;

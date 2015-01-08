@@ -37,7 +37,7 @@ if nargin == 1
     is_quick = false;
 end
 
-%obj.last_redraw_was_quick = is_quick;
+obj.last_redraw_was_quick = is_quick;
 
 obj.n_render_calls = obj.n_render_calls + 1;
 
