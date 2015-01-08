@@ -37,8 +37,6 @@ if nargin == 1
     is_quick = false;
 end
 
-obj.last_redraw_was_quick = is_quick;
-
 obj.n_render_calls = obj.n_render_calls + 1;
 
 %If the figure closes, and we ask the object to replot things, than
@@ -72,13 +70,13 @@ function h__replotData(obj,s,new_axes_width,is_quick)
 
 redraw_option = h__determineRedrawCase(obj,s);
 
-fprintf('----------------\nNext draw for %d\n',obj.id);
-if is_quick
-    fprintf('is quick\n')
-else
-    fprintf('is slow\n')
-end
-fprintf('Redraw option was: %d\n',redraw_option)
+% fprintf('----------------\nNext draw for %d\n',obj.id);
+% if is_quick
+%     fprintf('is quick\n')
+% else
+%     fprintf('is slow\n')
+% end
+% fprintf('Redraw option was: %d\n',redraw_option)
 use_original = false;
 switch redraw_option
     case 0

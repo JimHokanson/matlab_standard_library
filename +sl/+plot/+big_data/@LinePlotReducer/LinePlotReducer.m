@@ -40,6 +40,8 @@ classdef LinePlotReducer < handle
     %   See Also:
     %   sci.time_series.data
     
+    %TODO: How can we ensure that there are no callbacks left
+    %if our quick callbacks isn't fast enough?????
     
     %External Files:
     %---------------
@@ -279,6 +281,8 @@ classdef LinePlotReducer < handle
             
             
             t = obj.timers{axes_I};
+            obj.timers{axes_I} = [];
+            
             %This might occur if we haven't waited long enough
             if ~isempty(t)
                 try
@@ -298,9 +302,14 @@ classdef LinePlotReducer < handle
             elseif now - last_callback_local > obj.quick_callback_max_wait/86400
                 
                 if ~obj.busy
+                    %If we call drawnow we don't build up a ton of 
+                    %callbacks. I don't completely understand this
+                    %but it seems to work.
+                    drawnow
+                    
                     obj.busy = true;
                     obj.renderData(s,true);
-                    %obj.last_redraw_was_quick = true;
+                    obj.last_redraw_was_quick = true;
                     obj.busy = false;
                     obj.last_callback_time = now;
                 end
@@ -343,11 +352,14 @@ classdef LinePlotReducer < handle
                     fprintf('Callback 2 called for: %d at %g - busy: %d\n',obj.id,cputime,obj.busy);
                 end
                 
+                %NOTE: Once we grab a timer we want to delete it
+                %so that the callback can't grab and delete it
                 t = obj.timers{s.axes_I};
+                obj.timers{s.axes_I} = [];
+                
                 if ~isempty(t)
                     stop(t)
                     delete(t)
-                    obj.timers{s.axes_I} = [];
                 end
                 
                 try
@@ -355,7 +367,7 @@ classdef LinePlotReducer < handle
                     %automatically fire an event
                     obj.last_callback_time = [];
                     obj.renderData(s,false);
-                    %obj.last_redraw_was_quick = false;
+                    obj.last_redraw_was_quick = false;
                 catch ME
                     %TODO: How do I display the stack without throwing an error?
                     fprintf(2,ME.getReport('extended'));
@@ -377,6 +389,8 @@ end
 
 function h__initializeSlowTimer(obj,s,axes_I)
 t = obj.timers{axes_I};
+obj.timers{axes_I} = [];
+
 %This might occur if we haven't waited long enough
 if ~isempty(t)
     try

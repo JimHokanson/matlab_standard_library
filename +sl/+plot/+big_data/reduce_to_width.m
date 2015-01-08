@@ -133,6 +133,12 @@ end
 
 %THIS NOW IS THE OLD APPROACH
 
+if in.use_quick
+    %Let's get a bit more detail if we are going to go quickly
+    %
+    %This scalar is chosen arbitrarily currently
+    axis_width_in_pixels = 4*axis_width_in_pixels;
+end
 
 n_edges  = axis_width_in_pixels + 1;
 % Create a place to store the indices we'll need.
