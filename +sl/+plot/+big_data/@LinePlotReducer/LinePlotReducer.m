@@ -40,6 +40,15 @@ classdef LinePlotReducer < handle
     %   See Also:
     %   sci.time_series.data
     
+    %{
+    Other functions for comparison:
+    http://www.mathworks.com/matlabcentral/fileexchange/15850-dsplot-downsampled-plot
+    http://www.mathworks.com/matlabcentral/fileexchange/27359-turbo-plot
+    http://www.mathworks.com/matlabcentral/fileexchange/42191-jplot
+    
+    %}
+    
+    
     %TODO: How can we ensure that there are no callbacks left
     %if our quick callbacks isn't fast enough?????
     

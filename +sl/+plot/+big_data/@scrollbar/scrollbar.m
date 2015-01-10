@@ -85,8 +85,14 @@ classdef scrollbar < handle
                       
            h_figure = get(h_axes,'parent');
            
+           %---------------------------------------------------------------
            %This is the underlying scrollbar object which we had to tweak
            %significantly to behave as expected
+           %
+           %I had seriously considered using:
+           %    http://www.mathworks.com/matlabcentral/fileexchange/14984-scrollplot-scrollable-x-y-axes
+           %by Yair Altman
+           
            obj.s = sl.gui.scrollbar(h_figure,...
                 'units','normalized',...
                 'position',DEFAULT_POSITION,...
@@ -95,8 +101,9 @@ classdef scrollbar < handle
                 'max',xlim_temp(2),...
                 'callback',@(~,~)obj.CB_sliderValueChanged());
             
-           obj.s.continuous_callback = @(~,~,~)obj.CB_sliderValueChanged()
-            
+           obj.s.continuous_callback = @(~,~,~)obj.CB_sliderValueChanged();
+           %---------------------------------------------------------------
+           
            edit_position = zeros(1,4);
            edit_position(1) = DEFAULT_POSITION(1)+DEFAULT_POSITION(3)+0.01;
            edit_position(2) = DEFAULT_POSITION(2);
