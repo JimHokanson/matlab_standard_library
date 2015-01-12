@@ -6,12 +6,14 @@ function renderData(obj,s,is_quick)
 %   Inputs:
 %   -------
 %   s : (struct)
+%       Data from a callback event with fields:
 %       h : Axes
-%       event_data : matlab.graphics.eventdata.SizeChanged (2014b)
+%       event_data : matlab.graphics.eventdata.SizeChanged (>= 2014b)
 %                    ??? (pre 2014b)
 %       axes_I :
 %   is_quick : logical
-%       If true this is a request to update the plot
+%       If true this is a request to update the plot as quickly as
+%       possible.
 %
 %   This function is called:
 %       1) manually
@@ -20,17 +22,7 @@ function renderData(obj,s,is_quick)
 %   See Also:
 %   sl.plot.big_data.LinePlotReducer.resize2
 
-%TODO: Add a callback such that when the old lines are deleted, the calls
-%associated with those lines are deleted
-%
-%How to identify problem:
-%------------------------
-%plot figure
-%clear object
-%plot figure again, overriding
-%resize things
-%you should now see 2 callbacks, even though one isn't really rendering
-%- or shouldn't be
+
 
 if nargin == 1
     s = [];
@@ -39,17 +31,17 @@ end
 
 obj.n_render_calls = obj.n_render_calls + 1;
 
-%If the figure closes, and we ask the object to replot things, than
-%that would be a problem, since the graphics references wouldn't exist
-if ~obj.needs_initialization
-    for iG = obj.n_plot_groups
-        if any(~ishandle(obj.h_plot{iG}))
-            obj.h_axes = [];
-            obj.needs_initialization = true;
-            break
-        end
-    end
-end
+%This code should no longer be needed because of the callbacks that are in
+%place.
+% % % if ~obj.needs_initialization
+% % %     for iG = obj.n_plot_groups
+% % %         if any(~ishandle(obj.h_plot{iG}))
+% % %             obj.h_axes = [];
+% % %             obj.needs_initialization = true;
+% % %             break
+% % %         end
+% % %     end
+% % % end
 
 if obj.needs_initialization
     h__handleFirstPlotting(obj,obj.max_axes_width)
@@ -70,13 +62,6 @@ function h__replotData(obj,s,new_axes_width,is_quick)
 
 redraw_option = h__determineRedrawCase(obj,s);
 
-% fprintf('----------------\nNext draw for %d\n',obj.id);
-% if is_quick
-%     fprintf('is quick\n')
-% else
-%     fprintf('is slow\n')
-% end
-% fprintf('Redraw option was: %d\n',redraw_option)
 use_original = false;
 switch redraw_option
     case 0
@@ -136,16 +121,16 @@ function redraw_option = h__determineRedrawCase(obj,s,is_quick)
 
 %Possible changes and approaches:
 %--------------------------------
-%1) Axes wider: 
+%1) Axes wider: (1)
 %       Our current approach is to oversample at a given location, so no
-%       change is needed
+%       change is needed. This is currently only supported for the original
+%       view. We are not taking advantage of the oversampling on the zoomed
+%       view.
 %2) TODO: Finish this based on below
 
 
 
 
-%TODO: At this point we need to be able to short-circuit the rendering
-%if not that much has changed.
 %
 %Possible changes:
 %1) Axes is now wider    - redraw if not sufficiently oversampled
@@ -163,6 +148,8 @@ function redraw_option = h__determineRedrawCase(obj,s,is_quick)
 new_x_limits  = s.new_xlim;
 x_lim_changed = ~isequal(obj.last_rendered_xlim,new_x_limits);
 
+%TODO: Check for overlap
+
 if x_lim_changed
     %x_lim changed almost always means a redraw
     %Let's build a check in here for being the original
@@ -173,6 +160,7 @@ if x_lim_changed
         redraw_option = 2;
     end
 else
+    %???? Why does this callback get called???
     %Width changed:
     %NOTE: We are currently not doing any width based changes, so we really
     %don't know if the axes changed or not
@@ -180,25 +168,7 @@ else
         redraw_option = 2;
     else
         redraw_option = 0;
-    end
-    
-% % % % % %     previous_axes_width = obj.last_rendered_axes_width;
-% % % % % % 
-% % % % % %     
-% % % % % %     %TODO: Should we check for this, does changing the y-axis cause a
-% % % % % %     %change?????
-% % % % % %     
-% % % % % %     %Then the width changed
-% % % % % %     if previous_axes_width < new_axes_width
-% % % % % %         return
-% % % % % %     end
-% % % % % %     
-% % % % % %     %When we expand initially, we will assume we've oversampled enough
-% % % % % %     %to not warrant a redraw
-% % % % % %     if new_x_limits(1) <= obj.x_lim_original(1) && new_x_limits(2) >= obj.x_lim_original(2)
-% % % % % %         use_original = true;
-% % % % % %     end
-    
+    end   
 end
 
 
@@ -212,18 +182,16 @@ function h__setupCallbacksAndTimers(obj)
 %
 %   Called by:
 %   sl.plot.big_data.LinePlotReducer.renderData>h__handleFirstPlotting
-
+%
+%   JAH: I'm not thrilled with the layout of this code but it is fine for
+%   now.
 
 n_axes = length(obj.h_axes);
 
 obj.timers = cell(1,length(obj.h_axes));
 obj.quick_timers = cell(1,length(obj.h_axes));
 
-%I had setup timers in this function previously, but I was running into
-%issues, so I moved them to the callback functions ...
-
 % Listen for changes to the x limits of the axes.
-
 obj.axes_listeners = cell(1,n_axes);
 
 for iAxes = 1:n_axes
@@ -251,7 +219,7 @@ end
 
 function h__handleObjectsBeingDestroyed(obj)
 %This function prevents a memory leak. I'm not sure why it wasn't needed
-%in the FEX version ...
+%in the FEX version.
 
 %Destory all 
 
