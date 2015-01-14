@@ -17,8 +17,10 @@ classdef LinePlotReducer < handle
     %   no further user input).
     %
     %   Using this tool, users can plot huge amounts of data without their
-    %   machines becoming unresponsive, and yet they will still "see" all of
-    %   the data that they would if they had plotted every single point.
+    %   machines becoming unresponsive, and yet they will still "see" all
+    %   of the data that they would if they had plotted every single point.
+    %   Zooming in on the data engages callbacks that replot the data in
+    %   higher fidelity.
     %
     %   Examples:
     %   ---------
@@ -35,8 +37,6 @@ classdef LinePlotReducer < handle
     %   This code is based on:
     %   http://www.mathworks.com/matlabcentral/fileexchange/40790-plot--big-/
     %
-    %   It is slowly being rewritten to conform with my standards.
-    %
     %   See Also:
     %   sci.time_series.data
     
@@ -44,6 +44,7 @@ classdef LinePlotReducer < handle
     Other functions for comparison:
     http://www.mathworks.com/matlabcentral/fileexchange/15850-dsplot-downsampled-plot
     http://www.mathworks.com/matlabcentral/fileexchange/27359-turbo-plot
+    http://www.mathworks.com/matlabcentral/fileexchange/40790-plot--big-/
     http://www.mathworks.com/matlabcentral/fileexchange/42191-jplot
     
     %}
@@ -237,13 +238,9 @@ classdef LinePlotReducer < handle
             %I'm hiding the initialization details in another file to
             %reduce the high indentation levels and the length of this
             %function.
+            %sl.plot.big_data.LinePlotReducer.init
             obj.init(varargin{:});
         end
-        %         function delete(obj)
-        %             %http://stackoverflow.com/questions/14834040/matlab-free-memory-of-class-objects
-        %             %#DEBUG
-        %             %disp('Delete function ran')
-        %         end
     end
     
     properties

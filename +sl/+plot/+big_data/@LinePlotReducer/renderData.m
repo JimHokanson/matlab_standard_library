@@ -11,7 +11,8 @@ function renderData(obj,s,is_quick)
 %                    ??? (pre 2014b)
 %       axes_I :
 %   is_quick : logical
-%       If true this is a request to update the plot
+%       If true this is a request to update the plot as quickly as
+%       possible.
 %
 %   This function is called:
 %       1) manually
@@ -70,13 +71,6 @@ function h__replotData(obj,s,new_axes_width,is_quick)
 
 redraw_option = h__determineRedrawCase(obj,s);
 
-% fprintf('----------------\nNext draw for %d\n',obj.id);
-% if is_quick
-%     fprintf('is quick\n')
-% else
-%     fprintf('is slow\n')
-% end
-% fprintf('Redraw option was: %d\n',redraw_option)
 use_original = false;
 switch redraw_option
     case 0
@@ -288,52 +282,121 @@ end
 function h__handleFirstPlotting(obj,initial_axes_width)
 %
 %
-%
-%
-%   TODO: This code needs to be cleaned up!!!!!!!!!
 
-
+%Setup for plotting
+%----------------------------------------
 %Axes and figure initialization
-%------------------------------
-%The user may have already specified the axes.
+plot_args = h__initializeAxes(obj);
 
-%TODO: Move all of this to a helper function ...
-if isempty(obj.h_axes)
-    
-    %TODO:
-    %   set(0, 'CurrentFigure', o.h_figure);
-    %   set(o.h_figure, 'CurrentAxes', o.h_axes);
-    
-    
-    obj.h_axes   = gca;
-    obj.h_figure = gcf;
-    plot_args = {};
-else
-    %TODO: Verify that the axes exists if specified ...
-    if isempty(obj.h_figure)
-        obj.h_figure = get(obj.h_axes(1),'Parent');
-        plot_args = {obj.h_axes};
-    else
-        plot_args = {obj.h_axes};
-    end
+[plot_args,temp_h_indices] = h__setupInitialPlotArgs(obj,plot_args,initial_axes_width);
+
+%Do the plotting
+%----------------------------------------
+%NOTE: We plot everything at once, as failing to do so can
+%cause lines to be dropped.
+%
+%e.g.
+%   plot(x1,y1,x2,y2)
+%
+%   If we did:
+%   plot(x1,y1)
+%   plot(x2,y2)
+%
+%   Then we wouldn't see plot(x1,y1), unless we changed
+%   our hold status, but this could be messy
+
+%NOTE: This doesn't support stairs or plotyy
+temp_h_plot = obj.plot_fcn(plot_args{:});
+
+%I'm being superstitious
+drawnow();
+
+%Log some property values
+%-------------------------
+obj.last_redraw_used_original = true;
+obj.last_rendered_xlim = get(obj.h_axes,'xlim');
+obj.needs_initialization = false;
+
+%Break up plot handles to be grouped the same as the inputs were
+%---------------------------------------------------------------
+%e.g.
+%plot(x1,y1,x2,y2)
+%This returns one array of handles, but we break it back up into
+%handles for 1 and 2
+%{h1 h2} - where h1 is from x1,y1, h2 is from x2,y2
+obj.h_plot = cell(1,obj.n_plot_groups);
+for iG = 1:obj.n_plot_groups
+    obj.h_plot{iG} = temp_h_plot(temp_h_indices{iG});
+end
+
+%TODO:
+%I think I want to place a reference to the object in the line
+%so that we can get the actual data for any function that needs it
+%e.g. sl.plot.postp.autoscale
+
+
+%Setup callbacks and timers
+%-------------------------------
+h__setupCallbacksAndTimers(obj);
+
 
 end
 
+function plot_args = h__initializeAxes(obj)
 
-%NOTE: Going large here will only impact initial memory requirements.
-%---------------------------------------------------------------------
-%memory requirements assuming a large # of samples:
-%2 * n_channels * width
+    %The user may have already specified the axes.
+
+    %TODO: Move all of this to a helper function ...
+    if isempty(obj.h_axes)
+
+        %TODO:
+        %   set(0, 'CurrentFigure', o.h_figure);
+        %   set(o.h_figure, 'CurrentAxes', o.h_axes);
+
+
+        obj.h_axes   = gca;
+        obj.h_figure = gcf;
+        plot_args = {};
+    else
+        %TODO: Verify that the axes exists if specified ...
+        if isempty(obj.h_figure)
+            obj.h_figure = get(obj.h_axes(1),'Parent');
+            plot_args = {obj.h_axes};
+        else
+            plot_args = {obj.h_axes};
+        end
+
+    end
+end
+
+function [plot_args,temp_h_indices] = h__setupInitialPlotArgs(obj,plot_args,initial_axes_width)
 %
-%Generally this should be relatively small compared to the size of the
-%data.
+%
+%   Inputs:
+%   -------
+%   plot_args : 
+%   initial_axes_width :
+%
+%   Outputs:
+%   --------
+%   plot_args : 
+%   temp_h_indices : cell
+%       The output of the plot function combines all handles. For us it is
+%       helpful to keep track of the x's and y's are paired.
+%
+%       In other words if we have plot(x1,y1,x2,y2) we want to have
+%       x1 and y1 be paired. Note that x1 could be only a vector but
+%       y1 could be a matrix. In this way there is not necessarily a 1 to 1
+%       mapping between x and y (i.e. a single x1 could map to multiple
+%       output handles coming from each column of y1).
+%
 
-%TODO: Make all of this a function ...
-%--------------------------------------------------------------------------
+%This width is a holdover from when I varied this depending on the width of
+%the screen. I've not just hardcoded a "large" screen size.
 new_axes_width = initial_axes_width;
-
 obj.last_rendered_axes_width = new_axes_width;
 
+%h - handles
 end_h = 0;
 temp_h_indices = cell(1,obj.n_plot_groups);
 
@@ -377,47 +440,7 @@ obj.n_x_reductions = obj.n_x_reductions + 1;
 if ~isempty(obj.extra_plot_options)
     plot_args = [plot_args obj.extra_plot_options];
 end
-%--------------------------------------------------------------------------
 
 
 
-%NOTE: We plot everything at once, as failing to do so can
-%cause lines to be dropped.
-%
-%e.g.
-%   plot(x1,y1,x2,y2)
-%
-%   If we did:
-%   plot(x1,y1)
-%   plot(x2,y2)
-%
-%   Then we wouldn't see plot(x1,y1), unless we changed
-%   our hold status, but this could be messy
-
-%The actual plotting:
-%--------------------
-%NOTE: This doesn't support stairs or plotyy
-temp_h_plot = obj.plot_fcn(plot_args{:});
-
-%I'm being superstitious
-drawnow();
-
-obj.last_redraw_used_original = true;
-obj.last_rendered_xlim = get(obj.h_axes,'xlim');
-
-%Break up plot handles to be grouped the same as the inputs were
-%---------------------------------------------------------------
-%e.g.
-%plot(x1,y1,x2,y2)
-%This returns one array of handles, but we break it back up into
-%handles for 1 and 2
-%{h1 h2} - where h1 is from x1,y1, h2 is from x2,y2
-obj.h_plot = cell(1,obj.n_plot_groups);
-for iG = 1:obj.n_plot_groups
-    obj.h_plot{iG} = temp_h_plot(temp_h_indices{iG});
-end
-
-h__setupCallbacksAndTimers(obj)
-
-obj.needs_initialization = false;
 end
