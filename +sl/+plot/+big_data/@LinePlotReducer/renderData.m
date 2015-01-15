@@ -19,6 +19,8 @@ function renderData(obj,s,is_quick)
 %       1) manually
 %       2) from updateAxesData()
 %
+%   sl.plot.big_data.LinePlotReducer.renderData
+%
 %   See Also:
 %   sl.plot.big_data.LinePlotReducer.resize2
 
@@ -307,6 +309,21 @@ end
 %I think I want to place a reference to the object in the line
 %so that we can get the actual data for any function that needs it
 %e.g. sl.plot.postp.autoscale
+
+%I think I want to create an object which references this object
+%which gets the data particular to a line
+
+
+%sl.plot.big_data.line_plot_reducer.line_data_pointer
+for iG = 1:obj.n_plot_groups
+    cur_group_h = obj.h_plot{iG};
+    for iH = 1:length(cur_group_h)
+        cur_h = cur_group_h(iH);
+        temp_obj = sl.plot.big_data.line_plot_reducer.line_data_pointer(obj,iG,iH);
+        setappdata(cur_h,'BigDataPointer',temp_obj);
+    end
+end
+
 
 
 %Setup callbacks and timers
