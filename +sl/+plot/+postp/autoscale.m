@@ -30,7 +30,7 @@ keyboard
 n_children = length(c);
 n_samples = zeros(1,n_children);
 y_means = zeros(1,n_children);
-y_stds  = zeros(1,n_children);
+y_vars  = zeros(1,n_children);
 
 %Get min and max of all data sets
 for iC = 1:n_children
@@ -41,12 +41,22 @@ for iC = 1:n_children
       temp_y_data = p.getYData; 
    end
    n_samples(iC) = length(temp_y_data);
-   y_means(iC) = mean(temp_y_data);
-   y_stds(iC) = std(temp_y_data);
+   y_means(iC)   = mean(temp_y_data);
+   y_vars(iC)    = var(temp_y_data);
 end
 
 if n_children == 1
     y_mean = y_means;
+    y_variance = y_vars;
 else
     y_mean = sum((1./n_children).*y_means);
+    y_variance = sl.math.mergeVariances(y_vars,y_means,n_samples);
 end
+
+%TODO: Implement y std
+
+keyboard
+
+
+
+%Now determine an appropriate range
