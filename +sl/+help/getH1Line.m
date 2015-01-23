@@ -14,6 +14,7 @@ function help_str = getH1Line(method_name)
 %  tags: help, parsing
 %  see also: help
 
+%This is really really slow ...
 help_raw = help(method_name);
 
 help_str = regexp(help_raw,'^\s*\w+\s+(.+)','tokens','dotexceptnewline','once');

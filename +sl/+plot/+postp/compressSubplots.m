@@ -4,7 +4,7 @@ function compressSubplots(fig_handle)
 %   sl.plot.postp.compressSubplots(fig_handle)
 
 
-s = sl.figure.getSubplotAxesHandles(fig_handle);
+s = sl.hg.figure.getSubplotAxesHandles(fig_handle);
 
 %TODO: If all columns share limits and labels, allow vertical compression
 %We could allow doing this by rows ....

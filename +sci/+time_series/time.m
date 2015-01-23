@@ -122,13 +122,20 @@ classdef time < sl.obj.display_class
             obj.dt = dt;
             obj.n_samples = n_samples;
         end
-        function new_obj = copy(obj)
+        function new_objs = copy(objs)
             %x Creates a deep copy
-            new_obj = sci.time_series.time(obj.dt,...
-                obj.n_samples,...
-                'start_datetime',obj.start_datetime,...
-                'start_offset',obj.start_offset);
-            new_obj.output_units = obj.output_units;
+            n_objs = length(objs);
+            temp_ca = cell(1,n_objs);
+            for iObj = 1:n_objs
+                obj = objs(iObj);
+                new_obj = sci.time_series.time(obj.dt,...
+                    obj.n_samples,...
+                    'start_datetime',obj.start_datetime,...
+                    'start_offset',obj.start_offset);
+                new_obj.output_units = obj.output_units;
+                temp_ca{iObj} = new_obj;
+            end
+            new_objs = [temp_ca{:}];
         end
         function new_time_object = getNewTimeObjectForDataSubset(obj,start_sample,n_samples,varargin)
             %x Returns a new time object that only encompasses a subset of the original time
@@ -214,6 +221,12 @@ classdef time < sl.obj.display_class
 % %         end
         function shiftStartTime(obj,start_dt)
            %x Shifts the start time
+           %
+           %    shiftStartTime(obj,start_dt)
+           %
+           %    This function also changes the start_datetime so that
+           %    absolute time doesn't actually change, only the 
+           %    'start_offset' (relative) time changes.
            %
            %    Inputs:
            %    -------

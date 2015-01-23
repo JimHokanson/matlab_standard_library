@@ -1,0 +1,1 @@
+Anything dealing with error handling is meant to go into this folder. Eventually I'd like the 'explain' package to be one of the best features of the code base.

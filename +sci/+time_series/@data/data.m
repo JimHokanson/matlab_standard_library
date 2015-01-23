@@ -71,7 +71,16 @@ classdef data < sl.obj.display_class
           wtf = sci.time_series.data(y',time_obj);
           sc = wtf.getSpectrogramCalculatorMethods;
           sd = sc.ml_spectrogram(wtf,dt*100);
-          plot(pd
+          plot(sd)
+    
+    
+          profile on
+          for i = 1:20
+          disp(wtf)
+          end
+          profile off
+    
+    
     %}
     
     
@@ -333,15 +342,32 @@ classdef data < sl.obj.display_class
                 in.axes = {in.axes};
             end
             
+            time_objs = [objs.time];
+            start_datetimes = [time_objs.start_datetime];
+            if ~all(start_datetimes == start_datetimes(1))
+               %TODO: Change time objects for plotting
+                time_objs_for_plot = copy(time_objs);
+                base_datetime = min(start_datetimes);
+                dt = sl.datetime.datenumToSeconds(start_datetimes-base_datetime);
+                for iObj = 1:length(time_objs_for_plot)
+                    cur_time_obj = time_objs_for_plot(iObj);
+                    cur_time_obj.shiftStartTime(dt(iObj));
+                end
+            else
+                time_objs_for_plot = time_objs;
+            end
+            
+            
             for iObj = 1:length(objs)
                 if iObj == 2
+                    hold_state = sl.hg.axes.hold_state(gca);
                     hold all
                 end
                 cur_obj = objs(iObj);
                 %Ideally this decision would be pushed to the
                 %LinePlotReducer class ...
                 if cur_obj.n_samples < BIG_PLOT_N_SAMPLES
-                    t = cur_obj.time.getTimeArray();
+                    t = time_objs_for_plot(iObj).getTimeArray();
                     if ischar(in.channels)
                         plot(in.axes{:},t,cur_obj.d,plotting_options{:});
                     else
@@ -349,9 +375,9 @@ classdef data < sl.obj.display_class
                     end
                 else
                     if ischar(in.channels)
-                        temp = sl.plot.big_data.LinePlotReducer(objs(iObj).time,objs(iObj).d,plotting_options{:});
+                        temp = sl.plot.big_data.LinePlotReducer(time_objs_for_plot(iObj),objs(iObj).d,plotting_options{:});
                     else
-                        temp = sl.plot.big_data.LinePlotReducer(objs(iObj).time,objs(iObj).d(:,in.channels),plotting_options{:});
+                        temp = sl.plot.big_data.LinePlotReducer(time_objs_for_plot(iObj),objs(iObj).d(:,in.channels),plotting_options{:});
                     end
                     if ~isempty(in.axes)
                         temp.h_axes = in.axes{1};
@@ -360,12 +386,12 @@ classdef data < sl.obj.display_class
                 end
             end
             
-            %TODO: Do this only if not already in this state
-            %i.e. don't disable it if it wasn't enabled
-            hold off
+            if length(objs) > 1
+                hold_state.restore();
+            end
             
             %TODO: Depeneding upon what is defined, show different things
-            %for the ylabel
+            %for the ylabel - e.g. if units are present or not
             ylabel(sprintf('%s (%s)',cur_obj.y_label,cur_obj.units))
             xlabel(sprintf('Time (%s)',cur_obj.time.output_units))
         end
@@ -468,7 +494,7 @@ classdef data < sl.obj.display_class
         end
     end
     
-    %Adding things --------------------------------
+    %Add Event or History to data object ----------------------------------
     methods
         function addEventElements(obj,event_elements)
             %
@@ -499,148 +525,6 @@ classdef data < sl.obj.display_class
             end
             
             obj.history = [obj.history; history_elements];
-        end
-    end
-    
-    %Data changing --------------------------------------------------------
-    methods     
-        function objs = filter(objs,filters,varargin)
-            %x Filter the data using filters specified as inputs
-            %
-            %   TODO: Provide a list of filters that can be used ...
-            %   Filter List:
-            %   -----------------------------------------------
-            %   in sci.time_series.filter package
-            %
-            %   - butter   - i.e. sci.time_series.filter.butter
-            %   - ellip
-            %   - max
-            %   - min
-            %   - smoothing
-            %
-            %   Optional Inputs:
-            %   ----------------
-            %   subtract_filter_result : logical (Default false)
-            %       If true, the returned signal is the result of taking
-            %       the filtered signal and subtracting it from the
-            %       original signal.
-            %           i.e. data = data - filter(data)
-            %
-            %   See Also:
-            %   sci.time_series.data_filterer
-            
-            in.subtract_filter_result = false;
-            in = sl.in.processVarargin(in,varargin);
-            
-            df = sci.time_series.data_filterer('filters',filters);
-            df.filter(objs,'subtract_filter_result',in.subtract_filter_result);
-        end
-        function decimated_data = decimateData(objs,bin_width,varargin)
-            %x Resample time series after some smoothing function is applied
-            %
-            %   decimated_data = objs.decimateData(bin_width,varargin)
-            %
-            %   Currently decimation is done after taking the mean absolute
-            %   value.
-            %
-            %   Inputs:
-            %   -------
-            %   bin_width : scalar (s)
-            %       The width of each bin for decimation
-            
-            
-            
-            %in.max_samples = [];
-            %in = sl.in.processVarargin(in,varargin);
-            
-            n_objs         = length(objs);
-            decimated_data = cell(1,n_objs);
-            
-            for iObj = 1:n_objs
-                cur_obj      = objs(iObj);
-                sample_width = ceil(bin_width/cur_obj.time.dt);
-                dt_exact     = cur_obj.time.dt*sample_width;
-                
-                
-                n_samples = size(cur_obj.d,1);
-                
-                %We'll change this eventually to allow the last bin
-                start_Is      = 1:sample_width:n_samples;
-                start_Is(end) = []; %Drop the last one, might not be as accurate
-                end_Is        = start_Is + sample_width-1;
-                
-                n_bins   = length(start_Is);
-                new_data = zeros(n_bins,cur_obj.n_channels,cur_obj.n_reps);
-                
-                cur_data = cur_obj.d;
-                
-                new_obj  = cur_obj.copy();
-                
-                for iBin = 1:n_bins
-                    temp_data = cur_data(start_Is(iBin):end_Is(iBin),:,:);
-                    %NOTE: Eventually we might want additional methods
-                    new_data(iBin,:,:) = mean(abs(temp_data),1);
-                end
-                
-                new_time_object = copy(cur_obj.time);
-                
-                new_time_object.n_samples = n_bins;
-                new_time_object.dt = dt_exact;
-                new_time_object.shiftStartTime(dt_exact/2);
-                
-                new_data_obj = h__createNewDataFromOld(cur_obj,new_data,new_time_object);
-                
-                decimated_data{iObj} = new_data_obj;
-            end
-            
-            decimated_data = [decimated_data{:}];
-            
-        end
-        function runFunctionsOnData(objs,functions)
-            %
-            %
-            %
-            %   Example:
-            %   --------
-            %   objs.runFunctionsOnData(@abs)
-            if iscell(functions)
-                %Great, skip ahead
-            elseif ischar(functions)
-                functions = {str2func(functions)};
-            elseif isa(functions, 'function_handle')
-                functions = {functions};
-            elseif ~iscell(functions)
-                error('Unexpected type: %s, for ''functions'' input',class(functions));
-            end
-            
-            for iObj = 1:length(objs)
-                cur_obj = objs(iObj);
-                for iFunction = 1:length(functions)
-                    cur_function = functions{iFunction};
-                    cur_obj.d = cur_function(cur_obj.d);
-                end
-            end
-        end
-        function changeUnits(objs,new_units)
-            %
-            %   Inputs:
-            %   -------
-            %   new_units : string
-            %
-            %
-            
-            %TODO: We could make new_units a cell array of values, 1 for
-            %each object
-            
-            %TODO: Check that all objs have the same units ...
-            
-            fh = sci.units.getConversionFunction(objs(1).units,new_units);
-            
-            for iObj = 1:length(objs)
-                cur_obj = objs(iObj);
-                cur_obj.d = fh(cur_obj.d);
-                cur_obj.units = new_units;
-            end
         end
     end
     
@@ -874,36 +758,269 @@ classdef data < sl.obj.display_class
             for iObj = 1:length(objs)
                 cur_obj = objs(iObj);
                 cur_obj.time.start_offset = last_time;
+                cur_obj.time.start_datetime = 0;
                 last_time = cur_obj.time.end_time;
             end
         end
     end
     
-    %Basic math functions --------------- e.g. abs
-    %
-    %   NOTE: I'm slowly adding onto these methods as I need them
-    %
-    %   TODO: If output requested, make a copy first (see minus)
-    methods (Hidden)
-        function varargout = minus(objs,B)
-            %TODO: B might be objects, and this would need to be handled
+    %Data changing --------------------------------------------------------
+    methods     
+        function varargout = filter(objs,filters,varargin)
+            %x Filter the data using filters specified as inputs
+            %
+            %   Filter List:
+            %   -----------------------------------------------
+            %   in sci.time_series.filter package
+            %   (NOTE: This is likely not complete/out of date)
+            %
+            %   - butter   - i.e. sci.time_series.filter.butter
+            %   - ellip     sci.time_series.filter.ellip - etc
+            %   - max
+            %   - min
+            %   - smoothing
+            %
+            %   Optional Inputs:
+            %   ----------------
+            %   subtract_filter_result : logical (Default false)
+            %       If true, the returned signal is the result of taking
+            %       the filtered signal and subtracting it from the
+            %       original signal.
+            %       
+            %           i.e. rseult_data = data - filter(data)
+            %
+            %   Examples:
+            %   ---------
+            %   1)
+            %   
+            %   notch_filter = sci.time_series.filter.butter(2,[55 65],'stop');
+            %   eus_data_f   = filter(eus_data,notch_filter);
+            %
+            %   2)
+            %   
+            %   hp_filter = sci.time_series.filter.butter(2,100,'high');
+            %   filtered_pres_data = filter(pres_data,notch_filter);
+            %
+            %   See Also:
+            %   sci.time_series.data_filterer
+            
+            
             if nargout
                 temp = copy(objs);
             else
                 temp = objs;
             end
-            if ~isobject(B)
-                temp.runFunctionsOnData({@(x)minus(x,B)});
-            end
+            
+            in.subtract_filter_result = false;
+            in = sl.in.processVarargin(in,varargin);
+            
+            df = sci.time_series.data_filterer('filters',filters);
+            df.filter(temp,'subtract_filter_result',in.subtract_filter_result);
+            
             if nargout
-                varargout{1} = temp;
+               varargout{1} = temp; 
             end
         end
+        function decimated_data = decimateData(objs,bin_width,varargin)
+            %x Resample time series after some smoothing function is applied
+            %
+            %   decimated_data = objs.decimateData(bin_width,varargin)
+            %
+            %   Currently decimation is done after taking the mean absolute
+            %   value.
+            %
+            %   Inputs:
+            %   -------
+            %   bin_width : scalar (s)
+            %       The width of each bin for decimation
+            
+            
+            
+            %in.max_samples = [];
+            %in = sl.in.processVarargin(in,varargin);
+            
+            n_objs         = length(objs);
+            decimated_data = cell(1,n_objs);
+            
+            for iObj = 1:n_objs
+                cur_obj      = objs(iObj);
+                sample_width = ceil(bin_width/cur_obj.time.dt);
+                dt_exact     = cur_obj.time.dt*sample_width;
+                
+                
+                n_samples = size(cur_obj.d,1);
+                
+                %We'll change this eventually to allow the last bin
+                start_Is      = 1:sample_width:n_samples;
+                start_Is(end) = []; %Drop the last one, might not be as accurate
+                end_Is        = start_Is + sample_width-1;
+                
+                n_bins   = length(start_Is);
+                new_data = zeros(n_bins,cur_obj.n_channels,cur_obj.n_reps);
+                
+                cur_data = cur_obj.d;
+                
+                new_obj  = cur_obj.copy();
+                
+                for iBin = 1:n_bins
+                    temp_data = cur_data(start_Is(iBin):end_Is(iBin),:,:);
+                    %NOTE: Eventually we might want additional methods
+                    new_data(iBin,:,:) = mean(abs(temp_data),1);
+                end
+                
+                new_time_object = copy(cur_obj.time);
+                
+                new_time_object.n_samples = n_bins;
+                new_time_object.dt = dt_exact;
+                new_time_object.shiftStartTime(dt_exact/2);
+                
+                new_data_obj = h__createNewDataFromOld(cur_obj,new_data,new_time_object);
+                
+                decimated_data{iObj} = new_data_obj;
+            end
+            
+            decimated_data = [decimated_data{:}];
+            
+        end
+        function runFunctionsOnData(objs,functions)
+            %
+            %
+            %
+            %   Example:
+            %   --------
+            %   objs.runFunctionsOnData(@abs)
+            if iscell(functions)
+                %Great, skip ahead
+            elseif ischar(functions)
+                functions = {str2func(functions)};
+            elseif isa(functions, 'function_handle')
+                functions = {functions};
+            elseif ~iscell(functions)
+                error('Unexpected type: %s, for ''functions'' input',class(functions));
+            end
+            
+            for iObj = 1:length(objs)
+                cur_obj = objs(iObj);
+                for iFunction = 1:length(functions)
+                    cur_function = functions{iFunction};
+                    cur_obj.d = cur_function(cur_obj.d);
+                end
+            end
+        end
+        function changeUnits(objs,new_units)
+            %
+            %   Inputs:
+            %   -------
+            %   new_units : string
+            %
+            %
+            
+            %TODO: We could make new_units a cell array of values, 1 for
+            %each object
+            
+            %TODO: Check that all objs have the same units ...
+            
+            fh = sci.units.getConversionFunction(objs(1).units,new_units);
+            
+            for iObj = 1:length(objs)
+                cur_obj = objs(iObj);
+                cur_obj.d = fh(cur_obj.d);
+                cur_obj.units = new_units;
+            end
+        end
+    end
+    
+    %Math functions --------------------------------- e.g. abs, minus
+    %
+    %   These methods are slowly being created as they are needed.
+    %   
+    %
+    methods (Hidden)
+        function out_objs = add(A,B)
+            %x Performs the addition operation
+            % 
+            %   out_objs = add(A,B)
+            %
+            %   out_objs = A + B;
+            %
+            %   Note, this function currently always makes a copy. The copy
+            %   operation in the dual object case is a bit ambiguous, as
+            %   both object have history and names. Currently the first 
+            %   objects properties are copied in this case.
+            %
+            % 
+            
+            if isobject(A) && isobject(B)
+                out_objs = copy(A);
+                for iObj = 1:length(A)
+                   out_objs(iObj).d = A(iObj).d + B(iObj).d;
+                end
+            elseif isobject(A)
+                out_objs = copy(A);
+                for iObj = 1:length(A)
+                   out_objs(iObj).d = A(iObj).d + B;
+                end
+            else
+                out_objs = copy(B);
+                for iObj = 1:length(A)
+                   out_objs(iObj).d = A + B(iObj).d;
+                end       
+            end
+        end
+        function out_objs = minus(A,B)
+            %x Performs the minus operation
+            % 
+            %   out_objs = minus(A,B)
+            %
+            %   out_objs = A - B;
+            %   
+            %   Note, this function currently always makes a copy. The copy
+            %   operation in the dual object case is a bit ambiguous, as
+            %   both object have history and names. Currently the first 
+            %   objects properties are copied in this case.
+            %
+            %   
+            
+            %NOTE: We are supporting either a 1:1 length match for objects
+            %or the case where A or B is an object or array of objects, and
+            %the other input is an array.
+            
+            if isobject(A) && isobject(B)
+                out_objs = copy(A);
+                for iObj = 1:length(A)
+                   out_objs(iObj).d = A(iObj).d - B(iObj).d;
+                end
+            elseif isobject(A)
+                out_objs = copy(A);
+                for iObj = 1:length(A)
+                   out_objs(iObj).d = A(iObj).d - B;
+                end
+            else
+                out_objs = copy(B);
+                for iObj = 1:length(A)
+                   out_objs(iObj).d = A - B(iObj).d;
+                end       
+            end
+            
+        end
         function varargout = meanSubtract(objs,varargin)
+            %x Subtracts the mean of the data from the data
+            %
+            %   Performs the operation:
+            %   B = A - mean(A)
+            %
+            %   Note, part of me would rather have a mean()
+            %   function, but this removes time, which I would need to
+            %   handle. Also, if mean(A) is not a scalar, then I would
+            %   also need to build in bsxfun support.
+            %
             %
             %   Optional Inputs:
             %   ----------------
-            %   dim :
+            %   dim : scalar (default, [])
+            %       Dimension over which to calculate the mean. If empty,
+            %       the first non-singleton is used.
+            
             in.dim = [];
             in = sl.in.processVarargin(in,varargin);
             
@@ -930,14 +1047,45 @@ classdef data < sl.obj.display_class
                 varargout{1} = temp;
             end
         end
-        function objs = abs(objs)
-            objs.runFunctionsOnData({@abs});
+        function varargout = abs(objs)
+            if nargout
+                temp = copy(objs);
+            else
+                temp = objs;
+            end
+            temp.runFunctionsOnData({@abs});
+            if nargout
+               varargout{1} = temp; 
+            end
         end
-        function objs = mrdivide(objs,B)
-            objs.runFunctionsOnData({@(x)mrdivide(x,B)});
+        function varargout = mrdivide(objs,B)
+            if nargout
+                temp = copy(objs);
+            else
+                temp = objs;
+            end
+            temp.runFunctionsOnData({@(x)mrdivide(x,B)});
+            if nargout
+               varargout{1} = temp; 
+            end
         end
-        function objs = power(objs,B)
-            objs.runFunctionsOnData({@(x)power(x,B)});
+        function varargout = power(objs,B)
+            %x Raises the input to a given power
+            %
+            %   Performs:
+            %   new_objs = objs^B
+            %
+            %
+            
+            if nargout
+                temp = copy(objs);
+            else
+                temp = objs;
+            end
+            temp.runFunctionsOnData({@(x)power(x,B)});
+            if nargout
+               varargout{1} = temp; 
+            end
         end
     end
     

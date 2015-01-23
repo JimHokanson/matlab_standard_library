@@ -60,7 +60,7 @@ link_txt = sprintf('%s.m:%d',info.name,info.line_number);
 % to the code, otherwise print the raw text.
 
 if usejava('desktop')
-    link_str = sl.cmd_window.createOpenToLineLink(info.file_path,info.line_number,link_txt);
+    link_str = sl.ml.cmd_window.createOpenToLineLink(info.file_path,info.line_number,link_txt);
 else
     link_str = link_txt;
 end

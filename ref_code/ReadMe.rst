@@ -1,1 +1,7 @@
 This folder contains code that I am not planning on using in the library but that I am using as a reference for code that I am containing. Since it is in a separate folder, it will normally not be added to the path for usage. It can also be used for storing code that can be run for comparison (performance, correctness, etc.) to my code but that I normally don't want to use.
+
+Add via:
+sl.path.addRef
+
+Remove via:
+sl.path.removeRef

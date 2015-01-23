@@ -9,20 +9,23 @@ function [output,extras] = readDelimitedFile(file_path,delimiter,varargin)
 %
 %   Calling Forms:
 %   --------------
-%   [output,extras] = readDelimitedFile(filePath,delimiter,varargin)
+%   1)
+%   [output,extras] = readDelimitedFile(file_path,delimiter,varargin)
 %
+%   2)
 %   [output,extras] = readDelimitedFile(str_data,delimiter,'input_is_str',true,varargin)   
 %   
 %   Examples:
 %   ---------
-%   readDelimitedFile(filePath,'\s*:\s*') 
-%       - read file with a ':' delimiter that might have space on 
-%         either side ...
+%   readDelimitedFile(filePath,'\s*:\s*') - read file with a ':' delimiter
+%       that might have space on either side ...
 %
 %   Inputs:
 %   -------
-%   filePath  : path to the file to read
-%   delimiter : delimiter to use in reading the file
+%   file_path : 
+%       Path to the file to read
+%   delimiter : 
+%       Delimiter to use in reading the file
 %
 %   Optional Inputs:
 %   ----------------
@@ -52,23 +55,17 @@ function [output,extras] = readDelimitedFile(file_path,delimiter,varargin)
 %   output : either a 
 %               - cellstr matrix {'a' 'b'; 'c' 'd'}
 %               - cell array of cellstr {{'a' 'b'} {'c' 'd'}}
-%               See 'merge_lines' optional input
+%               See 'merge_lines' input
 %   extras : (structure)
 %       .raw           - raw text from file
 %       .header_lines  - first n lines, see "header_lines" optional input
 %   
-%   IMPLEMENTATION NOTES
-%   =========================================================
+%   Implementation Notes:
+%   ---------------------
 %   1) The last line if empty is always removed ...
 %   2) Removal of empty lines is done before delimiter parsing, not
 %   aftewards, i.e. a row with only delimiters will not be removed ...
-%   
-%   IMPROVEMENTS
-%   =======================================================================
-%
-%
-%   See Also:
-%       
+    
 
 in.input_is_str  = false; %If true, then 
 in.merge_lines   = true;

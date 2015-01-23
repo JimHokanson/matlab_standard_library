@@ -1,4 +1,4 @@
-classdef (Abstract) mlint < sl.obj.handle_light
+classdef (Abstract) mlint < sl.obj.display_class
     %
     %   Class:
     %   sl.mlint
@@ -40,18 +40,32 @@ classdef (Abstract) mlint < sl.obj.handle_light
        d3 = '----   sl.mlint super props   ----';
        file_path
        
-       raw_mex_string
+       raw_mex_string %This is the raw output of the mex function call.
+       
        %raw_mex_newline_indices
-       raw_mex_lines
+       raw_mex_lines  %Each line in the file is its own line
 
-       raw_file_string
-       raw_file_newline_indices
-       raw_file_lines
+       raw_file_string %The raw text from the file
+       
+       raw_file_newline_indices %[1 x n_lines]
+       %Indices in the raw text of newlines
+       
+       raw_file_line_start_I
+       
+       raw_file_lines %{1 x n_lines}
+       %Text of the originl file, broken up as 
     end
     
     %Get Methods ==========================================================
     methods
         %raw file methods ---------------------------
+        %
+        %
+        %   TODO: We might want to make all of this a class
+        %   with some initialization
+        %
+        %
+        %   regexp(...,'split') I
         function value = get.raw_file_string(obj)
             value = obj.raw_file_string;
             if isempty(value)
@@ -66,6 +80,13 @@ classdef (Abstract) mlint < sl.obj.handle_light
               obj.raw_file_newline_indices = value;
            end
         end
+        function value = get.raw_file_line_start_I(obj)
+           value = obj.raw_file_line_start_I;
+           if isempty(value)
+              value = [1 obj.raw_file_newline_indices + 1];
+              obj.raw_file_line_start_I = value;
+           end
+        end
         function value = get.raw_file_lines(obj)
            value = obj.raw_file_lines;
            if isempty(value)
@@ -77,6 +98,8 @@ classdef (Abstract) mlint < sl.obj.handle_light
         function value = get.raw_mex_lines(obj)
            value = obj.raw_mex_lines;
            if isempty(value)
+              %??? Does the raw text always return a single
+              %character for a line return?
               value = regexp(obj.raw_mex_string,'\n','split');
               obj.raw_mex_lines = value;
            end
@@ -84,9 +107,11 @@ classdef (Abstract) mlint < sl.obj.handle_light
     end
     
     %Shared Methods =======================================================
-    methods
-        function getAbsStartIndicesFromColStartIndices(obj)
-            
+    methods (Hidden)
+        function I = getAbsIndicesFromLineAndColumn(obj,line_numbers,column_numbers)
+           I = obj.raw_file_line_start_I(line_numbers) + column_numbers - 1;
+           %I(end) = [];
+           %words = arrayfun(@(x,y) obj.raw_file_string(x:y),I,I+5,'un',0);
         end
     end
 end

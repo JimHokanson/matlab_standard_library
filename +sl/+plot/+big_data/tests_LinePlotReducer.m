@@ -5,6 +5,7 @@ classdef (Hidden) tests_LinePlotReducer
     %
     %   See Also:
     %   sl.plot.big_data.LinePlotReducer
+    %   sl.plot.big_data.reduceToWidth
     
     
     %   JAH: Things to fix:
@@ -37,8 +38,10 @@ classdef (Hidden) tests_LinePlotReducer
     %
     %
     %   -------------------------
-    %   3) Plotting a new object, what does that do for the old object since
-    %   presumably the listeners still exist.
+    %   3) Plotting a new object, what does that do for the old object 
+    %   since presumably the listeners still exist.
+    %
+    %   
     
     properties
     end
@@ -55,6 +58,12 @@ classdef (Hidden) tests_LinePlotReducer
         %   2) plot(x1,y1,x2,y2) %See test001
         %   3) plot(ax,x1,y1)
         
+        function bugTestingInFEXVersion()
+           y=[0 1 zeros(1,1e6) 1 zeros(1,1e6) 1 0]; 
+           x=1:length(y);
+           wtf = sl.plot.big_data.LinePlotReducer(x,y,'*-');
+           wtf.renderData;
+        end
         function testSpeed()
             
             %sl.plot.big_data.tests_LinePlotReducer.testSpeed
@@ -80,14 +89,46 @@ classdef (Hidden) tests_LinePlotReducer
             keyboard
         end
         function test001_MatrixMultipleInputs()
+            %
+            %
+            %   This works but it is still a bit slow
+            
+            
+            profile on
+            
             t = 1:1e8;
+            t_fast = sci.time_series.time(1,length(t));
             y = rand(length(t),4);
             y2 = y;
-            wtf = sl.plot.big_data.LinePlotReducer(t,4-y,'r',t,y2,'c','Linewidth',2);
+            
+            tic;
+            wtf = sl.plot.big_data.LinePlotReducer(t_fast,4-y,'r',t_fast,y2,'c','Linewidth',2);
+            %wtf = sl.plot.big_data.LinePlotReducer(t,4-y,'r',t,y2,'c','Linewidth',2);
             wtf.renderData;
+            set(gca,'ylim',[-1 5])
+            toc;
+            %profile off
+            %profile viewer
         end
-        function interestingInput()
+        function test002_singleLongChannel()
+            profile on
+            t = 1:1e8;
+            t_fast = sci.time_series.time(1,length(t));
+            y = rand(length(t),1);
+            y2 = y;
+            
+            tic;
+            wtf = sl.plot.big_data.LinePlotReducer(t_fast,4-y,'r',t_fast,y2,'c','Linewidth',2);
+            %wtf = sl.plot.big_data.LinePlotReducer(t,4-y,'r',t,y2,'c','Linewidth',2);
+            wtf.renderData;
+            set(gca,'ylim',[-1 5])
+            toc;
+            %profile off
+            %profile viewer 
+        end
+        function test003_interestingInput()
             %From FEX: 40790
+            
             n = 1e7 + randi(1000);                          % Number of samples
             t = sort(100*rand(1, n));                       % Non-uniform sampling
             x = [sin(0.10 * t) + 0.05 * randn(1, n); ...
@@ -96,11 +137,34 @@ classdef (Hidden) tests_LinePlotReducer
             x(:, t > 40 & t < 50) = 0;                      % Drop a section of data.
             x(randi(numel(x), 1, 20)) = randn(1, 20);       % Emulate spikes.
             
-            %TODO: Why do I get the correct orientation when I do this ...
+            %Why do I get the correct orientation when I do this ...
             %I think it should be many channels with only a few samples,
             %where is the correction coming into play???
+            %
+            %   I think it comes with the size of t not matching 
+            %   the size of x, because they only match in the long
+            %   direction then x becomes by 3 channels, instead of having 
+            %   tons of channels
+            tic
             wtf = sl.plot.big_data.LinePlotReducer(t,x);
             wtf.renderData;
+            toc
+        end
+        function test004_simpleLine()
+           y = 1:1e8+3457;
+           x = y;
+           tic
+            wtf = sl.plot.big_data.LinePlotReducer(x,y);
+            wtf.renderData;
+            toc
+        end
+        function test004_simpleLineWithTimeObject()
+           y = 1:1e8+3457;
+           x = sci.time_series.time(0.01,length(y));
+           tic
+            wtf = sl.plot.big_data.LinePlotReducer(x,y);
+            wtf.renderData;
+            toc
         end
         function testMemoryLeak()
             for i = 1:200

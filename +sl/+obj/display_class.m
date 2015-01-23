@@ -11,14 +11,21 @@ classdef display_class < handle
     %   sl.obj.handle_light   
     
     methods(Hidden)
-        function disp(obj)
+        function disp(objs)
            %This is the new method that was added on from handle_light
            %to make this the display class.
-%            fprintf('xxxxxxx\n')
-%            fprintf(inputname(obj))
-%            fprintf('xxxxxxx\n')
-           sl.obj.dispObject_v1(obj)
+           sl.obj.dispObject_v1(objs)
         end
+        function str = datatipinfo(objs)
+           %This gets called when mousing over an object
+           str = evalc('builtin(''disp'',objs)');
+        end
+        function methods(objs)
+            
+        end
+    end
+    
+    methods (Hidden)
         function lh = addlistener(varargin)
             lh = addlistener@handle(varargin{:});
         end
