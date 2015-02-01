@@ -1,4 +1,4 @@
-function fileWrite(file_path,data)
+function fileWrite(file_path,data,varargin)
 %x Write an array to disk
 %
 %   sl.io.fileWrite(file_path,data)
@@ -7,6 +7,12 @@ function fileWrite(file_path,data)
 %
 %   This is a thin wrapper around fwrite that takes care of opening and
 %   closing a file.
+%
+%   Optional Inputs
+%   ---------------
+%   mode : (Default 'w')
+%   endian : (Default 'n')
+%   encoding : (Default '')
 %
 %   Examples:
 %   ---------
