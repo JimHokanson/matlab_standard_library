@@ -401,6 +401,18 @@ classdef data < sl.obj.display_class
             %
             %   We could have variability between objects OR between
             %   channels, but not both
+            %
+            %
+            %   Examples:
+            %   ---------
+            %   pres.zeroTimeByEvent('start_pump');
+            %   r = pres.plotStacked({'shift',-15},{'Linewidth',2});
+            %
+            %   Improvements:
+            %   -------------
+            %   1) Add on labels in this command
+            %   2) Add on a y-scale bar
+            %
             
             %???? - How much should we shift by ????
             %Shifting ideas:
@@ -473,7 +485,7 @@ classdef data < sl.obj.display_class
             n_plots = length(local_data);
             
             if isempty(in.shift)
-                error('Currently this is required :/')
+                error('Currently a shift specification is required :/')
             elseif length(in.shift) == 1
                 all_shifts    = zeros(1,n_plots);
                 all_shifts(2:end) = in.shift;
@@ -623,6 +635,10 @@ classdef data < sl.obj.display_class
             %        This refers to one of the internal events in the object.
             %    event_times :
             %        A single event time should be provided for each object
+            %
+            %   Examples:
+            %   ---------
+            %   pres.zeroTimeByEvent('start_pump')
             %
             %   See Also:
             %   sci.time_series.data.getDataAlignedToEvent()
