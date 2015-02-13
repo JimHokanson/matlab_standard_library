@@ -48,8 +48,15 @@ classdef (Hidden) tests_LinePlotReducer
     
     methods (Static)
         
+        %TYPES OF TESTS - TODO: break up into these tests
+        %----------------------------
+        %1) Speed
+        %2) Previous Bugs
+        %3) Coverage
         
-        %   Types of tests:
+        
+        
+        %   For Coverage:
         %   ---------------
         %   1) plot(x1,y1)
         %      hold on
@@ -59,6 +66,12 @@ classdef (Hidden) tests_LinePlotReducer
         %   3) plot(ax,x1,y1)
         
         function bugTestingInFEXVersion()
+           %See comment from Robbert:
+           %12 Dec 2014
+           %http://www.mathworks.com/matlabcentral/fileexchange/40790-plot--big-
+           %
+           %
+           %The last peak is apparently not being shown in the FEX version
            y=[0 1 zeros(1,1e6) 1 zeros(1,1e6) 1 0]; 
            x=1:length(y);
            wtf = sl.plot.big_data.LinePlotReducer(x,y,'*-');
@@ -73,19 +86,34 @@ classdef (Hidden) tests_LinePlotReducer
             
             n_samples = [1e5 1e6 1e7 1e8 2e8 3e8];
             
-            reps = 10;
-            speeds = zeros(reps,length(n_samples));
+            reps = 3;
+            speeds_old = zeros(reps,length(n_samples));
+            speeds_new = zeros(reps,length(n_samples));
             
             for iRep = 1:reps
                 for iSamples = 1:length(n_samples)
                     cur_n_samples = n_samples(iSamples);
-                    tic
+                    data = 1:cur_n_samples;
+                    
                     close all
-                    plot(1:cur_n_samples);
+                    tic
+                    plot(data);
                     drawnow %Seems to block execution until the rendering has finished
-                    speeds(iRep,iSamples) = toc;
+                    speeds_old(iRep,iSamples) = toc;
+                    
+                    close all
+                    tic
+                    wtf = sl.plot.big_data.LinePlotReducer(data);
+                    wtf.renderData;
+                    drawnow
+                    speeds_new(iRep,iSamples) = toc;
                 end
             end
+            
+            %TODO: Implement nice display here ...
+            %Compare
+            %speeds_old
+            %speeds_new
             keyboard
         end
         function test001_MatrixMultipleInputs()

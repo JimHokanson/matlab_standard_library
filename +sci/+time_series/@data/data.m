@@ -313,12 +313,16 @@ classdef data < sl.obj.display_class
             %   -------------------------
             %   channels: default 'all'
             %       Pass in the numeric values of the channels to plot.
+            %   time_shift: (default true)
+            %       If true, then objects will not be shifted to account
+            %       for differences in their absolute start times
             %
             %   Plotting Options: cell array
             %   ----------------------------
             %
             %   Example:
             %   plot(data_objs,{},{'Linewidth',2}
+            %   plot(data_objs,{'time_shift',false})
             %
             
             BIG_PLOT_N_SAMPLES = 5e5;
@@ -334,6 +338,7 @@ classdef data < sl.obj.display_class
                 plotting_options = {};
             end
             
+            in.time_shift = true;
             in.axes     = {};
             in.channels = 'all';
             in = sl.in.processVarargin(in,local_options);
@@ -344,7 +349,7 @@ classdef data < sl.obj.display_class
             
             time_objs = [objs.time];
             start_datetimes = [time_objs.start_datetime];
-            if ~all(start_datetimes == start_datetimes(1))
+            if ~all(start_datetimes == start_datetimes(1)) && in.time_shift
                %TODO: Change time objects for plotting
                 time_objs_for_plot = copy(time_objs);
                 base_datetime = min(start_datetimes);
@@ -398,10 +403,16 @@ classdef data < sl.obj.display_class
         function result_object = plotStacked(objs,local_options,plotting_options)
             %
             %
+            %   result_object = plotStacked(objs,local_options,plotting_options)
             %
             %   We could have variability between objects OR between
             %   channels, but not both
             %
+            %
+            %   Outputs:
+            %   --------
+            %   result_object : struct
+            %       - line_handles: cell
             %
             %   Examples:
             %   ---------
@@ -496,12 +507,17 @@ classdef data < sl.obj.display_class
             
             result_object.all_shifts = all_shifts;
             
+            line_handles = cell(1,n_plots);
+            
             hold all
             for iPlot = 1:n_plots
                 temp = sl.plot.big_data.LinePlotReducer(local_time{iPlot},local_data{iPlot}+all_shifts(iPlot),plotting_options{:});
                 temp.renderData();
+                line_handles(iPlot) = temp.h_plot(1);
             end
             hold off
+            
+            result_object.line_handles = line_handles;
             
         end
     end

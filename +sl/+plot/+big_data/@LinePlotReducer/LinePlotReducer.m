@@ -51,7 +51,10 @@ classdef LinePlotReducer < handle
     
     
     %TODO: How can we ensure that there are no callbacks left
-    %if our quick callbacks isn't fast enough?????
+    %if our quick callbacks isn't fast enough????? i.e. we don't want
+    %these to buildup
+    %
+    %http://www.mathworks.com/matlabcentral/answers/171346-how-does-flushing-the-system-queue-work-with-drawnow
     
     %External Files:
     %---------------
@@ -65,10 +68,7 @@ classdef LinePlotReducer < handle
     %   Eventually we could disable this behavior. Ideally this is not a
     %   significant memory hog.
     %
-    %   The current approach is just to use a hardcoded value in renderData
-    %
-    %2) Oversample the zoom, maybe by a factor of 4ish so that subsequent
-    %   zooms can use the oversampled data.
+    %   The current approach uses a hardcoded value in renderData()
     
     
     properties (Constant,Hidden)
@@ -83,15 +83,16 @@ classdef LinePlotReducer < handle
         quick_callback_max_wait = 0.1; %If we've waited this long we'll
         %do a quick plot to update. If this were not in place continuous
         %callback events would mean that the plot would never update since
-        %its always trying to wait for silence (no events) but events keep
-        %coming
-        update_delay = 0.1 %This is how long after a zoom request the code
+        %its always trying to wait for silence (no events), but events keep
+        %coming, delaying the callback indefinitely
+        
+        update_delay = 0.05 %This is how long after a zoom request the code
         %should wait before rendering the update. Ideally this is just long
         %enough to capture all resizing events.
         %
         %For example, if multiple axes are linked, there can be many
         %10s of resize events per single axes resize. Ideally the axes
-        %resize is only rendered once.
+        %resize is only rendered once for a given resize.
         
         post_render_callback = [] %This can be set to render
         %something after the data has been drawn .... Any inputs
@@ -103,6 +104,8 @@ classdef LinePlotReducer < handle
         
         max_axes_width = 4000 %Eventually the idea was to make this a function
         %of the screen size
+        %
+        %Used in renderData()
         
         
         % Handles
@@ -311,6 +314,7 @@ classdef LinePlotReducer < handle
                     %If we call drawnow we don't build up a ton of 
                     %callbacks. I don't completely understand this
                     %but it seems to work.
+                    %http://www.mathworks.com/matlabcentral/answers/171346-how-does-flushing-the-system-queue-work-with-drawnow
                     drawnow
                     
                     obj.busy = true;
@@ -387,8 +391,7 @@ classdef LinePlotReducer < handle
     end
     
     methods (Static)
-        %This should move to the tests class
-        test_plotting_speed %sl.plot.big_data.LinePlotReducer.test_plotting_speed
+        [x_reduced, y_reduced] = reduce_to_width(x, y, axis_width_in_pixels, x_limits, varargin)
     end
     
 end

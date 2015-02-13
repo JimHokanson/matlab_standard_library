@@ -1,7 +1,7 @@
 function [x_reduced, y_reduced, extras] = reduce_to_width(x, y, axis_width_in_pixels, x_limits, varargin)
 %x
 %
-%   [x_reduced, y_reduced] = sl.plot.big_data.reduce_to_width(x, y, axis_width_in_pixels, x_limits)
+%   [x_reduced, y_reduced] = sl.plot.big_data.LinePlotReducer.reduce_to_width(x, y, axis_width_in_pixels, x_limits)
 %
 %   For a given data set, this function returns the maximum and minimum
 %   points within non-overlapping subsets of the data, bounded by the
@@ -21,6 +21,10 @@ function [x_reduced, y_reduced, extras] = reduce_to_width(x, y, axis_width_in_pi
 %       2 element vector [min,max], can be [-Inf Inf] to indicate everything
 %       This limit is applied to the 'x' input to exclude any points that
 %       are outside the limits.
+%
+%   Optional Inputs:
+%   ----------------
+%   use_quick :
 %
 %   Outputs
 %   -------
@@ -117,8 +121,9 @@ plot_all_data  = h__checkForPlottingAllData(x,x_limits);
 multiple_channels = n_channels_y > 1;
 
 if evenly_sampled && plot_all_data && ~multiple_channels
-    %Run reshape code
-    
+%For this approach we truncate the array (in mex), reshape it into
+%a matrix, and then use Matlab to compute min and max along the proper
+%dimension so that all chunks are computed together in one call.
     if in.use_quick
         indices = h__getQuickIndices(1,length(y),n_points);
     else
@@ -131,7 +136,6 @@ if evenly_sampled && plot_all_data && ~multiple_channels
     return
 end
 
-%THIS NOW IS THE OLD APPROACH
 
 if in.use_quick
     %Let's get a bit more detail if we are going to go quickly
