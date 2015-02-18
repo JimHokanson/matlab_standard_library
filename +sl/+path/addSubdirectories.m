@@ -3,12 +3,12 @@ function addSubdirectories(base_paths,varargin)
 %
 %   sl.path.addSubdirectories(base_paths,varargin)
 %
-%   INPUTS
-%   =======================================================================
+%   Inputs:
+%   -------
 %   base_paths : (char or cellstr), must be absolute paths
 %
-%   OPTIONAL INPUTS
-%   =======================================================================
+%   Optional Inputs:
+%   ----------------
 %   dirs_ignore: {'private'};
 %   add_base_path: (default false)
 %
@@ -17,12 +17,18 @@ function addSubdirectories(base_paths,varargin)
 %   1) Move the code that gets directories to add to a separate function
 %   with perhaps a flag to allow adding. This function would probably
 %   be deleted -> getCodeSubdirectories????
+%
+%       i.e. adding is just a small extra step, but we should really expose
+%       the directory listing as its own function
+%       
 %   2) Not sure if we also need to ignore __MACOSX on windows (& unix)
 %   maybe just best to ignore _ in general?????
 %
 %   See Also:
 %   sl.dir.searcher.folder_default
 %   genpath
+
+error('This code needs to be rewritten using sl.dir.getList')
 
 %NOTE: We can allow a cell array for base_path as well ...
 

@@ -33,17 +33,16 @@ end
 
 obj.n_render_calls = obj.n_render_calls + 1;
 
-%This code should no longer be needed because of the callbacks that are in
-%place.
-% % % if ~obj.needs_initialization
-% % %     for iG = obj.n_plot_groups
-% % %         if any(~ishandle(obj.h_plot{iG}))
-% % %             obj.h_axes = [];
-% % %             obj.needs_initialization = true;
-% % %             break
-% % %         end
-% % %     end
-% % % end
+%This code shouldn't be required but I had troubles when it was gone :/
+if ~obj.needs_initialization
+    for iG = obj.n_plot_groups
+        if any(~ishandle(obj.h_plot{iG}))
+            obj.h_axes = [];
+            obj.needs_initialization = true;
+            break
+        end
+    end
+end
 
 if obj.needs_initialization
     h__handleFirstPlotting(obj,obj.max_axes_width)
@@ -94,7 +93,7 @@ for iG = 1:obj.n_plot_groups
         x_r = obj.x_r_orig{iG};
         y_r = obj.y_r_orig{iG};
     else
-        [x_r, y_r] = sl.plot.big_data.reduce_to_width(...
+        [x_r, y_r] = obj.reduce_to_width(...
             obj.x{iG}, obj.y{iG}, new_axes_width, new_x_limits, 'use_quick',is_quick);
     end
     
@@ -118,6 +117,7 @@ function redraw_option = h__determineRedrawCase(obj,s,is_quick)
 %       - 1 - reset data to original view
 %       - 2 - recompute data for plotting
 %       - 3 - partial window overlap (NOT YET IMPLEMENTED)
+%       - 4 - zoom out - could use some data that had already been computed
 
 
 
@@ -125,9 +125,8 @@ function redraw_option = h__determineRedrawCase(obj,s,is_quick)
 %--------------------------------
 %1) Axes wider: (1)
 %       Our current approach is to oversample at a given location, so no
-%       change is needed. This is currently only supported for the original
-%       view. We are not taking advantage of the oversampling on the zoomed
-%       view.
+%       change is needed. 
+%
 %2) TODO: Finish this based on below
 
 
@@ -200,7 +199,7 @@ for iAxes = 1:n_axes
     l1 = addlistener(obj.h_axes(iAxes), 'XLim', 'PostSet', @(h, event_data) obj.resize(h,event_data,iAxes));
     
     %TODO: Also update the object that the axes are dirty ...
-    l2 = addlistener(obj.h_axes(iAxes), 'ObjectBeingDestroyed',@(~,~)h__handleObjectsBeingDestroyed(obj));
+    l2 = addlistener(obj.h_axes(iAxes), 'ObjectBeingDestroyed',@(~,~)h__handleAxesBeingDestroyed(obj));
     
     obj.axes_listeners{iAxes} = [l1 l2];
 end
@@ -213,46 +212,89 @@ for iG = 1:length(obj.h_plot)
     cur_group = obj.h_plot{iG};
     %NOTE: Technically I think we only need to add on one listener
     %because if one gets deleted, all the others should as well ...
-    
-    obj.plot_listeners{iG} = addlistener(cur_group(1), 'ObjectBeingDestroyed',@(~,~)h__handleObjectsBeingDestroyed(obj));
+    try
+        obj.plot_listeners{iG} = addlistener(cur_group(1), 'ObjectBeingDestroyed',@(~,~)h__handleLinesBeingDestroyed(obj));
+    catch ME %#ok<NASGU>
+        obj.needs_initialization = true;
+        sl.warning.formatted('Warning: failed to add listener to deleted line\n');
+    end
 end
 
 end
 
-function h__handleObjectsBeingDestroyed(obj)
-%This function prevents a memory leak. I'm not sure why it wasn't needed
-%in the FEX version.
+function h__deleteThingsNow(obj)
 
-%Destory all 
+obj.needs_initialization = true;
 
 for iAxes = 1:length(obj.h_axes)
    cur_listeners = obj.axes_listeners{iAxes};
    delete(cur_listeners)
+   
+   t = obj.timers{iAxes};
+    obj.timers{iAxes} = [];
+    if ~isempty(t)
+        try %#ok<TRYNC>
+            stop(t)
+            delete(t)
+        end
+    end
 end
+
+%h__handleLinesBeingDestroyed(obj)
+
+
 
 for iG = 1:length(obj.h_plot)
    cur_listener = obj.plot_listeners{iG};
-   delete(cur_listener)
+   try %#ok<TRYNC>
+       %This might fail if the line wasn't able to be created
+    delete(cur_listener)
+   end
 end
 
-obj.needs_initialization = true;
-
-%TODO: Might want to delete timers as well ...
-%obj.timers
-
-% t = obj.timers{axes_I};
-% if ~isempty(t)
-%     try
-%         stop(t)
-%         delete(t)
-%     end
-% end
-
-
-
-if obj.DEBUG
-  disp('Listener cleanup ran')  
 end
+
+function h__handleAxesBeingDestroyed(obj)
+
+h__deleteThingsNow(obj)
+
+% % % % for iAxes = 1:length(obj.h_axes)
+% % % %    cur_listeners = obj.axes_listeners{iAxes};
+% % % %    delete(cur_listeners)
+% % % % end
+% % % % 
+% % % % obj.needs_initialization = true;
+% % % % h__handleLinesBeingDestroyed(obj)
+% % % % 
+% % % % t = obj.timers{axes_I};
+% % % % obj.timers{axes_I} = [];
+% % % % if ~isempty(t)
+% % % %     try %#ok<TRYNC>
+% % % %         stop(t)
+% % % %         delete(t)
+% % % %     end
+% % % % end
+
+end
+
+function h__handleLinesBeingDestroyed(obj)
+
+h__deleteThingsNow(obj)
+
+% % % % for iG = 1:length(obj.h_plot)
+% % % %    cur_listener = obj.plot_listeners{iG};
+% % % %    try %#ok<TRYNC>
+% % % %        %This might fail if the line wasn't able to be created
+% % % %     delete(cur_listener)
+% % % %    end
+% % % % end
+% % % % 
+% % % % %TODO: Might want to delete timers as well ...
+% % % % %obj.timers
+% % % % 
+% % % % 
+% % % % 
+% % % % obj.needs_initialization = true;
 end
 
 function h__handleFirstPlotting(obj,initial_axes_width)
@@ -284,9 +326,6 @@ plot_args = h__initializeAxes(obj);
 %NOTE: This doesn't support stairs or plotyy
 temp_h_plot = obj.plot_fcn(plot_args{:});
 
-%I'm being superstitious
-drawnow();
-
 %Log some property values
 %-------------------------
 obj.last_redraw_used_original = true;
@@ -305,14 +344,6 @@ for iG = 1:obj.n_plot_groups
     obj.h_plot{iG} = temp_h_plot(temp_h_indices{iG});
 end
 
-%TODO:
-%I think I want to place a reference to the object in the line
-%so that we can get the actual data for any function that needs it
-%e.g. sl.plot.postp.autoscale
-
-%I think I want to create an object which references this object
-%which gets the data particular to a line
-
 
 %sl.plot.big_data.line_plot_reducer.line_data_pointer
 for iG = 1:obj.n_plot_groups
@@ -324,20 +355,17 @@ for iG = 1:obj.n_plot_groups
     end
 end
 
-
-
 %Setup callbacks and timers
 %-------------------------------
 h__setupCallbacksAndTimers(obj);
 
+drawnow();
 
 end
 
 function plot_args = h__initializeAxes(obj)
 
     %The user may have already specified the axes.
-
-    %TODO: Move all of this to a helper function ...
     if isempty(obj.h_axes)
 
         %TODO:
@@ -370,7 +398,9 @@ function [plot_args,temp_h_indices] = h__setupInitialPlotArgs(obj,plot_args,init
 %
 %   Outputs:
 %   --------
-%   plot_args : 
+%   plot_args : cell
+%       These are the arguments for the plot function. For something like
+%       plot(1:4,2:5) the value of plot_args would be {1:4 2:5}
 %   temp_h_indices : cell
 %       The output of the plot function combines all handles. For us it is
 %       helpful to keep track of the x's and y's are paired.
@@ -401,7 +431,7 @@ for iG = 1:obj.n_plot_groups
     temp_h_indices{iG} = start_h:end_h;
     %Reduce the data.
     %----------------------------------------
-    [x_r, y_r] = sl.plot.big_data.reduce_to_width(...
+    [x_r, y_r] = obj.reduce_to_width(...
         obj.x{iG}, obj.y{iG}, new_axes_width, [-Inf Inf]);
     
     group_x_min(iG) = min(x_r(1,:));

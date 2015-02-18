@@ -4,15 +4,15 @@ classdef (Hidden) file_list_result < sl.obj.handle_light
     %   sl.dir.file_list_result
     %
     %   This class is the returned value when you call:
-    %   sl.dir.getFilesInFolder
+    %   sl.dir.getList
     %
     %   See Also:
-    %   sl.dir.getFilesInFolder
+    %   sl.dir.getList
     
     properties
         file_names %{1 x n}
         file_paths %{1 x n}
-        dir_result %[1 x n] stucture array, output from the dir() function
+        d_files %[1 x n] stucture array, output from the dir() function
         %
         %       name: 'ID_1_1.mat'
         %       date: '15-Jul-2013 10:46:48'
@@ -30,6 +30,4 @@ classdef (Hidden) file_list_result < sl.obj.handle_light
            value = length(obj.file_names); 
         end
     end
-    
 end
-

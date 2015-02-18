@@ -2,20 +2,21 @@ function output = getFilesInFolder(folder_path,varargin)
 %
 %   output = sl.dir.getFilesInFolder(folder_path,varargin)
 %
-%   OUTPUT
-%   ===================================================
-%   output :
-%           @type sl.dir.file_list_result
+%   Output:
+%   -------
+%   output : sl.dir.file_list_result or java.io.File[]
 %
 %           - if use_java is true, type is java.io.File[]
 %
-%   OPTIONAL INPUTS
-%   =======================================================================
-%   TODO: Finish documentation
-%
-%   check_single_match : Not yet documented :/
-%   type : Not yet documented :/
-%
+%   Optional Inputs:
+%   ----------------
+%   enforce_single_match :
+%       If true, then an error will be thrown if a single match is not
+%       found
+%   type : numeric %TODO: Allow string
+%       - 0: file
+%       - 1: folder
+%       - 2: both
 %   ext : default ''
 %       If not empty filters on the extension. Leading period optional.
 %   regexp : (default '')
@@ -26,13 +27,60 @@ function output = getFilesInFolder(folder_path,varargin)
 %       avoid some problems with Unicode file paths. Eventually I would
 %       like to have code that makes this unecessary and just works.
 %
+%   Improvements:
+%   -------------
+%   - ignore hidden files
+%   - ignore certain directories
+%   - ignore leading dot directories
+%   - return or don't return dir results - date modified ...
+%   - relative path support :/
+%
 %
 %   See Also:
 %   sl.dir.rdir
 
+%{
+Other Implementations
+---------------------
+22 http://www.mathworks.com/matlabcentral/fileexchange/15505-recursive-dir
+4 http://www.mathworks.com/matlabcentral/fileexchange/16217-wildcardsearch
+9 http://www.mathworks.com/matlabcentral/fileexchange/40020-dir-read
+26 http://www.mathworks.com/matlabcentral/fileexchange/32036-dirwalk-walk-the-directory-tree
+5 http://www.mathworks.com/matlabcentral/fileexchange/44089-rdir-dos
+131 http://www.mathworks.com/matlabcentral/fileexchange/19550-recursive-directory-listing
+5 http://www.mathworks.com/matlabcentral/fileexchange/25753-new-dir-m
+3 http://www.mathworks.com/matlabcentral/fileexchange/46873-dir-crawler-m
+30 http://www.mathworks.com/matlabcentral/fileexchange/40149-expand-wildcards-for-files-and-directory-names
+13 http://www.mathworks.com/matlabcentral/fileexchange/21791-search-files-recursively--dir2-
+13 http://www.mathworks.com/matlabcentral/fileexchange/2118-getfilenames-m
+49 http://www.mathworks.com/matlabcentral/fileexchange/1492-subdir--new-
+15 http://www.mathworks.com/matlabcentral/fileexchange/41135-folders-sub-folders
+5 http://www.mathworks.com/matlabcentral/fileexchange/39804-creating-file-and-folder-trees
+75 http://www.mathworks.com/matlabcentral/fileexchange/15859-subdir--a-recursive-file-search
+6 http://www.mathworks.com/matlabcentral/fileexchange/1570-dirdir
+5 http://www.mathworks.com/matlabcentral/fileexchange/24567-searchfile
+5 http://www.mathworks.com/matlabcentral/fileexchange/16216-regexpdir
+91 http://www.mathworks.com/matlabcentral/fileexchange/32226-recursive-directory-listing-enhanced-rdir
+17 http://www.mathworks.com/matlabcentral/fileexchange/40016-recursive-directory-searching-for-multiple-file-specs
+33 http://www.mathworks.com/matlabcentral/fileexchange/8682-dirr--find-files-recursively-filtering-name--date-or-bytes-
+7 http://www.mathworks.com/matlabcentral/fileexchange/43704-getdirectorycontents
+7 http://www.mathworks.com/matlabcentral/fileexchange/22829-file-list
+16 http://www.mathworks.com/matlabcentral/fileexchange/31343-enlist-all-file-names-in-a-folder-and-it-s-subfolders
+
+%}
+
+%Code structure
+%-----------------
+%1) Choose lister
+%2) Setup filters
+
+
+
+
+
 %TODO: Allow multiple folder paths ...
 
-in.check_single_match = false;
+in.enforce_single_match = false;
 in.type = 0; %0 - file, 1 - folder, 2 - both
 in.ext = ''; %file extension
 in.match_number = [];

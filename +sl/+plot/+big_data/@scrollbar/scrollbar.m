@@ -6,23 +6,16 @@ classdef scrollbar < handle
     %   See Also:
     %   sl.plot.big_data.LinePlotReducer
     %
+    %   This scrollbar class is specifically meant to go with
+    %   an axes for LinePlotReducer.
+    %
     %   Notes:
     %   ------
-    %   
+    %
     %
     %   See Also:
     %   ---------
     %   sl.gui.scrollbar
-    
-    %Improvements:
-    %-------------
-    %1) DONE y limits should be static
-    %2) Add key listeners to scroll and zoom in and out????
-    %       - This may already be enabled by default, although
-    %         hopefully it doesn't screw up the width
-    %3) Allow switching the zoom type - edit window or 2nd slider
-    %4) On zooming, ... not sure what I want to do
-    %5) Add on ability to change y limits
     
     %{
         close all
@@ -35,7 +28,7 @@ classdef scrollbar < handle
         x(randi(numel(x), 1, 20)) = randn(1, 20);       % Emulate spikes.
 
         wtf = sl.plot.big_data.LinePlotReducer(t,x);
-        wtf.renderData;   
+        wtf.renderData;
         s = sl.plot.big_data.scrollbar(wtf)
     
        %Testing
@@ -44,10 +37,10 @@ classdef scrollbar < handle
     %}
     
     properties
-       h_axes
-       s %handle to slider
-       h_edit_zoom_exact %Not yet implemented
-       h_edit_zoom_pct
+        h_axes
+        s %handle to slider
+        h_edit_zoom_exact %Not yet implemented
+        h_edit_zoom_pct
     end
     
     methods
@@ -57,43 +50,42 @@ classdef scrollbar < handle
             %
             %   Inputs:
             %   -------
-            %   lpr : sl.plot.big_data.LinePlotReducer
+            %   h_axes : axes handle
+            %
             
-           %A scrollbar normally manipulates the xlim of the figure
+            INITIAL_WIDTH = 0.5; %Pct
             
-           INITIAL_WIDTH = 0.5; %Pct
-           
-           DEFAULT_POSITION = [NaN 0.02 NaN 0.03];
-                      
-           %Starting points:
-           %----------------
-           %1) How far to zoom in
-           %2) Where to start
-                      
-           %TODO: We might want to query the data rather than the axes ...
-           
-           xlim_temp = get(h_axes,'xlim');
-           %TODO: Do we want to round based on step size???
-           
-           obj.h_axes = h_axes;
-           set(obj.h_axes,'YLimMode','manual')
-           
-           axes_extents = get(obj.h_axes,'position');
-           DEFAULT_POSITION(1) = axes_extents(1);
-           DEFAULT_POSITION(3) = axes_extents(3);
-           %TODO: Show window width and limits somewhere ...
-                      
-           h_figure = get(h_axes,'parent');
-           
-           %---------------------------------------------------------------
-           %This is the underlying scrollbar object which we had to tweak
-           %significantly to behave as expected
-           %
-           %I had seriously considered using:
-           %    http://www.mathworks.com/matlabcentral/fileexchange/14984-scrollplot-scrollable-x-y-axes
-           %by Yair Altman
-           
-           obj.s = sl.gui.scrollbar(h_figure,...
+            DEFAULT_POSITION = [NaN 0.02 NaN 0.03];
+            
+            %Starting points:
+            %----------------
+            %1) How far to zoom in
+            %2) Where to start
+            
+            %TODO: We might want to query the data rather than the axes ...
+            
+            xlim_temp = get(h_axes,'xlim');
+            %TODO: Do we want to round based on step size???
+            
+            obj.h_axes = h_axes;
+            set(obj.h_axes,'YLimMode','manual')
+            
+            axes_extents = get(obj.h_axes,'position');
+            DEFAULT_POSITION(1) = axes_extents(1);
+            DEFAULT_POSITION(3) = axes_extents(3);
+            %TODO: Show window width and limits somewhere ...
+            
+            h_figure = get(h_axes,'parent');
+            
+            %---------------------------------------------------------------
+            %This is the underlying scrollbar object which we had to tweak
+            %significantly to behave as expected
+            %
+            %I had seriously considered using:
+            %    http://www.mathworks.com/matlabcentral/fileexchange/14984-scrollplot-scrollable-x-y-axes
+            %by Yair Altman
+            
+            obj.s = sl.gui.scrollbar(h_figure,...
                 'units','normalized',...
                 'position',DEFAULT_POSITION,...
                 'Value',0.5*diff(xlim_temp) + xlim_temp(1),...
@@ -101,20 +93,20 @@ classdef scrollbar < handle
                 'max',xlim_temp(2),...
                 'callback',@(~,~)obj.CB_sliderValueChanged());
             
-           obj.s.continuous_callback = @(~,~,~)obj.CB_sliderValueChanged();
-           %---------------------------------------------------------------
-           
-           edit_position = zeros(1,4);
-           edit_position(1) = DEFAULT_POSITION(1)+DEFAULT_POSITION(3)+0.01;
-           edit_position(2) = DEFAULT_POSITION(2);
-           edit_position(3) = 0.05; %We'll change this
-           edit_position(4) = DEFAULT_POSITION(4);
-           obj.h_edit_zoom_pct = uicontrol('style','edit',...
-               'String',sprintf('%0.1f',100*INITIAL_WIDTH),...
-               'units','normalized',...
-               'FontSize',14,...
-               'position',edit_position,...
-               'callback',@(~,~)obj.CB_changeSliderWidth(true));
+            obj.s.continuous_callback = @(~,~,~)obj.CB_sliderValueChanged();
+            %---------------------------------------------------------------
+            
+            edit_position = zeros(1,4);
+            edit_position(1) = DEFAULT_POSITION(1)+DEFAULT_POSITION(3)+0.01;
+            edit_position(2) = DEFAULT_POSITION(2);
+            edit_position(3) = 0.05; %We'll change this
+            edit_position(4) = DEFAULT_POSITION(4);
+            obj.h_edit_zoom_pct = uicontrol('style','edit',...
+                'String',sprintf('%0.1f',100*INITIAL_WIDTH),...
+                'units','normalized',...
+                'FontSize',14,...
+                'position',edit_position,...
+                'callback',@(~,~)obj.CB_changeSliderWidth(true));
             
             obj.s.slider_width_pct = INITIAL_WIDTH;
             set(obj.h_axes,'xlim',obj.s.value_span);
@@ -130,23 +122,23 @@ classdef scrollbar < handle
             end
         end
         function CB_sliderValueChanged(obj)
-           h__updateAxesView(obj)
+            h__updateAxesView(obj)
         end
         function CB_sliderValueChangedQuickly(obj)
-           h__updateAxesView(obj) 
+            h__updateAxesView(obj)
         end
     end
     methods (Static)
         function obj = fromLinePlotReducer(lpr)
-           %    sl.plot.big_data.scrollbar.fromLinePlotReducer(lpr)
-           
-           obj = sl.plot.big_data.scrollbar(lpr.h_axes);
+            %    sl.plot.big_data.scrollbar.fromLinePlotReducer(lpr)
+            
+            obj = sl.plot.big_data.scrollbar(lpr.h_axes);
         end
     end
 end
 
 function h__updateAxesView(obj)
-   set(obj.h_axes,'xlim',obj.s.value_span);
+set(obj.h_axes,'xlim',obj.s.value_span);
 end
 
 %{
