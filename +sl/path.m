@@ -15,6 +15,10 @@ classdef (Hidden) path
        LIBRARY_PARENT_PATH = sl.path.getLibraryParentPath(); %Points to folder
        %that contains the '+sl' folder
        LIBRARY_BETA_PATH   = sl.path.getBetaPath()
+       %The thought with beta code was that it could be a set of functions
+       %that are in progress but not yet ready for general usage that could
+       %be added relatively easily to the path with:
+       %    
        LIBRARY_REF_PATH    = sl.path.getRefPath()
     end
     
@@ -36,21 +40,23 @@ classdef (Hidden) path
            value = fullfile(sl.path.LIBRARY_PARENT_PATH,'ref_code'); 
         end
         function value = getLibraryParentPath()
-           %%??? - when is the class definition loaded? On first call?
-           %
-           %or, when added to the path?
-           %
-           %If the latter, this would cause problems
-           %
-           %
-           value = sl.stack.getPackageRoot();
+            %x 
+            %
+            %   Returns the folder that contains the standard library (+sl)
+            %   package.
+            %
+            value = sl.stack.getPackageRoot();
         end
         %NOTE: I had thought about creating a GUI which would toggle
         %beta code being on the path or not.
         function addBeta()
+            %
+            %   sl.path.addBeta
            addpath(sl.path.LIBRARY_BETA_PATH);
         end
         function removeBeta()
+            %
+            %   sl.path.removeBeta
            rmpath(sl.path.LIBRARY_BETA_PATH);
         end
         function addRef()
@@ -63,21 +69,21 @@ classdef (Hidden) path
            %TODO: Build in removal
             
         end
-        function [base_path,file_name,ext] = fileparts()
-            %This is only meant to be used on files
-            %Goal is to provide something that handles packages
-            %
-            %   This will probably need to be renamed.
-            %
-            %   This should probably be in sl.dir
-            %
-            %   i.e. I wanted something like:
-            %   my_path\+sl\+test\file.m
-            %
-            %  base_path = my_path
-            %  file_name = sl.test.file
-            %  ext       = .m
-        end
+% % % %         function [base_path,file_name,ext] = fileparts()
+% % % %             %This is only meant to be used on files
+% % % %             %Goal is to provide something that handles packages
+% % % %             %
+% % % %             %   This will probably need to be renamed.
+% % % %             %
+% % % %             %   This should probably be in sl.dir
+% % % %             %
+% % % %             %   i.e. I wanted something like:
+% % % %             %   my_path\+sl\+test\file.m
+% % % %             %
+% % % %             %  base_path = my_path
+% % % %             %  file_name = sl.test.file
+% % % %             %  ext       = .m
+% % % %         end
         function subs_mask = matchSubdirectories(path_entries,base_path)
             %matchSubdirectories  Match subdirectories of a given base_path
             %
@@ -119,10 +125,6 @@ classdef (Hidden) path
             
             %}
         end
-    end
-    
-    methods (Static)
-        
     end
     
 end

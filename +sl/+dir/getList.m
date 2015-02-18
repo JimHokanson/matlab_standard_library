@@ -1,8 +1,17 @@
 function varargout = getList(root_folder_path,varargin)
 %getList Return a list of files and/or folders in a directory with many options
 %
-%   STATUS: 
-%   2015-02-17 - recursive listing working with extension filtering, LOTS OF ROOM FOR IMPROVEMENT
+%   STATUS:
+%   2015-02-17
+%       - recursive and non-recursive approaches finished
+%       - filter filtering in place
+%       - folder filtering NOT in place
+%       - documenation still needs:
+%           - finished optional input documentation
+%           - finished calling forms
+%           - updated outputs based on calling forms
+%           - examples
+%           - well documented advantages and limitations
 %
 %
 %   Calling Forms:
@@ -14,42 +23,72 @@ function varargout = getList(root_folder_path,varargin)
 %   Output:
 %   -------
 %   list_result : sl.dir.file_list_result
-%   
+%
+%   Input:
+%   ------
+%   root_folder_path : string
+%       The folder to search for files or folders. It is recommended that
+%       this be an absolute path although the function might work even if
+%       it is relative, depending upon which outputs are desired.
 %
 %
 %   Optional Inputs:
 %   ----------------
-%   
+%
 %       ========= Output format/type related =====
 %
-%   output_type : {'object','names','paths','dir'}
-%       TODO: Document what this means ...
-%   search_type : {0,1,2,'files','folders','both'}
-%       - 'files' or 0 : find only files
-%       - 'folders' or 1 : find only folders
-%       - 'both' or 2: find files and folders
-%   recursive : false
-%       If true, results are included from subdirectories in addition to
-%       just the root directory
-%   need_dir_props: false
-%       If true, then the 
 %   enforce_single_file_match : (default false) NOT YET IMPLEMENTED
 %       If true, then an error will be thrown if a single match is not
 %       found. This can be used to throw a bit nicer of an error message
 %       and to make the calling code not as messy.
+%   natural_sort_files : (default false) NOT YET IMPLEMENTED
+%   need_dir_props: false
+%       If true, then an algorithm will be chosen that returns 
+%       the structure associated with the dir() function
+%   output_type : {'object','names','paths','dir'}
+%       - object : return sl.dir.list_result
+%       - names  : return only the names
+%       - path   : return only the paths
+%       - dir    : return only the dir structures
+%       NOTE: When searching for both files and folders (search_type =
+%       'both'), the file property is returned as the first output and 
+%       the folder property is returned as the second output.
+%   recursive : false
+%       If true, results are included from subdirectories in addition to
+%       just the root directory
+%   search_type : {0,1,2,'files','folders','both'}
+%       - 'files' or 0 : find only files
+%       - 'folders' or 1 : find only folders
+%       - 'both' or 2: find files and folders
 %
 %       =============   File filtering    ==========
 %
-%   extension : default ''
+%   extension : string, default ''
 %       If not empty filters on the extension. A leading period is optional.
-%   file_regex : default ''
-%       If not empty, filters file names based on using the supplied string
-%       as a pattern to regexp(). All special characters should be escaped.
-%   file_pattern : default ''
+%   file_date_filter : function handle, default []
+%       If not empty, a function should be provided which takes in the
+%       modification date as a Matlab 'datenum' and returns a mask
+%       indicating whether or not each entry should be kept 
+%           (true means the entry is kept)
+%   file_pattern : string, default ''
 %       If not empty, filters the file names based on using the string.
-%       Unlike 'file_regex', only * characters (and possibly ?) are
+%       Unlike 'file_regex', only * characters are
 %       supported. This also means that chacters like '.' are treated as
 %       literals rather than as special regular expression characters.
+%           (a match means the entry is kept)
+%   file_regex : string, default ''
+%       If not empty, filters file names based on using the supplied string
+%       as a pattern to regexp(). All special characters should be escaped.
+%           (a match means the entry is kept)
+%   file_regex_case_sensitive : logical, default false
+%       Whether or not the regex is case sensitive. True indicates that it
+%       is case sensitive.
+%   file_size_filter : function handle, default []
+%       The function should take in a single input, an array where each
+%       element contains the # of bytes of a file, and return whether or 
+%       not each entry should be kept
+%           (true means the entry is kept)
+%   
 %
 %       ==============  Folder filtering ========
 %
@@ -59,23 +98,19 @@ function varargout = getList(root_folder_path,varargin)
 %
 %
 %
+%   Limitations:
+%   ------------
+%   1) Currently it is impossible to get a list of any folder that starts
+%   with a period.
+%   2) Unicode support is currently lacking. See this link for more info:
+%       http://www.mathworks.com/matlabcentral/answers/86186-working-with-unicode-paths
 %
-
 %
-%   regexp : (default '')
-%       If not empty filters based on regex matches. Regular expressions
-%       must be properly escaped prior to function (e.g. matching a period
-%       requires a leading backslash)
-%   use_java : (default false), if true the result uses Java, this can
-%       avoid some problems with Unicode file paths. Eventually I would
-%       like to have code that makes this unecessary and just works.
 %
-%   Improvements:
-%   -------------
+%   Possible Improvements:
+%   ----------------------
 %   - ignore hidden files
-%   - ignore certain directories
-%   - return or don't return dir results - date modified ...
-%   - relative path support :/
+%   - quicker recursive directory listing
 %
 %   Not Yet Supported:
 %   ------------------
@@ -94,10 +129,37 @@ function varargout = getList(root_folder_path,varargin)
     wtf = getDirectoryTree('C:\D\repos\matlab_git\matlab_SVN','','','\.m','files');
     toc;
 
+    %Non-recursive list of folders
+    wtf = sl.dir.getList('C:\D\repos\matlab_git\matlab_SVN','search_type','folders')
 
+    %Non-recursive with an extension
+    wtf = sl.dir.getList('C:\D\repos\matlab_git\matlab_SVN','extension','.m')
+
+    %Non-recursive list of files and folders
+    wtf = sl.dir.getList('C:\D\repos\matlab_git\matlab_SVN','search_type','both')
+
+    %Different return type ...
+    [file_names,folder_names] = sl.dir.getList('C:\D\repos\matlab_git\matlab_SVN',...
+            'search_type','both','output_type','names')
+
+    %Recursive
 	wtf = sl.dir.getList('C:\D\repos\matlab_git\matlab_SVN','recursive',true)
 
+    %Recursive, only folders
+	wtf = sl.dir.getList('C:\D\repos\matlab_git\matlab_SVN','recursive',true,'search_type','folders')
+
+    %Recursive with an extension
 	wtf = sl.dir.getList('C:\D\repos\matlab_git\matlab_SVN','recursive',true,'extension','.m')
+
+    %Recursive with a pattern
+    wtf = sl.dir.getList('C:\D\repos\matlab_git\matlab_SVN','recursive',true,'file_pattern','g*.m')
+
+    %Recursive with an extension - but needing dir info
+    wtf = sl.dir.getList('C:\D\repos\matlab_git\matlab_SVN','recursive',true,'extension','.m','need_dir_props',true)
+
+    %Recursive with an extension and size filter
+    %Keep files that are less than 6000 bytes
+    wtf = sl.dir.getList('C:\D\repos\matlab_git\matlab_SVN','recursive',true,'file_pattern','*.m','file_size_filter',@(x)(x < 6000))
 
 
     tic;
@@ -126,23 +188,26 @@ t_tic = tic;
 %=================================
 %Results related
 %---------------------------------------------
-in.output_type = 'object'; %DONE {'object','names','paths','dir'}
-in.search_type = 0; %DONE {0,1,2,'files','folders','both'}
-in.recursive = false; %HALF-DONE
-in.need_dir_props = false;
+in.enforce_single_file_match = false; %NYI
 in.natural_sort_files = false; %NYI - http://www.mathworks.com/matlabcentral/fileexchange/47434-natural-order-filename-sort
-in.enforce_single_file_match = false;
+in.need_dir_props = false; %DONE
+in.output_type = 'object'; %DONE {'object','names','paths','dir'}
+in.recursive = false; %DONE
+in.search_type = 0; %DONE {0,1,2,'files','folders','both'}
 
 %File filtering
 %---------------------------------------------
-in.extension = ''; %HALF_DONE file extension
-in.file_regex = ''; %NOTE: All regex must be escaped
-in.file_pattern = '';%NYI: this would be  
-in.date_filter = []; %NYI, should be a function handle
+in.extension = ''; %DONE file extension
+in.file_date_filter = []; %DONE
+in.file_pattern = '';%DONE 
+in.file_regex = ''; %DONE NOTE: All regex must be escaped
+in.file_regex_case_sensitive = false; %DONE
+in.file_size_filter = []; %DONE
 
 %Folder filtering
 %---------------------------------------------
-in.folder_regex = '';
+in.folder_regex = ''; %NYI
+in.folder_date_filter = []; %NYI
 in.folders_to_ignore = {}; %NYI
 
 in = sl.in.processVarargin(in,varargin);
@@ -150,12 +215,18 @@ in = sl.in.processVarargin(in,varargin);
 in = h__cleanOptionalInputs(in);
 %===============================================================
 
-[file_filters,need_dir_1]   = h__setupFileFilters(in);
-[folder_filters,need_dir_2] = h__setupFolderFilters(in);
+need_dir_approach = in.need_dir_props || ...
+    ~isempty(in.file_date_filter) || ...
+    ~isempty(in.file_size_filter) || ...
+    ~isempty(in.folder_date_filter);
 
-need_dir_approach = in.need_dir_props || need_dir_1 || need_dir_2;
+folder_filtering = ~isempty(in.folder_regex) || ...
+    ~isempty(in.folder_date_filter) || ...
+    ~isempty(in.folders_to_ignore);
 
-if ~need_dir_approach && in.recursive && ispc && in.search_type == 0
+if ~need_dir_approach && in.recursive && ispc && in.search_type == 0 && ~folder_filtering
+    %The folder filtering bit could be done post hoc but we'll ignore 
+    %this method for now if folder filtering is done
     s = h__getFilesDotNet(root_folder_path,in);
 else
     %Basic approaches using dir()
@@ -174,112 +245,7 @@ varargout = h__setupOutput(root_folder_path,s,in,nargout,t_tic);
 
 end  %------------------------  End of sl.dir.getList ---------------------
 
-function in = h__cleanOptionalInputs(in)
-%x Makes sure optional inputs are standardized and agree
-%
-%
-%
-
-if strcmp(in.output_type,'dir')
-   in.need_dir_props = true; 
-end
-
-%Change possible characters to numbers
-in = h__fixInType(in);
-
-end  %------------   End of h__cleanOptionalInputs    ---------------------
-
-function s = h__getFilesDotNet(root_folder_path,in)
-
-    s = struct;
-    
-    %TODO: Make this a function
-    if ~isempty(in.file_pattern)
-        search_pattern = in.file_pattern;
-    elseif ~isempty(in.extension)
-        if in.extension(1) == '.'
-            search_pattern = ['*' in.extension];
-        else
-            search_pattern = ['*.' in.extension];
-        end
-    else
-        search_pattern = '*';
-    end
-    
-    %https://msdn.microsoft.com/en-us/library/07wt70x2%28v=vs.110%29.aspx
-    temp = System.IO.Directory.GetFiles(root_folder_path,search_pattern,...
-        System.IO.SearchOption.AllDirectories);
-    
-    %TODO: Need to allow filtering as well
-    s.file_paths   = cell(temp);
-    s.folder_names = {};
-    s.file_names   = sl.dir.getFileName(s.file_paths);
-    s.folder_paths = {};
-    s.d_files      = [];
-    s.d_folders    = [];
-
-end
-
-function s = h__runBasicApproach(root_folder_path,in)
-    %NOT YET IMPLEMENTED
-    switch in.search_type
-        case 0
-            h__getFiles(root_folder_path);
-        case 1
-            h__getFolders(root_folder_path);
-        case 2
-            h__getFilesAndFolders(root_folder_path,in);
-    end
-
-end
-
-function s = h__runBasicRecursiveApproach(root_folder_path,in)
-
-    MAGIC_CELL_LENGTH = 10000;
-
-    file_filters   = h__setupFileFilters(in);
-    folder_filters = h__setupFolderFilters(in);
-
-    results = cell(1,MAGIC_CELL_LENGTH);
-    
-    folders_to_check = cell(1,MAGIC_CELL_LENGTH);
-    folders_to_check{1} = root_folder_path;
-    cur_list_length = 1;
-    
-    done = false;
-    cur_I = 0;
-    while ~done
-        cur_I    = cur_I + 1;
-        cur_root = folders_to_check{cur_I};
-        
-        %Main listing call
-        s = h__getFilesAndFolders(cur_root,in,file_filters,folder_filters);
-        results{cur_I} = s;
-        
-        %Update with more folders to check
-        %---------------------------------
-        folder_paths = s.folder_paths;
-        if ~isempty(s.folder_paths)
-            n_folders = length(folder_paths);
-            folders_to_check(cur_list_length+1:cur_list_length+n_folders) = folder_paths;
-            cur_list_length = cur_list_length + n_folders;
-        end
-        done = cur_I == cur_list_length;
-    end
-    
-    %Reduce results to a single structure
-    %------------------------------------
-    r2 = [results{1:cur_I}];
-    %At this point r2 is a structure array, let's create a single structure
-    s = struct;
-    s.file_names   = [r2.file_names];
-    s.folder_names = [r2.folder_names];
-    s.file_paths   = [r2.file_paths];
-    s.folder_paths = [r2.folder_paths];
-    s.d_files      = [r2.d_files];
-    s.d_folders    = [r2.d_folders];
-
-end  %------------------ End of h__runBasicRecursiveApproach --------------
+%==============   OUTPUT HANDLING  ========================================
 
 function output = h__setupOutput(root_folder_path,s,in,n_outputs,t_tic)
 %
@@ -322,7 +288,9 @@ switch in.output_type
                 output{1} = s.folder_names;
             case 2
                 output{1} = s.file_names;
+                if n_outputs > 1
                 output{2} = s.folder_names;
+                end
         end
     case 'paths'
         switch in.search_type
@@ -332,7 +300,9 @@ switch in.output_type
                 output{1} = s.folder_paths;
             case 2
                 output{1} = s.file_paths;
-                output{2} = s.folder_paths;
+                if n_outputs > 1
+                    output{2} = s.folder_paths;
+                end
         end
     case 'dir'
         switch in.search_type
@@ -342,16 +312,39 @@ switch in.output_type
                 output{1} = s.d_folders;
             case 2
                 output{1} = s.d_files;
-                output{2} = s.d_folders;
+                if n_outputs > 1
+                    output{2} = s.d_folders;
+                end
         end
+end
+
+end %---------------------------------   End of h__setupOutput  -----------
+
+%===============    INPUT HANDLING   ======================================
+
+function in = h__cleanOptionalInputs(in)
+%x Makes sure optional inputs are standardized and agree
+%
+%   TODO: I haven't given this function a lot of attention yet. It could
+%   probably have things added to it.
+%
+
+%Change possible characters to numbers
+%TODO: Move the function to being right next to this one
+in = h__fixInType(in);
+
+%TODO: Extension when search type is folders
+
+if strcmp(in.output_type,'dir')
+    in.need_dir_props = true;
 end
 
 
 
-end %---------------------------------   End of h__setupOutput  -----------
+end  %------------   End of h__cleanOptionalInputs    ---------------------
 
 function in = h__fixInType(in)
-%x 
+%x
 %
 %   Converts characters to numerics and makes sure numerics are in range
 %
@@ -377,25 +370,162 @@ end
 
 end  %----------    End of h__fixInType    --------------------
 
+%===========  LISTING APPROACHES   ========================================
 
-%=====================    LISTING PROGRAMS   ==============================
-function h__getFiles(root_folder_path)
+function s = h__getFilesDotNet(root_folder_path,in)
+%x Finds all files in in a directory and subdirectories using .NET
+%
+%
 
-% % % if ~isempty(in.extension)
-% % %     if in.extension(1) == '.'
-% % %         ext_use = ['*' in.extension];
-% % %     else
-% % %         ext_use = ['*.' in.extension];
-% % %     end
-% % % else
-% % %     ext_use = '';
-% % % end
+[file_filters,search_pattern]   = h__setupFileFilters(in,true);
+
+if isempty(search_pattern)
+    search_pattern = '*';
+end
+
+%This is the magic function ...
+%Documentation at:
+%https://msdn.microsoft.com/en-us/library/07wt70x2%28v=vs.110%29.aspx
+temp = System.IO.Directory.GetFiles(root_folder_path,search_pattern,...
+    System.IO.SearchOption.AllDirectories);
+
+file_paths = cell(temp); %Conversion of String[] to cellstr
+file_names = sl.dir.getFileName(file_paths);
+
+%Using file_paths instead of d_files is a bit of a hack but it works
+%.... It is an array that can be filtered side by side with the names
+%NOTE: We've already ensured we don't need d_files before calling this
+%function ...
+[file_names,file_paths] = h__filterFiles(file_names,file_paths,file_filters);
+
+s = struct;
+s.file_paths   = file_paths;
+s.folder_names = {};
+s.file_names   = file_names;
+s.folder_paths = {};
+s.d_files      = [];
+s.d_folders    = [];
 
 end
 
-function h__getFolders(root_folder_path)
+function s = h__runBasicApproach(root_folder_path,in)
+%x
+%
+%   Called for the non-recursive case. This code isn't much different
+%   than dir() except for the filtering that takes place
+
+switch in.search_type
+    case 0
+        s = h__getFiles(root_folder_path,in);
+    case 1
+        s = h__getFolders(root_folder_path,in);
+    case 2
+        %We need to create the filters and then pass them in because
+        %this function is also used as a helper in the recursive case 
+        %and in that case the filters are precomputed to save time and
+        %passed into the function we are calling here.
+        file_filters   = h__setupFileFilters(in,false);
+        folder_filters = h__setupFolderFilters(in);
+        s = h__getFilesAndFolders(root_folder_path,in,file_filters,folder_filters);
+end
 
 end
+
+function s = h__runBasicRecursiveApproach(root_folder_path,in)
+%x Get a list of files and folders in the directory and subdirectories
+%
+
+MAGIC_CELL_LENGTH = 10000;
+
+file_filters   = h__setupFileFilters(in,false);
+folder_filters = h__setupFolderFilters(in);
+
+results = cell(1,MAGIC_CELL_LENGTH);
+
+folders_to_check = cell(1,MAGIC_CELL_LENGTH);
+folders_to_check{1} = root_folder_path;
+cur_list_length = 1;
+
+done = false;
+cur_I = 0;
+while ~done
+    cur_I    = cur_I + 1;
+    cur_root = folders_to_check{cur_I};
+    
+    %Main listing call
+    s = h__getFilesAndFolders(cur_root,in,file_filters,folder_filters);
+    results{cur_I} = s;
+    
+    %Update with more folders to check
+    %---------------------------------
+    folder_paths = s.folder_paths;
+    if ~isempty(s.folder_paths)
+        n_folders = length(folder_paths);
+        folders_to_check(cur_list_length+1:cur_list_length+n_folders) = folder_paths;
+        cur_list_length = cur_list_length + n_folders;
+    end
+    done = cur_I == cur_list_length;
+end
+
+%Reduce results to a single structure
+%------------------------------------
+r2 = [results{1:cur_I}];
+%At this point r2 is a structure array, let's create a single structure
+s = struct;
+s.file_names   = [r2.file_names];
+s.folder_names = [r2.folder_names];
+s.file_paths   = [r2.file_paths];
+s.folder_paths = [r2.folder_paths];
+s.d_files      = [r2.d_files];
+s.d_folders    = [r2.d_folders];
+
+end  %------------------ End of h__runBasicRecursiveApproach --------------
+
+function s = h__getFiles(root_folder_path,in)
+%x Gets a list of files in a single directory
+
+[file_filters,file_pattern_use]   = h__setupFileFilters(in,true);
+
+d = dir(fullfile(root_folder_path,file_pattern_use))';
+
+d([d.isdir]) = [];
+
+file_names = {d.name};
+
+[file_names,d] = h__filterFiles(file_names,d,file_filters);
+
+s = struct;
+s.root_path    = {};
+s.file_names   = file_names;
+s.folder_names = {};
+s.file_paths   = sl.dir.fullfileCA(root_folder_path,file_names);
+s.folder_paths = {};
+s.d_files      = d;
+s.d_folders    = [];
+
+end %--------------   End of h__getFiles  ---------------------------------
+
+function s = h__getFolders(root_folder_path,in)
+
+folder_filters = h__setupFolderFilters(in);
+
+d = dir(root_folder_path)';
+d(~[d.isdir]) = [];
+
+folder_names = {d.name};
+
+[folder_names,d] = h__filterFolders(folder_names,d,folder_filters);
+
+s = struct;
+s.root_path    = root_folder_path;
+s.file_names   = {};
+s.folder_names = folder_names;
+s.file_paths   = {};
+s.folder_paths = sl.dir.fullfileCA(root_folder_path,folder_names);
+s.d_files      = [];
+s.d_folders    = d;
+
+end  %-------------   End of h__getFolders   ------------------------------ 
 
 function s = h__getFilesAndFolders(root_folder_path,in,file_filters,folder_filters)
 %x  return a list of files and folders in a directory
@@ -416,22 +546,32 @@ function s = h__getFilesAndFolders(root_folder_path,in,file_filters,folder_filte
 %   TODO: It would be good to be able to:
 %   1) Get a request that separates files and folders
 %   2) filters both of these based on a criteria
-
-s = struct;
+%
+%   See Also:
+%   h__runBasicRecursiveApproach
 
 d = dir(root_folder_path)'; %Transpose to make a row vector
 
 is_dir_mask = [d.isdir];
 
-d_files   = d(~is_dir_mask);
-d_folders = d(is_dir_mask);
 
-file_names   = {d_files.name};
+d_folders    = d(is_dir_mask);
 folder_names = {d_folders.name};
+[folder_names,d_folders] = h__filterFolders(folder_names,d_folders,folder_filters);
 
-[file_names,d_files] = h__filterFiles(file_names,d_files,file_filters);
-[folder_names,d_folders] = h__filterFolders(folder_names,d_folders,in);
+%Unfortunately right now we are using this function to get files and
+%folders for a single directory AND when using the recursive approach,
+%regardless of what we really need
+if in.search_type ~= 1
+    d_files    = d(~is_dir_mask);
+    file_names = {d_files.name};
+    [file_names,d_files] = h__filterFiles(file_names,d_files,file_filters);
+else
+    d_files = [];
+    file_names = {};
+end
 
+s = struct;
 s.root_path    = root_folder_path;
 s.file_names   = file_names;
 s.folder_names = folder_names;
@@ -453,18 +593,18 @@ function [file_names,d_files] = h__filterFiles(file_names,d_files,file_filters)
 %
 
 for iFilter = 1:length(file_filters)
-   fh = file_filters{iFilter};
-   remove_mask = fh(file_names,d_files);
-   
-   %??? - Do we combine all the masks first or filter first ???
-   file_names(remove_mask) = [];
-   d_files(remove_mask) = [];
+    fh = file_filters{iFilter};
+    remove_mask = fh(file_names,d_files);
+    
+    %??? - Do we combine all the masks first or filter first ???
+    file_names(remove_mask) = [];
+    d_files(remove_mask) = [];
 end
 
 
 end
 
-function [folder_names,d_folders] = h__filterFolders(folder_names,d_folders,in)
+function [folder_names,d_folders] = h__filterFolders(folder_names,d_folders,folder_filters)
 
 %For now we'll only filter leading periods
 %
@@ -481,117 +621,158 @@ leading_period_mask = first_char_array == '.';
 folder_names(leading_period_mask) = [];
 d_folders(leading_period_mask) = [];
 
+%All other filters
+%------------------
+for iFilter = 1:length(folder_filters)
+    fh = folder_filters{iFilter};
+    remove_mask = fh(folder_names,d_folders);
+    folder_names(remove_mask) = [];
+    d_folders(remove_mask) = [];
+end
+
 
 
 end
 
+
+
+%======================      Filters     ==================================
+
+function folder_filters = h__setupFolderFilters(in)
+%x Creates an array of function handles to filter folders
+%
+
+%Folder filtering
+%-------------------------------
+%2) folder_regex
+%3) folders_to_ignore
+%4) folders_to_keep
+
+folder_filters = {};
+end  %----------   End of h__setupFolderFilters   -----------------
+
+function [file_filters,file_pattern_use] = h__setupFileFilters(in,filter_via_query)
+%x Creates an array of function handles to filter files
+%
+%   Filtering via the query
+%   -----------------------
+%   If we can filter via the query
+%
+%   Inputs:
+%   -------
+%   filter_via_query :
+%       false - no filtering of files via the query
+%
+%
+%Setup file filters
+%-------------------
+% in.extension = ''; %HALF_DONE file extension
+% in.file_regex = ''; %NOTE: All regex must be escaped
+% in.file_pattern = '';%NYI: this would be
+% in.file_date_filter = []; %NYI, should be a function handle
+% in.file_size_filter = []; %NYI, should be a function handle
+
+file_filters = cell(1,5); %Expand as we get more filters
+
+file_pattern_use = '';
+
+%1) Extension filtering
+%--------------------
+if ~isempty(in.extension)
+    
+    dot_leading_extension = in.extension;
+    if dot_leading_extension(1) ~= '.'
+        dot_leading_extension = ['.' dot_leading_extension];
+    end
+    
+    if filter_via_query
+        if isempty(in.file_pattern)
+            run_postquery_extension_filter = false;
+            file_pattern_use = ['*' dot_leading_extension];
+        else
+            %file_pattern filtering takes precedence over extension
+            %filtering
+            run_postquery_extension_filter = true;
+        end
+    else
+        run_postquery_extension_filter = true;
+    end
+    
+    if run_postquery_extension_filter
+        %Match .extension where the dot is a literal and at the end of the
+        %string
+        dot_leading_extension_pattern = ['\' dot_leading_extension '$'];
+        file_filters{1} = @(file_names,~)cellfun('isempty',regexpi(file_names,dot_leading_extension_pattern,'once'));
+    end
+end
+
+%2) Regex filtering - always post query
+%--------------------------------------
+if ~isempty(in.file_regex)
+    if in.file_regex_case_sensitive
+        file_filters{2} = @(file_names,~)cellfun('isempty',regexp(file_names,in.file_regex,'once'));
+    else
+        file_filters{2} = @(file_names,~)cellfun('isempty',regexpi(file_names,in.file_regex,'once'));
+    end
+end
+
+%3) file pattern filtering
+%---------------------------------------
+if ~isempty(in.file_pattern)
+    if filter_via_query
+        file_pattern_use = in.file_pattern;
+    else
+        file_pattern = in.file_pattern;
+        %* - any character
+        %
+        %? - 0 or 1 of any character ... - doesn't seem to work for Matlab
+        %but could work for another approach, i.e. via .NET
+        %TODO: Handle other approaches ...
+        
+        %Add anchors for matching entire string not just a subset
+        file_pattern = ['^' regexptranslate('wildcard',file_pattern) '$'];
+        
+        file_filters{3} = @(file_names,~)cellfun('isempty',regexpi(file_names,file_pattern,'once'));
+    end
+end
+
+if ~isempty(in.file_date_filter)
+    file_filters{4} = @(~,d_files)~in.file_data_filter([d_files.datenum]);
+end
+
+if ~isempty(in.file_size_filter)
+    file_filters{5} = @(~,d_files)~in.file_size_filter([d_files.bytes]);
+end
+
+file_filters(cellfun('isempty',file_filters)) = [];
+
+end   %---------  End of h__setupFileFilters --------------------
+
+%======================   END OF FILTERS   ================================
+
+%=====================  SMALL HELPERS  ====================================
 function first_char_array = h__getFirstChar(cellstr_in)
 %
 %   Simple helper that grabs the first character of every string
 %
 %   Written for filtering folders if the first character is a period.
-%
+
+
+% tic
 n = length(cellstr_in);
 space = ' ';
 first_char_array = space(ones(1,n));
 for iStr = 1:n
     first_char_array(iStr) = cellstr_in{iStr}(1);
 end
-end
-
-%======================      Filters     ==================================
-
-function [folder_filters,need_dir] = h__setupFolderFilters(in)
-
-%Folder filtering
-%-------------------------------
-%1) leading dot filtering
-%2) folder_regex
-%3) folders_to_ignore
-%4) folders_to_keep
-
-    folder_filters = {};
-    need_dir = false;
-end
-
-function [file_filters,need_dir] = h__setupFileFilters(in)
-%Setup file filters
-%-------------------
-%1) ext - only if not done in the search
-%2) file_regex
-%3) date filter
-
-file_filters = cell(1,1); %Expand as we get more filters
-
-%Extension filtering
-%--------------------
-if in.recursive && ~isempty(in.extension)
-    %mask = h__filterByExtension(file_names,dot_leading_extension)
-    dot_leading_extension = in.extension;
-    if dot_leading_extension(1) ~= '.'
-       dot_leading_extension = ['.' dot_leading_extension]; 
-    end
-    %Match .extension where the dot is a literal and at the end of the
-    %string
-    dot_leading_extension_pattern = ['\' dot_leading_extension '$'];
-    file_filters{1} = @(file_names,~)cellfun('isempty',regexp(file_names,dot_leading_extension_pattern,'once'));
+% toc
+% tic
+% temp = regexp(cellstr_in,'.','match','once');
+% first_char_array = [temp{:}];
+% toc
 
 end
 
-file_filters(cellfun('isempty',file_filters)) = [];
-
-need_dir = false;
-
-end
-
-
-
-% % % function remove_mask = h__filterByExtension(file_names,dot_leading_extension_pattern)
-% % %     %
-% % % %
-% % % %   See Also:
-% % % %   h__setupFileFilters
-% % % %
-% % % %   TODO: We can remove this function and just
-% % %    remove_mask = cellfun('isempty',regexp(file_names,dot_leading_extension_pattern,'once'));
-% % %    
-% % % end
-
-%======================   END OF FILTERS   ================================
-
-
-%{
-
-.NET could be used rather effectively for recursive file searching but we
-it would really be beneficial to write a nice enumerated retriever
-
-%.NET 
-%http://support.microsoft.com/kb/303974
-
-%Is this needed or done by default? - already done by default
-%NET.addAssembly('System.IO');
-
-root_path = 'C:\D\repos\matlab_git\matlab_SVN';
-
-wtf = System.IO.Directory.GetDirectories(root_path,'*.*');
-
-
-
-tic;
-wtf = System.IO.Directory.GetFiles(root_path,'*.m',System.IO.SearchOption.AllDirectories);
-results = cell(wtf);
-toc;
-
-%This is really slow, can we do all of this with C#
-results = cell(1,wtf.Length);
-en = wtf.GetEnumerator
-for iFolder = 1:wtf.Length
-    en.MoveNext;
-    results{iFolder} = char(en.Current);
-end
-toc;
-
-%}
 
 
 %{

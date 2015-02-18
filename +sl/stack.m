@@ -8,6 +8,11 @@ classdef (Hidden) stack
         function goDebugHelper(stack_printout)
             %
             %   sl.stack.goDebugHelper(stack_printout)
+            %
+            %   This is used by goDebug.mex in order to 
+            %   open the editor to the current edit point in the stack.
+            %
+            %   
             lines = sl.str.getLines(stack_printout);
             
             [~,is_matched] = sl.cellstr.regexpSingleMatchTokens(...
