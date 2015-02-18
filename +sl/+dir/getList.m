@@ -5,7 +5,6 @@ function varargout = getList(root_folder_path,varargin)
 %   2015-02-17
 %       - recursive and non-recursive approaches finished
 %       - filter filtering in place
-%       - folder filtering NOT in place
 %       - documenation still needs:
 %           - finished optional input documentation
 %           - finished calling forms
@@ -130,7 +129,7 @@ function varargout = getList(root_folder_path,varargin)
     toc;
 
     %Non-recursive list of folders
-    wtf = sl.dir.getList('C:\D\repos\matlab_git\matlab_SVN','search_type','folders')
+    wtf = sl.dir.getList('C:\D\repos\matlab_git\matlab_SVN','search_type','folders','first_chars_in_folders_to_ignore','+@')
 
     %Non-recursive with an extension
     wtf = sl.dir.getList('C:\D\repos\matlab_git\matlab_SVN','extension','.m')
@@ -209,6 +208,7 @@ in.file_size_filter = []; %DONE
 in.folder_regex = ''; %NYI
 in.folder_date_filter = []; %NYI
 in.folders_to_ignore = {}; %NYI
+in.first_chars_in_folders_to_ignore = ''; %NYI
 
 in = sl.in.processVarargin(in,varargin);
 
@@ -620,12 +620,13 @@ first_char_array = h__getFirstChar(folder_names);
 leading_period_mask = first_char_array == '.';
 folder_names(leading_period_mask) = [];
 d_folders(leading_period_mask) = [];
+first_char_array(leading_period_mask) = [];
 
 %All other filters
 %------------------
 for iFilter = 1:length(folder_filters)
     fh = folder_filters{iFilter};
-    remove_mask = fh(folder_names,d_folders);
+    remove_mask = fh(folder_names,d_folders,first_char_array);
     folder_names(remove_mask) = [];
     d_folders(remove_mask) = [];
 end
@@ -642,13 +643,32 @@ function folder_filters = h__setupFolderFilters(in)
 %x Creates an array of function handles to filter folders
 %
 
-%Folder filtering
-%-------------------------------
-%2) folder_regex
-%3) folders_to_ignore
-%4) folders_to_keep
+% in.folder_regex = ''; %NYI
+% in.folder_date_filter = []; %NYI
+% in.folders_to_ignore = {}; %NYI
+% in.first_chars_in_folders_to_ignore = ''; %NYI
 
-folder_filters = {};
+folder_filters = cell(1,4);
+
+if ~isempty(in.folder_regex)
+   folder_filters{1} = @(folder_names,~,~)cellfun('isempty',regexpi(folder_names,in.folder_regex,'once'));
+end
+
+if ~isempty(in.folder_date_filter)
+   folder_filters{2} = @(~,d_folders,~)~in.folder_date_filter([d_folders.datenum]); 
+end
+
+if ~isempty(in.folders_to_ignore)
+   folder_filters{3} = @(folder_names,~,~)ismember(folder_names,in.folders_to_ignore); 
+end
+
+if ~isempty(in.first_chars_in_folders_to_ignore)
+   folder_filters{4} = @(~,~,first_chars)ismember(first_chars,in.first_chars_in_folders_to_ignore); 
+end
+
+
+folder_filters(cellfun('isempty',folder_filters)) = [];
+
 end  %----------   End of h__setupFolderFilters   -----------------
 
 function [file_filters,file_pattern_use] = h__setupFileFilters(in,filter_via_query)
@@ -736,10 +756,14 @@ if ~isempty(in.file_pattern)
     end
 end
 
+%4) Modified date filtering
+%--------------------------
 if ~isempty(in.file_date_filter)
     file_filters{4} = @(~,d_files)~in.file_data_filter([d_files.datenum]);
 end
 
+%5) File size filtering
+%----------------------
 if ~isempty(in.file_size_filter)
     file_filters{5} = @(~,d_files)~in.file_size_filter([d_files.bytes]);
 end
