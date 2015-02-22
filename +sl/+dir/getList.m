@@ -1,27 +1,59 @@
 function varargout = getList(root_folder_path,varargin)
 %getList Return a list of files and/or folders in a directory with many options
 %
-%   STATUS:
-%   2015-02-17
-%       - recursive and non-recursive approaches finished
-%       - filter filtering in place
-%       - documenation still needs:
-%           - finished optional input documentation
-%           - finished calling forms
-%           - updated outputs based on calling forms
-%           - examples
-%           - well documented advantages and limitations
+%
+%   This function gets a list of files and/or folders in a directory (and
+%   possibly subdirectories) with many options for filtering and return info
+%   type.
+%
+%   The format is such that hopefully additional filters are relatively
+%   easy to add and have everything kept well organized.
+%
+%   The function code is written so that it should be closest to being
+%   as fast as what is possible given the Matlab approach. Additional
+%   methods could be added which would allow the results to be obtained
+%   via not Matlab approaches. This has already been done when searching
+%   for files recursively on Windows, in which case .NET code is called.
 %
 %
-%   Calling Forms:
-%   --------------
-%   TODO: THIS IS OUT OF DATE
-%
+%   Calling Forms: (Not comprehensive, see 'output_type' and 'search_type')
+%   -----------------------------------------------------------------------
+%   1) Default form where we are searching for files and the result is an object
 %   list_result = sl.dir.getList(root_folder_path,varargin)
+%
+%   2) Only return certain info, not the object
+%   file_names = sl.dir.getList(root_folder_path,'output_type','names',varargin)
+%
+%   3) Return folders instead of files & returns as full paths
+%   folder_paths = sl.dir.getList(root_folder_path,'output_type','paths','search_type',folders',varargin)
+%
+%   4) File and folders when 'output_type' is not an object - files are first
+%   [file_names,folder_names] = sl.dir.getList(root_folder_path,'output_type','names','search_type',both',varargin)
+%
+%
 %
 %   Output:
 %   -------
-%   list_result : sl.dir.file_list_result
+%   list_result : sl.dir.list_result
+%   file_names : cellstr
+%       The name of each file, without the path
+%   folder_names : cellstr
+%       The name of each folder, without the path
+%   file_paths : cellstr
+%       Full paths to the file
+%   folder_paths : cellstr
+%       Full paths to the folder
+%   d_files : struct
+%       Same format as the output from dir() for each file
+%           .name
+%           .date
+%           .bytes
+%           .isdir
+%           .datenum
+%   d_folders : struct
+%       Same format as the output from dir() for each folder
+%
+%
 %
 %   Input:
 %   ------
@@ -29,6 +61,7 @@ function varargout = getList(root_folder_path,varargin)
 %       The folder to search for files or folders. It is recommended that
 %       this be an absolute path although the function might work even if
 %       it is relative, depending upon which outputs are desired.
+%
 %
 %
 %   Optional Inputs:
@@ -41,26 +74,31 @@ function varargout = getList(root_folder_path,varargin)
 %       found. This can be used to throw a bit nicer of an error message
 %       and to make the calling code not as messy.
 %   natural_sort_files : (default false) NOT YET IMPLEMENTED
-%   need_dir_props: false
+%       The goal of this property would be to return things sorted
+%       such that numbers determine a sort, rather than alphabetical order
+%       i.e. you might get:
+%           'file9','file10','file11' instead of 'file10','file11','file9'
+%   need_dir_props: logical (default false)
 %       If true, then an algorithm will be chosen that returns 
-%       the structure associated with the dir() function
-%   output_type : {'object','names','paths','dir'}
+%       the structure associated with the dir() function. If false, faster
+%       algorithms may be used that don't require 
+%   output_type : {'object','names','paths','dir'} (default 'object')
 %       - object : return sl.dir.list_result
 %       - names  : return only the names
-%       - path   : return only the paths
+%       - paths   : return only the paths
 %       - dir    : return only the dir structures
 %       NOTE: When searching for both files and folders (search_type =
 %       'both'), the file property is returned as the first output and 
 %       the folder property is returned as the second output.
-%   recursive : false
+%   recursive : logical (default false)
 %       If true, results are included from subdirectories in addition to
 %       just the root directory
-%   search_type : {0,1,2,'files','folders','both'}
-%       - 'files' or 0 : find only files
-%       - 'folders' or 1 : find only folders
-%       - 'both' or 2: find files and folders
+%   search_type : {'files','folders','both'}
+%       - 'files' : find only files
+%       - 'folders' : find only folders
+%       - 'both' : find files and folders
 %
-%       =============   File filtering    ==========
+%               =============   File filtering    ==========
 %
 %   extension : string, default ''
 %       If not empty filters on the extension. A leading period is optional.
@@ -89,12 +127,25 @@ function varargout = getList(root_folder_path,varargin)
 %           (true means the entry is kept)
 %   
 %
-%       ==============  Folder filtering ========
+%               ==============  Folder filtering ========
 %
-%
-%
-%
-%
+%   folder_regex : string (default '')
+%       A regular expression pattern to run on each folder name.
+%           (a match means the entry is kept)
+%   folder_date_filter : function handle (default None)
+%       Input should be a function which takes in an array of datenum
+%       values for when the folders were modified and returns an array of
+%       logicals regarding whether or not the folders should be kept.
+%           (true means the entry is kept)
+%   folders_to_ignore : cellstr (default {})
+%       Names of folders not to match (at any level)
+%   first_chars_in_folders_to_ignore : string (default '')
+%       Characters that a folder may not start with. Currently starting
+%       with a period '.' is not supported. If it ever is, it will be
+%       exposed as an option with the default behavior being to ignore
+%       them. This was created for filtering code paths such as directories
+%       that begin with a '+' or '@', e.g.
+%           first_chars_in_folders_to_ignore = '+@'
 %
 %
 %   Limitations:
@@ -110,14 +161,22 @@ function varargout = getList(root_folder_path,varargin)
 %   ----------------------
 %   - ignore hidden files
 %   - quicker recursive directory listing
+%   - multi-level path filtering
+%   - unicode support
 %
-%   Not Yet Supported:
-%   ------------------
-%   Ability to do multi-level path filtering
 %
 %   Examples:
 %   ---------
 %
+%
+%   Still to do:
+%   ------------
+%   - implement folder searching using .NET
+%   - provide examples
+%   - remove values that are not requested when populating the object
+%       so that changes to the implementation don't cause problems in users
+%       code that were never inteded to be permanent - e.g. returning
+%       dir() results when not requested
 %
 %   See Also:
 %   sl.dir.rdir
@@ -173,14 +232,6 @@ else
     %TODO: Validate nargout being 1 or 2 ...
 end
 
-
-
-%Speed approaches NYI
-%----------------------
-%1) Use mex or .NET
-%2) filter heavily on listing
-%3) System specific listing
-
 t_tic = tic;
 
 %Optional Inputs
@@ -192,7 +243,7 @@ in.natural_sort_files = false; %NYI - http://www.mathworks.com/matlabcentral/fil
 in.need_dir_props = false; %DONE
 in.output_type = 'object'; %DONE {'object','names','paths','dir'}
 in.recursive = false; %DONE
-in.search_type = 0; %DONE {0,1,2,'files','folders','both'}
+in.search_type = 'files'; %DONE {0,1,2,'files','folders','both'}
 
 %File filtering
 %---------------------------------------------
@@ -205,10 +256,10 @@ in.file_size_filter = []; %DONE
 
 %Folder filtering
 %---------------------------------------------
-in.folder_regex = ''; %NYI
-in.folder_date_filter = []; %NYI
-in.folders_to_ignore = {}; %NYI
-in.first_chars_in_folders_to_ignore = ''; %NYI
+in.folder_regex = ''; %DONE
+in.folder_date_filter = []; %DONE
+in.folders_to_ignore = {}; %DONE
+in.first_chars_in_folders_to_ignore = ''; %DONE
 
 in = sl.in.processVarargin(in,varargin);
 
@@ -222,7 +273,8 @@ need_dir_approach = in.need_dir_props || ...
 
 folder_filtering = ~isempty(in.folder_regex) || ...
     ~isempty(in.folder_date_filter) || ...
-    ~isempty(in.folders_to_ignore);
+    ~isempty(in.folders_to_ignore) || ...
+    ~isempty(in.first_chars_in_folders_to_ignore);
 
 if ~need_dir_approach && in.recursive && ispc && in.search_type == 0 && ~folder_filtering
     %The folder filtering bit could be done post hoc but we'll ignore 
@@ -371,6 +423,14 @@ end
 end  %----------    End of h__fixInType    --------------------
 
 %===========  LISTING APPROACHES   ========================================
+
+function s = h__getFoldersDotNet(root_folder_path,in)
+%NOT YET FINISHED ...
+%https://msdn.microsoft.com/en-us/library/ms143314(v=vs.110).aspx
+temp = System.IO.Directory.GetDirectories(root_folder_path,'*',...
+    System.IO.SearchOption.AllDirectories);
+
+end
 
 function s = h__getFilesDotNet(root_folder_path,in)
 %x Finds all files in in a directory and subdirectories using .NET
@@ -834,6 +894,5 @@ Other Implementations
 
 Interesting Questions:
 http://www.mathworks.com/matlabcentral/answers/2221-how-can-i-use-dir-with-multiple-search-strings-or-join-the-results-of-two-dir-calls
-
 
 %}
