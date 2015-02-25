@@ -821,6 +821,14 @@ classdef data < sl.obj.display_class
         function varargout = filter(objs,filters,varargin)
             %x Filter the data using filters specified as inputs
             %
+            %   This function can be used to filter the data. It is meant
+            %   to remove some of the details that are normally associated
+            %   with filtering the data, like computing filter parameters
+            %   where the sampling frequency is taken into account.
+            %
+            %   i.e. filter from 10 to 20 Hz NOT 10*2/fs to 20*2/fs
+            %
+            %
             %   Filter List:
             %   -----------------------------------------------
             %   in sci.time_series.filter package
