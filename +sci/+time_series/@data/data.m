@@ -40,15 +40,15 @@ classdef data < sl.obj.display_class
     %   Since this is generally not desirable, I'm trying to modify all
     %   functions that are of this nature so that the following happens:
     %
+    %   Case 1: An output is requested, make a copy
     %   b = abs(a); a => -1, b => 1
     %
+    %   Case 2: No output is requested, modify in place
     %   abs(a); a => 1
     %
     %   In other words, the presence of an output means that the handle
     %   should first be copied and then modified, so that the original
     %   value is not changed.
-    %
-    %
     %
     %
     %   See Also:
@@ -155,9 +155,11 @@ classdef data < sl.obj.display_class
             %
             %   Inputs:
             %   -------
-            %   data_in: array [samples x channels]
-            %       data_in must be with samples going down the rows.
-            %   time_object_or_dt: number or sci.time_series.time
+            %   data_in : array [samples x channels]
+            %       'data_in' must be with samples going down the rows.
+            %   time_object : sci.time_series.time
+            %       
+            %   dt: number or 
             %
             %   Optional Inputs:
             %   ----------------
@@ -266,7 +268,7 @@ classdef data < sl.obj.display_class
     end
     methods (Static)
         function objs = fromStruct(s_objs)
-            %
+            %x
             %
             %
             
@@ -283,10 +285,28 @@ classdef data < sl.obj.display_class
         end
     end
     
+    %Display handlers -----------------------------------------------------
+    methods
+        function dispMethodsSection(section_name)
+           %x Should display methods in a section
+           %
+           %    Inputs:
+           %    -------
+           %    section_name : string
+           %        Options include:
+           %            - 'constructor'
+           %            - 'visualization'
+           %            - 'events_and_history'
+           %            - 'time changing'
+           %            - 'data changing'
+           %    
+        end
+    end
+    
     %Visualization --------------------------------------------------------
     methods
         function plotRows(objs,varargin)
-            %
+            %x Plots each object as a row
             %
             
             in.link_option = 'x';

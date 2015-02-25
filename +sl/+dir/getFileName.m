@@ -31,6 +31,13 @@ function file_names = getFileName(file_paths)
 
 
 if iscell(file_paths)
+    
+    if isempty(file_paths)
+        %Bug fix: Below code would return [] not {}
+        file_names = {};
+        return
+    end
+        
     %Find a:
     %1) \                             \\
     %2) Followed by no '\' s          [^\\]+

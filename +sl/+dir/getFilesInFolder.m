@@ -175,7 +175,7 @@ else
     end
     
     
-    if in.check_single_match && length(temp) ~= 1
+    if in.enforce_single_match && length(temp) ~= 1
         error('Singular file match requested but %d files were found',length(temp))
     end
     
