@@ -1,4 +1,4 @@
-classdef data < sl.obj.display_class
+classdef data < sl.obj.handle_light
     %
     %   Class:
     %   sci.time_series.data
@@ -287,19 +287,51 @@ classdef data < sl.obj.display_class
     
     %Display handlers -----------------------------------------------------
     methods
+        function disp(objs)
+           sl.obj.dispObject_v1(objs,'show_methods',false);
+           
+           SECTION_NAMES = {'constructor related','visualization','events and history','time changing','data changing','miscellaneous'};
+           
+           sl.obj.disp.sectionMethods(SECTION_NAMES,'sci.time_series.data.dispMethodsSection')
+        end
+    end
+    methods (Static)
         function dispMethodsSection(section_name)
            %x Should display methods in a section
+           %
+           %    sci.time_series.data.dispMethodsSection
            %
            %    Inputs:
            %    -------
            %    section_name : string
            %        Options include:
-           %            - 'constructor'
+           %            - 'constructor_related'
            %            - 'visualization'
            %            - 'events_and_history'
            %            - 'time changing'
            %            - 'data changing'
            %    
+           
+           switch section_name
+               case 'constructor related'
+                   fcn_names = {};  
+               case 'visualization'
+                   fcn_names = {};
+               case 'events and history'
+                   fcn_names = {'addEventElements','addHistoryElements'};
+               case 'time changing'
+                   fcn_names = {};
+               case 'data changing'
+                   fcn_names = {'filter'};
+               case 'miscellaneous'
+                   fcn_names = {'getRawDataAndTime'};
+               otherwise
+                   error('Unknown section name')
+           end
+           
+           section_name = sl.str.capitalizeWords(section_name);
+           header_name = sprintf('%s Methods:',section_name);
+           sl.obj.disp.methods_v1('sci.time_series.data','header',header_name,'methods_use',fcn_names)
         end
     end
     
@@ -545,6 +577,7 @@ classdef data < sl.obj.display_class
     %Add Event or History to data object ----------------------------------
     methods
         function addEventElements(obj,event_elements)
+            %x Adds event elements to the class. See 'devents' property
             %
             %    Inputs:
             %    -------
@@ -553,7 +586,8 @@ classdef data < sl.obj.display_class
             if iscell(event_elements)
                 event_elements = [event_elements{:}];
             elseif isstruct(event_elements)
-                %This occurs when copying ...
+                %This occurs when copying the class object (see copy()
+                %method)
                 event_elements = struct2cell(event_elements);
                 event_elements = [event_elements{:}];
             end
@@ -564,6 +598,15 @@ classdef data < sl.obj.display_class
             end
         end
         function addHistoryElements(obj,history_elements)
+        %x Adds history elements (processing summaries) to the objects
+        %
+        %   addHistoryElements(obj,history_elements)
+        %
+        %   Inputs:
+        %   -------
+        %   history_elements : cell
+        %       See definition of the 'history' property in this class
+        %
             if iscell(history_elements);
                 if size(history_elements,2) > 1
                     history_elements = history_elements';
@@ -794,10 +837,6 @@ classdef data < sl.obj.display_class
             event_aligned_data = sci.time_series.data(new_data,new_time_object);
             
         end
-        function [data,time] = getRawDataAndTime(obj)
-            data = obj.d;
-            time = obj.time.getTimeArray();
-        end
         %         function sample_number = timeToSample(obj)
         %             error('Not yet implemented')
         %         end
@@ -816,6 +855,26 @@ classdef data < sl.obj.display_class
         end
     end
     
+    %Misc. Methods ----------------------------------------------------
+    methods
+     	function [data,time] = getRawDataAndTime(obj)
+            %x Returns the raw data and time
+            %
+            %   [data,time] = getRawDataAndTime(obj)
+            %
+            %   Outputs:
+            %   --------
+            %   data : array
+            %   time : array
+            %
+            %   Examples:
+            %   ---------
+            %   [p_data,p_time] = p.getRawDataAndTime
+            data = obj.d;
+            time = obj.time.getTimeArray();
+        end 
+    end
+    
     %Data changing --------------------------------------------------------
     methods     
         function varargout = filter(objs,filters,varargin)
@@ -823,8 +882,8 @@ classdef data < sl.obj.display_class
             %
             %   This function can be used to filter the data. It is meant
             %   to remove some of the details that are normally associated
-            %   with filtering the data, like computing filter parameters
-            %   where the sampling frequency is taken into account.
+            %   with filtering the data, like worrying about the sampling
+            %   frequency.
             %
             %   i.e. filter from 10 to 20 Hz NOT 10*2/fs to 20*2/fs
             %
@@ -840,6 +899,10 @@ classdef data < sl.obj.display_class
             %   - min
             %   - smoothing
             %
+            %   Inputs:
+            %   -------
+            %   filters : filter object or cell array of filter objects
+            %
             %   Optional Inputs:
             %   ----------------
             %   subtract_filter_result : logical (Default false)
@@ -853,13 +916,13 @@ classdef data < sl.obj.display_class
             %   ---------
             %   1)
             %   
-            %   notch_filter = sci.time_series.filter.butter(2,[55 65],'stop');
-            %   eus_data_f   = filter(eus_data,notch_filter);
+            %       notch_filter = sci.time_series.filter.butter(2,[55 65],'stop');
+            %       eus_data_f   = filter(eus_data,notch_filter);
             %
             %   2)
             %   
-            %   hp_filter = sci.time_series.filter.butter(2,100,'high');
-            %   filtered_pres_data = filter(pres_data,notch_filter);
+            %       hp_filter = sci.time_series.filter.butter(2,100,'high');
+            %       filtered_pres_data = filter(pres_data,notch_filter);
             %
             %   See Also:
             %   sci.time_series.data_filterer
@@ -877,6 +940,11 @@ classdef data < sl.obj.display_class
             df = sci.time_series.data_filterer('filters',filters);
             df.filter(temp,'subtract_filter_result',in.subtract_filter_result);
             
+            %TODO: Add on history of filtering ...
+            %filter_summaries = cellfun(@(x) getSummaries(x),filters,'un',0)
+            %
+            %temp.addHistoryElements
+            %
             if nargout
                varargout{1} = temp; 
             end

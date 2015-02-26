@@ -34,14 +34,20 @@ classdef obj
             end
         end
         function output = getFullMethodName(obj,method_name_or_names)
-            %x Adds on packages and
+            %x Adds on packages and class name to method name
             %
+            %   Calling Forms:
+            %   --------------
             %   output = sl.obj.getFullMethodName(obj,method_name_or_names)
+            %
+            %   output = sl.obj.getFullMethodName(class_name,method_name_or_names)
             %
             %   Inputs:
             %   -------
             %   obj : Matlab Object
-            %       Object from which the names should be referenced
+            %       Object from which the names should be referenced.
+            %   class_name : string
+            %       Full name of the class
             %   method_name_or_names :
             %
             %   Example:
