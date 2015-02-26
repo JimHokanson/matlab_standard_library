@@ -1,4 +1,7 @@
 classdef min < handle
+    %
+    %   Class:
+    %   
     
     properties
         width_type

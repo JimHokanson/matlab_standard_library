@@ -223,10 +223,13 @@ classdef data < sl.obj.handle_light
         function new_objs = copy(old_objs)
             %x Creates a deep copy of the object
             %
+            %   new_objs = copy(old_objs)
+            %
             %   This allows someone to make changes to the properties
             %   without it also changing the original object.
-            %
-            %
+            
+            %TODO: I'm curious if this would be better to do via
+            %export and fromStruct ...
             
             n_objs    = length(old_objs);
             temp_objs = cell(1,n_objs);
@@ -236,11 +239,11 @@ classdef data < sl.obj.handle_light
                 temp_objs{iObj} = sci.time_series.data(...
                     cur_obj.d,...
                     copy(cur_obj.time),...
-                    'history',cur_obj.history,...
-                    'units',cur_obj.units,...
+                    'history',      cur_obj.history,...
+                    'units',        cur_obj.units,...
                     'channel_labels',cur_obj.channel_labels,...
-                    'events',cur_obj.devents,...
-                    'y_label',cur_obj.y_label);
+                    'events',       cur_obj.devents,...
+                    'y_label',      cur_obj.y_label);
             end
             
             new_objs = [temp_objs{:}];
@@ -248,10 +251,12 @@ classdef data < sl.obj.handle_light
         function s_objs = export(objs)
             %x Exports the object to a structure
             %
+            %   s_objs = export(objs)
+            %
             %   Outputs:
             %   --------
             %   s_objs : structure array
-            %
+            
             s_objs = sl.obj.toStruct(objs);
             for iObj = 1:length(objs)
                 s_objs(iObj).time = export(s_objs(iObj).time);
@@ -268,9 +273,17 @@ classdef data < sl.obj.handle_light
     end
     methods (Static)
         function objs = fromStruct(s_objs)
-            %x
+            %x Creates an instance of the objects from a structure
             %
+            %   objs = sci.time_series.data.fromStruct(s_objs)
             %
+            %   This method was originally written when I had shared some
+            %   data with 
+            %
+            %   Example:
+            %   --------
+            %   s_objs = export(data_objs);
+            %   new_objs = fromStruct(s_objs)
             
             n_objs  = length(s_objs);
             temp_ca = cell(1,n_objs);
@@ -314,7 +327,7 @@ classdef data < sl.obj.handle_light
            
            switch section_name
                case 'constructor related'
-                   fcn_names = {};  
+                   fcn_names = {'copy','export','fromStruct'};  
                case 'visualization'
                    fcn_names = {};
                case 'events and history'
@@ -322,7 +335,7 @@ classdef data < sl.obj.handle_light
                case 'time changing'
                    fcn_names = {};
                case 'data changing'
-                   fcn_names = {'filter'};
+                   fcn_names = {'meanSubtract','filter','decimateData','changeUnits'};
                case 'miscellaneous'
                    fcn_names = {'getRawDataAndTime'};
                otherwise
@@ -577,7 +590,7 @@ classdef data < sl.obj.handle_light
     %Add Event or History to data object ----------------------------------
     methods
         function addEventElements(obj,event_elements)
-            %x Adds event elements to the class. See 'devents' property
+            %x Adds event elements to the object. See 'devents' property
             %
             %    Inputs:
             %    -------
@@ -598,20 +611,22 @@ classdef data < sl.obj.handle_light
             end
         end
         function addHistoryElements(obj,history_elements)
-        %x Adds history elements (processing summaries) to the objects
+        %x Adds history elements (processing summaries) to the object
         %
         %   addHistoryElements(obj,history_elements)
         %
         %   Inputs:
         %   -------
-        %   history_elements : cell
+        %   history_elements : cell or string
         %       See definition of the 'history' property in this class
         %
             if iscell(history_elements);
                 if size(history_elements,2) > 1
                     history_elements = history_elements';
                 end
-            elseif ~ischar(history_elements)
+            elseif ischar(history_elements)
+                history_elements = {history_elements};
+            else
                 error('Invalid history element type')
             end
             
@@ -876,7 +891,51 @@ classdef data < sl.obj.handle_light
     end
     
     %Data changing --------------------------------------------------------
-    methods     
+    methods  
+        function varargout = meanSubtract(objs,varargin)
+            %x Subtracts the mean of the data from the data
+            %
+            %   Performs the operation:
+            %   B = A - mean(A)
+            %
+            %   Note, part of me would rather have a mean()
+            %   function, but this removes time, which I would need to
+            %   handle. Also, if mean(A) is not a scalar, then I would
+            %   also need to build in bsxfun support.
+            %
+            %
+            %   Optional Inputs:
+            %   ----------------
+            %   dim : scalar (default, [])
+            %       Dimension over which to calculate the mean. If empty,
+            %       the first non-singleton is used.
+            
+            in.dim = [];
+            in = sl.in.processVarargin(in,varargin);
+            
+            if nargout
+                temp = copy(objs);
+            else
+                temp = objs;
+            end
+            
+            if isempty(in.dim)
+                for iObj = 1:length(objs)
+                    cur_obj   = temp(iObj);
+                    cur_obj.d = bsxfun(@minus,cur_obj.d,mean(cur_obj.d));
+                end
+            else
+                dim_use = in.dim;
+                for iObj = 1:length(objs)
+                    cur_obj   = temp(iObj);
+                    cur_obj.d = bsxfun(@minus,cur_obj.d,mean(cur_obj.d,dim_use));
+                end
+            end
+            
+            if nargout
+                varargout{1} = temp;
+            end
+        end
         function varargout = filter(objs,filters,varargin)
             %x Filter the data using filters specified as inputs
             %
@@ -941,9 +1000,14 @@ classdef data < sl.obj.handle_light
             df.filter(temp,'subtract_filter_result',in.subtract_filter_result);
             
             %TODO: Add on history of filtering ...
-            %filter_summaries = cellfun(@(x) getSummaries(x),filters,'un',0)
+            %Filters need to have this method (getSummaryString) added, see
+            %   sci.time_series.filter.smoothing for an example
+            %
+            %filter_summaries = cellfun(@(x) getSummaryString(x),filters,'un',0)
             %
             %temp.addHistoryElements
+            %
+            %
             %
             if nargout
                varargout{1} = temp; 
@@ -952,7 +1016,7 @@ classdef data < sl.obj.handle_light
         function decimated_data = decimateData(objs,bin_width,varargin)
             %x Resample time series after some smoothing function is applied
             %
-            %   decimated_data = objs.decimateData(bin_width,varargin)
+            %   decimated_data = decimateData(objs,bin_width)
             %
             %   Currently decimation is done after taking the mean absolute
             %   value.
@@ -961,14 +1025,20 @@ classdef data < sl.obj.handle_light
             %   -------
             %   bin_width : scalar (s)
             %       The width of each bin for decimation
+            %
+            %   Example:
+            %   --------
+            %   p_dec = p.decimateData(1);
             
-            
-            
-            %in.max_samples = [];
+            in.approach = 'mean_absolute'; %no options yet besides this
+            in.allow_last_bin = false; %NYI
             %in = sl.in.processVarargin(in,varargin);
+            
             
             n_objs         = length(objs);
             decimated_data = cell(1,n_objs);
+            
+            history_string = sprintf('Data decimated via .decimateData() with %gs width',bin_width);
             
             for iObj = 1:n_objs
                 cur_obj      = objs(iObj);
@@ -987,13 +1057,16 @@ classdef data < sl.obj.handle_light
                 new_data = zeros(n_bins,cur_obj.n_channels,cur_obj.n_reps);
                 
                 cur_data = cur_obj.d;
-                
-                new_obj  = cur_obj.copy();
-                
-                for iBin = 1:n_bins
-                    temp_data = cur_data(start_Is(iBin):end_Is(iBin),:,:);
-                    %NOTE: Eventually we might want additional methods
-                    new_data(iBin,:,:) = mean(abs(temp_data),1);
+                                
+                switch in.approach
+                    case 'mean_absolute'
+                        for iBin = 1:n_bins
+                            temp_data = cur_data(start_Is(iBin):end_Is(iBin),:,:);
+                            %NOTE: Eventually we might want additional methods
+                            new_data(iBin,:,:) = mean(abs(temp_data),1);
+                        end
+                    otherwise
+                        error('unexpeced decimation approach')
                 end
                 
                 new_time_object = copy(cur_obj.time);
@@ -1004,44 +1077,38 @@ classdef data < sl.obj.handle_light
                 
                 new_data_obj = h__createNewDataFromOld(cur_obj,new_data,new_time_object);
                 
+                new_data_obj.addHistoryElements(history_string);
+                
                 decimated_data{iObj} = new_data_obj;
             end
             
             decimated_data = [decimated_data{:}];
             
         end
-        function runFunctionsOnData(objs,functions)
-            %
-            %
-            %
-            %   Example:
-            %   --------
-            %   objs.runFunctionsOnData(@abs)
-            if iscell(functions)
-                %Great, skip ahead
-            elseif ischar(functions)
-                functions = {str2func(functions)};
-            elseif isa(functions, 'function_handle')
-                functions = {functions};
-            elseif ~iscell(functions)
-                error('Unexpected type: %s, for ''functions'' input',class(functions));
-            end
-            
-            for iObj = 1:length(objs)
-                cur_obj = objs(iObj);
-                for iFunction = 1:length(functions)
-                    cur_function = functions{iFunction};
-                    cur_obj.d = cur_function(cur_obj.d);
-                end
-            end
-        end
         function changeUnits(objs,new_units)
+            %x Given the new units, scales/converts the data accordingly
+            %
+            %   HIGHLY EXPERIMENTAL
+            %   Relies on sci.units.getConversionFunction which is woefully
+            %   incomplete.
             %
             %   Inputs:
             %   -------
             %   new_units : string
             %
+            %   Example:
+            %   --------
+            %   raw_data = sci.time_series.data(ones(100,1),1,'units','V')
+            %   plot(raw_data)
+            %   raw_data.changeUnits('mV')
+            %   hold all
+            %   plot(raw_data) %This will be 1000x larger
             %
+            %   
+            %   
+            %   
+            %   See Also:
+            %   sci.units.getConversionFunction
             
             %TODO: We could make new_units a cell array of values, 1 for
             %each object
@@ -1064,9 +1131,47 @@ classdef data < sl.obj.handle_light
     %   
     %
     methods (Hidden)
+        %Possibles to add:
+        %- ceil
+        %- floor
+        %- round
+        %- sqrt
+        %- diff
+        %- exp
+        %- log
+        %- log10
+        function runFunctionsOnData(objs,functions)
+            %x  Executes a a set of functions on the object
+            %
+            %   This is really a helper function for some of the basic
+            %   math functions.
+            %
+            %   Example:
+            %   --------
+            %   objs.runFunctionsOnData(@abs)
+            if iscell(functions)
+                %Great, skip ahead
+            elseif ischar(functions)
+                functions = {str2func(functions)};
+            elseif isa(functions, 'function_handle')
+                functions = {functions};
+            elseif ~iscell(functions)
+                error('Unexpected type: %s, for ''functions'' input',class(functions));
+            end
+            
+            for iObj = 1:length(objs)
+                cur_obj = objs(iObj);
+                for iFunction = 1:length(functions)
+                    cur_function = functions{iFunction};
+                    cur_obj.d = cur_function(cur_obj.d);
+                end
+            end
+        end
         function out_objs = add(A,B)
             %x Performs the addition operation
             % 
+            %   Calling Forms:
+            %   --------------
             %   out_objs = add(A,B)
             %
             %   out_objs = A + B;
@@ -1130,50 +1235,6 @@ classdef data < sl.obj.handle_light
                 end       
             end
             
-        end
-        function varargout = meanSubtract(objs,varargin)
-            %x Subtracts the mean of the data from the data
-            %
-            %   Performs the operation:
-            %   B = A - mean(A)
-            %
-            %   Note, part of me would rather have a mean()
-            %   function, but this removes time, which I would need to
-            %   handle. Also, if mean(A) is not a scalar, then I would
-            %   also need to build in bsxfun support.
-            %
-            %
-            %   Optional Inputs:
-            %   ----------------
-            %   dim : scalar (default, [])
-            %       Dimension over which to calculate the mean. If empty,
-            %       the first non-singleton is used.
-            
-            in.dim = [];
-            in = sl.in.processVarargin(in,varargin);
-            
-            if nargout
-                temp = copy(objs);
-            else
-                temp = objs;
-            end
-            
-            if isempty(in.dim)
-                for iObj = 1:length(objs)
-                    cur_obj   = temp(iObj);
-                    cur_obj.d = bsxfun(@minus,cur_obj.d,mean(cur_obj.d));
-                end
-            else
-                dim_use = in.dim;
-                for iObj = 1:length(objs)
-                    cur_obj   = temp(iObj);
-                    cur_obj.d = bsxfun(@minus,cur_obj.d,mean(cur_obj.d,dim_use));
-                end
-            end
-            
-            if nargout
-                varargout{1} = temp;
-            end
         end
         function varargout = abs(objs)
             if nargout
