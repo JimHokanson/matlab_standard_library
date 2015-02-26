@@ -61,7 +61,12 @@ classdef obj
             %   output => 'adinstruments.channel.getAllData'
             %
             
-            class_name = class(obj);
+            if ischar(obj)
+               class_name = obj;
+            else
+               class_name = class(obj); 
+            end
+            
             if ischar(method_name_or_names)
                 output = [class_name '.' method_name_or_names];
             else

@@ -105,7 +105,7 @@ end
 [method_names_sorted, I] = sort(method_names);
 method_objs_sorted = meta_method_objs(I);
 
-full_method_names = sl.obj.getFullMethodName(objs,method_names_sorted);
+full_method_names = sl.obj.getFullMethodName(class_name,method_names_sorted);
 h1_lines = cellfun(@sl.help.getH1Line,full_method_names,'un',0);
 
 %Size setup
@@ -175,6 +175,7 @@ for iM = 1:n_methods
     fprintf('%s%s %s%s\n',static_str, left_str,middle_str,right_str);
 end
 
+disp('') %Let's let things breath
 
 end
 
