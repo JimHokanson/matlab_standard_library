@@ -1,4 +1,4 @@
-classdef butter
+classdef butter < handle
     %
     %   Class:
     %   sci.time_series.filter.butter

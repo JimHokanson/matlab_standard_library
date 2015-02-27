@@ -13,6 +13,7 @@ classdef (Hidden) list_result < sl.obj.handle_light
     %   -------------
     %   1) Get folder names at a certain depth from the root
     %   2) Get path of everything after the root folder path
+    %   3) Allow additional post-result filtering
     
     properties
         method_used = '' 

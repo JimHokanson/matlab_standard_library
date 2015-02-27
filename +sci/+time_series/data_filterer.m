@@ -63,7 +63,7 @@ classdef data_filterer < handle
             
             %TODO: Add history support ...
             
-            %TODO: Allow merging filters ...
+            %TODO: Merge filters: Can we filter things faster 
             
             %TODO: Allow a shallow copy
             in.additional_filters = [];
@@ -105,6 +105,9 @@ classdef data_filterer < handle
     
     methods (Static)
         function listAvailableFilters(obj)
+            %
+            %   sci.time_series.data_filterer.listAvailableFilters
+            %
            %TODO: Provide links
            fprintf('List of implemented filters\n');
            fprintf('------------------------------\n');

@@ -4,13 +4,17 @@ classdef smoothing < handle
     %   sci.time_series.filter.smoothing
     %
     %   This might be better as "kernal" filtering ...
+    %
+    %   Filters data with either a triangular or rectangular window.
+    %
+    %
     
     
     properties
-        window_type
-        width_type
+        window_type     %{'tri','rect'}
+        width_type      %{'seconds','samples'}
         width_value
-        zero_phase %logical
+        zero_phase %logical, if true filtfilt is used instead of filter()
     end
     
     methods
@@ -39,8 +43,8 @@ classdef smoothing < handle
             %   ----------------
             %   type : {'tri','rect'}
             %       The shape to use for smoothing ...
-            %       tri - triangular window
-            %       rect - rectangular window
+            %       'tri' - triangular window
+            %       'rect' - rectangular window
             %   width_type : {'seconds','samples'}
             %   zero_phase : logical (default true)
             %       If true the data are filtered forwards and backwards
@@ -59,6 +63,7 @@ classdef smoothing < handle
             obj.window_type = in.type;
             obj.width_type  = in.width_type;
             obj.width_value = width;
+            obj.zero_phase  = in.zero_phase;
             
         end
         function width = getWidthInSamples(obj,fs)
@@ -69,12 +74,12 @@ classdef smoothing < handle
             end
         end
         function [B,A] = getCoefficients(obj,fs)
-        %
-        %   [B,A] = getCoefficients(obj,fs)
-        %
-        
+            %
+            %   [B,A] = getCoefficients(obj,fs)
+            %
+            
             A = 1;
-        
+            
             samples_width = obj.getWidthInSamples(fs);
             if strcmp(obj.window_type,'rect')
                 B = ones(1,samples_width);
@@ -108,40 +113,57 @@ classdef smoothing < handle
             data_out = filter_method(B,A,data_in);
         end
         function plotFrequencyResponse(obj,fs,varargin)
-         %
-         %
-         %  plotFrequencyResponse(obj,fs,varargin)
-         %
-         %  Optional Inputs:
-         %  ----------------
-         %
-         %  See Also:
-         %  freqz
-         
-         in.N = 1024;
-         in = sl.in.processVarargin(in,varargin);
-         
-         [B,A] = getCoefficients(obj,fs);
-
-         [H,F] = freqz(B,A,in.N,fs);
-         
-         plot(F,abs(H))
-         
-         
+            %
+            %
+            %  plotFrequencyResponse(obj,fs,varargin)
+            %
+            %  Optional Inputs:
+            %  ----------------
+            %
+            %  See Also:
+            %  freqz
+            
+            in.N = 1024;
+            in = sl.in.processVarargin(in,varargin);
+            
+            [B,A] = getCoefficients(obj,fs);
+            
+            [H,F] = freqz(B,A,in.N,fs);
+            
+            plot(F,abs(H))
+            
+            
         end
         function str = getSummaryString(obj,fs)
-           switch obj.window_type
-               case 'tri'
-                   window_name = 'triangular';
-               case 'rect'
-                   window_name = 'rectangular';
-               otherwise
-                   error('Unexpected window type')
-           end
-           
-           %TODO: Add on width information ...
-           
-           str = sprintf('Filtered using a %s window',window_name);
+            %x Returns a string that summarizes the details of the filter
+            %
+            %   str = getSummaryString(obj,*fs)
+            %
+            %
+            %
+            time_str = sprintf('%g %s',obj.width_value,obj.width_type);
+            
+            if strcmp(obj.width_type,'samples') && exist('fs','var')
+                width_in_seconds = obj.width_value/fs;
+                time_str = sprintf('%s (%gs)',time_str,width_in_seconds);
+            end
+            
+            switch obj.window_type
+                case 'tri'
+                    window_name = 'triangular';
+                case 'rect'
+                    window_name = 'rectangular';
+                otherwise
+                    error('Unexpected window type')
+            end
+            
+            if obj.zero_phase
+                filter_method = 'filtfilt()';
+            else
+                filter_method = 'filter()';
+            end
+            
+            str = sprintf('Filtered using a %s window, width: %s, method: %s',window_name,time_str,filter_method);
         end
     end
     

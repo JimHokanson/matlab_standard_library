@@ -5,6 +5,15 @@ function str_out = padText(input_str,total_len,varargin)
 %
 %   Status: code done, needs to be cleaned up
 %
+%   Optional Inputs:
+%   ----------------
+%   disp_len : numeric (default [])
+%       Pass this in if the length of the input string is not the same
+%       as the length of the string when displayed (due to html markup)
+%   text_loc : {'left','right','center'} (default 'left')
+%       'left' indicates that the padding goes to the right
+%   pad_char : string (default ' ')
+%
 
 %{
     disp(sl.str.padText('test',30))

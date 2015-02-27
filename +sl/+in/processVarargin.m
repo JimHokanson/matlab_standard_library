@@ -5,35 +5,37 @@ function [in,extras] = processVarargin(in,v,varargin)
 %
 %   [in,extras] = sl.in.processVarargin(in,v,varargin) 
 %
-%   INPUTS
-%   =======================================================================
-%   in       : structure containing default values that may be overridden
+%   Inputs:
+%   -------
+%   in : structure containing default values that may be overridden
 %              by user inputs
-%   v        : varargin input from calling function, prop/value pairs or 
-%              structure with fields
+%   v : cell or struct
+%       The varargin value from the calling function.
 %
 %   varargin : see optional inputs, prop/value or structure with fields
 %
-%   OPTIONAL INPUTS (specify via prop/value pairs or struct)
-%   =======================================================================
-%   Rules for these are:
-%   - case insensitive
-%   - non-matches not allowed ...
-%
+%   Optional Inputs (specify via prop/value pairs OR struct)
+%   --------------------------------------------------------
 %   case_sensitive    : (default false)
-%   allow_non_matches : (default false)
+%       If true values must have the same casing in order to match
+%   allow_non_matches: (default false)
+%       If true, then an option can be passed in and not match. Generally
+%       this is indicative of a spelling error but occasionally it might 
+%       indicate that the same options are being passed into multiple
+%       functions and only some options match in some functions.
+%   allow_spaces :
+%   return_as_object : 
 %
 %
-%   %   allow_duplicates  : (default false) NOT YET IMPLEMENTED
+%   allow_duplicates  : (default false) NOT YET IMPLEMENTED
 %   partial_match     : (default false) NOT YET IMPLEMENTED
 %
-%   OUTPUTS
-%   =======================================================================
-%   extras : Class: sl.in.process_varargin_result
+%   Outputs:
+%   --------
+%   extras: sl.in.process_varargin_result
 %
-%   TODO: Provide link
-%   EXAMPLES
-%   =======================================================================
+%   Examples:
+%   ---------
 %   1)
 %   function test(varargin)
 %   in.a = 1
@@ -41,11 +43,12 @@ function [in,extras] = processVarargin(in,v,varargin)
 %   in = processVarargin(in,varargin,'allow_duplicates',true)
 %
 %   Similar functions:
+%   ------------------
 %   http://www.mathworks.com/matlabcentral/fileexchange/22671
 %   http://www.mathworks.com/matlabcentral/fileexchange/10670
 %
-%   IMPROVEMENTS
-%   =======================================================================
+%   Improvements:
+%   -------------
 %   1) For non-matched inputs, provide link to offending caller
 %
 %
@@ -55,12 +58,13 @@ function [in,extras] = processVarargin(in,v,varargin)
 
 
 %Check to exit code quickly when it is not used ...
-if isempty(v) && nargout == 1
+if isempty(v) && nargout == 1 && isempty(varargin)
     %Possible improvement
     %- provide code that allows this to return quicker if nargout == 2
     return
 end
 
+c.return_as_object  = false;
 c.case_sensitive    = false;
 % % % c.allow_duplicates  = false;
 % % % c.partial_match     = false;
@@ -87,6 +91,10 @@ end
 
 %Update optional inputs of calling function with this function's options now set
 [in,extras] = processVararginHelper(in,v,c,false);
+
+if c.return_as_object
+   in = sl.in.optional_inputs(in); 
+end
 
 end
 
