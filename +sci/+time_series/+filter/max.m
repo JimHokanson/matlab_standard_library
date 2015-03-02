@@ -1,4 +1,7 @@
 classdef max < handle
+    %
+    %   Class:
+    %   sci.time_series.filter.max
     
     properties
         width_type

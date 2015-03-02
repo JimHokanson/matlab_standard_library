@@ -769,6 +769,7 @@ classdef data < sl.obj.handle_light
             
         end
         function event_aligned_data = getDataAlignedToEvent(obj,event_times,new_time_range,varargin)
+            %x Aligns subsets of the data to a time
             %
             %   event_aligned_data = getDataAlignedToEvent(obj,event_times,new_time_range,varargin)
             %
@@ -777,8 +778,9 @@ classdef data < sl.obj.handle_light
             %
             %   Inputs:
             %   -------
-            %   event_times:
-            %   new_time_range: [min max] with 0 being the event times
+            %   event_times :
+            %   new_time_range : [min max] with 0 being the event times
+            %       This specifies how far left 
             %
             %   Optional Inputs:
             %   ----------------
@@ -856,11 +858,16 @@ classdef data < sl.obj.handle_light
         %             error('Not yet implemented')
         %         end
         function removeTimeGapsBetweenObjects(objs)
+            %x Removes any time gaps between objects (for plotting)
             %
             %   removeTimeGapsBetweenObjects(objs)
             %
-            %
-            last_time = 0;
+            %   Example:
+            %   --------
+            %   p.removeTimeGapsBetweenObjects()
+            %   plot(p)
+            
+            last_time = 0; %Should this be the first object ?????
             for iObj = 1:length(objs)
                 cur_obj = objs(iObj);
                 cur_obj.time.start_offset = last_time;

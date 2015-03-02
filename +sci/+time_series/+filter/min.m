@@ -1,7 +1,7 @@
 classdef min < handle
     %
     %   Class:
-    %   
+    %   sci.time_series.filter.min
     
     properties
         width_type
