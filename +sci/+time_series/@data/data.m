@@ -329,11 +329,13 @@ classdef data < sl.obj.handle_light
                case 'constructor related'
                    fcn_names = {'copy','export','fromStruct'};  
                case 'visualization'
-                   fcn_names = {};
+                   fcn_names = {'plotRows','plot','plotStacked'};
                case 'events and history'
                    fcn_names = {'addEventElements','addHistoryElements'};
                case 'time changing'
-                   fcn_names = {};
+                   %Not in this file:
+                   %resample
+                   fcn_names = {'resample','getDataSubset','zeroTimeByEvent','getDataAlignedToEvent','removeTimeGapsBetweenObjects'};
                case 'data changing'
                    fcn_names = {'meanSubtract','filter','decimateData','changeUnits'};
                case 'miscellaneous'
@@ -715,16 +717,16 @@ classdef data < sl.obj.handle_light
             end
         end
         function zeroTimeByEvent(objs,event_name_or_time_array)
+            %x Redefines time such that the time of event is now at time zero.
             %
-            %    Redefines time such that the time of event is now at time
-            %    zero.
+            %   Calling Forms:
+            %   --------------
+            %   objs.zeroTimeByEvent(event_name)
             %
-            %    objs.zeroTimeByEvent(event_name)
+            %   objs.zeroTimeByEvent(event_times)
             %
-            %    objs.zeroTimeByEvent(event_times)
-            %
-            %    Inputs:
-            %    -------
+            %   Inputs:
+            %   -------
             %    event_name :
             %        This refers to one of the internal events in the object.
             %    event_times :
@@ -1097,7 +1099,8 @@ classdef data < sl.obj.handle_light
             %
             %   HIGHLY EXPERIMENTAL
             %   Relies on sci.units.getConversionFunction which is woefully
-            %   incomplete.
+            %   incomplete and is basically only hardcoded for the values
+            %   I'm using.
             %
             %   Inputs:
             %   -------
@@ -1117,17 +1120,26 @@ classdef data < sl.obj.handle_light
             %   See Also:
             %   sci.units.getConversionFunction
             
-            %TODO: We could make new_units a cell array of values, 1 for
-            %each object
+            %TODO: We could allow new_units to be a cellstr as well
             
-            %TODO: Check that all objs have the same units ...
+            if ~all(strcmp({objs.units},objs(1).units))
+                error('Not all units are the same as the first object')
+            end
             
-            fh = sci.units.getConversionFunction(objs(1).units,new_units);
+            cur_units = objs(1).units;
             
-            for iObj = 1:length(objs)
-                cur_obj = objs(iObj);
-                cur_obj.d = fh(cur_obj.d);
-                cur_obj.units = new_units;
+            if ~strcmp(cur_units,new_units)
+                fh = sci.units.getConversionFunction(cur_units,new_units);
+
+                for iObj = 1:length(objs)
+                    cur_obj = objs(iObj);
+                    
+                    cur_obj.d     = fh(cur_obj.d);
+                    cur_obj.units = new_units;
+                    
+                    history_str   = sprintf('Units changed from %s to %s, data scaled appropriately',cur_units,new_units);
+                    cur_obj.addHistoryElements({history_str})
+                end
             end
         end
     end
