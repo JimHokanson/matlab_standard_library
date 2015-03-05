@@ -105,7 +105,7 @@ classdef butter < handle
                 filter_method = 'filter()';
             end
             
-            freq_values = obj.cutoff_or_cutoffs/(fs/2);
+            freq_values = obj.cutoff_or_cutoffs;
             switch obj.type
                 case 'low'
                     filter_type = 'low pass';
