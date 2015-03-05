@@ -40,6 +40,6 @@ if show_code
     disp(uncommented_str)
 end
 
-eval(uncommented_str)
+evalin('base',uncommented_str);
 
 end

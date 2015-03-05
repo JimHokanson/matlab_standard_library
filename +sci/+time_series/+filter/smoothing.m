@@ -163,7 +163,7 @@ classdef smoothing < handle
                 filter_method = 'filter()';
             end
             
-            str = sprintf('Filtered using a %s window, width: %s, method: %s',window_name,time_str,filter_method);
+            str = sprintf('Smoothing filter: %s window, width: %s, method: %s',window_name,time_str,filter_method);
         end
     end
     

@@ -14,6 +14,7 @@ classdef butter < handle
     %
     %   See Also:
     %   sci.time_series.data_filterer
+    %   sci.time_series.filter.smoothing
     
     properties
        %-----------------------
@@ -58,7 +59,7 @@ classdef butter < handle
            
            obj.order  = order;
            
-           if strcmp(type,'pass')
+           if strcmp(type,'pass') || strcmp(type,'band')
                type = 'bandpass';
            end
            
@@ -96,6 +97,31 @@ classdef butter < handle
            %        Sampling rate
            %
            [B,A] = butter(obj.order,obj.cutoff_or_cutoffs/(fs/2),obj.type); 
+        end
+        function str = getSummaryString(obj,fs)
+            if obj.zero_phase
+                filter_method = 'filtfilt()';
+            else
+                filter_method = 'filter()';
+            end
+            
+            freq_values = obj.cutoff_or_cutoffs/(fs/2);
+            switch obj.type
+                case 'low'
+                    filter_type = 'low pass';
+                    freq_str = sprintf('%g',freq_values);
+                case 'high'
+                    filter_type = 'high pass';
+                    freq_str = sprintf('%g',freq_values);
+                case 'bandpass'
+                    filter_type = 'band pass';
+                    freq_str = sprintf('from %g to %g',freq_values(1),freq_values(2));
+                case 'stop'
+                    filter_type = 'band_stop';
+                    freq_str = sprintf('from %g to %g',freq_values(1),freq_values(2));
+            end
+            
+           str = sprintf('Butterworth Filter: type: %s,  frequency: %s,  order: %d,  method: %s',filter_type,freq_str,obj.order,filter_method);
         end
         function disp(obj)
 %            fprintf('xxxxxxx\n')
