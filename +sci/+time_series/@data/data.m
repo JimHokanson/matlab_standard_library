@@ -371,26 +371,29 @@ classdef data < sl.obj.handle_light
             
             %TODO: Build in cleanup code ...
         end
-        function plot(objs,local_options,plotting_options)
+        function plot(objs,varargin)
             %x Plot the data, nicely!
             %
-            %   plot(obj,local_options,plotting_options)
+            %   plot(obj,varargin)
             %
-            %   Local Options: cell array
-            %   -------------------------
+            %   Optional Inputs:
+            %   ----------------
+            %   time_units : {'s','min','ms','h'} (default 's')
+            %       - s , seconds
+            %       - h , hours
+            %       - min , minutes
+            %       - ms , milliseconds
             %   channels: default 'all'
             %       Pass in the numeric values of the channels to plot.
             %   time_shift: (default true)
             %       If true, then objects will not be shifted to account
             %       for differences in their absolute start times
             %
-            %   Plotting Options: cell array
-            %   ----------------------------
-            %
             %   Example:
-            %   plot(data_objs,{},{'Linewidth',2}
-            %   plot(data_objs,{'time_shift',false})
+            %   plot(p,'time_units','h','Color','k')
             %
+            %   See Also:
+            %   sci.time_series.time
             
             BIG_PLOT_N_SAMPLES = 5e5;
             %TODO: Plotting multiple objects on the same figure is a
@@ -398,17 +401,14 @@ classdef data < sl.obj.handle_light
             %
             %   TODO: How do we want to plot multiple repetitions ...
             
-            if nargin < 2
-                local_options = {};
-            end
-            if nargin < 3
-                plotting_options = {};
-            end
-            
+            in.time_units = 's';
             in.time_shift = true;
-            in.axes     = {};
+            in.axes = {};
             in.channels = 'all';
+            [local_options,plotting_options] = sl.in.removeOptions(varargin,fieldnames(in),'force_cell',true);
             in = sl.in.processVarargin(in,local_options);
+            
+            
             
             if ~isempty(in.axes)
                 in.axes = {in.axes};
@@ -426,9 +426,10 @@ classdef data < sl.obj.handle_light
                     cur_time_obj.shiftStartTime(dt(iObj));
                 end
             else
-                time_objs_for_plot = time_objs;
+                time_objs_for_plot = copy(time_objs);
             end
             
+            time_objs_for_plot.changeOutputUnits(in.time_units);
             
             for iObj = 1:length(objs)
                 if iObj == 2
@@ -465,7 +466,7 @@ classdef data < sl.obj.handle_light
             %TODO: Depeneding upon what is defined, show different things
             %for the ylabel - e.g. if units are present or not
             ylabel(sprintf('%s (%s)',cur_obj.y_label,cur_obj.units))
-            xlabel(sprintf('Time (%s)',cur_obj.time.output_units))
+            xlabel(sprintf('Time (%s)',in.time_units))
         end
         function result_object = plotStacked(objs,local_options,plotting_options)
             %
