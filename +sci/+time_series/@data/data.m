@@ -158,8 +158,8 @@ classdef data < sl.obj.handle_light
             %   data_in : array [samples x channels]
             %       'data_in' must be with samples going down the rows.
             %   time_object : sci.time_series.time
-            %       
-            %   dt: number or 
+            %
+            %   dt: number or
             %
             %   Optional Inputs:
             %   ----------------
@@ -278,7 +278,7 @@ classdef data < sl.obj.handle_light
             %   objs = sci.time_series.data.fromStruct(s_objs)
             %
             %   This method was originally written when I had shared some
-            %   data with 
+            %   data with
             %
             %   Example:
             %   --------
@@ -301,52 +301,52 @@ classdef data < sl.obj.handle_light
     %Display handlers -----------------------------------------------------
     methods
         function disp(objs)
-           sl.obj.dispObject_v1(objs,'show_methods',false);
-           
-           SECTION_NAMES = {'constructor related','visualization','events and history','time changing','data changing','miscellaneous'};
-           
-           sl.obj.disp.sectionMethods(SECTION_NAMES,'sci.time_series.data.dispMethodsSection')
+            sl.obj.dispObject_v1(objs,'show_methods',false);
+            
+            SECTION_NAMES = {'constructor related','visualization','events and history','time changing','data changing','miscellaneous'};
+            
+            sl.obj.disp.sectionMethods(SECTION_NAMES,'sci.time_series.data.dispMethodsSection')
         end
     end
     methods (Static)
         function dispMethodsSection(section_name)
-           %x Should display methods in a section
-           %
-           %    sci.time_series.data.dispMethodsSection
-           %
-           %    Inputs:
-           %    -------
-           %    section_name : string
-           %        Options include:
-           %            - 'constructor_related'
-           %            - 'visualization'
-           %            - 'events_and_history'
-           %            - 'time changing'
-           %            - 'data changing'
-           %    
-           
-           switch section_name
-               case 'constructor related'
-                   fcn_names = {'copy','export','fromStruct'};  
-               case 'visualization'
-                   fcn_names = {'plotRows','plot','plotStacked'};
-               case 'events and history'
-                   fcn_names = {'addEventElements','addHistoryElements'};
-               case 'time changing'
-                   %Not in this file:
-                   %resample
-                   fcn_names = {'resample','getDataSubset','zeroTimeByEvent','getDataAlignedToEvent','removeTimeGapsBetweenObjects'};
-               case 'data changing'
-                   fcn_names = {'meanSubtract','filter','decimateData','changeUnits'};
-               case 'miscellaneous'
-                   fcn_names = {'getRawDataAndTime'};
-               otherwise
-                   error('Unknown section name')
-           end
-           
-           section_name = sl.str.capitalizeWords(section_name);
-           header_name = sprintf('%s Methods:',section_name);
-           sl.obj.disp.methods_v1('sci.time_series.data','header',header_name,'methods_use',fcn_names)
+            %x Should display methods in a section
+            %
+            %    sci.time_series.data.dispMethodsSection
+            %
+            %    Inputs:
+            %    -------
+            %    section_name : string
+            %        Options include:
+            %            - 'constructor_related'
+            %            - 'visualization'
+            %            - 'events_and_history'
+            %            - 'time changing'
+            %            - 'data changing'
+            %
+            
+            switch section_name
+                case 'constructor related'
+                    fcn_names = {'copy','export','fromStruct'};
+                case 'visualization'
+                    fcn_names = {'plotRows','plot','plotStacked'};
+                case 'events and history'
+                    fcn_names = {'addEventElements','addHistoryElements'};
+                case 'time changing'
+                    %Not in this file:
+                    %resample
+                    fcn_names = {'resample','getDataSubset','zeroTimeByEvent','getDataAlignedToEvent','removeTimeGapsBetweenObjects'};
+                case 'data changing'
+                    fcn_names = {'meanSubtract','filter','decimateData','changeUnits'};
+                case 'miscellaneous'
+                    fcn_names = {'getRawDataAndTime'};
+                otherwise
+                    error('Unknown section name')
+            end
+            
+            section_name = sl.str.capitalizeWords(section_name);
+            header_name = sprintf('%s Methods:',section_name);
+            sl.obj.disp.methods_v1('sci.time_series.data','header',header_name,'methods_use',fcn_names)
         end
     end
     
@@ -417,7 +417,7 @@ classdef data < sl.obj.handle_light
             time_objs = [objs.time];
             start_datetimes = [time_objs.start_datetime];
             if ~all(start_datetimes == start_datetimes(1)) && in.time_shift
-               %TODO: Change time objects for plotting
+                %TODO: Change time objects for plotting
                 time_objs_for_plot = copy(time_objs);
                 base_datetime = min(start_datetimes);
                 dt = sl.datetime.datenumToSeconds(start_datetimes-base_datetime);
@@ -613,15 +613,15 @@ classdef data < sl.obj.handle_light
             end
         end
         function addHistoryElements(obj,history_elements)
-        %x Adds history elements (processing summaries) to the object
-        %
-        %   addHistoryElements(obj,history_elements)
-        %
-        %   Inputs:
-        %   -------
-        %   history_elements : cell or string
-        %       See definition of the 'history' property in this class
-        %
+            %x Adds history elements (processing summaries) to the object
+            %
+            %   addHistoryElements(obj,history_elements)
+            %
+            %   Inputs:
+            %   -------
+            %   history_elements : cell or string
+            %       See definition of the 'history' property in this class
+            %
             if iscell(history_elements);
                 if size(history_elements,2) > 1
                     history_elements = history_elements';
@@ -782,7 +782,7 @@ classdef data < sl.obj.handle_light
             %   -------
             %   event_times :
             %   new_time_range : [min max] with 0 being the event times
-            %       This specifies how far left 
+            %       This specifies how far left
             %
             %   Optional Inputs:
             %   ----------------
@@ -881,7 +881,7 @@ classdef data < sl.obj.handle_light
     
     %Misc. Methods ----------------------------------------------------
     methods
-     	function [data,time] = getRawDataAndTime(obj)
+        function [data,time] = getRawDataAndTime(obj)
             %x Returns the raw data and time
             %
             %   [data,time] = getRawDataAndTime(obj)
@@ -896,11 +896,11 @@ classdef data < sl.obj.handle_light
             %   [p_data,p_time] = p.getRawDataAndTime
             data = obj.d;
             time = obj.time.getTimeArray();
-        end 
+        end
     end
     
     %Data changing --------------------------------------------------------
-    methods  
+    methods
         function varargout = meanSubtract(objs,varargin)
             %x Subtracts the mean of the data from the data
             %
@@ -977,24 +977,27 @@ classdef data < sl.obj.handle_light
             %       If true, the returned signal is the result of taking
             %       the filtered signal and subtracting it from the
             %       original signal.
-            %       
+            %
             %           i.e. rseult_data = data - filter(data)
             %
             %   Examples:
             %   ---------
             %   1)
-            %   
+            %
             %       notch_filter = sci.time_series.filter.butter(2,[55 65],'stop');
             %       eus_data_f   = filter(eus_data,notch_filter);
             %
             %   2)
-            %   
+            %
             %       hp_filter = sci.time_series.filter.butter(2,100,'high');
             %       filtered_pres_data = filter(pres_data,notch_filter);
             %
             %   See Also:
             %   sci.time_series.data_filterer
             
+            if ~iscell(filters)
+                filters = {filters};
+            end
             
             if nargout
                 temp = copy(objs);
@@ -1011,15 +1014,19 @@ classdef data < sl.obj.handle_light
             %TODO: Add on history of filtering ...
             %Filters need to have this method (getSummaryString) added, see
             %   sci.time_series.filter.smoothing for an example
-            %
-            %filter_summaries = cellfun(@(x) getSummaryString(x),filters,'un',0)
-            %
-            %temp.addHistoryElements
-            %
-            %
-            %
+            
+            for iObj = 1:length(objs)
+                cur_obj = temp(iObj);
+                try %#ok<TRYNC>
+                    filter_summaries = cellfun(@(x) getSummaryString(x,cur_obj.time.fs),filters,'un',0);
+                    
+                    cur_obj.addHistoryElements(filter_summaries);
+                end
+                
+            end
+
             if nargout
-               varargout{1} = temp; 
+                varargout{1} = temp;
             end
         end
         function decimated_data = decimateData(objs,bin_width,varargin)
@@ -1066,7 +1073,7 @@ classdef data < sl.obj.handle_light
                 new_data = zeros(n_bins,cur_obj.n_channels,cur_obj.n_reps);
                 
                 cur_data = cur_obj.d;
-                                
+                
                 switch in.approach
                     case 'mean_absolute'
                         for iBin = 1:n_bins
@@ -1114,9 +1121,9 @@ classdef data < sl.obj.handle_light
             %   hold all
             %   plot(raw_data) %This will be 1000x larger
             %
-            %   
-            %   
-            %   
+            %
+            %
+            %
             %   See Also:
             %   sci.units.getConversionFunction
             
@@ -1130,7 +1137,7 @@ classdef data < sl.obj.handle_light
             
             if ~strcmp(cur_units,new_units)
                 fh = sci.units.getConversionFunction(cur_units,new_units);
-
+                
                 for iObj = 1:length(objs)
                     cur_obj = objs(iObj);
                     
@@ -1147,7 +1154,7 @@ classdef data < sl.obj.handle_light
     %Math functions --------------------------------- e.g. abs, minus
     %
     %   These methods are slowly being created as they are needed.
-    %   
+    %
     %
     methods (Hidden)
         %Possibles to add:
@@ -1188,7 +1195,7 @@ classdef data < sl.obj.handle_light
         end
         function out_objs = add(A,B)
             %x Performs the addition operation
-            % 
+            %
             %   Calling Forms:
             %   --------------
             %   out_objs = add(A,B)
@@ -1197,41 +1204,41 @@ classdef data < sl.obj.handle_light
             %
             %   Note, this function currently always makes a copy. The copy
             %   operation in the dual object case is a bit ambiguous, as
-            %   both object have history and names. Currently the first 
+            %   both object have history and names. Currently the first
             %   objects properties are copied in this case.
             %
-            % 
+            %
             
             if isobject(A) && isobject(B)
                 out_objs = copy(A);
                 for iObj = 1:length(A)
-                   out_objs(iObj).d = A(iObj).d + B(iObj).d;
+                    out_objs(iObj).d = A(iObj).d + B(iObj).d;
                 end
             elseif isobject(A)
                 out_objs = copy(A);
                 for iObj = 1:length(A)
-                   out_objs(iObj).d = A(iObj).d + B;
+                    out_objs(iObj).d = A(iObj).d + B;
                 end
             else
                 out_objs = copy(B);
                 for iObj = 1:length(A)
-                   out_objs(iObj).d = A + B(iObj).d;
-                end       
+                    out_objs(iObj).d = A + B(iObj).d;
+                end
             end
         end
         function out_objs = minus(A,B)
             %x Performs the minus operation
-            % 
+            %
             %   out_objs = minus(A,B)
             %
             %   out_objs = A - B;
-            %   
+            %
             %   Note, this function currently always makes a copy. The copy
             %   operation in the dual object case is a bit ambiguous, as
-            %   both object have history and names. Currently the first 
+            %   both object have history and names. Currently the first
             %   objects properties are copied in this case.
             %
-            %   
+            %
             
             %NOTE: We are supporting either a 1:1 length match for objects
             %or the case where A or B is an object or array of objects, and
@@ -1240,18 +1247,18 @@ classdef data < sl.obj.handle_light
             if isobject(A) && isobject(B)
                 out_objs = copy(A);
                 for iObj = 1:length(A)
-                   out_objs(iObj).d = A(iObj).d - B(iObj).d;
+                    out_objs(iObj).d = A(iObj).d - B(iObj).d;
                 end
             elseif isobject(A)
                 out_objs = copy(A);
                 for iObj = 1:length(A)
-                   out_objs(iObj).d = A(iObj).d - B;
+                    out_objs(iObj).d = A(iObj).d - B;
                 end
             else
                 out_objs = copy(B);
                 for iObj = 1:length(A)
-                   out_objs(iObj).d = A - B(iObj).d;
-                end       
+                    out_objs(iObj).d = A - B(iObj).d;
+                end
             end
             
         end
@@ -1263,7 +1270,7 @@ classdef data < sl.obj.handle_light
             end
             temp.runFunctionsOnData({@abs});
             if nargout
-               varargout{1} = temp; 
+                varargout{1} = temp;
             end
         end
         function varargout = mrdivide(objs,B)
@@ -1274,7 +1281,7 @@ classdef data < sl.obj.handle_light
             end
             temp.runFunctionsOnData({@(x)mrdivide(x,B)});
             if nargout
-               varargout{1} = temp; 
+                varargout{1} = temp;
             end
         end
         function varargout = power(objs,B)
@@ -1292,7 +1299,7 @@ classdef data < sl.obj.handle_light
             end
             temp.runFunctionsOnData({@(x)power(x,B)});
             if nargout
-               varargout{1} = temp; 
+                varargout{1} = temp;
             end
         end
     end
