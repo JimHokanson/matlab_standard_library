@@ -1,31 +1,95 @@
-function y = filtfiltMemSafe(b,a,x)
+function x = filtfiltMemSafe(b,a,x)
 %
+%
+%   Change x = x so that we might do everything in place ...
 
 %{
+
+http://stackoverflow.com/questions/585257/is-there-a-better-way-to-reverse-an-array-of-bytes-in-memory
+
+%Lesson, flipping of a vector is not done in place
+y1 = 1:1e8;
+while true
+    y1(1:1:end) = y1(end:-1:1);
+    pause(0.1)
+end
+
+%More memory efficient (it seems, but still allocating memory)
+while true
+    y1(:) = flip(y1,1);
+    pause(0.1)
+end
+
+while true
+    y1 = flip(y1,1);
+    pause(0.1)
+end
+
+
+while true
+y1 = filterInChunks(y1);
+pause(0.1)
+end
+
+
+while true
+   tic
+   n_in = floor(length(y1)/2);
+   len_p1 = length(y1)+1;
+   for iSample = 1:n_in
+      end__sample = len_p1-iSample;
+      t1 = y1(iSample);
+      y1(iSample) = y1(end__sample);
+      y1(end__sample) = t1;
+   end
+   toc
+
+end
+
+
+
 expt_id = '140414_C';
 df = dba.GSK.data_file(expt_id,1);
 p = df.getData('pres',-1,'filter_data',false);
 
 filter_spec = sci.time_series.filter.butter(2,100,'low');
-[B,A] = filter_spec.getCoefficients(1000)
+[B,A] = filter_spec.getCoefficients(1000);
 
 final_data = repmat(p(3).d,[7,1]);
+
+N_inner = 5;
+
+for j = 1:N_inner
+    p1 = filter(B,A,final_data);
+end
+
+for j = 1:N_inner
+    p2 = filterInChunks(B,A,final_data,100000);
+end
+
+
 
 profile('-memory','on')
 for i = 1:1
 disp(i)
 disp('memsafe')
 tic
-for j = 1:10
+for j = 1:N_inner
 y1 = filtfiltMemSafe(B,A,final_data);
 end
 toc
 tic
 disp('default')
-for j = 1:10
+for j = 1:N_inner
 y2 = filtfilt(B,A,final_data);
 end
 toc
+tic
+for j = 1:N_inner
+y3 = sl.array.mex_filtfilt(B,A,final_data);
+end
+toc
+
 end
 profile off
 profile viewer
@@ -42,7 +106,7 @@ if ~isa(b,'double') || ~isa(a,'double') || ~isa(x,'double')
     error(message('signal:filtfilt:NotSupported'));
 end
 if isempty(b) || isempty(a) || isempty(x)
-    y = [];
+    x = [];
     return
 end
 
@@ -57,18 +121,14 @@ end
 [b,a,zi,nfact,L] = getCoeffsAndInitialConditions(b,a,Npts);
 
 % Filter the data
-if Nchans==1
-    if Npts<10000
-        y = ffOneChanCat(b,a,x,zi,nfact,L);
-    else
-        y = ffOneChan(b,a,x,zi,nfact,L);
-    end
-else
-    y = ffMultiChan(b,a,x,zi,nfact,L);
-end
+
+x = ffOneChan(b,a,x,zi,nfact,L);
+
 
 if isRowVec
-    y = y.';   % convert back to row if necessary
+    x = x.';   % convert back to row if necessary
+end
+
 end
 
 %--------------------------------------------------------------------------
@@ -167,8 +227,10 @@ else
     end
 end
 
+end
+
 %--------------------------------------------------------------------------
-function y = ffOneChan(b,a,xc,zi,nfact,L)
+function xc = ffOneChan(b,a,xc,zi,nfact,L)
 
 %{
 %Single channel data with padding added on
@@ -201,7 +263,6 @@ end
 %
 %Step 4: 
 
-%TODO: Some in place data flipping would be great
 
 ii = 1;
 %Get the starting conditions for going forward
@@ -213,20 +274,124 @@ xt2 = -xc(end-1:-1:end-nfact) + 2*xc(end);
 %starting values. Perhaps I need to read the reference
 [~,zo1] = filter(b(:,ii),a(:,ii), xt1, zi(:,ii)*xt1(1)); % yc1 not needed
 
+
+
 %STEP 2: Main filtering going forward
-[xc,zo2] = filter(b(:,ii),a(:,ii), xc, zo1);
+%
+%   If we think that the output and input are going to be different, then
+%   this will duplicate our values
+
+
+%SETUP OF IN PLACE
+%=================
+%[xc,zo2] = h__filterInChunks(b(:,ii),a(:,ii), xc, zo1,ceil(length(xc)/1000));
+
+b1 = b(:,ii);
+a1 = a(:,ii);
+zi1 = zo1;
+chunk_size = ceil(length(xc)/1000);
+
+
+%IN PLACE CODE COPY
+%==============================================
+start_chunk = 1:chunk_size:size(xc,1);
+end_chunk = start_chunk + chunk_size - 1;
+if end_chunk(end) > size(xc,1);
+    end_chunk(end) = size(xc,1);
+end
+
+
+
+[xc(start_chunk(1):end_chunk(1),:),zf1] = filter(b1,a1,xc(start_chunk(1):end_chunk(1),:),zi1);    
+
+
+for iChunk = 2:length(start_chunk)
+   cur_start = start_chunk(iChunk);
+   cur_end   = end_chunk(iChunk);
+   [xc(cur_start:cur_end,:),zf1] = filter(b1,a1,xc(cur_start:cur_end,:),zf1);
+end
+%===============================================
+
+zo2 = zf1;
+
+%==========================================================
+
+
+
+
+
+
+
+
 
 %Step 3: Late part for forward, early part for going backward
 yc3 = filter(b(:,ii),a(:,ii), xt2, zo2);
 
 %Step 4: Get the initial filter conditions for going in reverse
 %based on the estimated late segment
+%
+%Where did this zi come from?
 [~,zo] = filter(b(:,ii),a(:,ii), yc3(end:-1:1), zi(:,ii)*yc3(end));
 
 %Step 5: Filter the data going backward
-xc = filter(b(:,ii),a(:,ii), xc(end:-1:1), zo);
+%
+%This isn't being done in place even though it should be by this point ...
+%
+xc = flip(xc,1);
 
-xc = xc(end:-1:1);
+%SETUP OF IN PLACE
+%=================
+%Better call:
+%xc = h__filterInChunks(b(:,ii),a(:,ii), xc, zo,ceil(length(xc)/1000));
 
-y = xc;
+b1 = b(:,ii);
+a1 = a(:,ii);
+zi1 = zo;
+chunk_size = ceil(length(xc)/1000);
 
+%IN PLACE CODE COPY
+%==============================================
+start_chunk = 1:chunk_size:size(xc,1);
+end_chunk = start_chunk + chunk_size - 1;
+if end_chunk(end) > size(xc,1);
+    end_chunk(end) = size(xc,1);
+end
+
+
+[xc(start_chunk(1):end_chunk(1),:),zf1] = filter(b1,a1,xc(start_chunk(1):end_chunk(1),:),zi1);    
+
+for iChunk = 2:length(start_chunk)
+   cur_start = start_chunk(iChunk);
+   cur_end   = end_chunk(iChunk);
+   [xc(cur_start:cur_end,:),zf1] = filter(b1,a1,xc(cur_start:cur_end,:),zf1);
+end
+%===============================================
+
+%TODO: Do this in place ...
+xc = flip(xc,1);
+
+%xc = xc(end:-1:1);
+
+end
+
+function [xc,zf] = h__filterInChunks(b,a,xc,zi,chunk_size)
+
+start_chunk = 1:chunk_size:size(xc,1);
+end_chunk = start_chunk + chunk_size - 1;
+if end_chunk(end) > size(xc,1);
+    end_chunk(end) = size(xc,1);
+end
+
+if isempty(zi)
+[xc(start_chunk(1):end_chunk(1),:),zf] = filter(b,a,xc(start_chunk(1):end_chunk(1),:));
+else
+[xc(start_chunk(1):end_chunk(1),:),zf] = filter(b,a,xc(start_chunk(1):end_chunk(1),:),zi);    
+end
+
+for iChunk = 2:length(start_chunk)
+   cur_start = start_chunk(iChunk);
+   cur_end   = end_chunk(iChunk);
+   [xc(cur_start:cur_end,:),zf] = filter(b,a,xc(cur_start:cur_end,:),zf);
+end
+
+end

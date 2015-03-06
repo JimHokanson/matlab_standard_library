@@ -48,6 +48,7 @@ classdef butter < handle
             %
             %   Examples:
             %   ---------
+            %   f = sci.time_series.filter.butter(3,100,'low','zero_phase');
             %   f = sci.time_series.filter.butter(2,100,'low');
             %   f = sci.time_series.filter.butter(1,10,'high');
             %   f = sci.time_series.filter.butter(1,[300 3000],'pass');
