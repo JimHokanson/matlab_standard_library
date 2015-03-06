@@ -54,6 +54,13 @@ classdef time < sl.obj.display_class
     
     %Dependent Methods ----------------------------------------------------
     methods
+        function set.output_units(obj,value)
+           if ismember(value,{'h','hours','milliseconds','min','minutes','ms','s','seconds'})
+              obj.output_units = value; 
+           else
+              error('Unable to change time to given units') 
+           end 
+        end
         function value = get.fs(obj)
             value = 1/obj.dt;
         end
@@ -219,6 +226,14 @@ classdef time < sl.obj.display_class
 % %            
 % %            
 % %         end
+        function changeOutputUnits(objs,new_units_value)
+           %TODO: I don't know that this triggers the set function :/
+           %So we should do the check here as well
+           % => call the same function for both
+           for iObj = 1:length(objs)
+              objs(iObj).output_units = new_units_value; 
+           end
+        end
         function shiftStartTime(obj,start_dt)
            %x Shifts the start time
            %
@@ -314,10 +329,6 @@ classdef time < sl.obj.display_class
         end
     end
     
-    methods
-        
-    end
-    
 end
 
 function days = h__secondsToDays(seconds)
@@ -346,13 +357,13 @@ end
 
 function scale_factor = h__getTimeScaleFactor(unit_name,for_output)
 switch unit_name
-    case 's'
+    case {'s','seconds'}
         scale_factor = 1;
-    case 'ms'
+    case {'ms','milliseconds'}
         scale_factor = 1000;
-    case 'min'
+    case {'min','minutes'}
         scale_factor = 1/60;
-    case 'h'
+    case {'h','hours'}
         scale_factor = 1/3600;
     otherwise
         error('Unrecognized time unit: %s',unit_name)

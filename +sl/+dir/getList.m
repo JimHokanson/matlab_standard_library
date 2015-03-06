@@ -132,6 +132,8 @@ function varargout = getList(root_folder_path,varargin)
 %   folder_regex : string (default '')
 %       A regular expression pattern to run on each folder name.
 %           (a match means the entry is kept)
+%   folder_pattern : string (default '')
+%       See notes on 'file_pattern'
 %   folder_date_filter : function handle (default None)
 %       Input should be a function which takes in an array of datenum
 %       values for when the folders were modified and returns an array of
@@ -167,19 +169,26 @@ function varargout = getList(root_folder_path,varargin)
 %
 %   Examples:
 %   ---------
+%   1) Find files in a directory with a given extension
+%   list_result = sl.dir.getList(folder_path,'extension','.mat')
+%
+%   2) Find files of a given type in a directory AND subdirectories
+%   list_result = sl.dir.getList(root_path,'recursive',true,'extension','.mat')
+%
+%   3) Find all nested folders starting with the word 'block'
+%   list_result = sl.dir.getList(root_path,'recursive',true,...
+%       'search_type','folders','folder_pattern','block*')
+%
+%   4) Recursive file search where only full file paths are needed
+%   file_paths = sl.dir.getList(root_path,'recursive',true,'output_type','paths')
 %
 %
 %   Still to do:
 %   ------------
 %   - implement folder searching using .NET
-%   - provide examples
-%   - remove values that are not requested when populating the object
-%       so that changes to the implementation don't cause problems in users
-%       code that were never inteded to be permanent - e.g. returning
-%       dir() results when not requested
 %
 %   See Also:
-%   sl.dir.rdir
+%   dir()
 
 %{
 
@@ -244,6 +253,10 @@ in.need_dir_props = false; %DONE
 in.output_type = 'object'; %DONE {'object','names','paths','dir'}
 in.recursive = false; %DONE
 in.search_type = 'files'; %DONE {0,1,2,'files','folders','both'}
+%in.numeric_search_type
+%0 - files
+%1 - folders
+%2 - both
 
 %File filtering
 %---------------------------------------------
@@ -257,6 +270,7 @@ in.file_size_filter = []; %DONE
 %Folder filtering
 %---------------------------------------------
 in.folder_regex = ''; %DONE
+in.folder_pattern = ''; %DONE
 in.folder_date_filter = []; %DONE
 in.folders_to_ignore = {}; %DONE
 in.first_chars_in_folders_to_ignore = ''; %DONE
@@ -266,17 +280,20 @@ in = sl.in.processVarargin(in,varargin);
 in = h__cleanOptionalInputs(in);
 %===============================================================
 
+%Whether or not we need to get the structure returned by dir() which
+%includes meta data besides just the name
 need_dir_approach = in.need_dir_props || ...
     ~isempty(in.file_date_filter) || ...
     ~isempty(in.file_size_filter) || ...
     ~isempty(in.folder_date_filter);
 
 folder_filtering = ~isempty(in.folder_regex) || ...
+    ~isempty(in.folder_pattern) || ...
     ~isempty(in.folder_date_filter) || ...
     ~isempty(in.folders_to_ignore) || ...
     ~isempty(in.first_chars_in_folders_to_ignore);
 
-if ~need_dir_approach && in.recursive && ispc && in.search_type == 0 && ~folder_filtering
+if ~need_dir_approach && in.recursive && ispc && in.numeric_search_type == 0 && ~folder_filtering
     %The folder filtering bit could be done post hoc but we'll ignore 
     %this method for now if folder filtering is done
     s = h__getFilesDotNet(root_folder_path,in);
@@ -314,26 +331,31 @@ function output = h__setupOutput(root_folder_path,s,in,n_outputs,t_tic)
 
 
 output = cell(1,n_outputs);
-%in.output_type
-%in.search_type
-%{'object','names','paths','dir'}
-%file,folder,both
 switch in.output_type
     case 'object'
         %TODO: We probably shouldn't return more than we have to
         %as different listing methods might not return everything ...
         lr = sl.dir.list_result;
         lr.root_folder_path = root_folder_path;
-        lr.folder_names = s.folder_names;
-        lr.file_names   = s.file_names;
-        lr.file_paths   = s.file_paths;
-        lr.folder_paths = s.folder_paths;
-        lr.d_folders    = s.d_folders;
-        lr.d_files      = s.d_files;
+        
+        if ismember(in.numeric_search_type,1:2)
+            lr.folder_names = s.folder_names;
+            lr.folder_paths = s.folder_paths;
+        end
+        
+        if ismember(in.numeric_search_type,[0 2])
+            lr.file_names   = s.file_names;
+            lr.file_paths   = s.file_paths;
+        end
+        
+        if in.need_dir_props
+            lr.d_folders    = s.d_folders;
+            lr.d_files      = s.d_files;
+        end
         lr.elapsed_time = toc(t_tic);
         output{1} = lr;
     case 'names'
-        switch in.search_type
+        switch in.numeric_search_type
             case 0
                 output{1} = s.file_names;
             case 1
@@ -345,7 +367,7 @@ switch in.output_type
                 end
         end
     case 'paths'
-        switch in.search_type
+        switch in.numeric_search_type
             case 0
                 output{1} = s.file_paths;
             case 1
@@ -357,7 +379,7 @@ switch in.output_type
                 end
         end
     case 'dir'
-        switch in.search_type
+        switch in.numeric_search_type
             case 0
                 output{1} = s.d_files;
             case 1
@@ -380,6 +402,8 @@ function in = h__cleanOptionalInputs(in)
 %   TODO: I haven't given this function a lot of attention yet. It could
 %   probably have things added to it.
 %
+%   This is just supposed to run some sanity checks on the optional inputs
+%   and change them if necessary
 
 %Change possible characters to numbers
 %TODO: Move the function to being right next to this one
@@ -405,15 +429,16 @@ function in = h__fixInType(in)
 if ischar(in.search_type)
     switch in.search_type(1:2)
         case 'fi'
-            in.search_type = 0;
+            in.numeric_search_type = 0;
         case 'fo'
-            in.search_type = 1;
+            in.numeric_search_type = 1;
         case 'bo'
-            in.search_type = 2;
+            in.numeric_search_type = 2;
         otherwise
             error('Unrecognized return type: %s',in.search_type)
     end
 else
+    in.numeric_search_type = in.search_type;
     %Valid values are 0, 1, or 2
     if ~ismember(in.search_type,0:2)
         error('Unrecognized search type: %d',in.search_type)
@@ -469,12 +494,12 @@ s.d_folders    = [];
 end
 
 function s = h__runBasicApproach(root_folder_path,in)
-%x
+%x Runs dir() with filtering (non-recursive)
 %
 %   Called for the non-recursive case. This code isn't much different
 %   than dir() except for the filtering that takes place
 
-switch in.search_type
+switch in.numeric_search_type
     case 0
         s = h__getFiles(root_folder_path,in);
     case 1
@@ -485,7 +510,7 @@ switch in.search_type
         %and in that case the filters are precomputed to save time and
         %passed into the function we are calling here.
         file_filters   = h__setupFileFilters(in,false);
-        folder_filters = h__setupFolderFilters(in);
+        folder_filters = h__setupFolderFilters(in,false);
         s = h__getFilesAndFolders(root_folder_path,in,file_filters,folder_filters);
 end
 
@@ -498,7 +523,7 @@ function s = h__runBasicRecursiveApproach(root_folder_path,in)
 MAGIC_CELL_LENGTH = 10000;
 
 file_filters   = h__setupFileFilters(in,false);
-folder_filters = h__setupFolderFilters(in);
+folder_filters = h__setupFolderFilters(in,false);
 
 results = cell(1,MAGIC_CELL_LENGTH);
 
@@ -544,7 +569,7 @@ end  %------------------ End of h__runBasicRecursiveApproach --------------
 function s = h__getFiles(root_folder_path,in)
 %x Gets a list of files in a single directory
 
-[file_filters,file_pattern_use]   = h__setupFileFilters(in,true);
+[file_filters,file_pattern_use] = h__setupFileFilters(in,true);
 
 d = dir(fullfile(root_folder_path,file_pattern_use))';
 
@@ -566,10 +591,15 @@ s.d_folders    = [];
 end %--------------   End of h__getFiles  ---------------------------------
 
 function s = h__getFolders(root_folder_path,in)
+%x Gets a list of folders in a root folder and filters results
+%
+%
+%   See Also:
+%   h__setupOutput
 
-folder_filters = h__setupFolderFilters(in);
+[folder_filters,file_pattern_use] = h__setupFolderFilters(in,true);
 
-d = dir(root_folder_path)';
+d = dir(fullfile(root_folder_path,file_pattern_use))';
 d(~[d.isdir]) = [];
 
 folder_names = {d.name};
@@ -622,7 +652,7 @@ folder_names = {d_folders.name};
 %Unfortunately right now we are using this function to get files and
 %folders for a single directory AND when using the recursive approach,
 %regardless of what we really need
-if in.search_type ~= 1
+if in.numeric_search_type ~= 1
     d_files    = d(~is_dir_mask);
     file_names = {d_files.name};
     [file_names,d_files] = h__filterFiles(file_names,d_files,file_filters);
@@ -699,16 +729,20 @@ end
 
 %======================      Filters     ==================================
 
-function folder_filters = h__setupFolderFilters(in)
+function [folder_filters,folder_pattern_use] = h__setupFolderFilters(in,filter_via_query)
 %x Creates an array of function handles to filter folders
 %
 
-% in.folder_regex = ''; %NYI
-% in.folder_date_filter = []; %NYI
-% in.folders_to_ignore = {}; %NYI
-% in.first_chars_in_folders_to_ignore = ''; %NYI
+%Filters get called with the form:
+%(folder_names,folder_paths,d_folders)
+%
+%where d_folders is the output of dir() for folders
+%
+%Functions should return back a mask indicating whether or not each entry
+%should be kept. True indicates that it should be removed (not kept).
 
-folder_filters = cell(1,4);
+
+folder_filters = cell(1,5);
 
 if ~isempty(in.folder_regex)
    folder_filters{1} = @(folder_names,~,~)cellfun('isempty',regexpi(folder_names,in.folder_regex,'once'));
@@ -724,6 +758,17 @@ end
 
 if ~isempty(in.first_chars_in_folders_to_ignore)
    folder_filters{4} = @(~,~,first_chars)ismember(first_chars,in.first_chars_in_folders_to_ignore); 
+end
+
+if filter_via_query
+    folder_pattern_use = in.folder_pattern;
+else
+    folder_pattern_use = '';
+    if ~isempty(in.folder_pattern)
+        
+        folder_pattern = ['^' regexptranslate('wildcard',in.folder_pattern) '$'];
+        folder_filters{5} = @(folder_names,~,~)cellfun('isempty',regexpi(folder_names,folder_pattern,'once'));    
+    end
 end
 
 

@@ -1,4 +1,4 @@
-function [removed_options,remaining_options] = removeOptions(varargin_data,names_to_remove)
+function [removed_options,remaining_options] = removeOptions(varargin_data,names_to_remove,varargin)
 %x Removes a set of option names (and values) so that all names are valid
 %
 %   [removed_options,remaining_options] = sl.in.removeOptions(varargin_data,names_to_remove)
@@ -10,6 +10,19 @@ function [removed_options,remaining_options] = removeOptions(varargin_data,names
 %   TODO: promote the options to a class which can handle this conflict
 %   so that no structure editing is needed - work started as
 %   sl.in.optional_inputs
+%
+%   Optional Inputs:
+%   ----------------
+%   force_cell : false
+%       If true, the output will be a cell
+%   force_struct : false
+%       If true, the output will be a struct
+%
+%   The default behavior is to keep the same kind of output as the input
+
+in.force_cell = false;
+in.force_struct = false;
+in = sl.in.processVarargin(in,varargin);
 
 if isstruct(varargin_data)
     was_struct = true;
@@ -33,7 +46,11 @@ for iName = 1:length(names_to_remove)
     end
 end
 
-if was_struct
+if in.force_cell
+    return
+end
+
+if in.force_struct || was_struct
    removed_options = sl.in.propValuePairsToStruct(removed_options);
    remaining_options = sl.in.propValuePairsToStruct(remaining_options); 
 end

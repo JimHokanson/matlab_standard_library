@@ -26,6 +26,16 @@ function varargout = resample(objs,new_fs_or_new_fs_objs,varargin)
 %       Pass this in when you want to ensure that the # of samples
 %       matches some other object.
 %
+%   Improvements:
+%   -------------
+%   1) Expose more options in the underlying resample() implementation
+%
+%   Examples:
+%   ---------
+%   1) Resample pressure data at 100 Hz
+%   pres_data.resample(100)
+%   pelvic_eng = pelvic_eng.resample(pres_data,'data_lengths_to_match',pres_data);
+%
 %   See Also:
 %   resample %signal processing toolbox
 
