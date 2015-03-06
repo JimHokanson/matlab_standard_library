@@ -9,12 +9,12 @@
 
 # Compiled source #
 ###################
-*.com
-*.class
-*.dll
-*.exe
-*.o
-*.so
+#*.com
+#*.class
+#*.dll
+#*.exe
+#*.o
+#*.so
 
 # Packages #
 ############

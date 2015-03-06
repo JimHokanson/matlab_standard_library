@@ -1,7 +1,7 @@
 function getProcessMemoryUsage(process_name)
 %
 %
-%   sl.os.getMemoryUsage
+%   sl.os.getProcessMemoryUsage(process_name)
 %
 %
 %   This should return an object with process information
