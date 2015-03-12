@@ -46,12 +46,24 @@ end
 
 xs = [x_positions(:) x_positions(:)];
 
-%TODO: This needs to be fixed
-ys = in.y_values;
-
-if isempty(in.y_values) && isempty(in.y_pct)
-   %TODO : Eventually we need to respect a parent intput in line_options
-   ys = get(gca,'ylim');
+if ~isempty(in.y_values)
+   ys = in.y_values;
+else
+   [is_found,value] = sl.in.getOptionalParameter(line_options,'parent');
+   if is_found
+       ax_use = value;
+   else
+       ax_use = gca;
+   end
+   
+   temp = get(ax_use,'ylim');
+   if isempty(in.y_pct)
+       ys = temp;
+   else
+       ys = in.y_pct;
+       ys(:,1) = ys(:,1)*temp(1);
+       ys(:,2) = ys(:,2)*temp(2);
+   end
 end
 
 if size(ys,1) < n_lines

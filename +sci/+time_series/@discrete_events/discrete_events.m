@@ -66,6 +66,44 @@ classdef discrete_events < handle
            %TODO: Implement this ...
            new_obj = old_obj;
         end
+        function prettyPrint(obj)
+            %
+            %   prettyPrint(obj)
+            %
+            %
+            %
+            %   TODO: Align columns ...
+            
+%             40: 15024, 40, void
+%             41: 15032.6, 41, stop pump
+%             42: 15556.9, 42, start pump
+           
+            fprintf('Event: %s\n',obj.name);
+            msgs_local = obj.msgs;
+            if isempty(msgs_local)
+               msgs_local = cell(1,length(obj.times)); 
+               msgs_local(:) = {''};
+            end
+            
+            values_local = obj.values;
+            if isempty(values_local)
+               values_local = cell(1,length(obj.times));
+               values_local(:) = {''};
+            else
+               values_local = arrayfun(@num2str,values_local,'un',0);
+            end
+            
+            times_local = arrayfun(@(x)num2str(x,'%g'),obj.times,'un',0);
+            
+            fprintf('format -----\n');
+            fprintf('Index: time, value, msg\n')
+            fprintf('---------------------------:\n')
+            for iEvent = 1:length(obj.times)
+               %ID, time, value, msg
+               fprintf('%d: %s, %s, %s\n',iEvent,times_local{iEvent},values_local{iEvent},msgs_local{iEvent})
+            end
+   
+        end
         function plot(obj,varargin)
             %
             %
@@ -86,7 +124,11 @@ classdef discrete_events < handle
                in.axes = gca;
            end
            
-           line_handles = sl.plot.type.verticalLines(x_positions,varargin)
+           if ischar(in.I)
+               in.I = 1:length(obj.times);
+           end
+           
+           line_handles = sl.plot.type.verticalLines(obj.times(in.I),'Color','k');
            
            %Plot style:
            %-----------
