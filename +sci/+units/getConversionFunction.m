@@ -31,6 +31,9 @@ switch combined_units
         fh = @(x)times(x,1e6);
     case 'V#mV'
         fh = @(x)times(x,1e3);
+% % %     case 's#ms'
+% % %     case 's#min'
+% % %     case 's#hr
     otherwise
         error('Unsupported case: From "%s" to "%s"',source_unit,output_unit)
 end

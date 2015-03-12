@@ -45,7 +45,6 @@ classdef data_filterer < handle
             in.filters = {};
             in = sl.in.processVarargin(in,varargin);
             obj.data_filters = in.filters;
-            
         end
 
         function clearFilters(obj)
@@ -57,15 +56,23 @@ classdef data_filterer < handle
         function filter(obj,data_objs,varargin)
             %
             %
+            %   filter(obj,data_objs,varargin)
+            %
             %   Inputs:
             %   -------
             %   data_objs : sci.time_series.data
-            
-            %TODO: Add history support ...
-            
+            %
+            %   Optional Inputs:
+            %   ----------------
+            %   additional_filters : 
+            %       These are additional filters that can be passed in at
+            %       this stage to filter the data.
+            %   subtract_filter_result : 
+            %       The result of the operation should be computed as:
+            %       data = data - filter(data)
+                        
             %TODO: Merge filters: Can we filter things faster 
             
-            %TODO: Allow a shallow copy
             in.additional_filters = [];
             in.subtract_filter_result = false;
             in = sl.in.processVarargin(in,varargin);
@@ -107,6 +114,8 @@ classdef data_filterer < handle
         function listAvailableFilters(obj)
             %
             %   sci.time_series.data_filterer.listAvailableFilters
+            %
+            %   This method is not complete
             %
            %TODO: Provide links
            fprintf('List of implemented filters\n');

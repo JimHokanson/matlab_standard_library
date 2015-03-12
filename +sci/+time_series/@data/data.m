@@ -109,14 +109,9 @@ classdef data < sl.obj.handle_light
         %processed. As classes create or manipulate the data they can add
         %on to the history.
         
-        devents %struct with fields of type: sci.time_series.time_events
+        event_info %sci.time_series.events_holder
         %
         %   See: addEventElements()
-        %
-        %   Shorts for "discrete events". I would prefer just to call this
-        %   field events but that is a reserved word. These hold times in
-        %   which certain things occured. The idea was that we could use
-        %   this information for plotting or data manipulation.
         
     end
     
@@ -130,7 +125,7 @@ classdef data < sl.obj.handle_light
     %Dependent Methods ----------------------------------------------------
     methods
         function value = get.event_names(obj)
-            value = fieldnames(obj.devents);
+            value = obj.event_info.p__all_event_names;
         end
         function value = get.n_samples(obj)
             value = size(obj.d,1);
@@ -169,7 +164,9 @@ classdef data < sl.obj.handle_light
             %       Units of the data
             %   channel_labels:
             %       Not yet implemented
-            %   events: array or cell array of sci.time_series.time_events
+            %   events: array or cell array of: 
+            %               - sci.time_series.discrete_events
+            %               - 
             %       These signify discrete events that happen at a given
             %       time and that may also carray a string or value with
             %       the event.
@@ -178,12 +175,12 @@ classdef data < sl.obj.handle_light
             %
             %
             
-            % :/ for initialization from structures
+            %This is needed for initializing from a structure
             if nargin == 0
                 return
             end
             
-            MIN_CHANNELS_FOR_WARNING = 500; %The dimensions of the input
+            MIN_CHANNELS_FOR_WARNING = 50; %The dimensions of the input
             %data are very specific, no assumptions are made. However, if
             %we get too many channels with only 1 sample we'll throw a
             %warning.
@@ -210,7 +207,7 @@ classdef data < sl.obj.handle_light
                 obj.time = sci.time_series.time(time_object_or_dt,obj.n_samples);
             end
             
-            obj.devents = struct();
+            obj.event_info = sci.time_series.events_holder;
             if ~isempty(in.events)
                 obj.addEventElements(in.events);
             end
@@ -242,7 +239,7 @@ classdef data < sl.obj.handle_light
                     'history',      cur_obj.history,...
                     'units',        cur_obj.units,...
                     'channel_labels',cur_obj.channel_labels,...
-                    'events',       cur_obj.devents,...
+                    'events',       cur_obj.event_info,...
                     'y_label',      cur_obj.y_label);
             end
             
@@ -261,13 +258,13 @@ classdef data < sl.obj.handle_light
             for iObj = 1:length(objs)
                 s_objs(iObj).time = export(s_objs(iObj).time);
                 
-                events = s_objs(iObj).devents;
+                events = s_objs(iObj).event_info;
                 fn = fieldnames(events);
                 for iField = 1:length(fn)
                     cur_field_name = fn{iField};
                     events.(cur_field_name) = export(events.(cur_field_name));
                 end
-                s_objs(iObj).devents = events;
+                s_objs(iObj).event_info = events;
             end
         end
     end
@@ -371,10 +368,14 @@ classdef data < sl.obj.handle_light
             
             %TODO: Build in cleanup code ...
         end
-        function plot(objs,varargin)
+        function varargout = plot(objs,varargin)
             %x Plot the data, nicely!
             %
-            %   plot(obj,varargin)
+            %   plot_result = plot(obj,varargin)
+            %
+            %   Output:
+            %   -------
+            %   plot_result : sci.time_series.data.plot_result
             %
             %   Optional Inputs:
             %   ----------------
@@ -387,7 +388,7 @@ classdef data < sl.obj.handle_light
             %       Pass in the numeric values of the channels to plot.
             %   time_shift: (default true)
             %       If true, then objects will not be shifted to account
-            %       for differences in their absolute start times
+            %       for differences in their absolute start times.
             %
             %   Example:
             %   plot(p,'time_units','h','Color','k')
@@ -395,10 +396,6 @@ classdef data < sl.obj.handle_light
             %   See Also:
             %   sci.time_series.time
             
-            BIG_PLOT_N_SAMPLES = 5e5;
-            %TODO: Plotting multiple objects on the same figure is a
-            %problem as they may have completely different starting dates
-            %
             %   TODO: How do we want to plot multiple repetitions ...
             
             in.time_units = 's';
@@ -431,41 +428,52 @@ classdef data < sl.obj.handle_light
             
             time_objs_for_plot.changeOutputUnits(in.time_units);
             
+            render_objs = cell(1,length(objs));
+            
             for iObj = 1:length(objs)
                 if iObj == 2
                     hold_state = sl.hg.axes.hold_state(gca);
                     hold all
                 end
                 cur_obj = objs(iObj);
-                %Ideally this decision would be pushed to the
-                %LinePlotReducer class ...
-                if cur_obj.n_samples < BIG_PLOT_N_SAMPLES
-                    t = time_objs_for_plot(iObj).getTimeArray();
-                    if ischar(in.channels)
-                        plot(in.axes{:},t,cur_obj.d,plotting_options{:});
-                    else
-                        plot(in.axes{:},t,cur_obj.d(:,in.channels),plotting_options{:});
-                    end
+
+                if ischar(in.channels)
+                    temp = sl.plot.big_data.LinePlotReducer(time_objs_for_plot(iObj),objs(iObj).d,plotting_options{:});
                 else
-                    if ischar(in.channels)
-                        temp = sl.plot.big_data.LinePlotReducer(time_objs_for_plot(iObj),objs(iObj).d,plotting_options{:});
-                    else
-                        temp = sl.plot.big_data.LinePlotReducer(time_objs_for_plot(iObj),objs(iObj).d(:,in.channels),plotting_options{:});
-                    end
-                    if ~isempty(in.axes)
-                        temp.h_axes = in.axes{1};
-                    end
-                    temp.renderData();
+                    temp = sl.plot.big_data.LinePlotReducer(time_objs_for_plot(iObj),objs(iObj).d(:,in.channels),plotting_options{:});
                 end
+                if ~isempty(in.axes)
+                    temp.h_axes = in.axes{1};
+                end
+                temp.renderData();
+                
+                render_objs{iObj} = temp;
             end
             
             if length(objs) > 1
                 hold_state.restore();
             end
+
+            %Populate Output:
+            %----------------
+            if nargout
+                plot_result = sci.time_series.data.plot_result;
+                plot_result.render_objs = render_objs;
+                plot_result.axes = render_objs{1}.h_axes;
+                varargout{1} = plot_result;
+            end
             
-            %TODO: Depeneding upon what is defined, show different things
-            %for the ylabel - e.g. if units are present or not
-            ylabel(sprintf('%s (%s)',cur_obj.y_label,cur_obj.units))
+            %Add labels:
+            %-----------
+            if isempty(cur_obj.units) && isempty(cur_obj.y_label)
+                %do nothing
+            elseif isempty(cur_obj.units)
+                ylabel(sprintf('%s',cur_obj.y_label))
+            elseif isempty(cur_obj.y_label)
+                ylabel(sprintf('(%s)',cur_obj.units))
+            else
+                ylabel(sprintf('%s (%s)',cur_obj.y_label,cur_obj.units))
+            end
             xlabel(sprintf('Time (%s)',in.time_units))
         end
         function result_object = plotStacked(objs,local_options,plotting_options)
@@ -595,23 +603,15 @@ classdef data < sl.obj.handle_light
         function addEventElements(obj,event_elements)
             %x Adds event elements to the object. See 'devents' property
             %
-            %    Inputs:
-            %    -------
-            %    event_elements : cell or cell array of sci.time_series.time_events
+            %   Inputs:
+            %   -------
+            %   event_elements : See sci.time_series.events_holder.addEvents
+            %   
+            %   See Also:
+            %   sci.time_series.events_holder
+            %   sci.time_series.events_holder.addEvents
             
-            if iscell(event_elements)
-                event_elements = [event_elements{:}];
-            elseif isstruct(event_elements)
-                %This occurs when copying the class object (see copy()
-                %method)
-                event_elements = struct2cell(event_elements);
-                event_elements = [event_elements{:}];
-            end
-            
-            for iElement = 1:length(event_elements)
-                cur_element = event_elements(iElement);
-                obj.devents.(cur_element.name) = cur_element;
-            end
+            obj.event_info.addEvents(event_elements);
         end
         function addHistoryElements(obj,history_elements)
             %x Adds history elements (processing summaries) to the object
@@ -687,8 +687,9 @@ classdef data < sl.obj.handle_light
                 cur_obj = objs(iObj);
                 
                 if ischar(start_event)
-                    start_time = cur_obj.devents.(start_event).times(start_event_index);
-                    end_time   = cur_obj.devents.(stop_event).times(stop_event_index);
+                    evh = cur_obj.event_info; %event holder
+                    start_time = evh.(start_event).times(start_event_index);
+                    end_time   = evh.(stop_event).times(stop_event_index);
                 elseif in.times_are_samples
                     start_time = start_event;
                     end_time   = stop_event;
@@ -747,7 +748,7 @@ classdef data < sl.obj.handle_light
             else
                 event_times = zeros(1,n_objects);
                 for iObj = 1:n_objects
-                    temp_event_obj = objs(iObj).devents.(event_name_or_time_array);
+                    temp_event_obj = objs(iObj).event_info.(event_name_or_time_array);
                     if length(temp_event_obj.times) ~= 1
                         error('Each event must have only 1 time value ..., for now')
                     end
@@ -761,7 +762,7 @@ classdef data < sl.obj.handle_light
                 objs(iObj).time.start_offset = objs(iObj).time.start_offset - event_times(iObj);
                 
                 %Adjust event times
-                all_events = objs(iObj).devents;
+                all_events = objs(iObj).event_info;
                 fn = fieldnames(all_events);
                 for iField = 1:length(fn)
                     %all_events is just a structure
@@ -1346,7 +1347,7 @@ function event_times = h__getEventTimes(obj,event_name,varargin)
 in.indices = 'all';
 in = sl.in.processVarargin(in,varargin);
 
-events = obj.devents;
+events = obj.event_info;
 
 %TODO: Check for name
 if ~isfield(events,event_name)

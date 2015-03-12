@@ -82,9 +82,9 @@ classdef butter < handle
            [B,A] = obj.getCoefficients(fs);
            
            if obj.zero_phase
-               filter_method = @filtfilt;
+               filter_method = @sl.array.mex_filtfilt;
            else
-               filter_method = @filter;
+               filter_method = @sl.array.mex_filter;
            end
            
            data_out = filter_method(B,A,data_in);

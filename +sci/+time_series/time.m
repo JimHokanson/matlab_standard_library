@@ -201,7 +201,10 @@ classdef time < sl.obj.display_class
     methods (Static)
     	function objs = fromStruct(s_objs)
             %
+            %   objs = sci.time_series.time.fromStruct(s_objs)
             %
+            %   Example:
+            %       
             %      
             
             n_objs  = length(s_objs);
