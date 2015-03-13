@@ -1,4 +1,4 @@
-classdef filter < handle
+classdef (Hidden) filter < sl.obj.handle_light
     %
     %   Class:
     %   sci.time_series.filter
