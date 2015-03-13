@@ -99,18 +99,18 @@ classdef smoothing < handle
                 B = B./sum(B);
             end
         end
-        function data_out = filter(obj,data_in,fs)
+        function data = filter(obj,data,fs)
             
             A = 1;
             B = obj.getCoefficients(fs);
             
             if obj.zero_phase
-                filter_method = @filtfilt;
+                filter_method = @sl.array.mex_filtfilt;
             else
-                filter_method = @filter;
+                filter_method = @sl.array.mex_filter;
             end
             
-            data_out = filter_method(B,A,data_in);
+            data = filter_method(B,A,data);
         end
         function plotFrequencyResponse(obj,fs,varargin)
             %
@@ -131,8 +131,6 @@ classdef smoothing < handle
             [H,F] = freqz(B,A,in.N,fs);
             
             plot(F,abs(H))
-            
-            
         end
         function str = getSummaryString(obj,fs)
             %x Returns a string that summarizes the details of the filter

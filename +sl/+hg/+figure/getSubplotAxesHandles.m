@@ -17,13 +17,28 @@ function s = getSubplotAxesHandles(figure_handle)
 %Testing code
 subplot(2,2,1)
 plot(1:10)
+xlabel('testing')
 subplot(2,2,2)
 plot(1:20)
 subplot(2,2,3)
 plot(1:30)
 subplot(2,2,4)
 plot(1:40)
+xlabel('testing')
 s = sl.hg.figure.getSubplotAxesHandles(gcf)
+
+
+%In prerelease for 2015a this doesn't work, returns null for one of the
+handles ...
+%WTF ...
+subplot(2,1,1)
+plot(1:10)
+xlabel('testing')
+subplot(2,1,2)
+plot(2:20)
+xlabel('testing')
+s = sl.hg.figure.getSubplotAxesHandles(gcf)
+
 
 %}
   
@@ -34,6 +49,8 @@ s = sl.hg.figure.getSubplotAxesHandles(gcf)
     s = struct;
     
     %This should work in 2014b, not sure if it works earlier ...
+    %Works in 2014a
+    %There is a bug in 2015a
     s.grid_handles = flipud(getappdata(figure_handle, 'SubplotGrid'));
 
     %TODO: Get all and compare against grid

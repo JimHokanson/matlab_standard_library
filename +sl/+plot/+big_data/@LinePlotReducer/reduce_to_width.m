@@ -74,6 +74,9 @@ if size(y, 1) <= N_SAMPLES_MAX_PLOT_EVERYTHING
     y_reduced = y;
     if isobject(x)
         x_reduced = x.getTimeArray();
+        if size(x_reduced,1) == 1
+            x_reduced = x_reduced';
+        end
     else
         x_reduced = x;
     end

@@ -24,13 +24,16 @@ classdef subplotter < sl.obj.display_class
         handles
         last_index = 0
         %This can be used to omit specification of the axes
-        %when doing
+        %when calling the axes() method
         
-        row_first_indexing
+        row_first_indexing %logical (default true)
+        %
+        %
+        %
     end
     
     methods
-        function obj = subplotter(n_rows,n_columns)
+        function obj = subplotter(n_rows,n_columns,varargin)
             %
             %   obj = sl.plot.subplotter(n_rows,n_columns)
             %
@@ -43,6 +46,7 @@ classdef subplotter < sl.obj.display_class
             %       
             
             in.row_first_indexing = true;
+            in = sl.in.processVarargin(in,varargin);
             
             if isempty(n_rows)
                 obj.dims = n_columns;
@@ -56,14 +60,17 @@ classdef subplotter < sl.obj.display_class
            %
            %    Calling Forms:
            %    --------------
+           %    1) Specify the index to make active
            %    axes(obj,index)
            %
+           %    2) Specify the location to make active by row & column
            %    axes(obj,row,column)
            %
+           %    3) Make the next axes active (increment index by 1)
            %    axes(obj)
            %    
            %    The goals is to have this be equivalent
-           %    to calling subplot
+           %    to calling subplot()
            %
            %    1) call subplot
            %
@@ -91,6 +98,16 @@ classdef subplotter < sl.obj.display_class
            obj.last_index = sp_index;
         end
         function setColWidthByTime(obj)
+            %x Adjust column widths so that they are proportional to time
+            %
+            %   setColWidthByTime(obj)
+            %
+            %   This function adjusts column widths so that column
+            %   widths are proportional to their time. In other words
+            %   if one column spans 1 second and another 2 seconds, the
+            %   latter column would be made to take up 2/3 of the available
+            %   width.
+            %
             %Yikes, I wonder if this is going to change my xlim
             %which would make this circular ...
             %
@@ -102,7 +119,7 @@ classdef subplotter < sl.obj.display_class
            all_lefts = cellfun(@(x) x(1),all_positions);
            all_rights = cellfun(@(x) x(1)+x(3),all_positions);
            
-           left_extent = all_lefts(1);
+           left_extent  = all_lefts(1);
            right_extent = all_rights(end);
            
            all_widths = all_rights - all_lefts;
@@ -131,17 +148,76 @@ classdef subplotter < sl.obj.display_class
                end
            end
         end
+        function removeVerticalGap(obj,rows,columns,varargin)
+           %x 
+           %
+           %    rows : 
+           %        Must be more than 1, should be continuous, starts at 
+           %        the top
+           %
+           %    Optional Inputs:
+           %    ----------------
+           %    remove_x_labels : logical (default true)
+           %
+           %    
+           
+           %{
+           subplot(2,1,1)
+           plot(1:10)
+           xlabel('testing')
+           subplot(2,1,2)
+           plot(2:20)
+           xlabel('testing')
+           sp = sl.plot.subplotter.fromFigure(gcf)
+           sp.removeVerticalGap(1:2,1)
+           %}
+           
+           in.remove_x_labels = true;
+           in.remove_x_ticks = true;
+           in = sl.in.processVarargin(in,varargin);
+           
+           keyboard
+           
+           %What's our expansion algorithm??????
+           %Outer Position
+           
+           for iRow = 1:length(rows-1)
+               cur_row_I = rows(iRow);
+               for iCol = 1:length(columns)
+                   cur_col_I = columns(iCol);
+                   cur_ax = obj.handles{cur_row_I,cur_col_I};
+                   a = sl.hg.axes(cur_ax);
+                   a.clearLabel('x');
+                   a.clearTicks('x');
+                    
+                   
+               end
+           end
+           
+           %Position
+           %OuterPosition
+           %
+           %    This is for manual resizing of the figure
+           %ActivePositionProperty - position property to hold constant
+           %during resize (default 'outerposition')
+           
+           %TODO: Verify continuity of rows
+           %TODO: Verify same axes if removing x labels ...
+        end
     end
     methods (Static)
         function obj = fromFigure(fig_handle)
             %
+            %
             %   sp = sl.plot.subplotter.fromFigure(fig_handle)
+            %
+            %
            temp = sl.hg.figure.getSubplotAxesHandles(fig_handle);
            
            sz = size(temp.grid_handles);
            
            obj = sl.plot.subplotter(sz(1),sz(2));
-           obj.handles = temp.grid_handles;
+           obj.handles = num2cell(temp.grid_handles);
            
         end
     end

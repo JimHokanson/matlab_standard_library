@@ -201,7 +201,10 @@ classdef time < sl.obj.display_class
     methods (Static)
     	function objs = fromStruct(s_objs)
             %
+            %   objs = sci.time_series.time.fromStruct(s_objs)
             %
+            %   Example:
+            %       
             %      
             
             n_objs  = length(s_objs);
@@ -272,10 +275,15 @@ classdef time < sl.obj.display_class
             %
             %    In general this should be avoided if possible.
             %
+            %   Outputs:
+            %   --------
+            %   time_array : array
+            %       Size is [n x 1].
+            %
             %   See Also:
             %   getTimesFromIndices
             
-            time_array = (0:obj.n_samples-1)*obj.dt + obj.start_offset;
+            time_array = ((0:obj.n_samples-1)*obj.dt + obj.start_offset)';
             time_array = h__getTimeScaled(obj,time_array);
         end
         function times = getTimesFromIndices(obj,indices)
@@ -286,6 +294,13 @@ classdef time < sl.obj.display_class
             %    that are associated with each data point. NOTE: Ideally
             %    plotting functions would actually support this abstract
             %    notion of time as well.
+            %
+            %    Outputs:
+            %    --------
+            %    times : array
+            %       Time taking into account:
+            %           - start_offset
+            %           - dt
             %
             %    Inputs:
             %    -------
