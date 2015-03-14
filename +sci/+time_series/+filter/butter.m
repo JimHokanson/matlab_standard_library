@@ -8,8 +8,6 @@ classdef butter < handle
     %   requiring a higher order filter.
     %
     %   Filter ToDos:
-    %   - plot filter response
-    %   - create filter display string
     %   - get coefficients
     %
     %   See Also:
@@ -123,6 +121,9 @@ classdef butter < handle
             %
             %   str = getSummaryString(obj,fs)
             %   
+            %   TODO: We don't need fs, we should
+            %   remove it as a requirement - need to update filter caller
+            %   from time_series.data
             
             if obj.zero_phase
                 filter_method = 'filtfilt()';
