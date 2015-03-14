@@ -1,12 +1,12 @@
-classdef discrete_events < handle
+classdef discrete_events < sl.obj.display_class
     %
     %   Class:
     %   sci.time_series.discrete_events
     %
     %   This is meant to hold discrete events that are associated with a
     %   time series. It can be used for example to:
-    %   - add comments to a time series
-    %   - associate other important triggers with a channel
+    %       - add comments to a time series
+    %       - associate other important triggers with a channel
     %
     %   See Also:
     %   sci.time_series.time
