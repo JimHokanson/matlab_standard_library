@@ -1,7 +1,9 @@
-classdef optional_inputs < dynamicprops
+classdef (Hidden) optional_inputs < dynamicprops
     %
     %   Class:
     %   sl.in.optional_inputs
+    %
+    %   NOT YET IMPLEMENTED
     %
     %   sl.in.processVarargin()
     %
