@@ -713,9 +713,9 @@ classdef data < sl.obj.handle_light
                     evh = cur_obj.event_info; %event holder
                     start_time = evh.(start_event).times(start_event_index);
                     end_time   = evh.(stop_event).times(stop_event_index);
-                elseif in.times_are_samples
-                    start_time = start_event;
-                    end_time   = stop_event;
+                else 
+                    start_time = start_event(iObj);
+                    end_time   = stop_event(iObj);
                 end
                 
                 if ~in.times_are_samples
