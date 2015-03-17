@@ -328,7 +328,7 @@ classdef data < sl.obj.handle_light
                 case 'visualization'
                     fcn_names = {'plotRows','plot','plotStacked'};
                 case 'events and history'
-                    fcn_names = {'addEventElements','addHistoryElements'};
+                    fcn_names = {'getEvent','addEventElements','addHistoryElements'};
                 case 'time changing'
                     %Not in this file:
                     %resample
@@ -600,6 +600,29 @@ classdef data < sl.obj.handle_light
     
     %Add Event or History to data object ----------------------------------
     methods
+        function events = getEvent(objs,name)
+           %x Gets a specific event name for all objects
+           %
+           %    events = getEvent(objs,name)
+           %
+           %    Since events are nested within the event holder object
+           %    'event_info' getting an event object for multiple objects
+           %    requires a loop. This method removes the need for that
+           %    loop.
+           %
+           %    Examples:
+           %    ---------
+           %    ev = p.getEvent('qp_start')
+           %    qp_start_times = [ev.times]
+           
+           temp_ca = cell(1,length(objs));
+           
+           for iObj = 1:length(objs)
+              temp_ca{iObj} = objs(iObj).event_info.(name);
+           end
+           
+           events = [temp_ca{:}];
+        end
         function addEventElements(obj,event_elements)
             %x Adds event elements to the object. See 'devents' property
             %
@@ -690,9 +713,9 @@ classdef data < sl.obj.handle_light
                     evh = cur_obj.event_info; %event holder
                     start_time = evh.(start_event).times(start_event_index);
                     end_time   = evh.(stop_event).times(stop_event_index);
-                elseif in.times_are_samples
-                    start_time = start_event;
-                    end_time   = stop_event;
+                else 
+                    start_time = start_event(iObj);
+                    end_time   = stop_event(iObj);
                 end
                 
                 if ~in.times_are_samples

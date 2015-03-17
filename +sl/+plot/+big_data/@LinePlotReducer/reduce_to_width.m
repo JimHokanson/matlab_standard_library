@@ -232,27 +232,30 @@ function indices = h__getMinMax_approach2(data,n_output_points)
 %
 %   Some extra Matlab code is used to calculate the max and min over the
 %   resulting smaller chunk of data at the end of the array if necessary.
-%
 
-new_m = floor(length(data)/n_output_points);
+%I'm not thrilled with this nomenclature (more so in the calling function
+%than here, here is a bit better)
+n_max_min_regions = n_output_points/2;
 
-extra_samples = length(data) - new_m*n_output_points;
+new_m = floor(length(data)/n_max_min_regions);
 
-indices = zeros(2,n_output_points);
+extra_samples = length(data) - new_m*n_max_min_regions;
+
+indices = zeros(2,n_max_min_regions);
 
 %TODO: Update mex documentation
-[~,indices(1,:),~,indices(2,:)] = pmex__minMaxViaResizing(data,new_m,n_output_points);
+[~,indices(1,:),~,indices(2,:)] = pmex__minMaxViaResizing(data,new_m,n_max_min_regions);
 
 %All of the indices need to be shifted ...
-indices = bsxfun(@plus,indices,0:new_m:new_m*(n_output_points-1));
+indices = bsxfun(@plus,indices,0:new_m:new_m*(n_max_min_regions-1));
 
 if extra_samples ~= 0
    extra_samples_m1 = extra_samples-1;
    leftover_samples = data(end-extra_samples_m1:end);
    [~,last_min_I] = min(leftover_samples);
-   last_min_I = last_min_I + new_m*n_output_points;
+   last_min_I = last_min_I + new_m*n_max_min_regions;
    [~,last_max_I] = max(leftover_samples);
-   last_max_I = last_max_I + new_m*n_output_points;
+   last_max_I = last_max_I + new_m*n_max_min_regions;
    last_column = [last_min_I; last_max_I];
    indices = [indices last_column];
 end
