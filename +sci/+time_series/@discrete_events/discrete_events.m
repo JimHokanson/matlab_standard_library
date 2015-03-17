@@ -1,4 +1,4 @@
-classdef discrete_events < handle
+classdef discrete_events < sl.obj.display_class
     %
     %   Class:
     %   sci.time_series.discrete_events
@@ -15,27 +15,27 @@ classdef discrete_events < handle
     %   sci.time_series.events_holder
     
     properties
-       prop_name %string
-       %    This should be a unique identifier and must also be a safe
-       %    variable name.
-       
-       name %string
-       %    This can be whatever and is not restricted to the limitations 
-       %    of the prop name. The default behavior is to make this the same
-       %    as the prop_name if it is not specified.
-       
-       times %array of times
-       output_units = 's'
-       values %anything
-       msgs %cellstr
-       %    Any associated strings with each event. This can be empty. This
-       %    was originally designed for comments from raw data files where
-       %    each comment has a time and a string.
+        prop_name %string
+        %    This should be a unique identifier and must also be a safe
+        %    variable name.
+        
+        name %string
+        %    This can be whatever and is not restricted to the limitations
+        %    of the prop name. The default behavior is to make this the same
+        %    as the prop_name if it is not specified.
+        
+        times %array of times
+        output_units = 's'
+        values %anything
+        msgs %cellstr
+        %    Any associated strings with each event. This can be empty. This
+        %    was originally designed for comments from raw data files where
+        %    each comment has a time and a string.
     end
     
-    methods 
+    methods
         function value = get.times(obj)
-           value = h__getTimeScaled(obj,obj.times); 
+            value = h__getTimeScaled(obj,obj.times);
         end
     end
     
@@ -46,25 +46,25 @@ classdef discrete_events < handle
             %
             %
             
-           in.name   = '';
-           in.values = [];
-           in.msgs   = [];
-           in = sl.in.processVarargin(in,varargin);
-           
-           if isempty(in.name)
-               in.name = prop_name;
-           end
-           
-           obj.prop_name  = prop_name;
-           obj.name  = in.name;
-           obj.times = times;
-           
-           obj.values = in.values;
-           obj.msgs   = in.msgs;
+            in.name   = '';
+            in.values = [];
+            in.msgs   = [];
+            in = sl.in.processVarargin(in,varargin);
+            
+            if isempty(in.name)
+                in.name = prop_name;
+            end
+            
+            obj.prop_name  = prop_name;
+            obj.name  = in.name;
+            obj.times = times;
+            
+            obj.values = in.values;
+            obj.msgs   = in.msgs;
         end
         function new_obj = copy(old_obj)
-           %TODO: Implement this ...
-           new_obj = old_obj;
+            %TODO: Implement this ...
+            new_obj = old_obj;
         end
         function prettyPrint(obj)
             %
@@ -74,23 +74,23 @@ classdef discrete_events < handle
             %
             %   TODO: Align columns ...
             
-%             40: 15024, 40, void
-%             41: 15032.6, 41, stop pump
-%             42: 15556.9, 42, start pump
-           
+            %             40: 15024, 40, void
+            %             41: 15032.6, 41, stop pump
+            %             42: 15556.9, 42, start pump
+            
             fprintf('Event: %s\n',obj.name);
             msgs_local = obj.msgs;
             if isempty(msgs_local)
-               msgs_local = cell(1,length(obj.times)); 
-               msgs_local(:) = {''};
+                msgs_local = cell(1,length(obj.times));
+                msgs_local(:) = {''};
             end
             
             values_local = obj.values;
             if isempty(values_local)
-               values_local = cell(1,length(obj.times));
-               values_local(:) = {''};
+                values_local = cell(1,length(obj.times));
+                values_local(:) = {''};
             else
-               values_local = arrayfun(@num2str,values_local,'un',0);
+                values_local = arrayfun(@num2str,values_local,'un',0);
             end
             
             times_local = arrayfun(@(x)num2str(x,'%g'),obj.times,'un',0);
@@ -99,13 +99,20 @@ classdef discrete_events < handle
             fprintf('Index: time, value, msg\n')
             fprintf('---------------------------:\n')
             for iEvent = 1:length(obj.times)
-               %ID, time, value, msg
-               fprintf('%d: %s, %s, %s\n',iEvent,times_local{iEvent},values_local{iEvent},msgs_local{iEvent})
+                %ID, time, value, msg
+                fprintf('%d: %s, %s, %s\n',iEvent,times_local{iEvent},values_local{iEvent},msgs_local{iEvent})
             end
-   
+            
         end
-        function plot(obj,varargin)
+        function h = plot(obj,varargin)
             %
+            %   h = plot(obj,varargin)
+            %
+            %   Outputs:
+            %   --------
+            %   h : {line_handles}
+            %       A cell array that contains arrays of line handles, 1
+            %       for each input axes
             %
             %   Optional Inputs:
             %   ----------------
@@ -113,43 +120,51 @@ classdef discrete_events < handle
             %       Event indices to plot.
             %   axes : array (default calls gca)
             %       Axes to plot into
+            %
+            %   
+           
+            in.I = 'all';
+            in.axes = 'gca';
+            [varargin,line_inputs] = sl.in.removeOptions(varargin,fieldnames(in),'force_cell',true);
+            in = sl.in.processVarargin(in,varargin);
             
-           keyboard 
-           
-           in.I = 'all';
-           in.axes = 'gca';
-           in = sl.in.processVarargin(in,varargin);
-           
-           if ischar(in.axes)
-               in.axes = gca;
-           end
-           
-           if ischar(in.I)
-               in.I = 1:length(obj.times);
-           end
-           
-           line_handles = sl.plot.type.verticalLines(obj.times(in.I),'Color','k');
-           
-           %Plot style:
-           %-----------
-           %
-           
+            line_inputs = sl.in.mergeInputs({'Color','k','LineStyle',':'},line_inputs);
+            %TODO: If parent is specified in line_inputs we should throw an
+            %error since we are allowing looping over multiple axes via
+            %in.axes and passing in parent to the plot function directly
+            
+            if ischar(in.axes)
+                in.axes = gca;
+            end
+            
+            if ischar(in.I)
+                in.I = 1:length(obj.times);
+            end
+            
+            %Actual Plotting
+            %----------------
+            h = cell(1,length(in.axes));
+            for iAxes = 1:length(in.axes)
+                cur_axes = in.axes(iAxes);
+                h{iAxes} = sl.plot.type.verticalLines(obj.times(in.I),'Parent',cur_axes,line_inputs{:});
+            end
+            
         end
         function shiftStartTime(objs,time_to_subtract)
             for iObj = 1:length(objs)
-               cur_obj = objs(iObj);
-               time_to_subtract = h__unscaleTime(cur_obj,time_to_subtract);
-               cur_obj.times = cur_obj.times - time_to_subtract;
+                cur_obj = objs(iObj);
+                time_to_subtract = h__unscaleTime(cur_obj,time_to_subtract);
+                cur_obj.times = cur_obj.times - time_to_subtract;
             end
         end
         function s_obj = export(objs)
-           s_obj = sl.obj.toStruct(objs);
+            s_obj = sl.obj.toStruct(objs);
         end
         function changeUnits(objs,new_value)
-           for iObj = 1:length(objs)
-              cur_obj = objs(iObj);
-              cur_obj.output_units = new_value;
-           end
+            for iObj = 1:length(objs)
+                cur_obj = objs(iObj);
+                cur_obj.output_units = new_value;
+            end
         end
     end
     

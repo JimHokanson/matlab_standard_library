@@ -2,6 +2,14 @@ function sc = mergeDissimilar(sa,sb)
 %
 %   sc = sl.struct.mergeDissimilar(sa,sb)
 %
+%   Allow the following:
+%   
+%       sc = [sa sb] 
+%
+%       where sa and sb don't have the same fields.
+%
+%
+%
 %   Improvements:
 %   ----------------------------------------------------------
 %   1) This could be expanded to multiple structures

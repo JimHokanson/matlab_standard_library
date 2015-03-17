@@ -22,6 +22,9 @@ function flag = contains(input_string,string_to_match,varargin)
 %     ans = 1
 %
 %   >> sl.str.contains('testing','est','location','anywhere')
+%
+%   See Also:
+%   sl.cellstr.contains
 
 in.case_sensitive = true;
 in.location = 'anywhere';

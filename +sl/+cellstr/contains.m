@@ -4,6 +4,10 @@ function mask = contains(data,str_or_pattern,varargin)
 %   mask = sl.cellstr.contains(data,str_or_pattern,varargin)
 %
 %   TODO: Insert usage example and finish documentation
+%
+%   See Also:
+%   ---------
+%   sl.str.contains
 
 in.case_sensitive = false;
 in.regexp = false;

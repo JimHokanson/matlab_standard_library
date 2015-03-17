@@ -18,6 +18,20 @@ function [removed_options,remaining_options] = removeOptions(varargin_data,names
 %   force_struct : false
 %       If true, the output will be a struct
 %
+%   Examples:
+%   ---------
+%   1) Process some inputs and leave the rest for going into the line
+%   function
+%
+%    in.I = 'all';
+%    in.axes = 'gca';
+%    %This line takes out 'I' and 'axes' prop/value pairs if present
+%    [varargin,line_inputs] = sl.in.removeOptions(varargin,fieldnames(in),'force_cell',true);
+%    in = sl.in.processVarargin(in,varargin);
+%    ...
+%    line(x,y,line_inputs{:})
+%
+%
 %   The default behavior is to keep the same kind of output as the input
 
 in.force_cell = false;
