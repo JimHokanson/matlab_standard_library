@@ -676,7 +676,7 @@ classdef data < sl.obj.handle_light
             %
             %   Inputs:
             %   -------
-            %
+            %       
             %   Optional Inputs:
             %   ----------------
             %   align_time_to_start : logical (default false)
@@ -686,7 +686,15 @@ classdef data < sl.obj.handle_light
             %   times_are_samples : logical
             %       If true, then the input values are treated as samples,
             %       not as time values i.e. 1 means sample 1, not 1s
-            %
+            %   Examples:
+            %    ---------------
+            %   see dba.GSK.cmg_analysis
+            %   obj.pres_data_handle.getDataSubset('bladder_contraction_starts', 1,'bladder_contraction_ends', 1)
+            %   first input  - string form character form, second input
+            %   numerical integer indicates the which iteration of the
+            %   property you would like to begin at. and the latter, the iteration of
+            %   the ending property you'd like to end at. 
+            %   
             %   See Also:
             %   sci.time_series.data.getDataAlignedToEvent()
             %   sci.time_series.data.zeroTimeByEvent()
