@@ -11,7 +11,8 @@ classdef axes < sl.obj.display_class
     
     properties
         h
-        p %sl.hg.axes.position
+        position %sl.hg.axes.position
+        outer_position
     end
     
     properties
@@ -37,7 +38,8 @@ classdef axes < sl.obj.display_class
     methods
         function obj = axes(h)
             obj.h = h;
-            obj.p = sl.hg.axes.position(obj.h,'position');
+            obj.position = sl.hg.axes.position(obj.h,'position');
+            obj.outer_position = sl.hg.axes.position(obj.h,'OuterPosition');
         end
     end
     

@@ -1,80 +1,92 @@
-function [htext] = addLineLabel(h,textString,varargin)
-%LABEL places a label next to your data.  
-% 
-% This function provides an option between the legend and text or annotation commands
-% for labeling data that you plot.  Edward Tufte
-% says that data shouldn't stray far from its label, because
-% the viewer of a graph should not need to repeatedly move his or her eyes
-% back and forth between plotted data and the legend to connect the dots of
-% which data are which.  In this spirit, label can be used to place a
-% label directly on a plot close to the data it describes.  
+function varargout = addLineLabel(h,text_strings,varargin)
+%x Places a text label next to your data.  
 %
-%% Syntax 
-% 
-%  label(h,'string')
-%  label(...,'location',LocationString)
-%  label(...,'TextProperty',PropertyValue)
-%  label(...,'slope')
-%  h = label(...)
+%   htext = sl.plot.annotation.addLineLabel(h,textString,varargin)
 %
-%% Description 
-% 
-% label(h,'string') places 'string' near the leftmost data described by
-% handle h. 
+%     This function provides an option between the legend and text or
+%     annotation commands for labeling data that you plot.  Edward Tufte
+%     says that data shouldn't stray far from its label, because the viewer
+%     of a graph should not need to repeatedly move his or her eyes back
+%     and forth between plotted data and the legend to connect the dots of
+%     which data are which.  In this spirit, label can be used to place a
+%     label directly on a plot close to the data it describes.
 %
-% label(...,'location',LocationString) specifies location of the string.
-% LocationString can be any of the following:
-% 
-% * 'left' or 'west' (default) 
-% * 'right' or 'east' 
-% * 'top' or 'north' 
-% * 'bottom' or 'south' 
-% * 'center' or 'middle' 
-% 
-% label(...,'TextProperty',PropertyValue) specifies text properties as
-% name-value pairs. 
+%   Inputs:
+%   -------
+%   h : line handles
+%   text_strings : string or cellstr
+%         
+%   Optional Inputs:
+%   ----------------
+%   location : string (default 'left')
+%       Options include, rows are grouped by funcitonality:
+%       'left','west','leftmost','westmost', 
+%       'right','east','rightmost','eastmost'
+%       'top','north','topmost','northmost'
+%       'bottom','south','southmost','bottommost'
+%       'center','central','middle','centered','middlemost','centermost'
 %
-% label(...,'slope') attempts to angle text following the local slope of
-% the data. 
+%       It is currently not possible to mix locations. Eventually I might
+%       change this behavior so that something like 'left top' would be
+%       supported.
 %
-% htext = label(...) returns the handle htext of the newly-created text
-% object. 
-% 
-%% Author Info
+%   follow_slope : logical (default false)
+%       If true the text is angled to follow the gradient of the line.
+%
+%   text properties : Any additional text properties may also be specified
+%   as property value pairs.
+%
+%   Examples:
+%   ---------
+%   1)
+%   h(1) = line([0 0],[0 150]);
+%   h(2) = line([10 10],[0 150]);
+%   htext = sl.plot.annotation.addLineLabel(h,{'start' 'stop'},'follow_slope',true,'FontSize',18)
+
+
+%TODO: I was having trouble with this on certain subplots. The text was not
+%anchored where I wanted it to be ...
+
+% Initial Author Info:
 % Written by Chad A. Greene of the University of Texas at Austin and its 
 % Institute for Geophysics, July 2014. 
 % Fixed for R2014b in January 2015. 
 % 
 % See also annotation, text, and legend. 
-%% Initial input error checks: 
 
-assert(ishandle(h)==1,'Unrecognized object handle.')
+% Initial input error checks: 
+assert(all(ishandle(h)),'Unrecognized object handle.')
+%??? What is this for????
 assert(isempty(get(0,'children'))==0,'No current axes are open.') 
-assert(isnumeric(textString)==0,'Label given by textString must be a string.') 
+%assert(isnumeric(text_string)==0,'Label given by textString must be a string.') 
 assert(nargin>=2,'Must input an object handle and corresponding label string.') 
 
-%% Set defaults: 
 
-location = 'left'; 
-followSlope = false; 
-
-%% Parse inputs
-
-tmp = strncmpi(varargin,'loc',3); 
-if any(tmp)
-    location = varargin{find(tmp)+1}; 
-    tmp(find(tmp)+1)=1; 
-    varargin = varargin(~tmp); 
+in.location = 'left';
+in.follow_slope = false;
+[varargin,text_options] = sl.in.removeOptions(varargin,fieldnames(in));
+in = sl.in.processVarargin(in,varargin);
+   
+if ischar(text_strings)
+    text_strings = {text_strings};
 end
 
-tmp = strcmpi(varargin,'slope'); 
-if any(tmp) 
-    followSlope = true; 
-    varargin = varargin(~tmp); 
+h_temp = cell(1,length(h));
+for iH = 1:length(h)
+   h_temp{iH} = h__runPlotting(h(iH),text_strings{iH},in,text_options);
+end
+
+if nargout
+    varargout{1} = [h_temp{:}];
+end
+
 end
 
 
-%% 
+function h_text = h__runPlotting(h,text_string,in,text_options)
+%
+%   The main function that adds the text according to specs.
+%
 
 color = get(h,'color'); 
 xdata = get(h,'XData'); 
@@ -84,8 +96,9 @@ ydata = get(h,'YData');
 gcax = get(gca,'xlim'); 
 gcay = get(gca,'ylim'); 
 
-if followSlope
-    pbp = kearneyplotboxpos(gca); % A modified version of Kelly Kearney's plotboxpos function is included as a subfunction below.  
+if in.follow_slope
+    pbp = kearneyplotboxpos(gca); % A modified version of Kelly Kearney's 
+    %plotboxpos function is included as a subfunction below.  
 
     % slope is scaled because of axes and plot box may not be equal and square:
     gcaf = pbp(4)/pbp(3); 
@@ -96,13 +109,21 @@ end
 % Find indices of data within figure window: 
 ind = find(xdata>=gcax(1)&xdata<=gcax(2)&ydata>=gcay(1)&ydata<=gcay(2)); 
 
-switch lower(location)
+%TODO: This is a temp fix, ideally we would interpolate
+if isempty(ind)
+    ind = 1:length(xdata);
+end
+
+%This could be empty ...
+
+%TODO: This is a bit misleading as to how the locations work
+switch lower(in.location)
     case {'left','west','leftmost','westmost'}
         horizontalAlignment = 'left'; 
         verticalAlignment = 'bottom'; 
         x = min(xdata(ind));
         y = ydata(xdata==x);
-        textString = [' ',textString]; 
+        text_string = [' ',text_string]; 
         xi = xdata==x; 
         
     case {'right','east','rightmost','eastmost'}
@@ -110,7 +131,7 @@ switch lower(location)
         verticalAlignment = 'bottom'; 
         x = max(xdata(ind)); 
         y = ydata(xdata==x);
-        textString = [textString,' ']; 
+        text_string = [text_string,' ']; 
         xi = xdata==x(1); 
         
     case {'top','north','topmost','northmost'}
@@ -143,7 +164,7 @@ switch lower(location)
 end
  
 % Set rotation preferences: 
-if followSlope
+if in.follow_slope
     theta = apparentTheta(xi); 
 else
     theta = 0; 
@@ -151,18 +172,14 @@ end
 
 
 % Create the label: 
-htext = text(x(1),y(1),textString,'color',color,'horizontalalignment',horizontalAlignment,...
-    'verticalalignment',verticalAlignment,'rotation',theta(1)); 
+h_text = text(x(1),y(1),text_string,'color',color,...
+    'horizontalalignment',horizontalAlignment,...
+    'verticalalignment',verticalAlignment,...
+    'rotation',theta(1)); 
 
 % Add any user-defined preferences: 
-if length(varargin)>1 
-    set(htext,varargin{:});
-end
-
-
-% Clean up: 
-if nargout == 0
-    clear htext
+if ~isempty(text_options)
+    set(h_text,text_options{:});
 end
 
 end

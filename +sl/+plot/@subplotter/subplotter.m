@@ -151,6 +151,8 @@ classdef subplotter < sl.obj.display_class
         function removeVerticalGap(obj,rows,columns,varargin)
            %x 
            %
+           %    removeVerticalGap(obj,rows,columns,varargin)
+           %
            %    rows : 
            %        Must be more than 1, should be continuous, starts at 
            %        the top
@@ -176,12 +178,10 @@ classdef subplotter < sl.obj.display_class
            in.remove_x_ticks = true;
            in = sl.in.processVarargin(in,varargin);
            
-           keyboard
-           
            %What's our expansion algorithm??????
            %Outer Position
            
-           for iRow = 1:length(rows-1)
+           for iRow = 1:length(rows)-1
                cur_row_I = rows(iRow);
                for iCol = 1:length(columns)
                    cur_col_I = columns(iCol);
@@ -189,18 +189,42 @@ classdef subplotter < sl.obj.display_class
                    a = sl.hg.axes(cur_ax);
                    a.clearLabel('x');
                    a.clearTicks('x');
-                    
-                   
                end
            end
            
-           %Position
-           %OuterPosition
+           %Assuming all columns are the same ...
+           top_axes    = sl.hg.axes(obj.handles{rows(1),columns(1)});
+           bottom_axes = sl.hg.axes(obj.handles{rows(end),columns(1)});
+
+           %Add 1 due to edges
            %
-           %    This is for manual resizing of the figure
-           %ActivePositionProperty - position property to hold constant
-           %during resize (default 'outerposition')
+           %        top     row 1   TOP OF TOP AXES
+           %
+           %        bottom  row 1  & top row 2
+           %
+           %        bottom  row 2  & top row 3
+           %
+           %        bottom  row 3   BOTTOM OF BOTTOM AXES
+           %
+           %    fill in so that each axes has the same height and so that
+           %    all axes span from the top of the top axes to the bottom of
+           %    the bottom axes
+           temp = linspace(bottom_axes.position.bottom,top_axes.position.top,length(rows)+1);
+           new_bottoms = temp(end-1:-1:1);
+           new_tops = temp(end:-1:2);
            
+           for iRow = 1:length(rows)
+               cur_row_I = rows(iRow);
+               cur_top = new_tops(iRow);
+               cur_bottom = new_bottoms(iRow);
+               for iCol = 1:length(columns)
+                   cur_col_I = columns(iCol);
+                   cur_ax = obj.handles{cur_row_I,cur_col_I};
+                   a = sl.hg.axes(cur_ax);
+                   a.position.top = cur_top;
+                   a.position.bottom = cur_bottom;
+               end
+           end
            %TODO: Verify continuity of rows
            %TODO: Verify same axes if removing x labels ...
         end

@@ -25,8 +25,9 @@ classdef discrete_events < sl.obj.display_class
         %    as the prop_name if it is not specified.
         
         times %array of times
-        output_units = 's'
+%         output_units = 's'
         values %anything
+        %numeric is preferable but any sort of value could be associaited
         msgs %cellstr
         %    Any associated strings with each event. This can be empty. This
         %    was originally designed for comments from raw data files where
@@ -34,9 +35,9 @@ classdef discrete_events < sl.obj.display_class
     end
     
     methods
-        function value = get.times(obj)
-            value = h__getTimeScaled(obj,obj.times);
-        end
+%         function value = get.times(obj)
+%             value = h__getTimeScaled(obj,obj.times);
+%         end
     end
     
     methods
@@ -44,6 +45,19 @@ classdef discrete_events < sl.obj.display_class
             %
             %   obj = sci.time_series.discrete_events(prop_name,times,varargin)
             %
+            %   See property definitions for definitions of inputs and
+            %   optional inputs.
+            %
+            %   Inputs:
+            %   -------
+            %   prop_name :
+            %   times :
+            %   
+            %   Outputs:
+            %   --------
+            %   name :
+            %   values :
+            %   msgs : 
             %
             
             in.name   = '';
@@ -70,7 +84,7 @@ classdef discrete_events < sl.obj.display_class
             %
             %   prettyPrint(obj)
             %
-            %
+            %   Prints the object in a nice way
             %
             %   TODO: Align columns ...
             
@@ -90,7 +104,7 @@ classdef discrete_events < sl.obj.display_class
                 values_local = cell(1,length(obj.times));
                 values_local(:) = {''};
             else
-                values_local = arrayfun(@num2str,values_local,'un',0);
+                values_local = h__valueToString(obj.values);
             end
             
             times_local = arrayfun(@(x)num2str(x,'%g'),obj.times,'un',0);
@@ -121,13 +135,25 @@ classdef discrete_events < sl.obj.display_class
             %   axes : array (default calls gca)
             %       Axes to plot into
             %
-            %   
+            %   See Also:
+            %   sl.plot.annotation.addLineLabel
+            %   sl.plot.type.verticalLines
            
             in.I = 'all';
             in.axes = 'gca';
+            in.show_msgs = true;
+            in.show_values = true;
+            in.text_options = {};
             [varargin,line_inputs] = sl.in.removeOptions(varargin,fieldnames(in),'force_cell',true);
             in = sl.in.processVarargin(in,varargin);
             
+            if isempty(obj.values)
+                in.show_values = false;
+            end
+            if isempty(obj.msgs)
+                in.show_msgs = false;
+            end
+
             line_inputs = sl.in.mergeInputs({'Color','k','LineStyle',':'},line_inputs);
             %TODO: If parent is specified in line_inputs we should throw an
             %error since we are allowing looping over multiple axes via
@@ -141,12 +167,62 @@ classdef discrete_events < sl.obj.display_class
                 in.I = 1:length(obj.times);
             end
             
+            h = cell(1,length(in.axes));
+            
+            if isempty(in.I)
+               return 
+            end
+            
             %Actual Plotting
             %----------------
-            h = cell(1,length(in.axes));
+            
+            if in.show_msgs && in.show_values
+                values_as_strings = h__valueToString(obj.values(in.I));
+                display_strings   = cellfun(@(x,y) [x ' : ' y],values_as_strings,obj.msgs(in.I),'un',0);
+            elseif in.show_msgs
+                display_strings = obj.msgs(in.I);
+            elseif in.show_values
+                display_strings = h__valueToString(obj.values(in.I));
+            else
+                display_strings = {};
+            end
+            
+            
             for iAxes = 1:length(in.axes)
+            
+                
+                
                 cur_axes = in.axes(iAxes);
-                h{iAxes} = sl.plot.type.verticalLines(obj.times(in.I),'Parent',cur_axes,line_inputs{:});
+                
+                times_for_plotting = obj.times(in.I);
+                app_data_axes = getappdata(cur_axes);
+                if isfield(app_data_axes,'time_series_time')
+                   time_obj = app_data_axes.time_series_time;
+                   %sci.time_series.time
+                   times_for_plotting = h__getTimeScaled(times_for_plotting,time_obj.output_units);
+                end
+                
+                
+                h{iAxes} = sl.plot.type.verticalLines(times_for_plotting,'Parent',cur_axes,line_inputs{:});
+                
+                if ~isempty(display_strings)
+                   cur_h_set = h{iAxes};
+                   for iH = 1:length(cur_h_set)
+                       cur_h = cur_h_set(iH);
+                       
+                       temp_x = get(cur_h,'XData');
+                       temp_y = get(cur_h,'YData');
+                       
+                      text(temp_x(1),temp_y(1),display_strings{iH},...
+                          'rotation',90,'HorizontalAlignment','left',...
+                          'VerticalAlignment','bottom',in.text_options{:}) 
+                       
+                   end
+                    
+                   %TODO: I'd like to know why this didn't work with
+                   %the pelvic nerve for 140416_C
+                   %sl.plot.annotation.addLineLabel(h{iAxes},display_strings,'follow_slope',true,in.text_options{:}); 
+                end
             end
             
         end
@@ -160,22 +236,31 @@ classdef discrete_events < sl.obj.display_class
         function s_obj = export(objs)
             s_obj = sl.obj.toStruct(objs);
         end
-        function changeUnits(objs,new_value)
-            for iObj = 1:length(objs)
-                cur_obj = objs(iObj);
-                cur_obj.output_units = new_value;
-            end
-        end
+%         function changeUnits(objs,new_value)
+%             for iObj = 1:length(objs)
+%                 cur_obj = objs(iObj);
+%                 cur_obj.output_units = new_value;
+%             end
+%         end
     end
     
 end
 
+function values_as_strings = h__valueToString(values)
+    %NOTE: This assumes a numerical value. Eventually we should
+    %write a toString method which works as expected for 
+    %numbers or strings but then maybe does a display capture
+    %or resorts to the property display method (which is also
+    %not yet written)
+    values_as_strings = arrayfun(@num2str,values,'un',0);
+end
 
-
+%THESE ARE NOT CURRENTLY BEING USED
+%I WANT TO DO THIS VERY DIFFERENTLY
 %TODO: Document these functions
 %This should all be moved to sci.units ...
-function times_scaled = h__getTimeScaled(obj,times)
-scale_factor = h__getTimeScaleFactor(obj.output_units,true);
+function times_scaled = h__getTimeScaled(times,units)
+scale_factor = h__getTimeScaleFactor(units,true);
 if scale_factor == 1
     times_scaled = times;
 else
@@ -183,14 +268,6 @@ else
 end
 end
 
-function unscaled_times = h__unscaleTime(obj,times)
-scale_factor = h__getTimeScaleFactor(obj.output_units,false);
-if scale_factor == 1
-    unscaled_times = times;
-else
-    unscaled_times = times*scale_factor;
-end
-end
 
 function scale_factor = h__getTimeScaleFactor(unit_name,for_output)
 switch unit_name
