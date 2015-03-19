@@ -405,12 +405,6 @@ classdef data < sl.obj.handle_light
             [local_options,plotting_options] = sl.in.removeOptions(varargin,fieldnames(in),'force_cell',true);
             in = sl.in.processVarargin(in,local_options);
             
-            
-            
-            if ~isempty(in.axes)
-                in.axes = {in.axes};
-            end
-            
             time_objs = [objs.time];
             start_datetimes = [time_objs.start_datetime];
             if ~all(start_datetimes == start_datetimes(1)) && in.time_shift
@@ -443,12 +437,17 @@ classdef data < sl.obj.handle_light
                     temp = sl.plot.big_data.LinePlotReducer(time_objs_for_plot(iObj),objs(iObj).d(:,in.channels),plotting_options{:});
                 end
                 if ~isempty(in.axes)
-                    temp.h_axes = in.axes{1};
+                    temp.h_axes = in.axes;
                 end
                 temp.renderData();
                 
                 render_objs{iObj} = temp;
             end
+            
+            %We want to know start time and units ...
+            %TODO: This start time might need to change ...
+            setappdata(gca,'time_series_time',time_objs_for_plot(1));
+            
             
             if length(objs) > 1
                 hold_state.restore();
@@ -676,7 +675,7 @@ classdef data < sl.obj.handle_light
             %
             %   Inputs:
             %   -------
-            %
+            %       
             %   Optional Inputs:
             %   ----------------
             %   align_time_to_start : logical (default false)
@@ -686,7 +685,15 @@ classdef data < sl.obj.handle_light
             %   times_are_samples : logical
             %       If true, then the input values are treated as samples,
             %       not as time values i.e. 1 means sample 1, not 1s
-            %
+            %   Examples:
+            %    ---------------
+            %   see dba.GSK.cmg_analysis
+            %   obj.pres_data_handle.getDataSubset('bladder_contraction_starts', 1,'bladder_contraction_ends', 1)
+            %   first input  - string form character form, second input
+            %   numerical integer indicates the which iteration of the
+            %   property you would like to begin at. and the latter, the iteration of
+            %   the ending property you'd like to end at. 
+            %   
             %   See Also:
             %   sci.time_series.data.getDataAlignedToEvent()
             %   sci.time_series.data.zeroTimeByEvent()

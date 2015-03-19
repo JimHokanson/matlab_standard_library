@@ -1,11 +1,25 @@
 function autoscale(array_of_h_axes,varargin)
-%
+%x Adjust the ylimits of a plot to encompass most of the data
 %
 %   sl.plot.postp.autoscale(array_of_h_axes)
+%
+%   Attempts to scale the y limits of the plot. The default Matlab behavior
+%   is to span the data completely. If artificats are present it is often
+%   more desirable to span most of the data rather than all of it.
+%
+%   I had considered a cdf based approach but calculating the cdf could be
+%   very expensive (I think). The current approach instead relies on 
+%   
 %
 %   Inputs:
 %   -------
 %   h_axes :
+%
+%   Optional Inputs:
+%   ----------------
+%   default_plus_minus = 1;
+%   move_mean_to_zero_pct = 0.05;
+%   max_clipping_expand_pct = 0.01;
 %
 %
 %   Approaches:
@@ -109,13 +123,23 @@ n_samples = zeros(1,n_children);
 y_means = zeros(1,n_children);
 y_vars  = zeros(1,n_children);
 
+delete_mask = false(1,n_children);
+
 %Get min and max of all data sets
 for iC = 1:n_children
     temp_y_data   = h__getYData(c(iC));
-    n_samples(iC) = length(temp_y_data);
-    y_means(iC)   = mean(temp_y_data);
-    y_vars(iC)    = var(temp_y_data);
+    if isempty(temp_y_data)
+        delete_mask(iC) = true;
+    else
+        n_samples(iC) = length(temp_y_data);
+        y_means(iC)   = mean(temp_y_data);
+        y_vars(iC)    = var(temp_y_data);
+    end
 end
+
+n_samples(delete_mask) = [];
+y_means(delete_mask)   = [];
+y_vars(delete_mask)    = [];
 
 if n_children == 1
     y_mean = y_means;
@@ -135,7 +159,12 @@ function y_data = h__getYData(h_line)
 
 p = getappdata(h_line,'BigDataPointer');
 if isempty(p)
+    try
     y_data = get(h_line,'YData');
+    catch
+       %Happens for text, maybe others
+       y_data = []; 
+    end
 else
     y_data = p.getYData;
 end

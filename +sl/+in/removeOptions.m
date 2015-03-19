@@ -14,12 +14,37 @@ function [removed_options,remaining_options] = removeOptions(varargin_data,names
 %   Optional Inputs:
 %   ----------------
 %   force_cell : false
-%       If true, the output will be a cell
+%       If true, the outputs will be a cell. This is equivalent to
+%           output_types = {'cell' 'cell'}
 %   force_struct : false
-%       If true, the output will be a struct
+%       If true, the outputs will be a struct. This is equivalent to
+%           output_types = {'struct' 'struct'}
+%   output_types : cellstr, (default not used)
+%       Options include:
+%       {'cell' 'cell'}
+%       {'struct' 'struct'}
+%       {'cell' 'struct'}
+%       {'struct' 'cell'}
+%       
+%   
+%
+%   Examples:
+%   ---------
+%   1) Process some inputs and leave the rest for going into the line
+%   function
+%
+%    in.I = 'all';
+%    in.axes = 'gca';
+%    %This line takes out 'I' and 'axes' prop/value pairs if present
+%    [varargin,line_inputs] = sl.in.removeOptions(varargin,fieldnames(in),'force_cell',true);
+%    in = sl.in.processVarargin(in,varargin);
+%    ...
+%    line(x,y,line_inputs{:})
+%
 %
 %   The default behavior is to keep the same kind of output as the input
 
+in.output_types = {};
 in.force_cell = false;
 in.force_struct = false;
 in = sl.in.processVarargin(in,varargin);
@@ -46,13 +71,23 @@ for iName = 1:length(names_to_remove)
     end
 end
 
-if in.force_cell
-    return
-end
-
-if in.force_struct || was_struct
+%Both values are cells at this point ...
+if ~isempty(in.output_types)
+    if in.output_types{1}(1) == 's'
+       removed_options = sl.in.propValuePairsToStruct(removed_options); 
+    end
+    if in.output_types{2}(1) == 's'
+       remaining_options = sl.in.propValuePairsToStruct(remaining_options);  
+    end
+elseif in.force_struct
    removed_options = sl.in.propValuePairsToStruct(removed_options);
    remaining_options = sl.in.propValuePairsToStruct(remaining_options); 
+elseif in.force_cell
+    %do nothing, both are cells
+    %This takes precedence over was_struct
+elseif was_struct
+   removed_options = sl.in.propValuePairsToStruct(removed_options);
+   remaining_options = sl.in.propValuePairsToStruct(remaining_options);     
 end
 
 
