@@ -748,7 +748,7 @@ classdef data < sl.obj.handle_light
                 data_subset_objs.zeroTimeByEvent(all_start_times);
             end
         end
-        function zeroTimeByEvent(objs,event_name_or_time_array)
+        function varargout = zeroTimeByEvent(objs,event_name_or_time_array,varargin)
             %x Redefines time such that the time of event is now at time zero.
             %
             %   Calling Forms:
@@ -772,13 +772,28 @@ classdef data < sl.obj.handle_light
             %   sci.time_series.data.getDataAlignedToEvent()
             %   sci.time_series.data.getDataSubset()
             
-            n_objects = length(objs);
+            in.same_absolute_time = true; %NYI - if false
+            %then we don't redefine absolute time
+            in = sl.in.processVarargin(in,varargin);
+            
+            if nargout
+                temp = copy(objs);
+            else
+                temp = objs;
+            end
+            
+            n_objects = length(temp);
             if isnumeric(event_name_or_time_array)
                 event_times = event_name_or_time_array;
+                %TODO: Make this more accurate
+                history_entry = {sprintf('Timeline zeroed by some time')};
             else
+                %TODO: This should be easier to do...
+                event_name = event_name_or_time_array;
                 event_times = zeros(1,n_objects);
+                history_entry = {sprintf('Timeline zeroed by %s',event_name)};
                 for iObj = 1:n_objects
-                    temp_event_obj = objs(iObj).event_info.(event_name_or_time_array);
+                    temp_event_obj = temp(iObj).event_info.(event_name);
                     if length(temp_event_obj.times) ~= 1
                         error('Each event must have only 1 time value ..., for now')
                     end
@@ -786,19 +801,30 @@ classdef data < sl.obj.handle_light
                 end
             end
             
+            
+            
             %TODO: Make this a method in the time object - shift time
             for iObj = 1:n_objects
                 %Adjust time start_offset
-                objs(iObj).time.start_offset = objs(iObj).time.start_offset - event_times(iObj);
+                cur_obj = temp(iObj);
+                cur_obj.time.start_offset   = cur_obj.time.start_offset - event_times(iObj);
                 
+                cur_obj.addHistoryElements(history_entry);
+                
+                %TODO: Do I want this ...????
+                cur_obj.time.start_datetime = cur_obj.time.start_datetime;
                 %Adjust event times
-                all_events = objs(iObj).event_info;
+                all_events = temp(iObj).event_info;
                 fn = fieldnames(all_events);
                 for iField = 1:length(fn)
                     %all_events is just a structure
                     cur_event = all_events.(fn{iField});
                     cur_event.shiftStartTime(event_times(iObj));
                 end
+            end
+            
+            if nargout
+               varargout{1} = temp; 
             end
             
         end
@@ -891,7 +917,7 @@ classdef data < sl.obj.handle_light
         %         function sample_number = timeToSample(obj)
         %             error('Not yet implemented')
         %         end
-        function removeTimeGapsBetweenObjects(objs)
+        function varargout = removeTimeGapsBetweenObjects(objs)
             %x Removes any time gaps between objects (for plotting)
             %
             %   removeTimeGapsBetweenObjects(objs)
@@ -901,12 +927,22 @@ classdef data < sl.obj.handle_light
             %   p.removeTimeGapsBetweenObjects()
             %   plot(p)
             
+            if nargout
+                temp = copy(objs);
+            else
+                temp = objs;
+            end
+            
             last_time = 0; %Should this be the first object ?????
             for iObj = 1:length(objs)
-                cur_obj = objs(iObj);
+                cur_obj = temp(iObj);
                 cur_obj.time.start_offset = last_time;
                 cur_obj.time.start_datetime = 0;
                 last_time = cur_obj.time.end_time;
+            end
+            
+            if nargout
+               varargout{1} = temp; 
             end
         end
     end

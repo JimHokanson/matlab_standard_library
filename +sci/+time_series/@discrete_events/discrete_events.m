@@ -229,7 +229,7 @@ classdef discrete_events < sl.obj.display_class
         function shiftStartTime(objs,time_to_subtract)
             for iObj = 1:length(objs)
                 cur_obj = objs(iObj);
-                time_to_subtract = h__unscaleTime(cur_obj,time_to_subtract);
+                %time_to_subtract = h__unscaleTime(cur_obj,time_to_subtract);
                 cur_obj.times = cur_obj.times - time_to_subtract;
             end
         end

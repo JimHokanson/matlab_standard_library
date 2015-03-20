@@ -7,6 +7,8 @@ classdef config < handle
     %
     %   The JGIT interface to the config is VERY generic. I'd like this
     %   class to make it a bit less generic ...
+    %
+    %   http://git-scm.com/docs/git-config
     
     properties
         h %org.eclipse.jgit.storage.file.FileBasedConfig
@@ -36,8 +38,14 @@ classdef config < handle
            
            %keyboard
            
+           
            temp = obj.h.getSections();
+           
            obj.sections = cell(temp.toArray());
+        end
+        function getSection(name)
+            %TODO: Should verify section exists ...
+           s = sl.git.repo.config.section(h,name); 
         end
     end
     

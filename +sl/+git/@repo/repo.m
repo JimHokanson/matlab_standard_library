@@ -1,4 +1,4 @@
-classdef repo < handle
+classdef repo < sl.obj.display_class
     %
     %   Class:
     %   sl.git.repo

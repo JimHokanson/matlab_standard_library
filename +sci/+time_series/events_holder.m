@@ -36,6 +36,11 @@ classdef events_holder < dynamicprops
                 h__addSingleEvent(obj,cur_element);
             end 
         end
+        function value = fieldnames(obj)
+           %We want to know the events, not all the properties ...
+           value = builtin('fieldnames',obj);
+           value(strcmp(value,'p__all_event_names')) = [];
+        end
     end
     
 end
