@@ -1,5 +1,5 @@
 function [x_reduced, y_reduced, extras] = reduce_to_width(x, y, axis_width_in_pixels, x_limits, varargin)
-%x
+%x Reduces the # of points in a data set
 %
 %   [x_reduced, y_reduced] = ...
 %       sl.plot.big_data.LinePlotReducer.reduce_to_width(...
@@ -15,6 +15,7 @@ function [x_reduced, y_reduced, extras] = reduce_to_width(x, y, axis_width_in_pi
 %   -------
 %   x : {array, sci.time_series.time}
 %       [samples x channels]
+%       The samples may be evenly spaced or not evenly spaced.
 %   y : array
 %       [samples x channels]
 %   axis_width_in_pixels :
@@ -26,7 +27,8 @@ function [x_reduced, y_reduced, extras] = reduce_to_width(x, y, axis_width_in_pi
 %
 %   Optional Inputs:
 %   ----------------
-%   use_quick :
+%   use_quick : A quick approach just downsamples the data rather than
+%       finding local maximums and minimums.
 %
 %   Outputs
 %   -------
@@ -47,8 +49,22 @@ function [x_reduced, y_reduced, extras] = reduce_to_width(x, y, axis_width_in_pi
 %   Based on code by:
 %   Tucker McClure (Mathworks)
 
+%Mex code calls:
+%---------------
+
+%TODO: This should be based on how long it takes to plot a set of points
+%versus how long it takes to run this code ...
+N_SAMPLES_MAX_PLOT_EVERYTHING = 10000;
+
+N_POINTS = 2*axis_width_in_pixels;
+HALF_N_POINTS = axis_width_in_pixels;
+HALF_N_POINTS_QUICK = 4*axis_width_in_pixels;
+
 in.use_quick = false;
 in = sl.in.processVarargin(in,varargin);
+
+
+
 
 %{
 %This 
@@ -62,16 +78,13 @@ tic; [xr,yr] = sl.plot.big_data.reduce_to_width(sci.time_series.time(0.01,N),r,4
 
 extras = struct;
 
-%TODO: This should be based on how long it takes to plot a set of points
-%versus how long it takes to run this code ...
-N_SAMPLES_MAX_PLOT_EVERYTHING = 10000;
 
-n_points = 2*axis_width_in_pixels;
-
-%Early exit for small data
-%--------------------------
+%TODO: Move this to a function
+% Early exit for small data
+%--------------------------------------------------------------------------
 % If the data is already small, there's no need to reduce.
-% Note that this check also serves to prevent indexing edge cases.
+% Note that this check also serves to prevent indexing edge cases (e.g. no
+% data or a single data point)
 if size(y, 1) <= N_SAMPLES_MAX_PLOT_EVERYTHING
     y_reduced = y;
     if isobject(x)
@@ -86,43 +99,55 @@ if size(y, 1) <= N_SAMPLES_MAX_PLOT_EVERYTHING
 end
 
 % Reduce the data to the new axis size.
-%---------------------------------------------------
-n_channels_y = size(y,2);
-
+%--------------------------------------------------------------------------
 %This value should either be 1, or the same as n_channels_y, indicating a
 %1:1 correspondance between x and y.
 n_channels_x = size(x,2);
 
-n_samples_y = size(y,1);
+n_samples_y  = size(y,1);
+n_channels_y = size(y,2);
 
 %+2 for min and max, see note below on extremes
-x_reduced = nan(n_points+2, n_channels_y);
-y_reduced = nan(n_points+2, n_channels_y);
+x_reduced = nan(N_POINTS+2, n_channels_y);
+y_reduced = nan(N_POINTS+2, n_channels_y);
 
-%Add data extremes
-%----------------------------------
-%TODO: Make this a method
+%Add data extremes:
+%--------------------------------------------------------------------------
 %We add on the extremes of the data so that Matlab doesn't zoom in and out
 %constantly.
-y_reduced(1,:) = y(1,:);
+y_reduced(1,:)   = y(1,:);
 y_reduced(end,:) = y(end,:);
 
 if isobject(x)
     x_reduced(1,:)   = x.getTimesFromIndices(1);
     x_reduced(end,:) = x.getTimesFromIndices(n_samples_y);   
 else
-    x_reduced(1,:) = x(1,:);
+    x_reduced(1,:)   = x(1,:);
     x_reduced(end,:) = x(end,:);
 end
 
-%Questions:
-%----------
-%1) Are the data evenly sampled in time
-%2) Are we plotting all data
-%3) # of channels
 
+%TODO: Move this section to a function...
+%------------------------------------------
+%Can we use a single channel reshape approach that is relatively quick?
+%--------------------------------------------------------------------------
+%
+%   We need:
+%   --------
+%   1) Data that are evently sampled in time
+%   2) to be plotting all the data
+%   3) Only to be dealing with a single channel.
+%
+
+%1) TODO: This doesn't consider when x is a vector that is evenly spaced.
+%The standard way of doing this in Matlab has a high memory requirement
+%(for an assumed large x)
 evenly_sampled = isobject(x); %We could also test the input data as well
-plot_all_data  = h__checkForPlottingAllData(x,x_limits);
+
+%2)
+plot_all_data = h__checkForPlottingAllData(x,x_limits);
+
+%3)
 multiple_channels = n_channels_y > 1;
 
 if evenly_sampled && plot_all_data && ~multiple_channels
@@ -130,10 +155,10 @@ if evenly_sampled && plot_all_data && ~multiple_channels
 %a matrix, and then use Matlab to compute min and max along the proper
 %dimension so that all chunks are computed together in one call.
     if in.use_quick
-        indices = h__getQuickIndices(1,length(y),n_points);
+        indices = h__getQuickIndices(1,length(y),N_POINTS);
     else
         extras.method = '2: Single Channel Reshape';
-        indices = h__getMinMax_approach2(y,n_points);
+        indices = h__getMinMax_approach2(y,N_POINTS);
     end
 
     x_reduced = h__getXReducedGivenIndices(x,x_reduced,1,indices);
@@ -141,18 +166,12 @@ if evenly_sampled && plot_all_data && ~multiple_channels
     return
 end
 
-
-if in.use_quick
-    %Let's get a bit more detail if we are going to go quickly
-    %
-    %This scalar is chosen arbitrarily currently
-    axis_width_in_pixels = 4*axis_width_in_pixels;
-end
-
-n_edges  = axis_width_in_pixels + 1;
+%Alternative approaches since the reshape approach won't work
+%--------------------------------------------------------------------------
+n_edges  = HALF_N_POINTS + 1;
 % Create a place to store the indices we'll need.
 %This size allows us to use indices(:) appropriately.
-indices  = zeros(2,axis_width_in_pixels);
+indices  = zeros(2,HALF_N_POINTS);
 
 for iChan = 1:n_channels_y
     
@@ -173,7 +192,7 @@ for iChan = 1:n_channels_y
     else
         %This is where we could try the mex ...
         if in.use_quick
-           indices = h__getQuickIndices(bound_indices(1),bound_indices(end),axis_width_in_pixels);    
+           indices = h__getQuickIndices(bound_indices(1),bound_indices(end),HALF_N_POINTS_QUICK);    
         else
            indices = h__getMinMax_approach3(y,indices,bound_indices,iChan);
         end
@@ -192,13 +211,15 @@ end
 end
 
 function plot_all_data = h__checkForPlottingAllData(x,x_limits)
+%x Check if we are plotting all of the data
+%
+%   We are checking that all x values are within the x_limits
 
 if isobject(x)
     plot_all_data =  x_limits(1) <= x.start_time && x_limits(2) >= x.end_time;
 else
     plot_all_data = all(x_limits(1) <= x(1,:) & x_limits(2) >= x(end,:));
 end
-
 
 end
 
@@ -470,10 +491,10 @@ else
 end
 end
 
-function indices = h__getQuickIndices(start_I,end_I,n_points)   
-   indices = zeros(2,n_points);
+function indices = h__getQuickIndices(start_I,end_I,half_n_points)
+   indices = zeros(2,half_n_points);
    
-   temp = round(linspace(start_I,end_I,n_points*2));
+   temp = round(linspace(start_I,end_I,2*half_n_points));
    indices(1,:) = temp(1:2:end);
    indices(2,:) = temp(2:2:end);
    
