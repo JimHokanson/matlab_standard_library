@@ -1,7 +1,9 @@
 function [x_reduced, y_reduced, extras] = reduce_to_width(x, y, axis_width_in_pixels, x_limits, varargin)
 %x
 %
-%   [x_reduced, y_reduced] = sl.plot.big_data.LinePlotReducer.reduce_to_width(x, y, axis_width_in_pixels, x_limits)
+%   [x_reduced, y_reduced] = ...
+%       sl.plot.big_data.LinePlotReducer.reduce_to_width(...
+%           x, y, axis_width_in_pixels, x_limits)
 %
 %   For a given data set, this function returns the maximum and minimum
 %   points within non-overlapping subsets of the data, bounded by the
@@ -228,10 +230,39 @@ function indices = h__getMinMax_approach2(data,n_output_points)
 %
 %   Since the arrray may not be reshapeable nicely - i.e. evenly divisible
 %   by the # of output points - we truncate the array (in mex) before
-%   calculating min and max. After this we untruncate the array.
+%   reshaping into a matrix and calculating min and max along one of the
+%   dimensions (also all done in mex). After this we untruncate the array.
 %
 %   Some extra Matlab code is used to calculate the max and min over the
 %   resulting smaller chunk of data at the end of the array if necessary.
+
+%TODO:
+%rename variables so that their meanings are obvious ...
+
+%TODO:
+%--------------------------------------
+%Using this approach, we are required to have a nice divisor. I was
+%plotting 29901 points with 4000 min/max regions. Sticking to 4000 output
+%points with even spaces gives us 29901 - 7*4000 => 1901 extra points,
+%which is not what we want.
+%
+%Instead we want to be able to able to adjust our # of output points
+%so that the remainder is on the order of the sample sizes (in that last
+%case, 7)
+%
+%   so we could do 7 points and return 4271 (technically 4272 since 29901
+%   isn't divisible by 7)
+%
+%   alternatively we could divide by 8 and return 3737 points
+%
+%   We are free to choose either (divide by 7 or 8) but both will not
+%   return the # requested, which we need to be able to handle ...
+%
+%   My preference would be to do less and to pad with NaN values in the
+%   calling function ...
+%
+
+
 
 %I'm not thrilled with this nomenclature (more so in the calling function
 %than here, here is a bit better)
@@ -252,10 +283,13 @@ indices = bsxfun(@plus,indices,0:new_m:new_m*(n_max_min_regions-1));
 if extra_samples ~= 0
    extra_samples_m1 = extra_samples-1;
    leftover_samples = data(end-extra_samples_m1:end);
+   
    [~,last_min_I] = min(leftover_samples);
    last_min_I = last_min_I + new_m*n_max_min_regions;
+   
    [~,last_max_I] = max(leftover_samples);
    last_max_I = last_max_I + new_m*n_max_min_regions;
+   
    last_column = [last_min_I; last_max_I];
    indices = [indices last_column];
 end

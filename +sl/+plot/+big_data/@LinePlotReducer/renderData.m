@@ -89,10 +89,10 @@ for iG = 1:obj.n_plot_groups
     %Reduce the data.
     %----------------------------------------
     if use_original
-        %
         x_r = obj.x_r_orig{iG};
         y_r = obj.y_r_orig{iG};
     else
+        %sl.plot.big_data.LinePlotReducer.reduce_to_width
         [x_r, y_r] = obj.reduce_to_width(...
             obj.x{iG}, obj.y{iG}, new_axes_width, new_x_limits, 'use_quick',is_quick);
     end
