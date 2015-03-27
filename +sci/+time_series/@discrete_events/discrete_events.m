@@ -78,7 +78,13 @@ classdef discrete_events < sl.obj.display_class
         end
         function new_obj = copy(old_obj)
             %TODO: Implement this ...
-            new_obj = old_obj;
+            new_obj = sci.time_series.discrete_events(old_obj.prop_name,old_obj.times);
+            %TODO: This should be a generic method via sl
+            fn = fieldnames(old_obj);
+            for iField = 1:length(fn)
+                cur_name = fn{iField};
+            new_obj.(cur_name) = old_obj.(cur_name);
+            end
         end
         function prettyPrint(obj)
             %

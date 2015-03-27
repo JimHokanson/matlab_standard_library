@@ -41,6 +41,14 @@ classdef events_holder < dynamicprops
            value = builtin('fieldnames',obj);
            value(strcmp(value,'p__all_event_names')) = [];
         end
+        function new_obj = copy(old_obj)
+           new_obj = sci.time_series.events_holder;
+            fn = fieldnames(old_obj);
+            for iField = 1:length(fn)
+                cur_name = fn{iField};
+                h__addSingleEvent(new_obj,copy(old_obj.(cur_name))) 
+            end
+        end
     end
     
 end

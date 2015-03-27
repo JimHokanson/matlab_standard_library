@@ -31,6 +31,9 @@ switch combined_units
         fh = @(x)times(x,1e6);
     case 'V#mV'
         fh = @(x)times(x,1e3);
+    case 'cmH20#cm H20'
+        %Yikes, why aren't we using the letter O instead of the # 0 ...
+        fh = @(x)x;
 % % %     case 's#ms'
 % % %     case 's#min'
 % % %     case 's#hr

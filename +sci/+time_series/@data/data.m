@@ -239,7 +239,7 @@ classdef data < sl.obj.handle_light
                     'history',      cur_obj.history,...
                     'units',        cur_obj.units,...
                     'channel_labels',cur_obj.channel_labels,...
-                    'events',       cur_obj.event_info,...
+                    'events',       copy(cur_obj.event_info),...
                     'y_label',      cur_obj.y_label);
             end
             
@@ -405,6 +405,9 @@ classdef data < sl.obj.handle_light
             [local_options,plotting_options] = sl.in.removeOptions(varargin,fieldnames(in),'force_cell',true);
             in = sl.in.processVarargin(in,local_options);
             
+            %TODO: Eventually each plotting routine should consult
+            %the absolute time that is being used by the first to plot
+            %and adjust accoridingly (both units and start time)
             time_objs = [objs.time];
             start_datetimes = [time_objs.start_datetime];
             if ~all(start_datetimes == start_datetimes(1)) && in.time_shift
@@ -422,6 +425,9 @@ classdef data < sl.obj.handle_light
             
             time_objs_for_plot.changeOutputUnits(in.time_units);
             
+            
+            %The actual plotting
+            %--------------------------------------------------------------
             render_objs = cell(1,length(objs));
             
             for iObj = 1:length(objs)
@@ -475,7 +481,7 @@ classdef data < sl.obj.handle_light
             end
             xlabel(sprintf('Time (%s)',in.time_units))
         end
-        function result_object = plotStacked(objs,local_options,plotting_options)
+        function result_object = plotStacked(objs,varargin)
             %
             %
             %   result_object = plotStacked(objs,local_options,plotting_options)
@@ -492,7 +498,7 @@ classdef data < sl.obj.handle_light
             %   Examples:
             %   ---------
             %   pres.zeroTimeByEvent('start_pump');
-            %   r = pres.plotStacked({'shift',-15},{'Linewidth',2});
+            %   r = pres.plotStacked('shift',-15,'Linewidth',2);
             %
             %   Improvements:
             %   -------------
@@ -531,43 +537,53 @@ classdef data < sl.obj.handle_light
             
             result_object = struct;
             
-            if nargin < 2
-                local_options = {};
-            end
-            if nargin < 3
-                plotting_options = {};
-            end
-            
+            in.y_tick_labels = {};
+            in.zero_by_event = '';
+            in.loop_props = {'Color'};
             in.shift    = []; %1 value or multiple values
             %multiple values, absolute or relative ????
             %- absolute for now ...
             in.channels = 'all'; %NYI
-            in = sl.in.processVarargin(in,local_options);
+            in.time_units = 's';
+            
+            [varargin,plotting_options] = sl.in.removeOptions(varargin,fieldnames(in));
+            
+            in = sl.in.processVarargin(in,varargin);
+            
+            if ~isempty(in.zero_by_event)
+               objs = objs.zeroTimeByEvent(in.zero_by_event); 
+            end
+            
             
             n_objs  = length(objs);
             
             %Step 1: Grab the data
+            %-----------------------------------------------------
             if n_objs > 1
                 %Then plot each object shifted ...
                 local_data = cell(1,n_objs);
                 local_time = cell(1,n_objs);
                 for iObj = 1:length(objs)
                     local_data{iObj} = objs(iObj).d;
-                    local_time{iObj} = objs(iObj).time;
+                    local_time{iObj} = copy(objs(iObj).time);
                 end
             else
+                %Plot each channel shifted ...
                 obj = objs;
                 n_chans = obj.n_channels;
                 local_data = cell(1,n_chans);
                 local_time = cell(1,n_chans);
                 for iChan = 1:n_chans
                     local_data{iChan} = obj.d(:,iChan);
-                    local_time{iChan} = obj.time;
+                    local_time{iChan} = copy(obj.time);
                 end
             end
             
-            %Step 2: Determine shift amount
+            local_time = [local_time{:}];
+            local_time.changeOutputUnits(in.time_units);
             
+            %Step 2: Determine shift amount
+            %----------------------------------------------------------
             n_plots = length(local_data);
             
             if isempty(in.shift)
@@ -582,15 +598,30 @@ classdef data < sl.obj.handle_light
             
             result_object.all_shifts = all_shifts;
             
+            %Plotting
+            %---------------------------------------------------
             line_handles = cell(1,n_plots);
             
+            loop_options = sl.in.looped_options(plotting_options,in.loop_props);
             hold all
             for iPlot = 1:n_plots
-                temp = sl.plot.big_data.LinePlotReducer(local_time{iPlot},local_data{iPlot}+all_shifts(iPlot),plotting_options{:});
+                plotting_options = loop_options.getNext();
+                temp = sl.plot.big_data.LinePlotReducer(local_time(iPlot),local_data{iPlot}+all_shifts(iPlot),plotting_options{:});
                 temp.renderData();
                 line_handles(iPlot) = temp.h_plot(1);
             end
             hold off
+            
+            set(gca,'YGrid','on')
+            
+            if ~isempty(in.y_tick_labels)
+               set(gca,'YTick',all_shifts,'YTickLabel',in.y_tick_labels)
+            end
+            
+            if ~isempty(in.zero_by_event)
+               event_fixed = regexprep(in.zero_by_event,'_',' ');
+               xlabel(sprintf('Time since %s (%s)',event_fixed,in.time_units));
+            end
             
             result_object.line_handles = line_handles;
             
