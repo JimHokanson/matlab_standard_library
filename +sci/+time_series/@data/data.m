@@ -648,6 +648,7 @@ classdef data < sl.obj.handle_light
            temp_ca = cell(1,length(objs));
            
            for iObj = 1:length(objs)
+              %TODO: add try/catch that makes missing event clearer
               temp_ca{iObj} = objs(iObj).event_info.(name);
            end
            
@@ -692,93 +693,7 @@ classdef data < sl.obj.handle_light
     
     %Time related manipulations -------------------------------------------
     methods
-        function data_subset_objs = getDataSubset(objs,start_event,start_event_index,stop_event,stop_event_index,varargin)
-            %
-            %   Returns a new object that only has a subset of the data.
-            %
-            %   Calling Forms:
-            %   --------------
-            %   getDataSubset(objs,start_event,start_event_index,stop_event,stop_event_index,varargin)
-            %
-            %   getDataSubset(objs,start_time,[],stop_time,[],varargin)
-            %
-            %   getDataSubset(objs,start_sample,[],stop_sample,[],'times_are_samples',true,varargin)
-            %
-            %   Inputs:
-            %   -------
-            %       
-            %   Optional Inputs:
-            %   ----------------
-            %   align_time_to_start : logical (default false)
-            %       If this value is true, the start time is set to the
-            %       time of the first sample in the subset, rather than
-            %       the first sample in the original data set
-            %   times_are_samples : logical
-            %       If true, then the input values are treated as samples,
-            %       not as time values i.e. 1 means sample 1, not 1s
-            %   Examples:
-            %    ---------------
-            %   see dba.GSK.cmg_analysis
-            %   obj.pres_data_handle.getDataSubset('bladder_contraction_starts', 1,'bladder_contraction_ends', 1)
-            %   first input  - string form character form, second input
-            %   numerical integer indicates the which iteration of the
-            %   property you would like to begin at. and the latter, the iteration of
-            %   the ending property you'd like to end at. 
-            %   
-            %   See Also:
-            %   sci.time_series.data.getDataAlignedToEvent()
-            %   sci.time_series.data.zeroTimeByEvent()
-            
-            in.align_time_to_start = false;
-            in.times_are_samples = false;
-            in = sl.in.processVarargin(in,varargin);
-            
-            if in.align_time_to_start
-                first_sample_time = 0;
-            else
-                %This basically means keep the first sample at whatever
-                %time it currently is
-                first_sample_time = [];
-            end
-            
-            n_objs = length(objs);
-            all_start_times = zeros(1,n_objs);
-            temp_objs_ca = cell(1,n_objs);
-            for iObj = 1:n_objs
-                cur_obj = objs(iObj);
-                
-                if ischar(start_event)
-                    evh = cur_obj.event_info; %event holder
-                    start_time = evh.(start_event).times(start_event_index);
-                    end_time   = evh.(stop_event).times(stop_event_index);
-                else 
-                    start_time = start_event(iObj);
-                    end_time   = stop_event(iObj);
-                end
-                
-                if ~in.times_are_samples
-                    %TODO: Make this a function ...
-                    %??? - what a function ????
-                    start_index = h__timeToSamples(cur_obj,start_time);
-                    end_index   = h__timeToSamples(cur_obj,end_time);
-                else
-                    start_index = start_event;
-                    end_index  = stop_event;
-                end
-                
-                new_data        = cur_obj.d(start_index:end_index,:,:);
-                
-                new_time_object = h__getNewTimeObjectForDataSubset(cur_obj,start_index,end_index,'first_sample_time',first_sample_time);
-                
-                temp_objs_ca{iObj} = h__createNewDataFromOld(cur_obj,new_data,new_time_object);
-            end
-            
-            data_subset_objs = [temp_objs_ca{:}];
-            
-            if in.align_time_to_start
-                data_subset_objs.zeroTimeByEvent(all_start_times);
-            end
-        end
+        %getDataSubset - in a separate file
         function varargout = zeroTimeByEvent(objs,event_name_or_time_array,varargin)
             %x Redefines time such that the time of event is now at time zero.
             %
