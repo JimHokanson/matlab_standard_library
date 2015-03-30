@@ -62,6 +62,12 @@ classdef data < sl.obj.handle_light
     %       wtf = sci.time_series.data(rand(1e8,1),0.01);
     %
     
+    %Other Files:
+    %-------------
+    %sci.time_series.data.getDataSubset
+    %sci.time_series.data.resample
+    
+    
     %{
     %   2)
           dt = 0.001;
@@ -117,6 +123,7 @@ classdef data < sl.obj.handle_light
     
     properties (Dependent)
         event_names
+        fs %Sampling frequency of the data
         n_channels
         n_reps
         n_samples
@@ -124,6 +131,10 @@ classdef data < sl.obj.handle_light
     
     %Dependent Methods ----------------------------------------------------
     methods
+        function values = get.fs(objs)
+            times  = [objs.time];
+            values = [times.fs];
+        end
         function value = get.event_names(obj)
             value = obj.event_info.p__all_event_names;
         end
@@ -300,7 +311,7 @@ classdef data < sl.obj.handle_light
         function disp(objs)
             sl.obj.dispObject_v1(objs,'show_methods',false);
             
-            SECTION_NAMES = {'constructor related','visualization','events and history','time changing','data changing','miscellaneous'};
+            SECTION_NAMES = {'constructor related','visualization','events and history','time changing','data changing','math','miscellaneous'};
             
             sl.obj.disp.sectionMethods(SECTION_NAMES,'sci.time_series.data.dispMethodsSection')
         end
@@ -335,6 +346,8 @@ classdef data < sl.obj.handle_light
                     fcn_names = {'resample','getDataSubset','zeroTimeByEvent','getDataAlignedToEvent','removeTimeGapsBetweenObjects'};
                 case 'data changing'
                     fcn_names = {'meanSubtract','filter','decimateData','changeUnits'};
+                case 'math'
+                    fcn_names = {'add','minus','abs','mrdivide','power','max','min','sum'};
                 case 'miscellaneous'
                     fcn_names = {'getRawDataAndTime'};
                 otherwise
@@ -1138,18 +1151,11 @@ classdef data < sl.obj.handle_light
     %
     %   These methods are slowly being created as they are needed.
     %
-    %
+    %   NOTE: These methods are currently hidden so that they don't
+    %   fill up the tab complete pane. It should be assumed that these
+    %   functions exist.
     methods (Hidden)
-        %Possibles to add:
-        %- ceil
-        %- floor
-        %- round
-        %- sqrt
-        %- diff
-        %- exp
-        %- log
-        %- log10
-        function runFunctionsOnData(objs,functions)
+       function runFunctionsOnData(objs,functions)
             %x  Executes a a set of functions on the object
             %
             %   This is really a helper function for some of the basic
@@ -1175,7 +1181,20 @@ classdef data < sl.obj.handle_light
                     cur_obj.d = cur_function(cur_obj.d);
                 end
             end
-        end
+        end 
+    end
+    %In place manipulations
+    methods (Hidden)
+        %Possibles to add:
+        %- ceil
+        %- floor
+        %- round
+        %- sqrt
+        %- diff
+        %- exp
+        %- log
+        %- log10
+        
         function out_objs = add(A,B)
             %x Performs the addition operation
             %
@@ -1283,6 +1302,90 @@ classdef data < sl.obj.handle_light
             temp.runFunctionsOnData({@(x)power(x,B)});
             if nargout
                 varargout{1} = temp;
+            end
+        end
+    end
+    %Data reduction basic math methods -------------- e.g. max,min
+    methods (Hidden)
+        %TODO: Describe some of the concerns with these methods
+        %   i.e. returning scalars vs objs depending on dimension
+        %
+        %
+        %   The design of these methods might change ...
+        function output = max(objs,varargin)
+           
+            in.dim = 1;
+            in.un = true;
+            in = sl.in.processVarargin(in,varargin);
+            
+            if in.dim ~= 1
+               error('Only dim=1 is currently supported') 
+            end
+            
+            n_objs = length(objs);
+            temp = cell(1,n_objs);
+            for iObj = 1:n_objs
+               temp{iObj} = max(objs(iObj).d,[],in.dim);
+            end
+            
+            if ~in.un
+                output = temp;
+            else
+                if any(cellfun(@numel,temp) ~= 1)
+                   error('One of the objects has more than 1 channel or rep, "''un'',0" required for the input') 
+                end
+                output = [temp{:}];
+            end
+
+        end
+        function output = min(objs,varargin)
+            
+            in.dim = 1;
+            in.un = true;
+            in = sl.in.processVarargin(in,varargin);
+            
+            if in.dim ~= 1
+               error('Only dim=1 is currently supported') 
+            end
+            
+            n_objs = length(objs);
+            temp = cell(1,n_objs);
+            for iObj = 1:n_objs
+               temp{iObj} = min(objs(iObj).d,[],in.dim);
+            end
+            
+            if ~in.un
+                output = temp;
+            else
+                if any(cellfun(@numel,temp) ~= 1)
+                   error('One of the objects has more than 1 channel or rep, "''un'',0" required for the input') 
+                end
+                output = [temp{:}];
+            end
+        end
+        function output = sum(objs,varargin)
+           
+            in.dim = 1;
+            in.un = true;
+            in = sl.in.processVarargin(in,varargin);
+            
+            if in.dim ~= 1
+               error('Only dim=1 is currently supported') 
+            end
+            
+            n_objs = length(objs);
+            temp = cell(1,n_objs);
+            for iObj = 1:n_objs
+               temp{iObj} = sum(objs(iObj).d,in.dim);
+            end
+            
+            if ~in.un
+                output = temp;
+            else
+                if any(cellfun(@numel,temp) ~= 1)
+                   error('One of the objects has more than 1 channel or rep, "''un'',0" required for the input') 
+                end
+                output = [temp{:}];
             end
         end
     end

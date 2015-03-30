@@ -1,12 +1,21 @@
 function varargout = methods_v1(objs,varargin)
+%x A function that displays the methods nicely
 %
 %   Calling Forms:
 %   --------------
-%   sl.obj.methods_v1(objs,varargin)
+%   1) Call with object instances
+%   
+%       sl.obj.methods_v1(objs,varargin)
 %
-%   option_struct = sl.obj.methods_v1(1);
+%   2) Call with object names (useful for calling from static methods)
 %
-%   sl.obj.methods_v1(class_name,varargin)
+%       sl.obj.methods_v1(class_name,varargin)
+%   
+%   3) Get the optional inputs
+%   
+%       option_struct = sl.obj.methods_v1(1);
+%
+%   
 %
 %   Outputs:
 %   --------
@@ -15,9 +24,18 @@ function varargout = methods_v1(objs,varargin)
 %
 %   Optional Inputs
 %   ---------------
+%   header : string
+%   methods_use : cellstr (default [])
+%       An empty input means all methods should be used after filtering.
+%       Specification of the methods to use means that the methods will be
+%       displayed, regardless of the filters.
 %   include_header : logical (default true)
 %   show_handle_methods : logical (default true)
 %
+%
+%   Known Bugs:
+%   -----------
+%   1) h1 line doesn't display properly for hidden methods
 %
 %
 %   1) TODO: Allow showing of hidden methods via clicking on link
@@ -27,20 +45,20 @@ function varargout = methods_v1(objs,varargin)
 %   sl.obj.getFullMethodName
 
 in.header = '    Methods:';
-in.methods_use = 'all';
+in.methods_use = []; %Empty means
 in.include_header = true;
 in.show_handle_methods = false;
 in.show_constructor = false;
 in.show_hidden = false; %If true hidden props (NYI) and methods are shown
 
+%Early exit, options only requested?
+%------------------------------------
 if isnumeric(objs)
     varargout{1} = in;
     return
 end
 
-
 in = sl.in.processVarargin(in,varargin);
-
 
 
 if ischar(objs)
@@ -51,50 +69,52 @@ else
     meta_class_obj = metaclass(objs(1));
 end
 
-
-
 meta_method_objs = meta_class_obj.MethodList;
 
-
 %Method filtering
-%-------------------------------------------------
-%1) Filtering by type
-%------
-%1.1) Remove hidden
-if ~in.show_hidden
-    meta_method_objs([meta_method_objs.Hidden]) = [];
-end
-
-
-%1.2) Remove handle methods
-if ~in.show_handle_methods && ~isempty(meta_class_obj.SuperclassList)
-    super_class_names = {meta_class_obj.SuperclassList.Name};
-    if any(strcmp(super_class_names,'handle'))
-        defining_class_names = sl.cell.getStructureField({meta_method_objs.DefiningClass},'Name','un',0);
-        meta_method_objs(strcmp(defining_class_names,'handle')) = [];
+%---------------------------------------------------
+if ~isempty(in.methods_use)
+    if ischar(in.methods_use)
+       in.methods_use = {in.methods_use}; 
     end
-end
-
-
-%2) Filtering by name
-%------
-method_names = {meta_method_objs.Name};
-
-%2.1) Remove constructor
-if ~in.show_constructor
-    class_constructor_name = sl.obj.getClassNameWithoutPackages(class_name);
-    
-    mask = strcmp(method_names,class_constructor_name);
-    
-    meta_method_objs(mask) = [];
-    method_names(mask)     = [];
-end
-
-if iscell(in.methods_use)
+    method_names = {meta_method_objs.Name};
     mask = ~ismember(method_names,in.methods_use);
     
     meta_method_objs(mask) = [];
-    method_names(mask)     = [];
+    method_names(mask)     = [];   
+else
+
+    %1) Filtering by type
+    %------
+    %1.1) Remove hidden
+    if ~in.show_hidden
+        meta_method_objs([meta_method_objs.Hidden]) = [];
+    end
+
+
+    %1.2) Remove handle methods
+    if ~in.show_handle_methods && ~isempty(meta_class_obj.SuperclassList)
+        super_class_names = {meta_class_obj.SuperclassList.Name};
+        if any(strcmp(super_class_names,'handle'))
+            defining_class_names = sl.cell.getStructureField({meta_method_objs.DefiningClass},'Name','un',0);
+            meta_method_objs(strcmp(defining_class_names,'handle')) = [];
+        end
+    end
+
+
+    %2) Filtering by name
+    %------
+    method_names = {meta_method_objs.Name};
+
+    %2.1) Remove constructor
+    if ~in.show_constructor
+        class_constructor_name = sl.obj.getClassNameWithoutPackages(class_name);
+
+        mask = strcmp(method_names,class_constructor_name);
+
+        meta_method_objs(mask) = [];
+        method_names(mask)     = [];
+    end
 end
 
 
