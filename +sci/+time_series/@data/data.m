@@ -340,7 +340,7 @@ classdef data < sl.obj.handle_light
                     %resample
                     fcn_names = {'resample','getDataSubset','zeroTimeByEvent','getDataAlignedToEvent','removeTimeGapsBetweenObjects'};
                 case 'data changing'
-                    fcn_names = {'meanSubtract','filter','decimateData','changeUnits'};
+                    fcn_names = {'meanSubtract','minSubtract','filter','decimateData','changeUnits'};
                 case 'math'
                     fcn_names = {'add','minus','abs','mrdivide','power','max','min','sum'};
                 case 'miscellaneous'
@@ -917,6 +917,39 @@ classdef data < sl.obj.handle_light
     
     %Data changing --------------------------------------------------------
     methods
+        function varargout = minSubtract(objs,varargin)
+            %x Subtracts the min of the data from the data
+            %
+            %   Performs the operation:
+            %   B = A - min(A)
+            %
+            %   
+            in.dim = [];
+            in = sl.in.processVarargin(in,varargin);
+            
+            if nargout
+                temp = copy(objs);
+            else
+                temp = objs;
+            end
+            
+            if isempty(in.dim)
+                for iObj = 1:length(objs)
+                    cur_obj   = temp(iObj);
+                    cur_obj.d = bsxfun(@minus,cur_obj.d,min(cur_obj.d));
+                end
+            else
+                dim_use = in.dim;
+                for iObj = 1:length(objs)
+                    cur_obj   = temp(iObj);
+                    cur_obj.d = bsxfun(@minus,cur_obj.d,min(cur_obj.d,dim_use));
+                end
+            end
+            
+            if nargout
+                varargout{1} = temp;
+            end 
+        end
         function varargout = meanSubtract(objs,varargin)
             %x Subtracts the mean of the data from the data
             %
@@ -1119,6 +1152,9 @@ classdef data < sl.obj.handle_light
         end
         function changeUnits(objs,new_units)
             %x Given the new units, scales/converts the data accordingly
+            %
+            %
+            %   I am planning on remo
             %
             %   HIGHLY EXPERIMENTAL
             %   Relies on sci.units.getConversionFunction which is woefully
