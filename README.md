@@ -1,5 +1,7 @@
 # Matlab Standard Library #
 
+[![Join the chat at https://gitter.im/JimHokanson/matlab_standard_library](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/JimHokanson/matlab_standard_library?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 This repository was created in order to supplement other projects that I was working on. 
 
 When I began work different repositories, I found myself copying specific functions that I needed from other repositories. When I would make a change or update to the function it was difficult to propagate. 
