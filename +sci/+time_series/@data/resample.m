@@ -1,6 +1,11 @@
 function varargout = resample(objs,new_fs_or_new_fs_objs,varargin)
 %x Change the sampling frequency of the data
 %
+%
+%   This doesn't work as well as I would like and needs to be fixed for
+%   edge effects.
+%
+%
 %   Calling Forms:
 %   --------------
 %   new_objs = resample(objs,new_fs,varargin)

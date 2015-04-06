@@ -62,6 +62,12 @@ classdef data < sl.obj.handle_light
     %       wtf = sci.time_series.data(rand(1e8,1),0.01);
     %
     
+    %Other Files:
+    %-------------
+    %sci.time_series.data.getDataSubset
+    %sci.time_series.data.resample
+    
+    
     %{
     %   2)
           dt = 0.001;
@@ -164,9 +170,9 @@ classdef data < sl.obj.handle_light
             %       Units of the data
             %   channel_labels:
             %       Not yet implemented
-            %   events: array or cell array of: 
+            %   events: array or cell array of:
             %               - sci.time_series.discrete_events
-            %               - 
+            %               -
             %       These signify discrete events that happen at a given
             %       time and that may also carray a string or value with
             %       the event.
@@ -300,7 +306,7 @@ classdef data < sl.obj.handle_light
         function disp(objs)
             sl.obj.dispObject_v1(objs,'show_methods',false);
             
-            SECTION_NAMES = {'constructor related','visualization','events and history','time changing','data changing','miscellaneous'};
+            SECTION_NAMES = {'constructor related','visualization','events and history','time changing','data changing','math','miscellaneous'};
             
             sl.obj.disp.sectionMethods(SECTION_NAMES,'sci.time_series.data.dispMethodsSection')
         end
@@ -334,7 +340,9 @@ classdef data < sl.obj.handle_light
                     %resample
                     fcn_names = {'resample','getDataSubset','zeroTimeByEvent','getDataAlignedToEvent','removeTimeGapsBetweenObjects'};
                 case 'data changing'
-                    fcn_names = {'meanSubtract','filter','decimateData','changeUnits'};
+                    fcn_names = {'meanSubtract','minSubtract','filter','decimateData','changeUnits'};
+                case 'math'
+                    fcn_names = {'add','minus','abs','mrdivide','power','max','min','sum'};
                 case 'miscellaneous'
                     fcn_names = {'getRawDataAndTime'};
                 otherwise
@@ -436,7 +444,7 @@ classdef data < sl.obj.handle_light
                     hold all
                 end
                 cur_obj = objs(iObj);
-
+                
                 if ischar(in.channels)
                     temp = sl.plot.big_data.LinePlotReducer(time_objs_for_plot(iObj),objs(iObj).d,plotting_options{:});
                 else
@@ -458,7 +466,7 @@ classdef data < sl.obj.handle_light
             if length(objs) > 1
                 hold_state.restore();
             end
-
+            
             %Populate Output:
             %----------------
             if nargout
@@ -631,28 +639,28 @@ classdef data < sl.obj.handle_light
     %Add Event or History to data object ----------------------------------
     methods
         function events = getEvent(objs,name)
-           %x Gets a specific event name for all objects
-           %
-           %    events = getEvent(objs,name)
-           %
-           %    Since events are nested within the event holder object
-           %    'event_info' getting an event object for multiple objects
-           %    requires a loop. This method removes the need for that
-           %    loop.
-           %
-           %    Examples:
-           %    ---------
-           %    ev = p.getEvent('qp_start')
-           %    qp_start_times = [ev.times]
-           
-           temp_ca = cell(1,length(objs));
-           
-           for iObj = 1:length(objs)
-              %TODO: add try/catch that makes missing event clearer
-              temp_ca{iObj} = objs(iObj).event_info.(name);
-           end
-           
-           events = [temp_ca{:}];
+            %x Gets a specific event name for all objects
+            %
+            %    events = getEvent(objs,name)
+            %
+            %    Since events are nested within the event holder object
+            %    'event_info' getting an event object for multiple objects
+            %    requires a loop. This method removes the need for that
+            %    loop.
+            %
+            %    Examples:
+            %    ---------
+            %    ev = p.getEvent('qp_start')
+            %    qp_start_times = [ev.times]
+            
+            temp_ca = cell(1,length(objs));
+            
+            for iObj = 1:length(objs)
+                %TODO: add try/catch that makes missing event clearer
+                temp_ca{iObj} = objs(iObj).event_info.(name);
+            end
+            
+            events = [temp_ca{:}];
         end
         function addEventElements(obj,event_elements)
             %x Adds event elements to the object. See 'devents' property
@@ -660,7 +668,7 @@ classdef data < sl.obj.handle_light
             %   Inputs:
             %   -------
             %   event_elements : See sci.time_series.events_holder.addEvents
-            %   
+            %
             %   See Also:
             %   sci.time_series.events_holder
             %   sci.time_series.events_holder.addEvents
@@ -694,6 +702,31 @@ classdef data < sl.obj.handle_light
     %Time related manipulations -------------------------------------------
     methods
         %getDataSubset - in a separate file
+        function value = timeProp(objs,prop_name)
+            %
+            %   Retrieves a property from the time objects. Values are
+            %   concatenated together for all objects.
+            %
+            %   This method is meant to get around the problem of doing:
+            %   data.time.fs
+            %   Where data is an array of objects
+            %
+            %   Examples:
+            %   ----------
+            %   data.timeProp('fs')
+            %   data.timeProp('elapsed_time')
+            %
+            %    See Also:
+            %    sci.time_series.time
+            
+            time_objs = [objs.time];
+            temp = {time_objs.(prop_name)};
+            if ischar(temp{1})
+                value = temp;
+            else
+                value = [temp{:}];
+            end
+        end
         function varargout = zeroTimeByEvent(objs,event_name_or_time_array,varargin)
             %x Redefines time such that the time of event is now at time zero.
             %
@@ -770,7 +803,7 @@ classdef data < sl.obj.handle_light
             end
             
             if nargout
-               varargout{1} = temp; 
+                varargout{1} = temp;
             end
             
         end
@@ -888,7 +921,7 @@ classdef data < sl.obj.handle_light
             end
             
             if nargout
-               varargout{1} = temp; 
+                varargout{1} = temp;
             end
         end
     end
@@ -915,6 +948,39 @@ classdef data < sl.obj.handle_light
     
     %Data changing --------------------------------------------------------
     methods
+        function varargout = minSubtract(objs,varargin)
+            %x Subtracts the min of the data from the data
+            %
+            %   Performs the operation:
+            %   B = A - min(A)
+            %
+            %   
+            in.dim = [];
+            in = sl.in.processVarargin(in,varargin);
+            
+            if nargout
+                temp = copy(objs);
+            else
+                temp = objs;
+            end
+            
+            if isempty(in.dim)
+                for iObj = 1:length(objs)
+                    cur_obj   = temp(iObj);
+                    cur_obj.d = bsxfun(@minus,cur_obj.d,min(cur_obj.d));
+                end
+            else
+                dim_use = in.dim;
+                for iObj = 1:length(objs)
+                    cur_obj   = temp(iObj);
+                    cur_obj.d = bsxfun(@minus,cur_obj.d,min(cur_obj.d,dim_use));
+                end
+            end
+            
+            if nargout
+                varargout{1} = temp;
+            end 
+        end
         function varargout = meanSubtract(objs,varargin)
             %x Subtracts the mean of the data from the data
             %
@@ -1038,7 +1104,7 @@ classdef data < sl.obj.handle_light
                 end
                 
             end
-
+            
             if nargout
                 varargout{1} = temp;
             end
@@ -1118,6 +1184,9 @@ classdef data < sl.obj.handle_light
         function changeUnits(objs,new_units)
             %x Given the new units, scales/converts the data accordingly
             %
+            %
+            %   I am planning on remo
+            %
             %   HIGHLY EXPERIMENTAL
             %   Relies on sci.units.getConversionFunction which is woefully
             %   incomplete and is basically only hardcoded for the values
@@ -1169,17 +1238,10 @@ classdef data < sl.obj.handle_light
     %
     %   These methods are slowly being created as they are needed.
     %
-    %
+    %   NOTE: These methods are currently hidden so that they don't
+    %   fill up the tab complete pane. It should be assumed that these
+    %   functions exist.
     methods (Hidden)
-        %Possibles to add:
-        %- ceil
-        %- floor
-        %- round
-        %- sqrt
-        %- diff
-        %- exp
-        %- log
-        %- log10
         function runFunctionsOnData(objs,functions)
             %x  Executes a a set of functions on the object
             %
@@ -1207,6 +1269,19 @@ classdef data < sl.obj.handle_light
                 end
             end
         end
+    end
+    %In place manipulations
+    methods (Hidden)
+        %Possibles to add:
+        %- ceil
+        %- floor
+        %- round
+        %- sqrt
+        %- diff
+        %- exp
+        %- log
+        %- log10
+        
         function out_objs = add(A,B)
             %x Performs the addition operation
             %
@@ -1314,6 +1389,90 @@ classdef data < sl.obj.handle_light
             temp.runFunctionsOnData({@(x)power(x,B)});
             if nargout
                 varargout{1} = temp;
+            end
+        end
+    end
+    %Data reduction basic math methods -------------- e.g. max,min
+    methods (Hidden)
+        %TODO: Describe some of the concerns with these methods
+        %   i.e. returning scalars vs objs depending on dimension
+        %
+        %
+        %   The design of these methods might change ...
+        function output = max(objs,varargin)
+            
+            in.dim = 1;
+            in.un = true;
+            in = sl.in.processVarargin(in,varargin);
+            
+            if in.dim ~= 1
+                error('Only dim=1 is currently supported')
+            end
+            
+            n_objs = length(objs);
+            temp = cell(1,n_objs);
+            for iObj = 1:n_objs
+                temp{iObj} = max(objs(iObj).d,[],in.dim);
+            end
+            
+            if ~in.un
+                output = temp;
+            else
+                if any(cellfun(@numel,temp) ~= 1)
+                    error('One of the objects has more than 1 channel or rep, "''un'',0" required for the input')
+                end
+                output = [temp{:}];
+            end
+            
+        end
+        function output = min(objs,varargin)
+            
+            in.dim = 1;
+            in.un = true;
+            in = sl.in.processVarargin(in,varargin);
+            
+            if in.dim ~= 1
+                error('Only dim=1 is currently supported')
+            end
+            
+            n_objs = length(objs);
+            temp = cell(1,n_objs);
+            for iObj = 1:n_objs
+                temp{iObj} = min(objs(iObj).d,[],in.dim);
+            end
+            
+            if ~in.un
+                output = temp;
+            else
+                if any(cellfun(@numel,temp) ~= 1)
+                    error('One of the objects has more than 1 channel or rep, "''un'',0" required for the input')
+                end
+                output = [temp{:}];
+            end
+        end
+        function output = sum(objs,varargin)
+            
+            in.dim = 1;
+            in.un = true;
+            in = sl.in.processVarargin(in,varargin);
+            
+            if in.dim ~= 1
+                error('Only dim=1 is currently supported')
+            end
+            
+            n_objs = length(objs);
+            temp = cell(1,n_objs);
+            for iObj = 1:n_objs
+                temp{iObj} = sum(objs(iObj).d,in.dim);
+            end
+            
+            if ~in.un
+                output = temp;
+            else
+                if any(cellfun(@numel,temp) ~= 1)
+                    error('One of the objects has more than 1 channel or rep, "''un'',0" required for the input')
+                end
+                output = [temp{:}];
             end
         end
     end
