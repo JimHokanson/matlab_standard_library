@@ -1362,6 +1362,21 @@ classdef data < sl.obj.handle_light
                 varargout{1} = temp;
             end
         end
+        
+        function out_objs = mean(objs,dim,varargin)
+           if nargin == 1 || isempty(dim)
+               dim = 1;
+           end
+            n_objs = length(objs);
+            output = cell(1,n_objs);
+            
+           for iObj = 1:length(objs)
+               output{iObj} = mean(objs(iObj).d,dim);
+           end
+           
+           out_objs = [output{:}];
+
+        end
         function varargout = mrdivide(objs,B)
             if nargout
                 temp = copy(objs);
