@@ -328,6 +328,8 @@ if ~isempty(varargin) && ischar(varargin{1}) && varargin{1}(1) == '-'
             stop_times  = cellfun(@(x) x + value,start_times,'un',0);
        case '-s_dur'
            implement_sample_duration = true;
+       otherwise
+           error('Unrecognized option: %s',option)
    end
    varargin(1:2) = [];
 end

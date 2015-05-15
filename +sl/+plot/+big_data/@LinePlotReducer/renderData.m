@@ -340,11 +340,13 @@ obj.needs_initialization = false;
 %handles for 1 and 2
 %{h1 h2} - where h1 is from x1,y1, h2 is from x2,y2
 obj.h_plot = cell(1,obj.n_plot_groups);
-for iG = 1:obj.n_plot_groups
-    obj.h_plot{iG} = temp_h_plot(temp_h_indices{iG});
+if ~isempty(temp_h_plot)
+    for iG = 1:obj.n_plot_groups
+        obj.h_plot{iG} = temp_h_plot(temp_h_indices{iG});
+    end
 end
 
-
+%TODO: Make sure this is exposed in the documentation
 %sl.plot.big_data.line_plot_reducer.line_data_pointer
 for iG = 1:obj.n_plot_groups
     cur_group_h = obj.h_plot{iG};
@@ -434,6 +436,17 @@ for iG = 1:obj.n_plot_groups
     [x_r, y_r] = obj.reduce_to_width(...
         obj.x{iG}, obj.y{iG}, new_axes_width, [-Inf Inf]);
     
+    if isempty(x_r) %or equivalently y_r would work
+        group_x_min(iG) = NaN;
+        group_x_max(iG) = NaN;
+
+        %I'm not sure what impact setting these to NaN will have ...
+        obj.x_r_orig{iG} = NaN;
+        obj.y_r_orig{iG} = NaN;
+
+        obj.x_r_last{iG} = NaN;
+        obj.y_r_last{iG} = NaN;    
+    else
     group_x_min(iG) = min(x_r(1,:));
     group_x_max(iG) = max(x_r(end,:));
     
@@ -442,6 +455,8 @@ for iG = 1:obj.n_plot_groups
     
     obj.x_r_last{iG} = x_r;
     obj.y_r_last{iG} = y_r;
+    end
+    
     
     plot_args = [plot_args {x_r y_r}]; %#ok<AGROW>
     

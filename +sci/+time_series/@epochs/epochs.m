@@ -52,6 +52,14 @@ classdef epochs < sl.obj.display_class
             obj.durations = stop_times - start_times;
             obj.values = in.values;
         end
+        function shiftStartTime(objs,time_to_subtract)
+            for iObj = 1:length(objs)
+                cur_obj = objs(iObj);
+                %time_to_subtract = h__unscaleTime(cur_obj,time_to_subtract);
+                cur_obj.start_times = cur_obj.start_times - time_to_subtract;
+                cur_obj.stop_times  = cur_obj.stop_times - time_to_subtract;
+            end
+        end
         function new_obj = copy(old_obj)
            new_obj = sci.time_series.epochs(old_obj.prop_name,old_obj.start_times,old_obj.stop_times);
            new_obj.name = old_obj.name;
