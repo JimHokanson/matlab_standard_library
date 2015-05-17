@@ -18,7 +18,7 @@ classdef (Hidden) path
        %The thought with beta code was that it could be a set of functions
        %that are in progress but not yet ready for general usage that could
        %be added relatively easily to the path with:
-       %    
+       %    sl.path.addBeta()
        LIBRARY_REF_PATH    = sl.path.getRefPath()
     end
     
@@ -69,6 +69,40 @@ classdef (Hidden) path
            %TODO: Build in removal
             
         end
+        function path_entries = toCellstr(path_string)
+        %x  Parses a path string into a cellstr.
+        %
+        %   path_cell_array = sl.path.toCellstr(path_string)
+        %
+        %   This is really a helper function for the class. The more useful
+        %   function is probably sl.path.asCellstr
+        %
+        %   Input:
+        %   ------
+        %   path_string : string
+        %       The raw path string
+        %
+        %   Output:
+        %   -------
+        %   path_cell_array : {n x 1}, cellstr
+        %       Each entry is a directory in the Matlab path
+        %
+        %   Example:
+        %   --------
+        %   path_entries = sl.path.toCellstr(path())
+        %
+        %   See Also:
+        %   sl.path.asCellstr
+        %   path
+
+        path_entries = regexp(path_string,pathsep,'split')';
+        if isempty(path_entries(end))
+            path_entries(end) = [];
+        end
+
+        end
+        
+        
 % % % %         function [base_path,file_name,ext] = fileparts()
 % % % %             %This is only meant to be used on files
 % % % %             %Goal is to provide something that handles packages
@@ -84,6 +118,7 @@ classdef (Hidden) path
 % % % %             %  file_name = sl.test.file
 % % % %             %  ext       = .m
 % % % %         end
+
         function subs_mask = matchSubdirectories(path_entries,base_path)
             %matchSubdirectories  Match subdirectories of a given base_path
             %

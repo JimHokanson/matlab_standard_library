@@ -1,10 +1,9 @@
 function varargout = getList(root_folder_path,varargin)
-%getList Return a list of files and/or folders in a directory with many options
-%
+%x Return a list of files and/or folders in a directory with many options
 %
 %   This function gets a list of files and/or folders in a directory (and
-%   possibly subdirectories) with many options for filtering and return info
-%   type.
+%   possibly subdirectories) with many options for filtering and specifying
+%   how the information should be returned (full paths, names, etc.)
 %
 %   The format is such that hopefully additional filters are relatively
 %   easy to add and have everything kept well organized.
@@ -18,23 +17,34 @@ function varargout = getList(root_folder_path,varargin)
 %
 %   Calling Forms: (Not comprehensive, see 'output_type' and 'search_type')
 %   -----------------------------------------------------------------------
-%   1) Default form where we are searching for files and the result is an object
+%   1) Default form where we are searching for files and the result is 
+%   an object
+%   
 %   list_result = sl.dir.getList(root_folder_path,varargin)
 %
+%
 %   2) Only return certain info, not the object
-%   file_names = sl.dir.getList(root_folder_path,'output_type','names',varargin)
+%   
+%   file_names = sl.dir.getList(root_folder_path,...
+%                       'output_type','names',varargin)
+%
 %
 %   3) Return folders instead of files & returns as full paths
+%   
 %   folder_paths = sl.dir.getList(root_folder_path,'output_type','paths','search_type',folders',varargin)
 %
-%   4) File and folders when 'output_type' is not an object - files are first
-%   [file_names,folder_names] = sl.dir.getList(root_folder_path,'output_type','names','search_type',both',varargin)
+%
+%   4) File and folders when 'output_type' is not 'list_result'
+%   
+%   [file_names,folder_names] = sl.dir.getList(root_folder_path,...
+%                       'output_type','names','search_type',both',varargin)
 %
 %
 %
-%   Output:
-%   -------
+%   Output (See 'output_type' option):
+%   ----------------------------------
 %   list_result : sl.dir.list_result
+%       An object that can contain both file and folder info.
 %   file_names : cellstr
 %       The name of each file, without the path
 %   folder_names : cellstr
@@ -81,7 +91,9 @@ function varargout = getList(root_folder_path,varargin)
 %   need_dir_props: logical (default false)
 %       If true, then an algorithm will be chosen that returns 
 %       the structure associated with the dir() function. If false, faster
-%       algorithms may be used that don't require 
+%       algorithms may be used that don't require this information. This
+%       is necessary specifically for the list_result output where
+%       the user may be expecting this information.
 %   output_type : {'object','names','paths','dir'} (default 'object')
 %       - object : return sl.dir.list_result
 %       - names  : return only the names
@@ -188,6 +200,7 @@ function varargout = getList(root_folder_path,varargin)
 %   - implement folder searching using .NET
 %
 %   See Also:
+%   ---------
 %   dir()
 
 %{

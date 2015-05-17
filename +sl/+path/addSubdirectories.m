@@ -1,5 +1,5 @@
 function addSubdirectories(base_paths,varargin)
-%addSubdirectories  Adds subdirectories to the path
+%x  Adds subdirectories to the path
 %
 %   sl.path.addSubdirectories(base_paths,varargin)
 %
@@ -25,7 +25,7 @@ function addSubdirectories(base_paths,varargin)
 %   maybe just best to ignore _ in general?????
 %
 %   See Also:
-%   sl.dir.searcher.folder_default
+%   sl.dir.getList
 %   genpath
 
 error('This code needs to be rewritten using sl.dir.getList')
