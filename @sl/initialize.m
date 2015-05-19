@@ -8,9 +8,16 @@ repo_root = sl.stack.getPackageRoot;
 
 %repo_root - points to folder containing +sl, not +sl itself
 
+%Why am I changing the directory
 cd(fileparts(repo_root));
 
-addpath(fullfile(repo_root,'global_namespace_functions'))
+gnf_dir = fullfile(repo_root,'global_namespace_functions');
+
+addpath(gnf_dir)
+
+temp_runc_file_path = fullfile(gnf_dir,'z_runc_exec_file.m');
+sl.io.fileWrite(temp_runc_file_path,' ');
+
 
 %TODO: I added a non-existant path and javaaddpath didn't say anything
 %I also don't want to add if it is already added
