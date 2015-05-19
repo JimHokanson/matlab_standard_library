@@ -3,23 +3,29 @@ classdef (Hidden) path
     %   Class:
     %   sl.path
     %
+    %   Functions related to the code path NOT to files and directories.
+    %
     %   Class for hiding functions. I don't think you can hide normal
     %   functions in Matlab. However, if the functions are static methods
-    %   of a class they can be hidden ... By placing them in a class it
+    %   of a class they can be hidden. By placing them in a class it
     %   also provides a bit more convenient access for simple functions.
     %
     %   Functions that are in this class are typically not meant to be
     %   accessed directly by users.
     
     properties (Constant)
-       LIBRARY_PARENT_PATH = sl.path.getLibraryParentPath(); %Points to folder
-       %that contains the '+sl' folder
+       LIBRARY_PARENT_PATH = sl.path.getLibraryParentPath(); %Points to 
+       %folder that contains the '+sl' folder
+       
        LIBRARY_BETA_PATH   = sl.path.getBetaPath()
        %The thought with beta code was that it could be a set of functions
        %that are in progress but not yet ready for general usage that could
        %be added relatively easily to the path with:
        %    sl.path.addBeta()
+       
        LIBRARY_REF_PATH    = sl.path.getRefPath()
+       %Reference code is meant to be code that we don't use normally but
+       %that might be included as a reference for testing.
     end
     
     methods (Static)
@@ -40,11 +46,7 @@ classdef (Hidden) path
            value = fullfile(sl.path.LIBRARY_PARENT_PATH,'ref_code'); 
         end
         function value = getLibraryParentPath()
-            %x 
-            %
-            %   Returns the folder that contains the standard library (+sl)
-            %   package.
-            %
+            %x Return folder that contains the +sl package
             value = sl.stack.getPackageRoot();
         end
         %NOTE: I had thought about creating a GUI which would toggle
@@ -119,28 +121,43 @@ classdef (Hidden) path
 % % % %             %  ext       = .m
 % % % %         end
 
-        function subs_mask = matchSubdirectories(path_entries,base_path)
-            %matchSubdirectories  Match subdirectories of a given base_path
+        function subs_mask = matchSubdirectories(path_entries,base_path,varargin)
+            %x  Match subdirectories of a given base_path
             %
-            %   subs_mask = sl.path.matchSubdirectories(path_entries,base_path)
+            %   subs_mask = sl.path.matchSubdirectories(path_entries,base_path,varargin)
             %
             %   Currently only subdirectories are matched
             %
-            %   INPUTS
-            %   ===========================================================
-            %   path_entries : (cell array)
-            %   base_path    : (char) path of root folder
+            %   Inputs:
+            %   -------
+            %   path_entries : (cellstr)
+            %       Each entry corresponds to a folder (that is likely
+            %       on the Matlab path)
+            %   base_path : (char) 
+            %       Path of root folder.
+            %
+            %   Optional Inputs:
+            %   ----------------
+            %   include_base_path : logical (false)
+            %       
+            %   Outputs:
+            %   --------
+            %   subs_mask : logical array
+            %       True if each element of path_entries is in the
+            %       base_path.
+            % 
             %
             %   IMPROVEMENTS
-            %   ===========================================================
+            %   ------------
             %   1) Allow multiple base paths as an input
             %   2) Allow matching the base path as well
             %
             %   See Also:
-            %   
+            %   ---------
+            %   sl.path.removeSubdirectories
             
-            %in.include_base_path
-            %in = sl.in.processVarargin(in,varargin);
+            in.include_base_path = false;
+            in = sl.in.processVarargin(in,varargin);
             
             %This is critical to match only subdirectories ...
             if base_path(end) ~= filesep
@@ -149,12 +166,18 @@ classdef (Hidden) path
             
             subs_mask = strncmp(base_path,path_entries,length(base_path)); 
             
+            %This has always drove me nuts since I wonder how Matlab 
+            %optimizes this.
+            if in.include_base_path
+               subs_mask = subs_mask | strcmp(base_path(1:end-1),path_entries);
+            end
+            
             %{
             @TEST_CODE
             
             %Still working out details on how I want to do testing ...
             
-                path_entries = 
+                path_entries = sl.path.asCellstr();
                 subs_mask    = sl.path.matchSubdirectories(path_entries,base_path)
             
             
