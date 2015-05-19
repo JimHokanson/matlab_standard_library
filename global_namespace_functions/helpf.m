@@ -4,13 +4,13 @@ function helpf(name,varargin)
 %   The idea with this function is to allow displaying the help function
 %   as a set of sections.  
 %
-%   Improvement:
-%   ------------
+%   Improvements:
+%   -------------
 %   1) Allow displaying of only certain sections via the command
 %   2) Create links to recognized functions => look for names
 %   following colon. Also handle see also
-%   3) Can we use html 
-%   4) Make sure we can handle the non-sectioned help
+%   3) Can we allow an html popup? (via an option)
+%   4) Make sure we can handle the non-sectioned help function
 %   5) Allow for function prototyping, and display this
 %   by default. This will require a lot of work.
 %
@@ -22,7 +22,12 @@ function helpf(name,varargin)
 %   Common Sections:
 %   ----------------
 %   - Calling Forms
-%   - 
+%   - Input(s)
+%   - Optional Input(s)
+%   - Output(s)
+%   - See Also
+%   - Improvements
+%   - Example(s)
 
 %{
 * We pass back the text to this function to display using
@@ -31,24 +36,36 @@ function helpf(name,varargin)
 %}
 
     if name == 1
-       disp(urldecode(varargin{1}))
+       text_to_display = varargin{1};
        name = varargin{2};
+       disp(urldecode(text_to_display))
+       
+       menu_command = sprintf('helpf(''%s'')',name);
+       
        str = sl.ml.cmd_window.createLinkForCommands(...
-           'to menu',sprintf('helpf(''%s'')',name));
+           'to menu',menu_command);
+       
        disp(str)
-       disp('') %Adding a newline
+       fprintf('\n'); %Adding a newline, otherwise things get a bit tight
+       %
        return
     end
 
-    %This might eventually be better as extracted from help. It would require
-    %that we remove hyperlinks ...
+    
+    %Get the original help string
+    %----------------------------
+    %This might eventually be better as extracted from help. 
+    %  str = evalc('help(...))
+    %It would however require that we remove hyperlinks ...
     process = helpUtils.helpProcess(1, 1, {name});
 
     process.getHelpText;
         
     help_string = process.helpStr;
 
-    %Split on ---
+    
+    %Split on dividers and obtain parts
+    %-------------------------------------
     %
     %e.g.
     %
@@ -56,11 +73,12 @@ function helpf(name,varargin)
     %   --------------
     %   Text
     
-    %section_pattern = 
-    
     %Let's require at least 3 ...
+    section_pattern = '\n\s*-{3,}'; 
+    
+    
     %We could also look at 
-    [r,stop_I] = regexp(help_string,'\n\s*-{3,}','split','end');
+    [r,stop_I] = regexp(help_string,section_pattern,'split','end');
     
     %These are the titles for the 
     [title_strings,temp_I] = regexp(r(1:end-1),'\n[^\n]+$','once','match','start');
@@ -75,23 +93,15 @@ function helpf(name,varargin)
 
     title_strings = [{'Introduction'} title_strings];
     
-    
-    
+    %Do the actual displaying
+    %---------------------------
     n_sections = length(title_strings);
-    all_strings = cell(1,n_sections);
     for iSection = 1:n_sections
        temp = help_string(section_start_I(iSection):section_stop_I(iSection));
        str = sl.ml.cmd_window.createLinkForCommands(...
            title_strings{iSection},sprintf('helpf(1,''%s'',''%s'')',urlencode(temp),name));
-       %all_strings{iSection} = str;
        disp(str)
     end
     
-    
-    %????? What to display?
-    %The function prototype?
-    %Followed by links to each section
-    
-    %r = regexp(help_string,'\n[^\n]\n-{3,}');
         
 end
