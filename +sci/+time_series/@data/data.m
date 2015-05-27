@@ -360,16 +360,32 @@ classdef data < sl.obj.handle_light
         function plotRows(objs,varargin)
             %x Plots each object as a row
             %
+            %   plotRows(objs,varargin)
+            %
+            %   Optional Inputs:
+            %   ----------------
+            %   link_option: (default 'x')
+            %       - x   - link x axes of all plots
+            %       - xy  - 
+            %       - y
+            %
+            %   Example:
+            %   --------
+            %   plotRows(p,'Linewidth',2,'link_options','xy')
+            
+            %TODO: Update this call to be like in plot ...
+            [local_options,plot_options] = sl.in.removeOptions(varargin,{'link_option'},'force_cell',true);
             
             in.link_option = 'x';
-            in.plot_options = {};
-            in = sl.in.processVarargin(in,varargin);
+            in = sl.in.processVarargin(in,local_options);
+            
+            
             
             n_objs = length(objs);
             
             for iObj = 1:n_objs
                 subplot(n_objs,1,iObj)
-                plot(objs(iObj),{},in.plot_options);
+                plot(objs(iObj),plot_options{:});
             end
             
             sl.plot.postp.linkFigureAxes(gcf,in.link_option);
@@ -497,6 +513,9 @@ classdef data < sl.obj.handle_light
             %   We could have variability between objects OR between
             %   channels, but not both
             %
+            %   ====================================
+            %   TODO: Update documentation!
+            %   ====================================
             %
             %   Outputs:
             %   --------
