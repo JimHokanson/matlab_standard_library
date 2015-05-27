@@ -57,7 +57,7 @@ classdef epochs < sl.obj.display_class
                 cur_obj = objs(iObj);
                 %time_to_subtract = h__unscaleTime(cur_obj,time_to_subtract);
                 cur_obj.start_times = cur_obj.start_times - time_to_subtract;
-                cur_obj.stop_times = cur_obj.stop_times - time_to_subtract;
+                cur_obj.stop_times  = cur_obj.stop_times - time_to_subtract;
             end
         end
         function new_obj = copy(old_obj)

@@ -1,22 +1,41 @@
 function helpm(str)
-%helpm Get method help from class instance
+%x  Get method help from class instance
 %
 %   helpm(str)
 %
 %   This is meant to provide help on a class when you are working with an
 %   instance. For example, you might have:
 %   
-%   my_obj.prop_class.method() 
-%   
-%   class(prop_clas) = 'Class_2'
+%   my_obj.prop_that_is_a_class.classMethod() 
 %
-%   Equivalent then to: help('Class_2.method')
+%   Our goal is to get help for the method "classMethod".
 %
-%   NOTE: This function also provides a link to edit the method
+%   The slow way:
+%       temp = class(my_obj.prop_that_is_a_class)
+%       help([temp '.classMethod'])
+%
+%   This way:
+%       helpm my_obj.prop_that_is_a_class.classMethod
+%
+%
+%   This function works by resolving the class name from the caller.
+%
+%   This function also provides a link to edit the method
+%
+%   Example:
+%   --------
+%   wtf = sci.time_series.data(rand(1e6,1),0.01);
+%   helpm wtf.getDataSubset
+%
+%   See Also:
+%   ---------
+%   helpc
+%   helpf
 
 
 parts = regexp(str,'\.','split');
 
+%The parent is everything except the terminal part
 parent = regexprep(str,'(\.[^.]*)$','');
 
 class_type = evalin('caller',sprintf('class(%s)',parent));
