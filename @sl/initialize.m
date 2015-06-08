@@ -1,5 +1,6 @@
 function initialize()
-%
+%x Initializes the standard library
+%   
 %   Add to this anything that needs to be run on initialization of the
 %   standard library.
 %   

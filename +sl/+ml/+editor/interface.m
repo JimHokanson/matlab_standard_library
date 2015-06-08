@@ -1,4 +1,4 @@
-classdef (Hidden) interface < sl.obj.handle_light
+classdef (Hidden) interface < sl.obj.display_class
     %
     %   Class:
     %   sl.editor.interface
@@ -59,8 +59,8 @@ classdef (Hidden) interface < sl.obj.handle_light
             %   obj = sl.editor.interface.getInstance
             %   output = obj.getActiveDocument();
             %
-            %   OUTPUTS
-            %   ====================================================
+            %   Outputs:
+            %   --------
             %   output: Class: matlab.desktop.editor.Document 
             
             
@@ -93,9 +93,10 @@ classdef (Hidden) interface < sl.obj.handle_light
 
     methods (Static)
         function output = getInstance()
+            %x Access method for singleton
            persistent local_obj
            if isempty(local_obj)
-               local_obj = sl.editor.interface;
+               local_obj = sl.ml.editor.interface;
            end
            output = local_obj;
         end

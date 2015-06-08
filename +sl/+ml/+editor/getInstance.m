@@ -1,12 +1,10 @@
 function obj = getInstance()
-%
+%x Shortcut for returning the editor singleton
 %   
-%   Shortcut for returning the editor singleton
+%   obj = sl.ml.editor.getInstance
 %
-%   obj = sl.editor.getInstance
-%
-%   Outputs
-%   =======================================================================
-%   obj: Class: sl.editor.interface
+%   Outputs:
+%   --------
+%   obj : sl.editor.interface
 
-obj = sl.editor.interface.getInstance;
+obj = sl.ml.editor.interface.getInstance;
