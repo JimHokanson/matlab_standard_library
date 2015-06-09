@@ -20,9 +20,7 @@ classdef current_line_info < sl.obj.display_class
     
     raw_text = 'mean(''testing('
     
-    fp = 'C:\D\repos\matlab_git\mat_std_lib\+sl\+help\@current_line_info\test_dir\example_line.m'
-    %obj = sl.mlint.mex.calls(fp) %doesn't work ...
-    obj = sl.mlint.mex.ty(fp)
+    fp = 'C:\D\repos\matlab_git\mat_std_lib\+sl\+help\@current_line_info\test_dir\example_line_v3.m'
     obj = sl.mlint.mex.lex(fp)
     
     
@@ -56,7 +54,8 @@ classdef current_line_info < sl.obj.display_class
             %
             %Algorithm:
             %----------
-            %1) ??????
+            %0) Use lex ...
+            %1) Ignore everything prior to an equal sign
             
             
             

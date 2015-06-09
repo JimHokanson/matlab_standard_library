@@ -15,23 +15,23 @@ classdef constants
         SOF2 = uint16(hex2dec('C2FF'))
         SOF3 = uint16(hex2dec('C3FF'))
         
-    #define JIFMK_SOF0    0xFFC0   /* SOF Huff  - Baseline DCT*/
-#define JIFMK_SOF1    0xFFC1   /* SOF Huff  - Extended sequential DCT*/    
-        #define JIFMK_SOF2    0xFFC2   /* SOF Huff  - Progressive DCT*/
-#define JIFMK_SOF3    0xFFC3   /* SOF Huff  - Spatial (sequential) lossless*/
-#define JIFMK_SOF5    0xFFC5   /* SOF Huff  - Differential sequential DCT*/
-#define JIFMK_SOF6    0xFFC6   /* SOF Huff  - Differential progressive DCT*/
-#define JIFMK_SOF7    0xFFC7   /* SOF Huff  - Differential spatial*/
-#define JIFMK_JPG     0xFFC8   /* SOF Arith - Reserved for JPEG extensions*/
-#define JIFMK_SOF9    0xFFC9   /* SOF Arith - Extended sequential DCT*/
- 
-#define JIFMK_SOF10   0xFFCA   /* SOF Arith - Progressive DCT*/
-#define JIFMK_SOF11   0xFFCB   /* SOF Arith - Spatial (sequential) lossless*/
-#define JIFMK_SOF13   0xFFCD   /* SOF Arith - Differential sequential DCT*/
-#define JIFMK_SOF14   0xFFCE   /* SOF Arith - Differential progressive DCT*/
-#define JIFMK_SOF15   0xFFCF   /* SOF Arith - Differential spatial*/
-#define JIFMK_DHT     0xFFC4   /* Define Huffman Table(s) */
-#define JIFMK_DAC     0xFFCC   /* Define Arithmetic coding conditioning(s) */
+% % %     #define JIFMK_SOF0    0xFFC0   /* SOF Huff  - Baseline DCT*/
+% % % #define JIFMK_SOF1    0xFFC1   /* SOF Huff  - Extended sequential DCT*/    
+% % %         #define JIFMK_SOF2    0xFFC2   /* SOF Huff  - Progressive DCT*/
+% % % #define JIFMK_SOF3    0xFFC3   /* SOF Huff  - Spatial (sequential) lossless*/
+% % % #define JIFMK_SOF5    0xFFC5   /* SOF Huff  - Differential sequential DCT*/
+% % % #define JIFMK_SOF6    0xFFC6   /* SOF Huff  - Differential progressive DCT*/
+% % % #define JIFMK_SOF7    0xFFC7   /* SOF Huff  - Differential spatial*/
+% % % #define JIFMK_JPG     0xFFC8   /* SOF Arith - Reserved for JPEG extensions*/
+% % % #define JIFMK_SOF9    0xFFC9   /* SOF Arith - Extended sequential DCT*/
+% % %  
+% % % #define JIFMK_SOF10   0xFFCA   /* SOF Arith - Progressive DCT*/
+% % % #define JIFMK_SOF11   0xFFCB   /* SOF Arith - Spatial (sequential) lossless*/
+% % % #define JIFMK_SOF13   0xFFCD   /* SOF Arith - Differential sequential DCT*/
+% % % #define JIFMK_SOF14   0xFFCE   /* SOF Arith - Differential progressive DCT*/
+% % % #define JIFMK_SOF15   0xFFCF   /* SOF Arith - Differential spatial*/
+% % % #define JIFMK_DHT     0xFFC4   /* Define Huffman Table(s) */
+% % % #define JIFMK_DAC     0xFFCC   /* Define Arithmetic coding conditioning(s) */
         
         
         

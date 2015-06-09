@@ -85,7 +85,7 @@ function h__displayMenu(fcn_name)
 %
 %  It would however require that we remove hyperlinks ...
 
-process = helpUtils.helpProcess(1, 1, {name});
+process = helpUtils.helpProcess(1, 1, {fcn_name});
 
 process.getHelpText;
 
@@ -114,6 +114,7 @@ section_pattern = '\n\s*-{3,}';
 title_strings = cellfun(@strtrim,title_strings,'un',0);
 
 text_start_I = [1 stop_I];
+%TODO: This fails sometimes, presumably for cases of no title strings ...
 title_start_I = text_start_I(1:end-1)+[temp_I{:}];
 
 section_start_I = [1 title_start_I];
@@ -127,7 +128,7 @@ n_sections = length(title_strings);
 for iSection = 1:n_sections
     temp = help_string(section_start_I(iSection):section_stop_I(iSection));
     str = sl.ml.cmd_window.createLinkForCommands(...
-        title_strings{iSection},sprintf('helpf(1,''%s'',''%s'')',urlencode(temp),name));
+        title_strings{iSection},sprintf('helpf(1,''%s'',''%s'')',urlencode(temp),fcn_name));
     disp(str)
 end
 

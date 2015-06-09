@@ -1,4 +1,4 @@
-classdef java_comm_obj < NEURON.comm_obj
+classdef java_comm_obj < sl.os.comm_obj
     %
     %   Class:
     %       NEURON.comm_obj.java_comm_obj
