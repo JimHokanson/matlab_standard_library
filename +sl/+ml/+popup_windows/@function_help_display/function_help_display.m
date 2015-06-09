@@ -65,8 +65,16 @@ classdef function_help_display
             %
             %
             
+            %1) What's active, the command window or the editor?
+            %   - if neither is active, then what? - go to editor?
+            %   - provide an option for the default
+            %2) I
+            
             cw = obj.cmd_window;
             last_line_text = cw.getLineText(cw.line_count);
+            
+            cli = sl.help.current_line_info(last_line_text);
+            
             fprintf(2,'Last line\n')
             disp(last_line_text)
             
