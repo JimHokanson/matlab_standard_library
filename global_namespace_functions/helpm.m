@@ -1,7 +1,7 @@
 function helpm(str)
 %x  Get method help from class instance
 %
-%   helpm(str)
+%   helpm(str) OR helpm str
 %
 %   This is meant to provide help on a class when you are working with an
 %   instance. For example, you might have:
@@ -11,10 +11,13 @@ function helpm(str)
 %   Our goal is to get help for the method "classMethod".
 %
 %   The slow way:
+%
 %       temp = class(my_obj.prop_that_is_a_class)
 %       help([temp '.classMethod'])
 %
+%
 %   This way:
+%
 %       helpm my_obj.prop_that_is_a_class.classMethod
 %
 %

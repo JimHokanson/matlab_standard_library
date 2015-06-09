@@ -14,6 +14,8 @@ classdef repo < sl.obj.display_class
     
     repo_path = 'C:\D\repos\matlab_git\bladder_analysis';
     r = sl.git.repo(repo_path)
+    
+    repo_path = '/Users/jameshokanson/repos/mat_std_lib'
     %}
     
     properties

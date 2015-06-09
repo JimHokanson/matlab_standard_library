@@ -19,7 +19,7 @@ classdef LinePlotReducer < handle
     %   Using this tool, users can plot huge amounts of data without their
     %   machines becoming unresponsive, and yet they will still "see" all
     %   of the data that they would if they had plotted every single point.
-    %   Zooming in on the data engages callbacks that replot the data in
+    %   Zooming in on the data engages callbacks that replot the data with
     %   higher fidelity.
     %
     %   Examples:
@@ -36,6 +36,9 @@ classdef LinePlotReducer < handle
     %   ---------
     %   This code is based on:
     %   http://www.mathworks.com/matlabcentral/fileexchange/40790-plot--big-/
+    %
+    %   This code is organized a bit better than that code and handles
+    %   callbacks a bit better.
     %
     %   See Also:
     %   sci.time_series.data
@@ -91,7 +94,7 @@ classdef LinePlotReducer < handle
         %enough to capture all resizing events.
         %
         %For example, if multiple axes are linked, there can be many
-        %10s of resize events per single axes resize. Ideally the axes
+        %tens of resize events per single axes resize. Ideally the axes
         %resize is only rendered once for a given resize.
         
         post_render_callback = [] %This can be set to render
@@ -102,8 +105,8 @@ classdef LinePlotReducer < handle
         %
         %   'obj' will now be available in the callback
         
-        max_axes_width = 4000 %Eventually the idea was to make this a function
-        %of the screen size
+        max_axes_width = 4000 %Eventually the idea was to make this 
+        %a functio of the screen size
         %
         %Used in renderData()
         
@@ -176,6 +179,7 @@ classdef LinePlotReducer < handle
         
         last_rendered_axes_width %This is currently not valid as we have
         %hardcoded the render width
+        
         last_rendered_xlim
         x_lim_original
         
@@ -209,6 +213,10 @@ classdef LinePlotReducer < handle
         id %A unique id that can be used to identify the plotter
         %when working with callback optimization, i.e. to identify which
         %object is throwing the callback (debugging)
+        
+        callback_info %sl.plot.big_data.line_plot_reducer.callback_info
+        %Not sure what I'm going to store here
+        
         n_resize_calls = 0 %# of times the figure detected a resize
         n_render_calls = 0 %We'll keep track of the # of renders done
         n_x_reductions = 0 %# of times we needed to reduce the data
@@ -236,8 +244,8 @@ classdef LinePlotReducer < handle
             %
             %   TODO: Add examples
             %
-            temp = now;
-            obj.id = uint64(floor(1e8*(temp - floor(temp))));
+            
+            
             %I'm hiding the initialization details in another file to
             %reduce the high indentation levels and the length of this
             %function.
@@ -274,9 +282,12 @@ classdef LinePlotReducer < handle
             %   h :
             %   event_data :
             %   axes_I :
+            %       Index of internal axes being modified
             %
             %   See Also:
             %   sl.plot.big_data.LinePlotReducer.renderData>h__setupCallbacksAndTimers
+            
+            obj.callback_info.doing = 'resize';
             
             obj.n_resize_calls = obj.n_resize_calls + 1;
             
@@ -288,6 +299,9 @@ classdef LinePlotReducer < handle
             s.axes_I       = axes_I;
             s.new_xlim     = new_xlim;
             
+            if mod(obj.n_resize_calls,20) == 0
+                disp('resize')
+            end
             
             t = obj.timers{axes_I};
             obj.timers{axes_I} = [];
@@ -353,6 +367,8 @@ classdef LinePlotReducer < handle
             
             %http://www.mathworks.com/matlabcentral/answers/22180-timers-and-thread-safety
             
+            obj.callback_info.doing = 'updateAxesData';
+            
             %#DEBUG
             if obj.busy
                 h__initializeSlowTimer(obj,s,s.axes_I)
@@ -391,7 +407,7 @@ classdef LinePlotReducer < handle
     end
     
     methods (Static)
-        [x_reduced, y_reduced] = reduce_to_width(x, y, axis_width_in_pixels, x_limits, varargin)
+        [x_reduced, y_reduced, extras] = reduce_to_width(x, y, axis_width_in_pixels, x_limits, varargin)
     end
     
 end

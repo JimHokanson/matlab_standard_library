@@ -10,7 +10,8 @@ function renderData(obj,s,is_quick)
 %       h : Axes
 %       event_data : matlab.graphics.eventdata.SizeChanged (>= 2014b)
 %                    ??? (pre 2014b)
-%       axes_I :
+%       axes_I : 
+%           Which axes 
 %   is_quick : logical
 %       If true this is a request to update the plot as quickly as
 %       possible.
@@ -24,7 +25,11 @@ function renderData(obj,s,is_quick)
 %   See Also:
 %   sl.plot.big_data.LinePlotReducer.resize2
 
+drawnow; pause(0.05);
 
+obj_id_local = obj.id;
+
+obj.callback_info.doing = 'render_data';
 
 if nargin == 1
     s = [];
@@ -32,6 +37,16 @@ if nargin == 1
 end
 
 obj.n_render_calls = obj.n_render_calls + 1;
+
+%Some debugging code
+if obj.n_render_calls > 100
+   keyboard 
+end
+% % % % % if obj.n_render_calls > 100
+% % % % %    keyboard
+% % % % % else
+% % % % %    fprintf('Render call %d made\n',obj.n_render_calls)
+% % % % % end
 
 %This code shouldn't be required but I had troubles when it was gone :/
 if ~obj.needs_initialization
@@ -58,8 +73,15 @@ end
 
 function h__replotData(obj,s,new_axes_width,is_quick)
 %
-%   
+%   Handles replotting data, as opposed to handling the first plot
 %
+%   Inputs:
+%   -------
+%   s :
+%       See definition in parent function
+%   new_axes_width:
+%       Currently hardcoded as the max width
+%   
 
 redraw_option = h__determineRedrawCase(obj,s);
 

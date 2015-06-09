@@ -25,15 +25,10 @@ function runc(show_code)
 %
 %   2) Error in code
 %   %Copy below into clipboard then enter 'runc' in command window
-%   a = 1:5
-%   b = 2*a
-%   c = a(6)
+%   a = 1:5;
+%   b = 2*a;
+%   c = a(6); %The location of this error should be clear 
 %   
-%
-%   Improvments:
-%   ------------
-%   1) Write to a temporary file so that errors are assigned to specific
-%   locations
 
 %This is also unfortunately in sl.initialize due to Matlab not allowing
 %dynamically created functions
@@ -53,7 +48,7 @@ if show_code
 end
 
 function_dir = sl.stack.getMyBasePath();
-file_path = fullfile(function_dir,TEST_FILE);
+file_path = fullfile(function_dir,TEST_FILE_NAME);
 code_in_file = true;
 try
     sl.io.fileWrite(file_path,uncommented_str);

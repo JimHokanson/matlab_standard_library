@@ -18,6 +18,8 @@ classdef scrollbar < handle
     %   sl.gui.scrollbar
     
     %{
+    
+        %Example usage
         close all
         n = 1e7 + randi(1000);                          % Number of samples
         t = sort(100*rand(1, n));                       % Non-uniform sampling
