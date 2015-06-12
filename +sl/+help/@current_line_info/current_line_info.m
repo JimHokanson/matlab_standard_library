@@ -3,13 +3,15 @@ classdef current_line_info < sl.obj.display_class
     %   Class:
     %   sl.help.current_line_info
     %
-    %   
-    %
+    %   See Also:
+    %   ---------
+    %   sl.ml.popup_windows.function_help_display
     
     %{
     
     %Testing code:
     raw_text = 'sl.path.addPackages(''hdf5_matlab'
+    obj = sl.help.current_line_info(raw_text,'')
     %sl.path.addPackages
     
     raw_text = 'mean(x(1'               %What do we want to do here?
@@ -37,6 +39,8 @@ classdef current_line_info < sl.obj.display_class
     methods
         function obj = current_line_info(raw_text,context)
             %
+            %   obj = sl.help.current_line_info(raw_text,context)
+            %
             %   Inputs:
             %   -------
             %   raw_text : 
@@ -44,11 +48,13 @@ classdef current_line_info < sl.obj.display_class
             %   context : 
             %       I'm not sure what I want here ...
             %       command window or filename
+            %       for now:
+            %       - '' : command window
+            %       - filename : path of file where it is coming from ...
             %
             
             obj.raw_text = raw_text;
-        
-            
+                    
             %Can we find an unterminated quoted string and use that to our 
             %advantage to find the text ????
             %
@@ -57,6 +63,32 @@ classdef current_line_info < sl.obj.display_class
             %0) Use lex ...
             %1) Ignore everything prior to an equal sign
             
+            %Get lex
+            %-------
+            %Need to write to file I think :/
+            %http://www.mathworks.com/matlabcentral/answers/223050-can-you-pass-a-string-to-parse-into-mlintmex-rather-than-a-filename
+            fp = fullfile(sl.TEMP_DIR,'sl_current_line_info.m');
+            
+            sl.io.fileWrite(fp,raw_text);
+            
+            lex = sl.mlint.mex.lex(fp);
+            
+            keyboard
+            
+            %Find open paren
+            %---------------
+            %* They're might be a better approach for this
+            %
+            type_info = lex.types;
+            %type_map_info = lex.unique_types_map
+            temp = char(zeros(1,length(type_info)));
+            temp(strcmp(type_info,'(')) = 'a';
+            temp(strcmp(type_info,')')) = 'b';
+            
+            I_open_paren = regexp(temp,'a(?!b)');
+            
+            %TODO: Go back to types preceding the open paren
+            %and form a name
             
             
             

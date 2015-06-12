@@ -5,10 +5,18 @@ classdef (Hidden) sl
     %
     %   sl => standard library
     
+    properties (Constant)
+       TEMP_DIR = fullfile(sl.getRoot,'temp_directory'); 
+    end
     
     methods (Static,Hidden)
-        %sl.initialize
+        %sl.initialize - in a separate file
         initialize()
+        function root = getRoot()
+           %This is needed as this call can't be resolved in a property
+           %block
+           root = sl.stack.getPackageRoot; 
+        end
         function runTests()
            %
            %    sl.runTests()
