@@ -1,4 +1,4 @@
-classdef filepartsx < sl.test.object
+classdef test_filepartsx < matlab.unittest.TestCase
     %
     %   Class:
     %   sl.dir.test.filepartsx
@@ -10,9 +10,9 @@ classdef filepartsx < sl.test.object
     end
     
     methods (Test)
-        function basicTest(obj)
+        function basicTest(testCase)
            my_path = 'C:/folder_1/folder_2';
-           obj.assertEqual(...
+           testCase.verifyEqual(...
                fileparts(fileparts(my_path)),...
                sl.dir.filepartsx(my_path,2));
         end

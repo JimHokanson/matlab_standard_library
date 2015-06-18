@@ -22,6 +22,7 @@ classdef function_help_display
     %   sl.help.current_line_info
     
     properties
+        fig %figure handle
         t %The timer
         cmd_window
     end
@@ -33,7 +34,21 @@ classdef function_help_display
             %
             %
             
+            %I think I'll load this from a GUI
+            %=> change text size buttons
+            %=> 
+            
             %TODO: Create a figure 
+            f = figure;
+            
+            set(f,'HandleVisibility','off')
+            text_h = uicontrol(f,'Style','text','Units','normalized','Position',...
+                [0.05 0.05 0.90 0.90],'String','testing',...
+                'BackgroundColor',[1 1 1],'FontSize',12,'HorizontalAlignment','left');
+            
+            obj.fig = f;
+            
+            %TODO: On close figure, stop timer and delete obj
             
             obj.cmd_window = sl.ml.cmd_window.getInstance();
             
@@ -64,6 +79,14 @@ classdef function_help_display
         function cb__updateHelpText(obj)
             %
             %
+            
+            if ~isvalid(obj.fig)
+               %Figure closed, delete obj
+               %stop(obj.t)
+               delete(obj.t)
+               delete(obj)
+               return
+            end
             
             %1) What's active, the command window or the editor?
             %   - if neither is active, then what? - go to editor?

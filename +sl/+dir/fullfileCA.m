@@ -1,22 +1,23 @@
 function paths_out = fullfileCA(root,paths_in)
 %fullfileCA  Appends paths to a root path
 %
-%   paths_out = sl.dir.fullfileCA(root,pathsIn)
+%   paths_out = sl.dir.fullfileCA(root,paths_in)
 %
 %   Performs the equivalent of fullfile() on each root/pathsIn pair. It
 %   tries to accomplish this in the quickest way possible.
 %
 %   Inputs:
 %   -------
-%   root     : (string), root path for appending to
+%   root : (string), root path for appending to
 %   paths_in : (cellstr), paths to append to the root
 %
 %   Outputs:
 %   --------
 %   paths_out : (cellstr) resultant concatenation of paths
 %
-%   EXAMPLE
-%   =======================================================================
+%   Examples:
+%   ---------
+%   1) 
 %   root = 'C:\'
 %   paths_in = {'test' 'cheese'};
 %   paths_out = sl.dir.fullfileCA(root,paths_in)
@@ -24,8 +25,9 @@ function paths_out = fullfileCA(root,paths_in)
 %       {'C:\test' 'C:\cheese'}
 %
 %   IMPROVEMENTS
-%   =======================================================================
+%   ------------
 %   1) I don't like the name of this file. I might rename it ...
+%       => fullfile would be fine
 %
 %   See Also:
 %   fullfile
@@ -33,6 +35,8 @@ function paths_out = fullfileCA(root,paths_in)
 if isempty(paths_in)
     paths_out = {};
     return
+elseif ischar(paths_in)
+    error('paths_in must be a cell array of strings')
 end
 
 fs = filesep;
