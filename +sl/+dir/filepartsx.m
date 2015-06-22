@@ -16,6 +16,10 @@ function path_out = filepartsx(file_or_folder_path,N)
 %   path_out  = sl.dir.filepartsx(file_path,2);
 %
 %   path_out  => 'C:\my_dir1'
+%
+%   See Also:
+%   ---------
+%   sl.dir.getFileName
 
 path_out = file_or_folder_path;
 for iN = 1:N

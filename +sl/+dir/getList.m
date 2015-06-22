@@ -306,10 +306,18 @@ folder_filtering = ~isempty(in.folder_regex) || ...
     ~isempty(in.folders_to_ignore) || ...
     ~isempty(in.first_chars_in_folders_to_ignore);
 
-if ~need_dir_approach && in.recursive && ispc && in.numeric_search_type == 0 && ~folder_filtering
+possible_dotnet = ~need_dir_approach && in.recursive && ispc && ~folder_filtering;
+
+if  possible_dotnet && in.numeric_search_type == 0 
+    %
+    % in.numeric_search_type == 0 => get files
+    %
+    
     %The folder filtering bit could be done post hoc but we'll ignore 
     %this method for now if folder filtering is done
     s = h__getFilesDotNet(root_folder_path,in);
+elseif possible_dotnet && in.numeric_search_type == 1
+    s = h__getFoldersDotNet(root_folder_path,in);
 else
     %Basic approaches using dir()
     %------------------------------
@@ -333,12 +341,14 @@ function output = h__setupOutput(root_folder_path,s,in,n_outputs,t_tic)
 %
 %   Inputs:
 %   -------
-%     s.file_names   = [r2.file_names];
-%     s.folder_names = [r2.folder_names];
-%     s.file_paths   = [r2.file_paths];
-%     s.folder_paths = [r2.folder_paths];
-%     s.d_files      = [r2.d_files];
-%     s.d_folders    = [r2.d_folders];
+%   s : (structure)
+%       .file_names
+%       .folder_names
+%       .file_paths
+%       .folder_paths
+%       .d_files
+%       .d_folders
+%
 %
 %
 
@@ -465,8 +475,15 @@ end  %----------    End of h__fixInType    --------------------
 function s = h__getFoldersDotNet(root_folder_path,in)
 %NOT YET FINISHED ...
 %https://msdn.microsoft.com/en-us/library/ms143314(v=vs.110).aspx
+%
+%(path,searchPattern,searchOption)
+%
 temp = System.IO.Directory.GetDirectories(root_folder_path,'*',...
     System.IO.SearchOption.AllDirectories);
+
+s = struct;
+s.folder_paths = cell(temp);
+s.folder_names = sl.dir.getFileName(s.folder_paths);
 
 end
 
@@ -915,7 +932,7 @@ end
 
 end
 
-
+%sl.dir.getFileName
 
 %{
 Other Implementations
