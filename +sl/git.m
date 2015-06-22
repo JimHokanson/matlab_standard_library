@@ -1,6 +1,7 @@
 classdef git
     %
-    %   Class: sl.git
+    %   Class: 
+    %   sl.git
     %
     %   http://git-scm.com/docs
     %
@@ -15,7 +16,8 @@ classdef git
     %
     %   Initialization:
     %   ---------------
-    %   sl.git.initialize via sl.initialize
+    %   sl.git.initialize is called via sl.initialize
+    %   sl.initialize should be called on startup
     %
     %   http://www.eclipse.org/jgit/download/
     %

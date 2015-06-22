@@ -3,7 +3,7 @@ classdef ty < sl.mlint
     %   Class:
     %   sl.mlint.ty
     %
-    %   Display the line numbers where each of the file's identifiers are 
+    %   Display the line numbers where each of the file's identifiers are
     %   used.
     %
     %   Can we identify where property blocks start and end? If so, this
@@ -42,9 +42,9 @@ devents:
     
     properties
         function_list
-       call_names
-       call_line_numbers %{1 x n}
-       first_line_number
+        call_names
+        call_line_numbers %{1 x n}
+        first_line_number
     end
     
     methods
@@ -68,7 +68,7 @@ devents:
             %Extract call info
             %---------------------------------------------------------
             %
-            %   This could be made cleaner 
+            %   This could be made cleaner
             %
             %****
             %The first line is a list of all functions
@@ -82,7 +82,7 @@ devents:
             [start_I,end_I,call_entries] = regexp(obj.raw_mex_string,'^[^\s:]+','lineanchors','start','end','match');
             
             %Nothing is coming to mind without lookaround operators, for
-            %now we'll 
+            %now we'll
             n_entries = length(call_entries)-1;
             line_number_raw_text = cell(1,n_entries);
             
@@ -92,7 +92,7 @@ devents:
             end_raw_I   = [start_I(3:end)-1 length(obj.raw_mex_string)];
             raw_string = obj.raw_mex_string;
             for iEntry = 1:n_entries
-               line_number_raw_text{iEntry} = raw_string(start_raw_I(iEntry):end_raw_I(iEntry)); 
+                line_number_raw_text{iEntry} = raw_string(start_raw_I(iEntry):end_raw_I(iEntry));
             end
             
             numbers_only = regexprep(line_number_raw_text,'[^\d]+',' ');
@@ -110,6 +110,6 @@ devents:
 end
 
 function array_out = h__toInt(string_in)
-   array_out = sscanf(string_in,'%d');
+array_out = sscanf(string_in,'%d');
 end
 

@@ -5,14 +5,20 @@ classdef calls < sl.mlint
     %
     %   'calls' identifies function calls within a file.
     %
+    %   Implements:
+    %   -----------
+    %   mlintmex('-calls')
     %
+    %   Call via:
+    %   ---------
+    %   obj = sl.mlint.mex.calls(file_path)
     %
     %   This class exposes the mlintmex function with the '-calls' input.
     %   From what I can tell, this is equivalent to the '-callops' input.
     %
     %
-    %   ISSUES:
-    %   ==================================================================
+    %   Issues:
+    %   -------
     %   1) There is information in this function as to when a function
     %   starts and when it ends, but this is not being processed. I'm not
     %   sure what functions get this information (all with an end
@@ -119,6 +125,8 @@ classdef calls < sl.mlint
             
             %NOTE: The -m3 specifies not to return mlint messages
             obj.raw_mex_string    = mlintmex(file_path,'-calls','-m3');
+            
+            %TODO: Handle when the raw_mex_string is empty ...
             
             c = textscan(obj.raw_mex_string,'%*s %f %f %s');
             

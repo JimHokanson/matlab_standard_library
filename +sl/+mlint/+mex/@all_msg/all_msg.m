@@ -3,14 +3,24 @@ classdef all_msg < sl.obj.handle_light
     %   Class:
     %   sl.mlint.all_msg
     %
+    %   This class stores definitions of mlint messages.
+    %
     %   Access via:
+    %   -----------
     %   sl.mlint.all_msg.getInstance
+    %
+    %   This is made a singleton as it never changes.
+    %
+    %   Implements:
+    %   -----------
+    %   mlintmex('-allmsg')
     %
     %   Status: Completed
     %
-    %   Improvements
-    %   ===================================================================
-    %   1. Consider using msg by default instead of all msg
+    %   Improvements:
+    %   -------------
+    %   1. Consider using msg by default instead of all msg : Update
+    %       I sort of like the idea of using all_msgs_list or msg_defs
     
     properties
        raw_string %output from mlintmex('-allmsg')

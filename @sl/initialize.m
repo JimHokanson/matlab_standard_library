@@ -1,10 +1,18 @@
 function initialize()
-%
+%x Initializes the standard library
+%   
 %   Add to this anything that needs to be run on initialization of the
 %   standard library.
 %   
 
 repo_root = sl.stack.getPackageRoot;
+
+%Temp directory creation
+%-----------------------
+%- originally written for sl.help.current_line_info
+if ~exist(sl.TEMP_DIR,'dir')
+    mkdir(sl.TEMP_DIR);
+end
 
 %repo_root - points to folder containing +sl, not +sl itself
 
@@ -15,8 +23,11 @@ gnf_dir = fullfile(repo_root,'global_namespace_functions');
 
 addpath(gnf_dir)
 
+%runc support
 temp_runc_file_path = fullfile(gnf_dir,'z_runc_exec_file.m');
 sl.io.fileWrite(temp_runc_file_path,' ');
+
+
 
 
 %TODO: I added a non-existant path and javaaddpath didn't say anything
