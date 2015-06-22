@@ -125,6 +125,7 @@ classdef discrete_events < sl.obj.display_class
             
         end
         function h = plot(obj,varargin)
+            %x  Plot vertical lines indicating event with text and/or values
             %
             %   h = plot(obj,varargin)
             %
@@ -138,14 +139,34 @@ classdef discrete_events < sl.obj.display_class
             %   ----------------
             %   I : array (default 'all')
             %       Event indices to plot.
+            %   text_mask_fh : function handle (default '')
+            %       If present, the 
+            %       
             %   axes : array (default calls gca)
-            %       Axes to plot into
+            %       Axes to plot into.
+            %   show_msgs : logical (default true)
+            %   show_values : logical (default true)
+            %   text_options : cell (default {})
+            %       These are the options that get passed into the text()
+            %       command.
+            %
+            %   
+            %
+            %   Improvements:
+            %   -------------
+            %   1) Provide an option for adding text on the last axes only
+            %
+            %   Additional optional inputs can be found in:
+            %       sl.plot.type.verticalLines
             %
             %   See Also:
+            %   ---------
+            %   text()
             %   sl.plot.annotation.addLineLabel
             %   sl.plot.type.verticalLines
            
             in.I = 'all';
+            in.text_mask_fh = ''; 
             in.axes = 'gca';
             in.show_msgs = true;
             in.show_values = true;
@@ -169,8 +190,12 @@ classdef discrete_events < sl.obj.display_class
                 in.axes = gca;
             end
             
-            if ischar(in.I)
-                in.I = 1:length(obj.times);
+            if ischar(in.I) %'all'
+                if isempty(in.text_mask_fh)
+                    in.I = 1:length(obj.times);
+                else
+                    in.I = find(in.text_mask_fh(obj.msgs));
+                end
             end
             
             h = cell(1,length(in.axes));
@@ -195,19 +220,17 @@ classdef discrete_events < sl.obj.display_class
             
             
             for iAxes = 1:length(in.axes)
-            
-                
-                
                 cur_axes = in.axes(iAxes);
                 
                 times_for_plotting = obj.times(in.I);
+                
+                %This is not-obvious ...
                 app_data_axes = getappdata(cur_axes);
                 if isfield(app_data_axes,'time_series_time')
                    time_obj = app_data_axes.time_series_time;
                    %sci.time_series.time
                    times_for_plotting = h__getTimeScaled(times_for_plotting,time_obj.output_units);
                 end
-                
                 
                 h{iAxes} = sl.plot.type.verticalLines(times_for_plotting,'Parent',cur_axes,line_inputs{:});
                 
@@ -221,7 +244,7 @@ classdef discrete_events < sl.obj.display_class
                        
                       text(temp_x(1),temp_y(1),display_strings{iH},...
                           'rotation',90,'HorizontalAlignment','left',...
-                          'VerticalAlignment','bottom',in.text_options{:}) 
+                          'VerticalAlignment','bottom',in.text_options{:},'parent',cur_axes) 
                        
                    end
                     

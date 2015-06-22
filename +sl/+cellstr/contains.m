@@ -35,10 +35,23 @@ function mask = contains(data,strings_or_patterns,varargin)
 %   mask = sl.cellstr.contains(data,strings_or_patterns)
 %   mask => [1 0 1]
 %
+%   2) 
+%   data = {'qp1','this is a qp','qp today'}
+%   strings_or_patterns = {'^qp\s*\d+'}
+%   mask = sl.cellstr.contains(data,strings_or_patterns,'regexp','true')
+%   mask => [1 0 0]
+%
 %
 %   See Also:
 %   ---------
 %   sl.str.contains
+
+%{
+a = 1:4
+for i = 1:5
+   a(i);
+end
+%}
 
 in.relationship = 'or'; %NYI, could do 'AND' as well
 in.case_sensitive = false;
@@ -54,7 +67,6 @@ end
 if ~iscell(data)
     error('Input data must be a cellstr')
 end
-
 
 mask = false(1,length(data));
 
@@ -76,7 +88,6 @@ for iPattern = 1:length(strings_or_patterns)
     I = fh(data(~cur_mask),str_or_pattern,'once');
 
     mask(~cur_mask) = ~cellfun('isempty',I);
-    
 end
 
 end

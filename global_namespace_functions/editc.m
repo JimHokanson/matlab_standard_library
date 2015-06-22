@@ -50,4 +50,10 @@ end
 %Which resolves the class or function rather than the property.
 class_path = which(class_name);
 
+if isempty(class_path)
+    %This generally happens when I call editc <class_instance>
+    %instead of editc(class_instance)
+    error('Class name couldn''t be resolved to a file')
+end
+
 matlab.desktop.editor.openDocument(class_path);
