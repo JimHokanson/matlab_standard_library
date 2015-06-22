@@ -5,9 +5,9 @@ function data_subset_objs = getDataSubset(objs,varargin)
 %   data_subset_objs = getDataSubset(objs,varargin)
 %
 %   There are many ways of calling this function. See:
-%       "Specifying the Data Range" 
+%       "Specifying the Data Range"
 %   below for more details.
-%   
+%
 %   Specifying the Data Range:
 %   --------------------------
 %   This function is meant to simplify data retrieval of a subset of data.
@@ -34,11 +34,17 @@ function data_subset_objs = getDataSubset(objs,varargin)
 %
 %   In order to resolve to a given time point, an event index must be
 %   given, as an event object can have multiple events. This index is often
-%   1 to indicate that 
+%   1 to indicate that
 %
 %
 %   Start Inputs:
 %   -------------
+%   '-samples',<samples>
+%       ex. '-samples',[10 1000]
+%   '-times',<times>
+%       ex. '-times',[1.3 1.6]
+%
+%
 %   <start_event_name>,<event_indices or 'all'> Requires Stop Input
 %           'start_e','qp_start',1
 %           'start_e','bladder_contraction_starts','all'
@@ -74,7 +80,7 @@ function data_subset_objs = getDataSubset(objs,varargin)
 %       case, per object), then the output must be a cell array. In order
 %       to not have the output type dynamically change, the user must
 %       acknowledge the output will ALWAYS be a cell array by passing in:
-%   
+%
 %           'UniformOutput', false
 %       These functions however only check for the first two characters
 %       being 'un' so it is much more succint to enter 'un',0 instead.
@@ -94,7 +100,7 @@ function data_subset_objs = getDataSubset(objs,varargin)
 %       p_fill = p.getDataSubset('fill',1);
 %
 %
-%   2) " " from 20% to 80% of the 1st 'fill' epoch   
+%   2) " " from 20% to 80% of the 1st 'fill' epoch
 %
 %       p_fillp = p.getDataSubset('fill',1,'-pct',[0.2 0.8]);
 %
@@ -103,16 +109,6 @@ function data_subset_objs = getDataSubset(objs,varargin)
 %   there could be multiple contractions per 'p' instance.
 %
 %       p_bc = p.getDataSubset('bladder_contraction','all','un',0);
-%
-%
-%   Examples:
-%    ---------------
-%   see dba.GSK.cmg_analysis
-%   obj.pres_data_handle.getDataSubset('bladder_contraction_starts', 1,'bladder_contraction_ends', 1)
-%   first input  - string form character form, second input
-%   numerical integer indicates the which iteration of the
-%   property you would like to begin at. and the latter, the iteration of
-%   the ending property you'd like to end at.
 %
 %   See Also:
 %   sci.time_series.data.getDataAlignedToEvent()
@@ -129,7 +125,7 @@ function data_subset_objs = getDataSubset(objs,varargin)
 
 %}
 
-%TODO: If 
+%TODO: If
 %{
     c = dba.GSK.cmg_expt('140806_C');
     p = c.getData('pres');
@@ -174,9 +170,9 @@ return_as_cell = ~in.un;
 %TODO: Error check that we can do this ...
 
 if ~return_as_cell
-   if any(cellfun('length',start_samples)~= 1)
-      error('Sorry, please add ,''un'',0 at the end of the to the input (output will be a cell array, 1 entry per object') 
-   end
+    if any(cellfun('length',start_samples)~= 1)
+        error('Sorry, please add ,''un'',0 at the end of the to the input (output will be a cell array, 1 entry per object')
+    end
 end
 
 if in.align_time_to_start
@@ -191,7 +187,7 @@ n_objs = length(start_samples);
 temp_objs_1 = cell(1,n_objs);
 for iObj = 1:n_objs
     cur_obj = objs(iObj);
-        
+    
     cur_start_samples = start_samples{iObj};
     cur_stop_samples = stop_samples{iObj};
     n_spans = length(cur_start_samples);
@@ -199,11 +195,11 @@ for iObj = 1:n_objs
     temp_objs_2 = cell(1,n_spans);
     for iSpan = 1:n_spans
         start_I  = cur_start_samples(iSpan);
-        stop_I    = cur_stop_samples(iSpan);
+        stop_I   = cur_stop_samples(iSpan);
         new_data = cur_obj.d(start_I:stop_I,:,:);
         new_time = h__getNewTimeObjectForDataSubset(cur_obj,start_I,stop_I,...
             'first_sample_time',first_sample_time);
-    
+        
         temp_objs_2{iSpan} = h__createNewDataFromOld(cur_obj,new_data,new_time);
     end
     
@@ -223,12 +219,16 @@ end
 
 function [start_samples,stop_samples,varargin] = h__handleInput(objs,varargin)
 %
+%   This function is called at the beginning of the main function to
+%   resolve which samples should be retrieved based on the complicated
+%   # of input options
 %
 %   Output:
 %   -------
-%   start_samples : cell 
+%   start_samples : cell
 %       cell for each object, array for each element
-%   stop_samples : " "
+%   stop_samples : cell
+%       cell for each object, array for each element
 %   varargin: varargin input, trimmed to handle inputs
 
 %   'start_e','qp_start',1,'stop_e','qp_end',1
@@ -241,27 +241,41 @@ function [start_samples,stop_samples,varargin] = h__handleInput(objs,varargin)
 
 first_name = varargin{1};
 if first_name(1) == '-'
-   %TODO: How would we handle the ambigious case of multiple values
-   %- are these values by object or within object? - we can guess
-   %based on size but we want to be sure all of the time
-   error('Not yet implemented') 
+    %See details of this case in the help under start events
+    values = varargin{2};
+    varargin(1:2) = [];
+    n_objs = length(objs);
+    
+    switch first_name(2:end)
+        case 'samples'
+            start_samples = sl.cell.initialize(n_objs,values(1));
+            stop_samples  = sl.cell.initialize(n_objs,values(2));
+        case 'times'
+            start_samples = h__timeToSamples(objs,values(1));
+            stop_samples  = h__timeToSamples(objs,values(2));
+        otherwise
+            error('Option %s not recognized')
+    end
 else
-   events = objs.getEvent(first_name); 
-   if isa(events,'sci.time_series.epochs')
-       [start_samples,stop_samples,varargin] = h__handleEpochInput(objs,events,varargin{2:end});
-       return
-   else
-       [start_samples,stop_samples,varargin] = h__handleDiscreteEventInput(objs,true,events,varargin{2:end});
-       if ~isempty(stop_samples)
-           return
-       end
-   end
+    events = objs.getEvent(first_name);
+    if isa(events,'sci.time_series.epochs')
+        [start_samples,stop_samples,varargin] = h__handleEpochInput(objs,events,varargin{2:end});
+        return
+    else
+        [start_samples,stop_samples,varargin] = h__handleDiscreteEventInput(objs,true,events,varargin{2:end});
+        if ~isempty(stop_samples)
+            return
+        end
+    end
+    
+    %Currently the only option at this point is for a closing event ...
+    event_name = varargin{1};
+    events = objs.getEvent(event_name);
+    [~,stop_samples,varargin] = h__handleDiscreteEventInput(objs,false,events,varargin{2:end});
+    
 end
 
-%Currently the only option at this point is for a closing event ...
-event_name = varargin{1};
-events = objs.getEvent(event_name); 
-[~,stop_samples,varargin] = h__handleDiscreteEventInput(objs,false,events,varargin{2:end});
+
 
 end
 
@@ -273,7 +287,7 @@ for iObj = 1:length(start_samples)
     obj_start_samples = start_samples{iObj};
     obj_stop_samples  = stop_samples{iObj};
     if any(obj_stop_samples < obj_start_samples)
-       error('Invalid range requested for object %d',iObj)
+        error('Invalid range requested for object %d',iObj)
     end
 end
 
@@ -292,12 +306,12 @@ n_events = length(events);
 times = cell(1,n_events);
 if ischar(I)
     for iEvent = 1:n_events
-       times{iEvent} = events(iEvent).times;
+        times{iEvent} = events(iEvent).times;
     end
 else
     for iEvent = 1:n_events
-       times{iEvent} = events(iEvent).times(I);
-    end    
+        times{iEvent} = events(iEvent).times(I);
+    end
 end
 
 if is_start
@@ -313,25 +327,25 @@ end
 implement_sample_window = false;
 implement_sample_duration = false;
 if ~isempty(varargin) && ischar(varargin{1}) && varargin{1}(1) == '-'
-   if ~is_start
-      error('Options are only supported following a start event') 
-   end
-   option = varargin{1};
-   value  = varargin{2};
-   switch option
-       case '-t_win'
-           stop_times  = cellfun(@(x) x + value(2),start_times,'un',0);
-           start_times = cellfun(@(x) x + value(1),start_times,'un',0);
-       case '-s_win'
-           implement_sample_window = true;
-       case '-t_dur'
+    if ~is_start
+        error('Options are only supported following a start event')
+    end
+    option = varargin{1};
+    value  = varargin{2};
+    switch option
+        case '-t_win'
+            stop_times  = cellfun(@(x) x + value(2),start_times,'un',0);
+            start_times = cellfun(@(x) x + value(1),start_times,'un',0);
+        case '-s_win'
+            implement_sample_window = true;
+        case '-t_dur'
             stop_times  = cellfun(@(x) x + value,start_times,'un',0);
-       case '-s_dur'
-           implement_sample_duration = true;
-       otherwise
-           error('Unrecognized option: %s',option)
-   end
-   varargin(1:2) = [];
+        case '-s_dur'
+            implement_sample_duration = true;
+        otherwise
+            error('Unrecognized option: %s',option)
+    end
+    varargin(1:2) = [];
 end
 
 %Conversion from times to samples
@@ -347,16 +361,16 @@ end
 %Processing now that we are working with samples
 %-----------------------------------------------
 if implement_sample_window
-   stop_samples  = cellfun(@(x) x + value(2),start_samples,'un',0);
-   start_samples = cellfun(@(x) x + value(1),start_samples,'un',0);
+    stop_samples  = cellfun(@(x) x + value(2),start_samples,'un',0);
+    start_samples = cellfun(@(x) x + value(1),start_samples,'un',0);
 elseif implement_sample_duration
-   sample_duration = value;
-   if sample_duration < 0
-       stop_samples  = start_samples;
-       start_samples = cellfun(@(x) x + sample_duration,start_samples,'un',0);
-   else
-       stop_samples  = cellfun(@(x) x + sample_duration,start_samples,'un',0);
-   end
+    sample_duration = value;
+    if sample_duration < 0
+        stop_samples  = start_samples;
+        start_samples = cellfun(@(x) x + sample_duration,start_samples,'un',0);
+    else
+        stop_samples  = cellfun(@(x) x + sample_duration,start_samples,'un',0);
+    end
 end
 
 end
@@ -374,14 +388,14 @@ stop_times  = cell(1,n_events);
 
 if ischar(I)
     for iEvent = 1:n_events
-       start_times{iEvent} = events(iEvent).start_times;
-       stop_times{iEvent}  = events(iEvent).stop_times;
+        start_times{iEvent} = events(iEvent).start_times;
+        stop_times{iEvent}  = events(iEvent).stop_times;
     end
 else
     for iEvent = 1:n_events
-       start_times{iEvent} = events(iEvent).start_times(I);
-       stop_times{iEvent}  = events(iEvent).stop_times(I);
-    end    
+        start_times{iEvent} = events(iEvent).start_times(I);
+        stop_times{iEvent}  = events(iEvent).stop_times(I);
+    end
 end
 
 
@@ -391,25 +405,25 @@ end
 use_sample_window = false;
 
 if ~isempty(varargin) && ischar(varargin{1}) && (varargin{1}(1) == '-')
-   
-   type =  varargin{1};
-   switch type
-       case '-t_win'
-           window_times = varargin{2};
-           start_times = cellfun(@(x) x + window_times(1),start_times,'un',0);
-           stop_times  = cellfun(@(x) x + window_times(2),stop_times,'un',0);
-       case '-s_win'
-           window_samples = varargin{2};
-           use_sample_window = true;
-       case '-pct'
-           pct_window = varargin{2};
-           range = cellfun(@(x,y) x-y,stop_times,start_times,'un',0);
-           %NOTE: stop_times must come first before we redefine start_times
-           stop_times   = cellfun(@(x,y) x + pct_window(2)*y,start_times,range,'un',0);
-           start_times = cellfun(@(x,y) x + pct_window(1)*y,start_times,range,'un',0);
-           
-   end
-   varargin(1:2) = [];
+    
+    type =  varargin{1};
+    switch type
+        case '-t_win'
+            window_times = varargin{2};
+            start_times = cellfun(@(x) x + window_times(1),start_times,'un',0);
+            stop_times  = cellfun(@(x) x + window_times(2),stop_times,'un',0);
+        case '-s_win'
+            window_samples = varargin{2};
+            use_sample_window = true;
+        case '-pct'
+            pct_window = varargin{2};
+            range = cellfun(@(x,y) x-y,stop_times,start_times,'un',0);
+            %NOTE: stop_times must come first before we redefine start_times
+            stop_times   = cellfun(@(x,y) x + pct_window(2)*y,start_times,range,'un',0);
+            start_times = cellfun(@(x,y) x + pct_window(1)*y,start_times,range,'un',0);
+            
+    end
+    varargin(1:2) = [];
 end
 
 %Change times to samples
@@ -421,8 +435,8 @@ stop_samples  = h__timeToSamples(objs,stop_times);
 %Implement sample based window
 %-----------------------------
 if use_sample_window
-   start_samples = cellfun(@(x) x + window_samples(1),start_samples,'un',0);
-   stop_samples   = cellfun(@(x) x + window_samples(2),stop_samples,'un',0);
+    start_samples = cellfun(@(x) x + window_samples(1),start_samples,'un',0);
+    stop_samples   = cellfun(@(x) x + window_samples(2),stop_samples,'un',0);
 end
 
 end
@@ -434,16 +448,21 @@ function samples = h__timeToSamples(objs,times)
 %
 %   Inputs:
 %   -------
-%   times : cell
-%
-    n_objs = length(objs);
-    samples = cell(1,n_objs);
-    for iObj = 1:n_objs
-        cur_obj = objs(iObj);
-        cur_times = times{iObj};
-        %TODO: Introduce a bounds error check in getNearestIndices
-        samples{iObj} = cur_obj.time.getNearestIndices(cur_times);
-    end
+%   times : cell or array
+%       When an array, the values are replicated for each object
+
+if ~iscell(times)
+    times = sl.cell.initialize(length(objs),times);
+end
+
+n_objs = length(objs);
+samples = cell(1,n_objs);
+for iObj = 1:n_objs
+    cur_obj = objs(iObj);
+    cur_times = times{iObj};
+    %TODO: Introduce a bounds error check in getNearestIndices
+    samples{iObj} = cur_obj.time.getNearestIndices(cur_times);
+end
 end
 
 function new_data_obj = h__createNewDataFromOld(obj,new_data,new_time_object)

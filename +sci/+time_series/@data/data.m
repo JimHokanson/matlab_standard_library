@@ -159,8 +159,9 @@ classdef data < sl.obj.handle_light
             %   data_in : array [samples x channels]
             %       'data_in' must be with samples going down the rows.
             %   time_object : sci.time_series.time
-            %
-            %   dt: number or
+            %       Specification regarding the start time and sampling 
+            %       rate of the data.
+            %   dt: number
             %
             %   Optional Inputs:
             %   ----------------
@@ -172,16 +173,11 @@ classdef data < sl.obj.handle_light
             %       Not yet implemented
             %   events: array or cell array of:
             %               - sci.time_series.discrete_events
-            %               -
-            %       These signify discrete events that happen at a given
-            %       time and that may also carray a string or value with
-            %       the event.
+            %               - sci.time_series.epochs
             %   y_label: string
             %       Value for y_label when plotted.
-            %
-            %
             
-            %This is needed for initializing from a structure
+            %This is needed for initializing from a structure :/
             if nargin == 0
                 return
             end
@@ -357,10 +353,10 @@ classdef data < sl.obj.handle_light
     
     %Visualization --------------------------------------------------------
     methods
-        function plotRows(objs,varargin)
+        function varargout = plotRows(objs,varargin)
             %x Plots each object as a row
             %
-            %   plotRows(objs,varargin)
+            %   plot_results = plotRows(objs,varargin)
             %
             %   Optional Inputs:
             %   ----------------
@@ -368,27 +364,40 @@ classdef data < sl.obj.handle_light
             %       - x   - link x axes of all plots
             %       - xy  - 
             %       - y
+            %   Additional arguments can be specified via the 
+            %
+            %   Outputs:
+            %   --------
+            %   plot_results : sci.time_series.data.plot_result
+            %       
             %
             %   Example:
             %   --------
             %   plotRows(p,'Linewidth',2,'link_options','xy')
+            %
+            %   See Also:
+            %   ---------
+            %   sci.time_series.data.plot
             
-            %TODO: Update this call to be like in plot ...
-            [local_options,plot_options] = sl.in.removeOptions(varargin,{'link_option'},'force_cell',true);
+
+            plot_results = cell(1,length(objs));
             
             in.link_option = 'x';
+            [local_options,plot_options] = sl.in.removeOptions(varargin,fieldnames(in),'force_cell',true);
             in = sl.in.processVarargin(in,local_options);
-            
-            
-            
+
             n_objs = length(objs);
             
             for iObj = 1:n_objs
                 subplot(n_objs,1,iObj)
-                plot(objs(iObj),plot_options{:});
+                plot_results{iObj} = plot(objs(iObj),plot_options{:});
             end
             
             sl.plot.postp.linkFigureAxes(gcf,in.link_option);
+            
+            if nargout
+                varargout{1} = [plot_results{:}];
+            end
             
             %TODO: Build in cleanup code ...
         end
@@ -721,6 +730,14 @@ classdef data < sl.obj.handle_light
     %Time related manipulations -------------------------------------------
     methods
         %getDataSubset - in a separate file
+        function varargout = scaleTime(objs)
+           %x 
+           %    
+           %    This function was originally written to handle cases in
+           %    which
+           %
+           %    - we have 2 issues, changing the sampling rate and scaling
+        end
         function value = timeProp(objs,prop_name)
             %
             %   Retrieves a property from the time objects. Values are

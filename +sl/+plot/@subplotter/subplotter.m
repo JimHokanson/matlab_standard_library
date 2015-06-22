@@ -31,7 +31,19 @@ classdef subplotter < sl.obj.display_class
         %
         %
     end
+    properties (Dependent)
+       n_rows
+       n_columns
+    end
     
+    methods
+        function value = get.n_rows(obj)
+            value = obj.dims(1);
+        end
+        function value = get.n_columns(obj)
+           value = obj.dims(2); 
+        end
+    end
     methods
         function obj = subplotter(n_rows,n_columns,varargin)
             %
@@ -149,13 +161,18 @@ classdef subplotter < sl.obj.display_class
            end
         end
         function removeVerticalGap(obj,rows,columns,varargin)
-           %x 
+           %x Removes vertical gaps from subplots
            %
            %    removeVerticalGap(obj,rows,columns,varargin)
            %
-           %    rows : 
+           %    Inputs:
+           %    -------
+           %    rows : array
            %        Must be more than 1, should be continuous, starts at 
            %        the top
+           %        The value -1 indicates that all rows should be
+           %        compressed.
+           %    columns : 
            %
            %    Optional Inputs:
            %    ----------------
@@ -180,6 +197,10 @@ classdef subplotter < sl.obj.display_class
            
            %What's our expansion algorithm??????
            %Outer Position
+           
+           if rows == -1
+              rows = 1:obj.n_rows;
+           end
            
            for iRow = 1:length(rows)-1
                cur_row_I = rows(iRow);
