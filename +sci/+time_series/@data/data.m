@@ -100,7 +100,7 @@ classdef data < sl.obj.handle_light
         
         time     %sci.time_series.time
         units    %string
-        channel_labels
+        channel_labels %cellstr (or string?)
         y_label %Must be a string
     end
     
@@ -219,29 +219,38 @@ classdef data < sl.obj.handle_light
             obj.channel_labels = in.channel_labels;
             obj.history = in.history;
         end
-        function new_objs = copy(old_objs)
+        function new_objs = copy(old_objs,varargin)
             %x Creates a deep copy of the object
             %
             %   new_objs = copy(old_objs)
             %
             %   This allows someone to make changes to the properties
             %   without it also changing the original object.
+            %
+            %   See Also:
+            %   ---------
+            %   sci.time_series.events_holder
+            %   sci.time_series.time
             
-            %TODO: I'm curious if this would be better to do via
-            %export and fromStruct ...
+            in.new_start_offset = [];
+            in = sl.in.processVarargin(in,varargin);
             
             n_objs    = length(old_objs);
             temp_objs = cell(1,n_objs);
             
+            old_time_objs = [old_objs.time];
+            new_time_objs = copy([old_objs.time],'new_start_offset',in.new_start_offset);
+            
             for iObj = 1:n_objs
+                time_shift = old_time_objs(iObj).start_offset-new_time_objs(iObj).start_offset;
                 cur_obj = old_objs(iObj);
                 temp_objs{iObj} = sci.time_series.data(...
                     cur_obj.d,...
-                    copy(cur_obj.time),...
+                    new_time_objs(iObj),...
                     'history',      cur_obj.history,...
                     'units',        cur_obj.units,...
                     'channel_labels',cur_obj.channel_labels,...
-                    'events',       copy(cur_obj.event_info),...
+                    'events',       copy(cur_obj.event_info,'time_shift',time_shift),...
                     'y_label',      cur_obj.y_label);
             end
             

@@ -478,6 +478,7 @@ function new_data_obj = h__createNewDataFromOld(obj,new_data,new_time_object)
 new_data_obj   = copy(obj);
 new_data_obj.d = new_data;
 new_data_obj.time = new_time_object;
+new_data_obj.event_info.shiftTimes(obj.time,new_time_object);
 end
 
 function new_time_object = h__getNewTimeObjectForDataSubset(obj,first_sample,last_sample,varargin)

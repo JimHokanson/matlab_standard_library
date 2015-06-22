@@ -129,7 +129,25 @@ classdef time < sl.obj.display_class
             obj.dt = dt;
             obj.n_samples = n_samples;
         end
-        function new_objs = copy(objs)
+        function new_objs = copy(objs,varargin)
+            %
+            %
+            %   Optional Inputs:
+            %   ----------------
+            %   new_start_offset :
+            
+            in.new_start_offset = [];
+            in = sl.in.processVarargin(in,varargin);
+            
+            if isempty(in.new_start_offset)
+                start_offsets = [objs.start_offset];
+            elseif length(in.new_start_offset) == 1
+                start_offsets = repmat(in.new_start_offset,1,length(objs));
+            else
+                start_offsets = in.new_start_offset;
+            end
+                
+            
             %x Creates a deep copy
             n_objs = length(objs);
             temp_ca = cell(1,n_objs);
@@ -138,7 +156,7 @@ classdef time < sl.obj.display_class
                 new_obj = sci.time_series.time(obj.dt,...
                     obj.n_samples,...
                     'start_datetime',obj.start_datetime,...
-                    'start_offset',obj.start_offset);
+                    'start_offset',start_offsets(iObj));
                 new_obj.output_units = obj.output_units;
                 temp_ca{iObj} = new_obj;
             end

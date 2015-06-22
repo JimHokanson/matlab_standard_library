@@ -76,14 +76,24 @@ classdef discrete_events < sl.obj.display_class
             obj.values = in.values;
             obj.msgs   = in.msgs;
         end
-        function new_obj = copy(old_obj)
-            %TODO: Implement this ...
-            new_obj = sci.time_series.discrete_events(old_obj.prop_name,old_obj.times);
+        function new_obj = copy(old_obj,varargin)
+            %
+            %   Optional Inputs:
+            %   ----------------
+            %   time_shift : scalar (default 0)
+            %       Value is subtracted from the times values
+            %   
+            
+            in.time_shift = 0;
+            in = sl.in.processVarargin(in,varargin);
+            
+            new_obj = sci.time_series.discrete_events(old_obj.prop_name,old_obj.times - in.time_shift);
+            
             %TODO: This should be a generic method via sl
             fn = fieldnames(old_obj);
             for iField = 1:length(fn)
                 cur_name = fn{iField};
-            new_obj.(cur_name) = old_obj.(cur_name);
+                new_obj.(cur_name) = old_obj.(cur_name);
             end
         end
         function prettyPrint(obj)
