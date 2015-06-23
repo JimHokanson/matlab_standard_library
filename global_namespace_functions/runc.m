@@ -32,8 +32,7 @@ function runc(show_code)
 %
 %   Improvments:
 %   ------------
-%   1) Write to a temporary file so that errors are assigned to specific
-%   locations
+%   1) Allow running code without uncommenting
 
 %%Testing file writing
 %   %first run (copy line below then run this function)
