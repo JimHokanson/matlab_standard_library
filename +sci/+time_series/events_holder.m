@@ -6,6 +6,8 @@ classdef events_holder < dynamicprops
     %   This class holds all of the events for a particular instance of 
     %   sci.time_series.data
     %
+    %   sci.time_series.data.event_info => instance of this class
+    %
     %   As a dynamicprops class, the event objects are added dynamically as
     %   properties to the class instances.
     %
@@ -56,14 +58,14 @@ classdef events_holder < dynamicprops
             value = builtin('fieldnames',obj);
             value(strcmp(value,'p__all_event_names')) = [];
         end
-        function shiftTimes(obj,varargin)
-            if isnumeric(varargin(1))
-                time_shift = varargin(1);
-            else
-                old_time = varargin{1};
-                new_time = varargin{2};
-                time_shift = old_time.start_offset - new_time.start_offset;
-            end
+        function shiftTimes(obj,time_shift)
+%             if isnumeric(varargin(1))
+%                 time_shift = varargin(1);
+%             else
+%                 old_time = varargin{1};
+%                 new_time = varargin{2};
+%                 time_shift = old_time.start_offset - new_time.start_offset;
+%             end
                 fn = fieldnames(obj);
                 for iField = 1:length(fn)
                     cur_name = fn{iField};

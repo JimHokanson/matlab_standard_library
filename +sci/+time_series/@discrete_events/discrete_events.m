@@ -159,7 +159,9 @@ classdef discrete_events < sl.obj.display_class
             %   text_options : cell (default {})
             %       These are the options that get passed into the text()
             %       command.
-            %
+            %   events_in_extents_only : logical (default true)
+            %       Events that are outside the extents of the axes will
+            %       not be plotted
             %   
             %
             %   Improvements:
@@ -181,6 +183,7 @@ classdef discrete_events < sl.obj.display_class
             in.show_msgs = true;
             in.show_values = true;
             in.text_options = {};
+            in.events_in_extents_only = true;
             [varargin,line_inputs] = sl.in.removeOptions(varargin,fieldnames(in),'force_cell',true);
             in = sl.in.processVarargin(in,varargin);
             
@@ -240,6 +243,12 @@ classdef discrete_events < sl.obj.display_class
                    time_obj = app_data_axes.time_series_time;
                    %sci.time_series.time
                    times_for_plotting = h__getTimeScaled(times_for_plotting,time_obj.output_units);
+                end
+                
+                if in.events_in_extents_only
+                   xlim = get(cur_axes,'xlim');
+                   mask = times_for_plotting < xlim(1) | times_for_plotting > xlim(2);
+                   times_for_plotting(mask) = [];
                 end
                 
                 h{iAxes} = sl.plot.type.verticalLines(times_for_plotting,'Parent',cur_axes,line_inputs{:});

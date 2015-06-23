@@ -175,14 +175,15 @@ if ~return_as_cell
     end
 end
 
-if in.align_time_to_start
-    first_sample_time = 0;
-else
-    %This basically means keep the first sample at whatever
-    %time it currently is
-    first_sample_time = [];
-end
+% if in.align_time_to_start
+%     first_sample_time = 0;
+% else
+%     %This basically means keep the first sample at whatever
+%     %time it currently is
+%     first_sample_time = [];
+% end
 
+%TODO: This all needs to be simplified ...
 n_objs = length(start_samples);
 temp_objs_1 = cell(1,n_objs);
 for iObj = 1:n_objs
@@ -192,20 +193,35 @@ for iObj = 1:n_objs
     cur_stop_samples = stop_samples{iObj};
     n_spans = length(cur_start_samples);
     
+    new_time_objs = cell(1,n_spans);
     temp_objs_2 = cell(1,n_spans);
     for iSpan = 1:n_spans
         start_I  = cur_start_samples(iSpan);
         stop_I   = cur_stop_samples(iSpan);
         new_data = cur_obj.d(start_I:stop_I,:,:);
-        new_time = h__getNewTimeObjectForDataSubset(cur_obj,start_I,stop_I,...
-            'first_sample_time',first_sample_time);
         
-        temp_objs_2{iSpan} = h__createNewDataFromOld(cur_obj,new_data,new_time);
+        
+        n_samples = stop_I - start_I + 1;
+        new_time = cur_obj.time.getNewTimeObjectForDataSubset(start_I,n_samples);
+        new_time_objs{iSpan} = new_time;
+        
+        
+        new_obj = h__createNewDataFromOld(cur_obj,new_data,new_time);
+        %new_obj.event_info.shiftTimes(new_obj.time.start_offset - cur_obj.time.start_offset)
+        temp_objs_2{iSpan} = new_obj;
     end
+    
+    %objs.zeroTimeByEvent(event_times)
     
     %We can always collapse these objects. It is just across objects that
     %we might not be able to collapse
-    temp_objs_1{iObj} = [temp_objs_2{:}];
+    new_time_objs = [new_time_objs{:}];
+    temp_objs_2_array = [temp_objs_2{:}];
+    if in.align_time_to_start
+        temp_objs_2_array.zeroTimeByEvent([new_time_objs.start_offset]);
+    end
+    
+    temp_objs_1{iObj} = temp_objs_2_array;
 end
 
 if return_as_cell
@@ -465,7 +481,7 @@ for iObj = 1:n_objs
 end
 end
 
-function new_data_obj = h__createNewDataFromOld(obj,new_data,new_time_object)
+function new_data_obj = h__createNewDataFromOld(old_obj,new_data,new_time_object)
 %
 %   This should be used internally when creating a new data object.
 %
@@ -475,28 +491,28 @@ function new_data_obj = h__createNewDataFromOld(obj,new_data,new_time_object)
 %       The actual data from the new object.
 %   new_time_object : sci.time_series.time
 
-new_data_obj   = copy(obj);
+new_data_obj   = copy(old_obj);
 new_data_obj.d = new_data;
 new_data_obj.time = new_time_object;
-new_data_obj.event_info.shiftTimes(obj.time,new_time_object);
+%new_data_obj.event_info.shiftTimes(new_data_obj.time.start_offset - old_obj.time.start_offset)
 end
 
-function new_time_object = h__getNewTimeObjectForDataSubset(obj,first_sample,last_sample,varargin)
-%
-%
-%   Optional Inputs:
-%   ----------------
-
-in.first_sample_time = [];
-%empty - keeps its time
-%0 - first value will be zero
-in = sl.in.processVarargin(in,varargin);
-
-n_samples = last_sample - first_sample + 1;
-new_time_object = obj.time.getNewTimeObjectForDataSubset(first_sample,n_samples,...
-    'first_sample_time',in.first_sample_time);
-
-end
+% % % % function new_time_object = h__getNewTimeObjectForDataSubset(obj,first_sample,last_sample,varargin)
+% % % % %
+% % % % %
+% % % % %   Optional Inputs:
+% % % % %   ----------------
+% % % % 
+% % % % in.first_sample_time = [];
+% % % % %empty - keeps its time
+% % % % %0 - first value will be zero
+% % % % in = sl.in.processVarargin(in,varargin);
+% % % % 
+% % % % n_samples = last_sample - first_sample + 1;
+% % % % new_time_object = obj.time.getNewTimeObjectForDataSubset(first_sample,n_samples,...
+% % % %     'first_sample_time',in.first_sample_time);
+% % % % 
+% % % % end
 
 %{
 if in.align_time_to_start
