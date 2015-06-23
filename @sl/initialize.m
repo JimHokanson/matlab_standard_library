@@ -24,6 +24,7 @@ gnf_dir = fullfile(repo_root,'global_namespace_functions');
 addpath(gnf_dir)
 
 %runc support
+%TODO: I don't think this is needed anymore
 temp_runc_file_path = fullfile(gnf_dir,'z_runc_exec_file.m');
 sl.io.fileWrite(temp_runc_file_path,' ');
 

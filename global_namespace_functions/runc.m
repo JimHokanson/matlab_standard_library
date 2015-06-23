@@ -35,14 +35,19 @@ function runc(show_code)
 %   1) Write to a temporary file so that errors are assigned to specific
 %   locations
 
-%One strange bug I ran into is when these files are read into memory.
-%In 2015a I needed to execute this function twice before the contents of
-%the file had been updated in Matlab memory. Is this a race condition?
+%%Testing file writing
+%   %first run (copy line below then run this function)
+%   a = 1
+%   %2nd run   (copy lines below then run this function)
+%   b = 1:5
+%   b(10)  %Should cause an error in the file
 
+%TODO: I don't think this is needed anymore
 %This is also unfortunately in sl.initialize due to Matlab not allowing
 %dynamically created functions
 TEST_FILE_NAME = 'z_runc_exec_file.m';
-name_without_ext = TEST_FILE_NAME(1:end-2);
+
+script_name = TEST_FILE_NAME(1:end-2); 
 
 if nargin == 0
    show_code = false; 
@@ -60,35 +65,23 @@ function_dir = sl.stack.getMyBasePath();
 file_path = fullfile(function_dir,TEST_FILE_NAME);
 
 if exist(file_path,'file')
-   delete(file_path);
-   pause(0.5)
+   clear(script_name)
 end
 
 try
     sl.io.fileWrite(file_path,uncommented_str);
     %pause(1); %Adding to test race condition
     %Doesn't seem to be a race condition
-    run_file = exist(name_without_ext,'file');
+    run_file = exist(script_name,'file');
 catch ME
     run_file = false; 
 end
 
+%TODO: Do I ever want to do 'caller' instead? Is 'caller' preferred?
 if run_file
-    %A timer won't work since it executes in neverland, not in the 
-    %main thread like we want ...
-    %t = timer('ExecutionMode','singleShot','TimerFcn',@(~,~) h__runCode(name_without_ext),'StartDelay',0.5);
-    %start(t);
-    
-    %Doesn't make a difference
-    %drawnow()
-    
-    evalin('base',name_without_ext);
+    evalin('base',script_name);
 else
     evalin('base',uncommented_str);
 end
 
-end
-
-function h__runCode(name_without_ext)
-    evalin('base',name_without_ext);
 end
