@@ -60,8 +60,12 @@ classdef epochs < sl.obj.display_class
                 cur_obj.stop_times  = cur_obj.stop_times - time_to_subtract;
             end
         end
-        function new_obj = copy(old_obj)
-           new_obj = sci.time_series.epochs(old_obj.prop_name,old_obj.start_times,old_obj.stop_times);
+        function new_obj = copy(old_obj,varargin)
+           
+            in.time_shift = 0;
+            in = sl.in.processVarargin(in,varargin);
+            
+           new_obj = sci.time_series.epochs(old_obj.prop_name,old_obj.start_times-in.time_shift,old_obj.stop_times-in.time_shift);
            new_obj.name = old_obj.name;
            new_obj.values = old_obj.values;
         end

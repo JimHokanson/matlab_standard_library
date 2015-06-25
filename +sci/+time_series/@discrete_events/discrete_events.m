@@ -249,6 +249,11 @@ classdef discrete_events < sl.obj.display_class
                    xlim = get(cur_axes,'xlim');
                    mask = times_for_plotting < xlim(1) | times_for_plotting > xlim(2);
                    times_for_plotting(mask) = [];
+                   display_strings(mask) = [];
+                end
+                
+                if isempty(times_for_plotting)
+                   continue 
                 end
                 
                 h{iAxes} = sl.plot.type.verticalLines(times_for_plotting,'Parent',cur_axes,line_inputs{:});

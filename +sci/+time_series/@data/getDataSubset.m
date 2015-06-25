@@ -198,6 +198,11 @@ for iObj = 1:n_objs
     for iSpan = 1:n_spans
         start_I  = cur_start_samples(iSpan);
         stop_I   = cur_stop_samples(iSpan);
+        
+        %TODO: Decide if this is what we want to do ...
+        if stop_I > cur_obj.n_samples
+            stop_I = cur_obj.n_samples;
+        end
         new_data = cur_obj.d(start_I:stop_I,:,:);
         
         

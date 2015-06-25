@@ -19,6 +19,8 @@ function varargout = verticalLines(x_positions,varargin)
 %       For when the values are meant to specified in terms of the viewing
 %       limits. 
 %       NOT YET IMPLEMENTED: 
+%
+%   TODO: Finish documentation
 
 %A potentially useful reference
 %Check this out: http://www.mathworks.com/matlabcentral/fileexchange/1039-hline-and-vline

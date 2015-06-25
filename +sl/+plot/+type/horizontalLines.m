@@ -1,4 +1,4 @@
-function varargout = horizontalLines(y_positions,local_options,line_options)
+function varargout = horizontalLines(y_positions,varargin)
 %
 %   line_handles = sl.plot.type.horizontalLines(y_positions,local_options,line_options)
 %
@@ -16,15 +16,12 @@ function varargout = horizontalLines(y_positions,local_options,line_options)
 %       limits. 
 %       NOT YET IMPLEMENTED: 
 
-if nargin == 2
-    line_options = {};
-end
-
 in.y_pct_vary_with_zoom = false; %NYI - on zoom, change values
 in.x_pct_vary_with_zoom = false; %NYI - on zoom, change values
 in.y_as_pct = false; %NYI
 in.x_values = [];
 in.x_pct = [];
+[local_options,line_options] = sl.in.removeOptions(varargin,fieldnames(in),'force_cell',true);
 in = sl.in.processVarargin(in,local_options);
 
 %NOTE: We need to know the y limit of the parents

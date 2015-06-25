@@ -37,6 +37,15 @@ classdef axes < sl.obj.display_class
     
     methods
         function obj = axes(h)
+            %x Construct axes object from Matlab's axes object
+            %   
+            %   Inputs:
+            %   -------
+            %   h : scalar OR matlab.graphics.axis.Axes (2014b & newer)
+            %       A handle to the Matlab axes
+            %
+            
+            %TODO: Add on axes check for h
             obj.h = h;
             obj.position = sl.hg.axes.position(obj.h,'position');
             obj.outer_position = sl.hg.axes.position(obj.h,'OuterPosition');
@@ -65,12 +74,21 @@ classdef axes < sl.obj.display_class
         end
         function setHeight(obj,value,varargin)
             in.mode = 'c';
+            in = sl.in.processVarargin(in,varargin);
             
+            p = obj.position;
             switch lower(in.mode(1))
                 case 'c'
+                    center_y = p.center_y;
+                    new_bottom = center_y - 0.5*value;
+                    new_top = center_y + 0.5*value;
                 case 'l'
                 case 'r'
             end
+            
+            p.top = new_top;
+            p.bottom = new_bottom;
+            
         end
         function clearLabel(obj,type)
             %

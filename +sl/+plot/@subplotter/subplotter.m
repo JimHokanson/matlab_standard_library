@@ -69,6 +69,7 @@ classdef subplotter < sl.obj.display_class
             obj.row_first_indexing = in.row_first_indexing;
         end
         function axes(obj,row,column)
+           %x NYI - this is supposed to activate a particular axes
            %
            %    Calling Forms:
            %    --------------
@@ -191,6 +192,8 @@ classdef subplotter < sl.obj.display_class
            sp.removeVerticalGap(1:2,1)
            %}
            
+           in.gap_size = 0.02;
+           in.keep_relative_size = true;
            in.remove_x_labels = true;
            in.remove_x_ticks = true;
            in = sl.in.processVarargin(in,varargin);
@@ -201,6 +204,13 @@ classdef subplotter < sl.obj.display_class
            if rows == -1
               rows = 1:obj.n_rows;
            end
+
+           
+           all_axes = cellfun(@(x) sl.hg.axes(x),obj.handles(rows(1:end),columns(1)),'un',0);
+           all_axes = [all_axes{:}];
+           
+           all_heights = [all_axes.height];
+           pct_all_heights = all_heights./sum(all_heights);
            
            for iRow = 1:length(rows)-1
                cur_row_I = rows(iRow);
@@ -214,25 +224,42 @@ classdef subplotter < sl.obj.display_class
            end
            
            %Assuming all columns are the same ...
-           top_axes    = sl.hg.axes(obj.handles{rows(1),columns(1)});
-           bottom_axes = sl.hg.axes(obj.handles{rows(end),columns(1)});
+           top_axes    = all_axes(1);
+           bottom_axes = all_axes(end);
 
-           %Add 1 due to edges
-           %
-           %        top     row 1   TOP OF TOP AXES
-           %
-           %        bottom  row 1  & top row 2
-           %
-           %        bottom  row 2  & top row 3
-           %
-           %        bottom  row 3   BOTTOM OF BOTTOM AXES
-           %
-           %    fill in so that each axes has the same height and so that
-           %    all axes span from the top of the top axes to the bottom of
-           %    the bottom axes
-           temp = linspace(bottom_axes.position.bottom,top_axes.position.top,length(rows)+1);
-           new_bottoms = temp(end-1:-1:1);
-           new_tops = temp(end:-1:2);
+           top_position = top_axes.position.top;
+           bottom_position = bottom_axes.position.bottom;
+
+           %TODO: This algorithm makes everything the same size. We need
+           %to divy up based on the height
+           
+           if in.keep_relative_size
+               total_height = top_position - bottom_position;
+               gap_height   = (length(rows)-1)*in.gap_size;
+               available_height = total_height - gap_height;
+               new_heights = available_height*pct_all_heights;
+
+               temp_start_heights = [0 cumsum(new_heights(1:end-1)+in.gap_size)];
+               new_tops = top_position - temp_start_heights;
+               new_bottoms = new_tops - new_heights;
+           else
+               %Add 1 due to edges
+               %
+               %        top     row 1   TOP OF TOP AXES
+               %
+               %        bottom  row 1  & top row 2
+               %
+               %        bottom  row 2  & top row 3
+               %
+               %        bottom  row 3   BOTTOM OF BOTTOM AXES
+               %
+               %    fill in so that each axes has the same height and so that
+               %    all axes span from the top of the top axes to the bottom of
+               %    the bottom axes
+               temp = linspace(bottom_position,top_position,length(rows)+1);
+               new_bottoms = temp(end-1:-1:1);
+               new_tops = temp(end:-1:2);
+           end
            
            for iRow = 1:length(rows)
                cur_row_I = rows(iRow);

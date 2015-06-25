@@ -51,9 +51,18 @@ classdef (Hidden) position < handle
         bottom
         left
         right
+        center_y
+        center_x
     end
     
     methods
+        function value = get.center_x(obj)
+           value = obj.left + 0.5*(obj.right - obj.left);
+        end
+        function value = get.center_y(obj)
+           value = obj.bottom + 0.5*(obj.top - obj.bottom);
+        end
+        %TODO: Implement set functions for center_x and center_y ...
         function value = get.raw_position(obj)
             value = get(obj.h,obj.type);
         end
