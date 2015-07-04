@@ -23,7 +23,11 @@ classdef document < sl.obj.display_class
     %}
     
     properties (Dependent)
-        opened %? What does this even mean?
+        
+        %This is not present in mac 2013a
+        %opened %? What does this even mean?
+        
+        
         text
         selection_start_row
         selection_start_column
