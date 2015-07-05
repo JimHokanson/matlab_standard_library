@@ -1,4 +1,4 @@
-classdef function_help_display
+classdef function_help_display < handle
     %
     %   Class: (Singleton)
     %   sl.ml.popup_windows.function_help_display
@@ -46,20 +46,31 @@ classdef function_help_display
             %
             %
             
+            FIGURE_HANDLE = 3894576; %This shouldn't be necessary
+            %but I had some luck with it 
             TIMER_PERIOD = 1;
             
             %I think I'll load this from a GUI
             %=> change text size buttons
             %=> 
             
-            %TODO: Create a figure 
-            f = figure;
+            %TODO: Create a figure
+            %Eventually I'll probably want to load a pre created figure
+            %from disk
+            f = figure(FIGURE_HANDLE);
             obj.fig = f;
             
             set(f,'HandleVisibility','off')
-            obj.text_h = uicontrol(f,'Style','text','Units','normalized','Position',...
-                [0.05 0.05 0.90 0.90],'String','testing',...
-                'BackgroundColor',[1 1 1],'FontSize',12,'HorizontalAlignment','left');
+            obj.text_h = uicontrol(f,'Style','text',...
+                'Units','normalized',...
+                'Position',[0.05 0.05 0.90 0.90],...
+                'String','testing',...
+                'BackgroundColor',[1 1 1],...
+                'FontSize',12,...
+                'HorizontalAlignment','left',...
+                'Parent',f);
+            
+            %disp(obj.text_h)
             
             set(f,'CloseRequestFcn',@(~,~)cb_closeFigure(obj))
             
@@ -80,9 +91,12 @@ classdef function_help_display
            if isa(obj.t,'timer')
                stop(obj.t)
                delete(obj.t)
+           else
+               obj.t
            end
         end
         function cb_closeFigure(obj)
+            disp('close is running')
            delete(obj.fig)
            delete(obj)
         end
@@ -97,7 +111,7 @@ classdef function_help_display
             %
             
             persistent local_obj
-            if isempty(local_obj)
+            if isempty(local_obj) || ~ishandle(obj.fig)
                 local_obj = sl.ml.popup_windows.function_help_display;
             end
             % % %            output = local_obj;
@@ -113,14 +127,22 @@ classdef function_help_display
             %
             %
             
+            %We'll eventually want to persist some of the results
+            %so that we don't call expensive update functions
+            %persistent last_location
+            
+            %TODO: Add sync on closing so that we don't invalidate
+            %the figure midway through this code ...
+            
+            
             %TODO: This needs to be a more appropriate check
+            %we might have made a new figure that is posing as the old
+            %one
+            %
             %See Also:
             %http://stackoverflow.com/questions/1956626/checking-if-a-matlab-handle-is-a-valid-one
             if ~ishandle(obj.fig)
                %Figure closed, delete obj
-               %stop(obj.t)
-%                delete(obj.t)
-%                delete(obj)
                return
             end
             
@@ -148,9 +170,9 @@ classdef function_help_display
             end
             
             cli = sl.help.current_line_info(last_line_text);
+            %TODO
             
-            %fprintf(2,'Last line\n')
-            %disp(last_line_text)
+            
             set(obj.text_h,'String',last_line_text)
             
             catch
