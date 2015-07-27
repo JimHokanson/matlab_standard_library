@@ -498,6 +498,9 @@ if isempty(search_pattern)
     search_pattern = '*';
 end
 
+%TODO: Introduce try/catch and look for missing directory on catch
+%otherwise rethrow original error
+
 %This is the magic function ...
 %Documentation at:
 %https://msdn.microsoft.com/en-us/library/07wt70x2%28v=vs.110%29.aspx
@@ -512,6 +515,8 @@ file_names = sl.dir.getFileName(file_paths);
 %NOTE: We've already ensured we don't need d_files before calling this
 %function ...
 [file_names,file_paths] = h__filterFiles(file_names,file_paths,file_filters);
+
+%TODO: Move to a constructor function
 
 s = struct;
 s.file_paths   = file_paths;
