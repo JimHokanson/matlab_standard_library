@@ -1,19 +1,31 @@
 classdef (Hidden) editor < sl.obj.display_class
     %
-    %   Class:
+    %   Class: (Singleton)
     %   sl.editor.interface
     %
     %   This class is meant as an interface to the editor API that Matlab
     %   created in version (???). It was originally created to facilitate
     %   knowing if files had been edited in the editor and to help
     %    
+    %   Call via:
+    %   ---------
     %   e = sl.ml.editor.getInstance();
     %
-    %
     %   See Also:
+    %   ---------
     %   sl.ml.editor.document
     %   matlab.desktop.editor.Document
     %   matlab.desktop.editor
+    %
+    %
+    %   Status:
+    %   -------
+    %   The "API" version provided as of ... isn't all that exciting.
+    %
+    %   TODO:
+    %   -----
+    %   Incorporate com.mathworks.mde.desk.MLDesktop.getInstance and 
+    %   hasFocus
     
     
     %   Work with all documents open in the Editor:
@@ -38,24 +50,53 @@ classdef (Hidden) editor < sl.obj.display_class
     %     linesToText           - Convert cell array of text lines to character array.
     %     textToLines           - Convert character array into cell array of text lines.
     
+    %{
+    Undocumented:
+    wtf = com.mathworks.mlservices.MLEditorServices.getEditorApplication
+    com.mathworks.mde.editor.MatlabEditorApplication
+    
+    d = com.mathworks.mlservices.MLEditorServices;
+    fName = d.builtinGetActiveDocument;
+    path=fileparts(fName.toCharArray');
+    
+    %e is Java Collection (List?) on documents
+    e = wtf.getOpenEditors
+    e.size %# of documents
+    wtf2 = e.get(#)
+    
+    wtf2 : com.mathworks.mde.editor.MatlabEditor
+    wtf2.getLongName
+    wtf2.smartIndentContents
+    %}
     
     
+    properties
+       main_frame_h 
+    end
     
     properties (Dependent)
         active_filename %full path to document open in editor
         %? - what happens in split mode?
         %? - 
+        has_focus
     end
     
     methods
         function value = get.active_filename(~)
            value = matlab.desktop.editor.getActiveFilename();
         end
+        function value = get.has_focus(obj)
+           %hasFocus doesn't seem to work, my guess is that it is too
+           %specific, 
+           value = obj.main_frame_h.isActive; 
+        end
     end
     
     methods (Access = private)
         function obj = editor()
-            %Nothing so far ...
+            %http://undocumentedmatlab.com/blog/accessing-the-matlab-editor
+            temp = com.mathworks.mde.desk.MLDesktop.getInstance;
+            obj.main_frame_h = temp.getGroupContainer('Editor').getTopLevelAncestor;
         end
     end
     

@@ -23,7 +23,11 @@ classdef document < sl.obj.display_class
     %}
     
     properties (Dependent)
-        opened %? What does this even mean?
+        
+        %This is not present in mac 2013a
+        %opened %? What does this even mean?
+        
+        
         text
         selection_start_row
         selection_start_column
@@ -36,9 +40,13 @@ classdef document < sl.obj.display_class
     end
     
     methods
-        function value = get.opened(obj)
-            value = obj.h.Opened;
-        end
+        %Not present in mac 2013a
+        %I think this means whether or not it is in the editor
+        %and I think I could get this functionality out of older code
+        %if I really wanted to via com calls
+%         function value = get.opened(obj)
+%             value = obj.h.Opened;
+%         end
         function value = get.text(obj)
             value = obj.h.Text;
         end
