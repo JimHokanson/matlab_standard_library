@@ -1,17 +1,35 @@
-function error_msg = getMissingFileErrorMsg(file_or_folder_path)
+function error_msg = getMissingFileErrorMsg(file_or_folder_path,varargin)
 %x Returns a message that helps the user to understand why a file is missing
 %
-%   error_msg = sl.error.getMissingFileErrorMsg(file_or_folder_path)
+%   error_msg = sl.error.getMissingFileErrorMsg(file_or_folder_path,varargin)
 %
 %   This function is meant to facilitate handling when a file is missing.
 %   It only returns a formatted message. It does not actually display the
 %   error (or warning).
+%
+%   The message returned is clickable (opens explorer or finder) to the 
+%   deepest level that exists relative to the file.
+%
+%   For example, let's say the following is missing:
+%   C:\repos\matlab_git\bladder_analysis\data_files\cmg_info\1401416_C.csv
+%   and that the 'cmg_info' folder is missing as well
+%
+%   The output will be:
+%
+%   Missing file:
+%   C:\repos\matlab_git\bladder_analysis\data_files\cmg_info\1401416_C.csv
+%   ________________________________________________
 %
 %   Inputs:
 %   -------
 %   file_or_folder_path : string
 %       Path to a file or folder.
 %
+%   Optional Inputs:
+%   ----------------
+%   msg_prefix : string (Default 'Missing file':)
+%       How to prefix the missing file link
+%   
 %   Outputs:
 %   --------
 %   error_msg : string
@@ -37,11 +55,10 @@ function error_msg = getMissingFileErrorMsg(file_or_folder_path)
 %   I'd like this to facilitate navigating to a path to see
 %   why a file is missing ...
 %
-%   For example, let's say the following is missing:
-%   C:\repos\matlab_git\bladder_analysis\data_files\gsk_matlab_analysis\cmg_info\1401416_C.csv
-%   I'd like to have a link that allows clicking on a path that does exist
-%   ....
-%   C:\repos\matlab_git\bladder_analysis\data_files\gsk_matlab_analysis\cmg_info
+
+
+in.msg_prefix = 'Missing file:';
+in = sl.in.processVarargin(in,varargin);
 
 if isempty(file_or_folder_path)
    error_msg = 'The path variable was empty'; %See improvment #1
@@ -59,14 +76,14 @@ while ~isempty(root_path)
 end
 
 if isempty(existing_base_path)
-    error_msg = sprintf('Missing file:\n%s\n',file_or_folder_path);
+    error_msg = sprintf('%s:\n%s\n',in.msg_prefix,file_or_folder_path);
 else
     start_I = length(existing_base_path)+1;
     remaining_str = file_or_folder_path(start_I:end);
     
     link_to_existing_path = sl.ml.cmd_window.createNavToPathLink(existing_base_path);
     
-    error_msg = sprintf('Missing file:\n%s%s\n',link_to_existing_path,remaining_str);
+    error_msg = sprintf('%s:\n%s%s\n',in.msg_prefix,link_to_existing_path,remaining_str);
 end
 
 
