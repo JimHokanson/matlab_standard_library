@@ -1,10 +1,15 @@
 function addPackages(package_folders,varargin)
 %x Adds folders with code to the path
 %
-%   sl.path.addPackages(root_path,package_folders)
+%   sl.path.addPackages(package_folders,varargin)
 %
 %   This function is meant to facilitate adding code to the path on
 %   startup.
+%
+%   Inputs:
+%   -------
+%   package_folders: string or cellstr
+%   
 %
 %   Optional Inputs:
 %   ----------------
@@ -15,6 +20,10 @@ function addPackages(package_folders,varargin)
 
 in.root_path = fileparts(sl.stack.getPackageRoot);
 in = sl.in.processVarargin(in,varargin);
+
+if ischar(package_folders)
+   package_folders = {package_folders}; 
+end
 
 for iPackage = 1:length(package_folders)
     cur_package_name = package_folders{iPackage};
