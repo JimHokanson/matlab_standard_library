@@ -1,4 +1,4 @@
-function runc(show_code)
+function runc(varargin)
 %x Run a commented example that is in the clipboard
 %
 %   runc()
@@ -7,6 +7,11 @@ function runc(show_code)
 %   files. I would normally need to uncomment the lines, evaluating the
 %   selection (being careful not to save the file), and then undo the
 %   changes so that the file wasn't changed.
+%
+%   Flags
+%   -----
+%   last - use last command
+%   disp - display the command in the command window
 %
 %   To Run:
 %   -------
@@ -32,7 +37,10 @@ function runc(show_code)
 %
 %   Improvments:
 %   ------------
-%   1) Allow running code without uncommenting
+%   1) Allow running code without uncommenting - this would allow
+%   evaluating a selection that isn't commented but would still provide
+%   the ability to determine where errors were in the selection
+%   2) runc last
 
 %%Testing file writing
 %   %first run (copy line below then run this function)
@@ -41,6 +49,19 @@ function runc(show_code)
 %   b = 1:5
 %   b(10)  %Should cause an error in the file
 
+persistent uncommented_str
+
+in.use_last = false; %flag - last
+in.show_code = false; %flag - disp
+%TODO: Write a formal function that handles this ...
+if any(strcmp(varargin,'last'))
+   in.use_last = true; 
+end
+if any(strcmp(varargin,'disp'))
+   in.use_last = true; 
+end
+
+
 %TODO: I don't think this is needed anymore
 %This is also unfortunately in sl.initialize due to Matlab not allowing
 %dynamically created functions
@@ -48,15 +69,16 @@ TEST_FILE_NAME = 'z_runc_exec_file.m';
 
 script_name = TEST_FILE_NAME(1:end-2); 
 
-if nargin == 0
-   show_code = false; 
+if in.use_last
+    if isempty(uncommented_str)
+        fprintf(2,'Last execution string was cleared or never initialized\n');
+    end
+else
+    str = clipboard('paste');
+    uncommented_str = regexprep(str,'^\s*%\s*','','lineanchors');
 end
 
-str = clipboard('paste');
-
-uncommented_str = regexprep(str,'^\s*%\s*','','lineanchors');
-
-if show_code
+if in.show_code
     disp(uncommented_str)
 end
 

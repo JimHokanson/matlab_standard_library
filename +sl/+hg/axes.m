@@ -92,10 +92,15 @@ classdef axes < sl.obj.display_class
         end
         function clearLabel(obj,type)
             %
+            %   clearLabel(obj,type)
+            %   
+            %   Inputs:
+            %   -------
+            %   type : string {'x','y'}
             %
             %   Examples:
             %   ---------
-            %   a = sl.hg.axes();
+            %   a = sl.hg.axes(gca);
             %   a.clearLabel('x')
             
             %NOTE: This is really a breakdown across 2014b lines (pre vs post)
@@ -108,9 +113,11 @@ classdef axes < sl.obj.display_class
             end
         end
         function clearTicks(obj,type)
+            %
+            %
             %   Examples:
             %   ---------
-            %   a = sl.hg.axes();
+            %   a = sl.hg.axes(gca);
             %   a.clearTicks('x')
             
             prop_name = [upper(type) 'Tick'];

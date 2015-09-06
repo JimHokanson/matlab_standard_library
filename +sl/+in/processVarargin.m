@@ -152,6 +152,8 @@ else
     %   NOTE: is_parsing_options would allow us to have different 
     %   error messages ...
     if ~all(is_str_mask(1:2:end))
+        %TODO: See improvement above, provide a clickable link that does
+        %dbup 3x (up to main, up to caller, up to caller's caller)
         error('Unexpected format for varargin, not all properties are strings')
     end
     if mod(length(v),2) ~= 0
