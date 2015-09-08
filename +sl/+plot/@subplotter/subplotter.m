@@ -123,11 +123,12 @@ classdef subplotter < sl.obj.display_class
             %
             %Yikes, I wonder if this is going to change my xlim
             %which would make this circular ...
+            %- it does, so the xlim needs to be manual before this ...
             %
             %   TODO: Units need to be normalized ...
 
-           all_positions = get(obj.handles(1,:),'position');
-           all_xlims     = get(obj.handles(1,:),'xlim');
+           all_positions = get([obj.handles{1,:}],'position');
+           all_xlims     = get([obj.handles{1,:}],'xlim');
 
            all_lefts = cellfun(@(x) x(1),all_positions);
            all_rights = cellfun(@(x) x(1)+x(3),all_positions);
@@ -151,10 +152,10 @@ classdef subplotter < sl.obj.display_class
            for iColumn = 1:n_columns
                cur_width = new_widths(iColumn);
                for iRow = 1:n_rows
-                  cur_position = get(obj.handles(iRow,iColumn),'position');
+                  cur_position = get(obj.handles{iRow,iColumn},'position');
                   cur_position(1) = next_left;
                   cur_position(3) = cur_width;
-                  set(obj.handles(iRow,iColumn),'position',cur_position)
+                  set(obj.handles{iRow,iColumn},'position',cur_position)
                end
                if iColumn ~= n_columns
                   next_left = next_left + cur_width + gap_widths(iColumn); 
