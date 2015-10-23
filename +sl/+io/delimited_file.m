@@ -1,5 +1,8 @@
 classdef delimited_file < sl.obj.display_class
-  % 
+  % see dba.GSK.cmg_expt
+  % dba - Duke bladder analysis, package (+)
+  % GSK - package (+)
+  % @ = class 
   %    class:
   %    sl.io.delimited_file
   %    
@@ -7,7 +10,9 @@ classdef delimited_file < sl.obj.display_class
     file_path =...
     'C:\Users\LyndseyGarcia\Documents\Repos\bladder_analysis\data_files\gsk_matlab_analysis\cmg_info\140414_C.csv'
     d = sl.io.readDelimitedFile(file_path,',', 'header_lines', 1, 'return_type', 'object')
-    
+    s = struct
+  s.cmg_id = d.getColumn('CMG #', 'type', 'numeric')
+  cmg_id = obj.raw_data(:, column_number)
     %}
     
     
@@ -22,35 +27,27 @@ classdef delimited_file < sl.obj.display_class
             %  sl.io.delimited_file(cell_data, extras)
         obj.raw_data = cell_data;
         obj.extras = extras;
-        obj.column_names = obj.extras.header_lines;
-        %obj.version = obj.column_names('Version');
+        first_line = obj.extras.header_lines{1};
+        obj.column_names = strtrim(regexp(first_line, ',', 'split'));
+        
         end
 %         deliminator = strmatch(',', d.column_names);
-        function column_data = getColumn(obj, column_names)
-            [row column] = size(d.raw_data);
-            strlength = size(d.extras.header_lines{1,1}) %size of column_names
-            for i = 1: strlength
-                
-            end
+        function column_data = getColumn(obj, requested_column_names, varargin)
+            in.type = [];
+            in = sl.in.processVarargin(in,varargin);
+%             column_number = find(strcmp(requested_column_names, obj.column_names));
+%             column_data = obj.raw_data(:,column_number);
+            [mask, loc] = ismember(requested_column_names, obj.column_names);
+            % Todo: check all are present, see all() function 
+            column_data = obj.raw_data(:, loc);
+
+%             strlength = size(obj.column_names{1,1}) %size of column_names
+%             for i = 1: strlength
+%                 
+%             end
+           keyboard
            
-        for k = 1:5 %number here depends on size
-           version(1,1) = obj.raw_data(1,1);
-           file_number(1,k) = d.raw_data(k,2);
-           cmg_number(1,k) = d.raw_data(k,3);
-           is_good(1,k) = d.raw_data(k,4);
-           void_volume_ml(1,k) = d.raw_data(k,5);
-           residual_volume_ml(1,k) = d.raw_data(k,6);
-           record(1,k) = d.raw_data(k,7);
-           fill_rate(1,k) = d.raw_data(k,8); %ml/hr
-           qp_start(1,k) = d.raw_data(k,9);
-           qp_end(1,k) = d.raw_data(k,10);
-           start_pump(1,k) = d.raw_data(k,11);
-           stop_pump(1,k) = d.raw_data(k,12);
-           trial_end(1,k) = d.raw_data_(k,13);
-           bladder_contraction_start(1,k) = d.raw_data(k,14);
-           bladder_contraction_end(1,k) = d.raw_data(k,15);
-           treatment(1,k) = d.raw_data(k,16);
-        end
+       
         end
     end
     
