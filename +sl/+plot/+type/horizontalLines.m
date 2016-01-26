@@ -1,6 +1,6 @@
 function varargout = horizontalLines(y_positions,varargin)
 %
-%   line_handles = sl.plot.type.horizontalLines(y_positions,local_options,line_options)
+%   line_handles = sl.plot.type.horizontalLines(y_positions,varargin)
 %
 %   JAH TODO: Update documenation
 %
@@ -8,6 +8,8 @@ function varargout = horizontalLines(y_positions,varargin)
 %
 %   Local Options:
 %   --------------
+%   y_as_pct:
+%       
 %   x_values: [n 2] numeric array
 %       Column 1: x_starts
 %       Column 2: x_stops
@@ -15,6 +17,11 @@ function varargout = horizontalLines(y_positions,varargin)
 %       For when the values are meant to specified in terms of the viewing
 %       limits. 
 %       NOT YET IMPLEMENTED: 
+%
+%   Examples
+%   --------
+%   TODO
+
 
 in.y_pct_vary_with_zoom = false; %NYI - on zoom, change values
 in.x_pct_vary_with_zoom = false; %NYI - on zoom, change values
@@ -28,6 +35,8 @@ in = sl.in.processVarargin(in,local_options);
 
 n_lines = max([length(y_positions) length(in.x_values) length(in.x_pct)]);
 
+
+
 if n_lines > y_positions
     if length(y_positions) == 1
         %scaler passed in, replicated based on x specification
@@ -37,7 +46,14 @@ if n_lines > y_positions
     end
 end
 
+if in.y_as_pct
+   y_lim = get(gca,'ylim');
+   y_range = y_lim(2)-y_lim(1);    
+   y_positions = y_lim(1)+y_positions(:).*y_range;
+end
+
 ys = [y_positions(:) y_positions(:)];
+
 
 %TODO: This needs to be fixed
 xs = in.x_values;

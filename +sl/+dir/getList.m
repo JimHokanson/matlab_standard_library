@@ -105,7 +105,7 @@ function varargout = getList(root_folder_path,varargin)
 %   recursive : logical (default false)
 %       If true, results are included from subdirectories in addition to
 %       just the root directory
-%   search_type : {'files','folders','both'}
+%   search_type : {'files','folders','both'} (default 'files')
 %       - 'files' : find only files
 %       - 'folders' : find only folders
 %       - 'both' : find files and folders
@@ -125,6 +125,7 @@ function varargout = getList(root_folder_path,varargin)
 %       supported. This also means that chacters like '.' are treated as
 %       literals rather than as special regular expression characters.
 %           (a match means the entry is kept)
+%       This pattern should not include the extension.
 %   file_regex : string, default ''
 %       If not empty, filters file names based on using the supplied string
 %       as a pattern to regexp(). All special characters should be escaped.
@@ -413,6 +414,8 @@ switch in.output_type
                     output{2} = s.d_folders;
                 end
         end
+    otherwise
+        error('Unrecognized output type')
 end
 
 end %---------------------------------   End of h__setupOutput  -----------

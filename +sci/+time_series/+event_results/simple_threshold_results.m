@@ -1,4 +1,4 @@
-classdef simple_threshold_results < handle
+classdef simple_threshold_results < sl.obj.display_class
     %
     %   Class:
     %   sci.time_series.event_results.simple_threshold_results
@@ -15,6 +15,7 @@ classdef simple_threshold_results < handle
        threshold_start_I
        threshold_end_times
        threshold_end_I
+       n_samples
     end
     
     %TODO: How many do we remove from time filtering ????
