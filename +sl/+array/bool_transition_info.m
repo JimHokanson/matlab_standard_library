@@ -1,10 +1,11 @@
-classdef bool_transition_info < handle
+classdef bool_transition_info < sl.obj.display_class
     %
     %   Class:
     %   sl.array.bool_transition_info
     %
     %   This class calculate useful information about transitions between
-    %   
+    %   high and low transition periods.
+    %
     %
     %   TODO: Implement units tests for this ...
     %
@@ -13,6 +14,10 @@ classdef bool_transition_info < handle
     
     
     properties
+        first_sample %logical
+        %   `If we start with a set of true values this will be true.
+        %
+        n_samples
         %NOTE: We assume that the first index indicates the "start"
         %of something and that the last index indcates the "end" of an
         %event. TODO: We could add this on as an optional input
@@ -51,10 +56,10 @@ classdef bool_transition_info < handle
     
     methods
         function value = get.n_true(obj)
-           value = length(obj.true_start_indices);
+            value = length(obj.true_start_indices);
         end
         function value = get.n_false(obj)
-           value = length(obj.false_start_indices); 
+            value = length(obj.false_start_indices);
         end
         function value = get.true_start_times(obj)
             value = obj.true_start_times;
@@ -101,8 +106,8 @@ classdef bool_transition_info < handle
         function value = get.true_sample_durations(obj)
             value = obj.true_sample_durations;
             if isempty(value)
-           value = obj.true_end_indices - obj.true_start_indices + 1;
-           obj.true_sample_durations = value;
+                value = obj.true_end_indices - obj.true_start_indices + 1;
+                obj.true_sample_durations = value;
             end
         end
         function value = get.false_sample_durations(obj)
@@ -147,11 +152,20 @@ classdef bool_transition_info < handle
     methods
         function obj = bool_transition_info(logical_data,varargin)
             %
+            %   obj = sl.array.bool_transition_info(logical_data,varargin)
+            %
+            %   Inputs
+            %   ------
+            %   logical_data: logical array
             %
             %   Optional Inputs:
             %   ----------------
             %   time: sci.time_series.time
             %       TODO: We could also support a time array
+            %
+            %   Examples
+            %   --------
+            %   sl.array.bool_transition_info(stim_data.d > 0.1,'time',stim_data.time)
             
             
             in.time = [];
@@ -163,44 +177,7 @@ classdef bool_transition_info < handle
                 return
             end
             
-            %TODO: We don't even need the temp logic, we would just need to
-            %a
-            if isrow(logical_data)
-                temp_logic = [~logical_data(1) logical_data];
-            else
-                temp_logic = [~logical_data(1); logical_data;];
-            end
-            %1 - must always be a start
-            %end - must always be an end
-            
-            %These could all be made dependent
-            
-            obj.true_start_indices  = find(~temp_logic(1:end-1) & temp_logic(2:end));
-            obj.false_start_indices = find(temp_logic(1:end-1) & ~temp_logic(2:end));
-            
-            %NOTE: We could make this faster by casing everything out ...
-            
-            %Casing on the start value and end value
-            % if start_is_1 and end_is_1
-            % elseif start_is_1 and end_is_0
-            % etc.
-            %
-            obj.true_end_indices = obj.false_start_indices - 1;
-            if ~isempty(obj.true_end_indices) && obj.true_end_indices(1) == 0
-                obj.true_end_indices(1) = [];
-            end
-            if logical_data(end)
-                obj.true_end_indices(end+1) = length(logical_data);
-            end
-            
-            obj.false_end_indices = obj.true_start_indices - 1;
-            if ~isempty(obj.false_end_indices) && obj.false_end_indices(1) == 0
-                obj.false_end_indices(1) = [];
-            end
-            if ~logical_data(end)
-                obj.false_end_indices(end+1) = length(logical_data);
-            end
-            
+            obj.init(logical_data)
         end
         function [start_run_times,stop_run_times] = getRunStartsAndStops(obj,min_time_for_new_run,varargin)
             %
@@ -243,6 +220,95 @@ classdef bool_transition_info < handle
             stop_run_times = obj.false_start_times(mask);
             stop_stim_durations = obj.false_durations(mask);
             start_run_times = [obj.true_start_times(1); stop_run_times(1:end-1)+stop_stim_durations(1:end-1)];
+        end
+        function mask = getMask(obj)
+            mask = false(1,obj.n_samples);
+            true_start_I = obj.true_start_indices;
+            true_end_I   = obj.true_end_indices;
+            for iStart = 1:length(true_start_I)
+                mask(true_start_I(iStart):true_end_I(iStart)) = true;
+            end
+        end
+        function negateSections(obj,indices,type)
+            %
+            %
+            %   type: logical
+            %This should be changed to be more efficient but this
+            %was the easiest approach to get right quickly
+            logical_data = obj.getMask();
+            if type
+                start_I = obj.true_start_indices(indices);
+                end_I   = obj.true_end_indices(indices);
+                
+            else
+                start_I = obj.false_start_indices(indices);
+                end_I   = obj.false_end_indices(indices);
+            end
+            
+            new_value = ~type;
+            
+            for iStart = 1:length(start_I)
+                logical_data(start_I(iStart):end_I(iStart)) = new_value;
+            end
+            obj.init(logical_data);
+            
+            %This needs to be a method ...
+            obj.true_start_times = [];
+            obj.true_end_times = [];
+            obj.false_start_times = [];
+            obj.false_end_times = [];
+            obj.true_durations = []; %in time
+            obj.false_durations = []; %in time
+            obj.true_sample_durations = [];
+            obj.false_sample_durations = [];
+        end
+    end
+    
+    methods (Hidden)
+        function init(obj,logical_data)
+            %Written so that negateSections could work easily, technically
+            %it shouldn't be needed if negateSections were written
+            %correctly
+            obj.first_sample = logical_data(1);
+            obj.n_samples    = length(logical_data);
+            
+            %TODO: We don't even need the temp logic, we would just need to
+            %a
+            if isrow(logical_data)
+                temp_logic = [~logical_data(1) logical_data];
+            else
+                temp_logic = [~logical_data(1); logical_data;];
+            end
+            %1 - must always be a start
+            %end - must always be an end
+            
+            %These could all be made dependent
+            
+            obj.true_start_indices  = find(~temp_logic(1:end-1) & temp_logic(2:end));
+            obj.false_start_indices = find(temp_logic(1:end-1) & ~temp_logic(2:end));
+            
+            %NOTE: We could make this faster by casing everything out ...
+            
+            %Casing on the start value and end value
+            % if start_is_1 and end_is_1
+            % elseif start_is_1 and end_is_0
+            % etc.
+            %
+            obj.true_end_indices = obj.false_start_indices - 1;
+            if ~isempty(obj.true_end_indices) && obj.true_end_indices(1) == 0
+                obj.true_end_indices(1) = [];
+            end
+            if logical_data(end)
+                obj.true_end_indices(end+1) = length(logical_data);
+            end
+            
+            obj.false_end_indices = obj.true_start_indices - 1;
+            if ~isempty(obj.false_end_indices) && obj.false_end_indices(1) == 0
+                obj.false_end_indices(1) = [];
+            end
+            if ~logical_data(end)
+                obj.false_end_indices(end+1) = length(logical_data);
+            end
         end
     end
     

@@ -739,14 +739,14 @@ classdef data < sl.obj.handle_light
     %Time related manipulations -------------------------------------------
     methods
         %getDataSubset - in a separate file
-        function varargout = scaleTime(objs)
-           %x 
-           %    
-           %    This function was originally written to handle cases in
-           %    which
-           %
-           %    - we have 2 issues, changing the sampling rate and scaling
-        end
+% % % %         function varargout = scaleTime(objs)
+% % % %            %x 
+% % % %            %    
+% % % %            %    This function was originally written to handle cases in
+% % % %            %    which
+% % % %            %
+% % % %            %    - we have 2 issues, changing the sampling rate and scaling
+% % % %         end
         function value = timeProp(objs,prop_name)
             %
             %   Retrieves a property from the time objects. Values are

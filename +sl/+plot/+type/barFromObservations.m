@@ -1,6 +1,6 @@
 function barFromObservations(ids,data,id_names,type_names)
 %
-%   sl.plot.type.barFromObservations(ids,data,type_names)
+%   sl.plot.type.barFromObservations(ids,data,id_names,type_names)
 %   TODO: This needs TONS of work
 %
 %   Inputs:

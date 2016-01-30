@@ -42,6 +42,7 @@ function results = simpleThreshold(data_objs,threshold_value,look_for_positive,v
 %   See Also:
 %   sl.array.bool_transition_info
 
+in.mask_fh = [];
 in.min_intertime = [];
 in.min_time    = []; 
 in.min_samples = [];
@@ -54,19 +55,23 @@ in = sl.in.processVarargin(in,varargin);
 %We might be able to borrow ideas from:
 %https://github.com/JimHokanson/SegwormMatlabClasses/blob/master/%2Bseg_worm/%2Bevents/findEvent.m
 
-if ~isempty(in.max_value)
-    if look_for_positive
-        %TODO: Check that in.max_value and look_for_positive applies
-        mask_fh = @(x)(x >= threshold_value & x <= in.max_value);
+if isempty(in.mask_fh)
+    if ~isempty(in.max_value)
+        if look_for_positive
+            %TODO: Check that in.max_value and look_for_positive applies
+            mask_fh = @(x)(x >= threshold_value & x <= in.max_value);
+        else
+            mask_fh = @(x)(x <= threshold_value & x >= in.max_value);
+        end
     else
-        mask_fh = @(x)(x <= threshold_value & x >= in.max_value);
+        if look_for_positive
+            mask_fh = @(x)(x >= threshold_value);
+        else
+            mask_fh = @(x)(x <= threshold_value);
+        end
     end
 else
-    if look_for_positive
-        mask_fh = @(x)(x >= threshold_value);
-    else
-        mask_fh = @(x)(x <= threshold_value);
-    end
+   mask_fh = in.mask_fh; 
 end
 
 results_ca = cell(1,length(data_objs));
@@ -79,7 +84,31 @@ for iObj = 1:length(data_objs)
     
     %This might not be the most efficient, but it works ...
     if ~isempty(in.join_time)
-        keyboard
+        if any(bti.false_durations < in.join_time)
+            bti.negateSections(bti.false_durations < in.join_time,false)
+            
+            if any(bti.false_durations < in.join_time)
+                fprintf(2,'Need to finish this code, enetering keyboard mode now\n');
+                keyboard
+            end
+            %We'll shoot for 1 drop, multiple drops will need to be handled
+            %later on ...
+            
+            
+            
+%             start_times = bti.true_start_times;
+%             current_start = start_times(1);
+%             delete_mask = false(1,length(start_times));
+%             for iStart = 2:length(start_times);
+%                 if 
+%             fprintf(2,'Need to finish this code\n');
+%             keyboard
+            %I think the best approach to handling this is to make a method
+            %in bti which supports merging with previous entries
+            %
+            %Then we would likely need to use some Matlab hack to
+            %accomplish the merging efficienctly
+        end
         %The idea was to modify the mask and pass it back into the
         %bool_transition_info function
     end
@@ -130,6 +159,7 @@ for iObj = 1:length(data_objs)
     temp.threshold_start_I     = bti.true_start_indices(mask2);
     temp.threshold_end_times   = bti.true_end_times(mask2);
     temp.threshold_end_I       = bti.true_end_indices(mask2);
+    temp.n_samples = length(mask);
     
     
     

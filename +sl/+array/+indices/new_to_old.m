@@ -1,7 +1,7 @@
 classdef new_to_old
     %
     %   Class:
-    %   sl.indices.new_to_old
+    %   sl.array.indices.new_to_old
     %
     %   This is a simple class for going back to old indices after
     %   indexing
