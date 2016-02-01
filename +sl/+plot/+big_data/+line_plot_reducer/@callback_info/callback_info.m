@@ -7,11 +7,21 @@ classdef callback_info < handle
     %
     %   I'm not sure of the details yet ...
     %
+    %   *********************************
+    %   TODO: I think this should be a singleton for the figure
+    %   For now it will be a global singleton
+    %   
     
     properties
-       doing
-       history
-       cur_history_I
+       doing %Status of a LinePlotReducer
+       %- resize
+       
+       
+       history %cell array
+       %Keeps track of what we're doing
+       %
+       cur_history_I %Index into history, we'll circularly shift this
+       %as necessary
     end
     
     methods (Access = private)

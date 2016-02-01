@@ -18,6 +18,7 @@ function init(obj,varargin)
 
 temp = now;
 obj.id = int2str(uint64(floor(1e8*(temp - floor(temp)))));
+
 obj.callback_info = sl.plot.big_data.line_plot_reducer.callback_info.getInstance;
 
 

@@ -1,8 +1,15 @@
 classdef (Hidden) line_data_pointer
     %
     %   Class:
-    %
     %   sl.plot.big_data.line_plot_reducer.line_data_pointer
+    %
+    %   This class is meant to facilitate retrieval of the actual data that
+    %   is in a figure, given that we are only plotting a subset of the
+    %   data available. The typical approach to getting data would be to
+    %   get it from the figure directly, but in that case only a subset
+    %   would be available (the min/max data plotted).
+    %
+    %   This class is returned from 
     
     properties
        line_plot_reducer_ref

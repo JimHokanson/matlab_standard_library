@@ -41,7 +41,9 @@ classdef LinePlotReducer < handle
     %   callbacks a bit better.
     %
     %   See Also:
+    %   ---------
     %   sci.time_series.data
+    %   plotBig
     
     %{
     Other functions for comparison:
@@ -52,6 +54,13 @@ classdef LinePlotReducer < handle
     
     %}
     
+    %{
+    Relevant posts:
+    http://blogs.mathworks.com/loren/2015/12/14/axes-limits-scream-louder-i-cant-hear-you/
+    TODO: Summarize above post
+    
+    
+    %}
     
     %TODO: How can we ensure that there are no callbacks left
     %if our quick callbacks isn't fast enough????? i.e. we don't want
@@ -63,6 +72,7 @@ classdef LinePlotReducer < handle
     %---------------
     %1) sl.plot.big_data.LinePlotReducer.init
     %2) sl.plot.big_data.LinePlotReducer.renderData
+    %3) sl.plot.big_data.LinePlotReducer.reduce_to_width
     
     %Speedup approaches:
     %--------------------------------
@@ -79,6 +89,8 @@ classdef LinePlotReducer < handle
         DEBUG = 0
         %1) Things related to callbacks
         %2) things from 1) and cleanup
+        %
+        %sl.plot.big_data.line_plot_reducer.callback_info
     end
     
     properties
@@ -106,7 +118,8 @@ classdef LinePlotReducer < handle
         %   'obj' will now be available in the callback
         
         max_axes_width = 4000 %Eventually the idea was to make this 
-        %a functio of the screen size
+        %a function of the screen size. Currently we obtain max & min
+        %points when fully zoomed out for this width.
         %
         %Used in renderData()
         
@@ -222,7 +235,7 @@ classdef LinePlotReducer < handle
         n_x_reductions = 0 %# of times we needed to reduce the data
         %This is the slow part of the code and ideally this is not called
         %very often.
-        %
+        
         last_redraw_used_original = true
         last_redraw_was_quick = false
         
@@ -244,12 +257,15 @@ classdef LinePlotReducer < handle
             %
             %   TODO: Add examples
             %
+            %   See Also:
+            %   plotBig()
             
             
             %I'm hiding the initialization details in another file to
             %reduce the high indentation levels and the length of this
             %function.
-            %sl.plot.big_data.LinePlotReducer.init
+            %
+            %	sl.plot.big_data.LinePlotReducer.init
             obj.init(varargin{:});
         end
     end
@@ -262,8 +278,10 @@ classdef LinePlotReducer < handle
         function resize(obj,h,event_data,axes_I)
             %
             %   Called when the xlim property of an axes object changes or
-            %   when an axes is resized (or moved - older versions of
-            %   Matlab).
+            %   when an axes is resized.
+            %
+            %   In older versions of Matlab this is also called when the 
+            %   figure is moved. TODO: When did this change?
             %
             %   This callback can occur multiple times in quick succession
             %   so we add a timer that essentially requests an update in

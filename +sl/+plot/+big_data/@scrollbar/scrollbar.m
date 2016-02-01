@@ -9,6 +9,12 @@ classdef scrollbar < handle
     %   This scrollbar class is specifically meant to go with
     %   an axes for LinePlotReducer.
     %
+    %   STATUS
+    %   ------
+    %   This class uses some hacks to improve upon the scrolling that is
+    %   possible within Matlab. Sadly, it doesn't yet work all that well.
+    %
+    %
     %   Notes:
     %   ------
     %

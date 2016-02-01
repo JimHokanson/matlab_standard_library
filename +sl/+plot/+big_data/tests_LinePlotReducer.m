@@ -65,6 +65,9 @@ classdef (Hidden) tests_LinePlotReducer
         %   2) plot(x1,y1,x2,y2) %See test001
         %   3) plot(ax,x1,y1)
         
+        
+        %TODO: On close, support rerendering (low priority)
+        
         function bugTestingInFEXVersion()
            %See comment from Robbert:
            %12 Dec 2014
@@ -72,10 +75,10 @@ classdef (Hidden) tests_LinePlotReducer
            %
            %
            %The last peak is apparently not being shown in the FEX version
-           y=[0 1 zeros(1,1e6) 1 zeros(1,1e6) 1 0]; 
-           x=1:length(y);
+           y = [0 1 zeros(1,1e6) 1 zeros(1,1e6) 1 0]; 
+           x = 1:length(y);
            wtf = sl.plot.big_data.LinePlotReducer(x,y,'*-');
-           wtf.renderData;
+           wtf.renderData();
         end
         function testSpeed()
             
