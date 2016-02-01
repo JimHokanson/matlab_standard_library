@@ -83,6 +83,7 @@ in.remove_empty_lines         = false;  %Any line which literally has no
 in.remove_lines_with_no_content = false; %If each cell for a line is empty,
 %then the line is deleted
 in.single_delimiter_match = false;
+in.return_type = 'cell'; %object
 in = sl.in.processVarargin(in,varargin);
 
 %Obtaining the text data - change to using an optional input ...
@@ -191,3 +192,13 @@ if in.merge_lines
 end
 
 extras.raw = text;
+
+switch lower(in.return_type)
+    case 'cell'
+        % Do nothing
+    case 'object'
+        output = sl.io.delimited_file(output, extras);
+    otherwise
+        error('Incorrect output type');
+end
+        
