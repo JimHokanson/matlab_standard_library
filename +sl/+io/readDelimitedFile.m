@@ -29,6 +29,9 @@ function [output,extras] = readDelimitedFile(file_path,delimiter,varargin)
 %
 %   Optional Inputs:
 %   ----------------
+%   return_type : {'cell','object'} (default 'cell')
+%       - 'cell' => cell array
+%       - 'object' => sl.io.delimited_file
 %   merge_lines  : (default true), if true returns a cell array matrix
 %                  if false, returns a cell array of cell arrays
 %   header_lines : (default 0), if non-zero then the lines should be
@@ -65,6 +68,10 @@ function [output,extras] = readDelimitedFile(file_path,delimiter,varargin)
 %   1) The last line if empty is always removed ...
 %   2) Removal of empty lines is done before delimiter parsing, not
 %   aftewards, i.e. a row with only delimiters will not be removed ...
+%
+%   See Also:
+%   ---------
+%   sl.io.delimited_file
     
 
 in.input_is_str  = false; %If true, then 
@@ -199,6 +206,6 @@ switch lower(in.return_type)
     case 'object'
         output = sl.io.delimited_file(output, extras);
     otherwise
-        error('Incorrect output type');
+        error('Output type: "%s" not recognized',in.return_type);
 end
         
