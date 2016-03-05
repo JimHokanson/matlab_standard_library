@@ -1,0 +1,4 @@
+    identifier: 'MATLAB:minrhs'
+       message: 'Not enough input arguments.'
+	   
+	   Happened when I updated a function but not the function that called it with a new argument
