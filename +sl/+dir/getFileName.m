@@ -1,4 +1,4 @@
-function file_names = getFileName(file_paths)
+function file_names = getFileName(file_paths,varargin)
 %x Returns the name of the file given the file path
 %
 %   This function was written to facilitate getting the name of a file
@@ -26,9 +26,18 @@ function file_names = getFileName(file_paths)
 %   file_path : char
 %   java_file_path : java.io.File
 %
+%   Improvements
+%   ------------
+%   1) Allow no extension
+%   2) BUG, this does not work for file_name only inputs
+%
+%
 %   See Also:
 %   fileparts()
 
+%NOT YET IMPLEMENTED ...
+%in.include_extension = true;
+%in = sl.in.processVarargin(in,varargin);
 
 if iscell(file_paths)
     
@@ -51,14 +60,18 @@ if iscell(file_paths)
     %Unfortunately with tokens we will get nested cell arrays
     file_names = [temp{:}]; 
     
-    if length(file_names) ~= length(file_paths)
+    if length(file_names) ~= length(file_paths) 
        error('Length mismatch between input and output, the regexp parsing failed') 
     end
     
 else
     if ischar(file_paths)
-        [~,file_names] = fileparts(file_paths);
+        [~,file_names,extension] = fileparts(file_paths);
+        if ~isempty(extension)
+           file_names = [file_names extension]; 
+        end
     elseif isjava(file_paths)
+        error('This code needs to be fixed to return the extension')
         file_names = char(file_paths.getName);
     else
         error('Unrecognized type')
