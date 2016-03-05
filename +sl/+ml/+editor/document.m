@@ -28,7 +28,8 @@ classdef document < sl.obj.display_class
         %opened %? What does this even mean?
         
         
-        text
+        text %This appears to be all of the text
+        
         selection_start_row
         selection_start_column
         selection_end_row

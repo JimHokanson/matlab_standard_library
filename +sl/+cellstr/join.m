@@ -27,8 +27,15 @@ function str = join(cellstr_input,varargin)
 %   
 %   Examples:
 %   ---------
+%   cellstr_input = {'this' 'is' 'a' 'test'};
+%   str = sl.cellstr.join(cellstr_input,'d',' ') %use space as delimiter
 %   
-%   TODO: Finish Documentation
+%       str => 'this is a test'
+%
+%   Notes:
+%   ------
+%   In 2013a Matlab introduced strjoin() which does something similar
+%   although the implementation was subpar.
 
 in.d         = ',';
 in.keep_rows = false;

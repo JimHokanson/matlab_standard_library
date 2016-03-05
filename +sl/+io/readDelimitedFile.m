@@ -51,7 +51,9 @@ function [output,extras] = readDelimitedFile(file_path,delimiter,varargin)
 %   make_delimiter_literal : (default false), same effect as above
 %       property, just for the column delimiter
 %   single_delimiter_match : (default false), true can be used
-%       for property value files ...
+%       for property value files where the delimiter is not observed
+%       in the property name, but may be observed in the property value
+%       and thus we split on only the first one
 %
 %   Outputs:
 %   --------
@@ -72,12 +74,14 @@ function [output,extras] = readDelimitedFile(file_path,delimiter,varargin)
 %   See Also:
 %   ---------
 %   sl.io.delimited_file
-    
+   
 
+in.has_column_labels = false;
+
+in.columns_specs = [];
 in.input_is_str  = false; %If true, then 
 in.merge_lines   = true;
 in.header_lines  = 0;
-in.parse_headers = false; %NYI - this is primarily for labels of headers
 in.default_ca    = '';
 in.deblank_all   = false;
 in.strtrim_all   = false;
@@ -92,6 +96,9 @@ in.remove_lines_with_no_content = false; %If each cell for a line is empty,
 in.single_delimiter_match = false;
 in.return_type = 'cell'; %object
 in = sl.in.processVarargin(in,varargin);
+
+%Currently this association needs to hold
+in.has_column_labels = strcmpi(in.return_type,'object');
 
 %Obtaining the text data - change to using an optional input ...
 %--------------------------------------------------------------------
@@ -113,6 +120,7 @@ if in.make_row_delimiter_literal
     in.row_delimiter = regexptranslate('escape',in.row_delimiter);
 end
 
+%Column delimiter ...
 if in.make_delimiter_literal
     delimiter = regexptranslate('escape',delimiter);
 end
@@ -125,7 +133,11 @@ if isempty(lines)
     lines = {text};
 end
 
-if in.header_lines > 0
+if in.has_column_labels
+   first_line_string = lines{1};
+   extras.column_labels = regexp(first_line_string,delimiter,'split');
+   lines(1) = [];
+elseif in.header_lines > 0
    extras.header_lines = lines(1:in.header_lines);
    lines(1:in.header_lines) = [];
 end
@@ -204,7 +216,7 @@ switch lower(in.return_type)
     case 'cell'
         % Do nothing
     case 'object'
-        output = sl.io.delimited_file(output, extras);
+        output = sl.io.delimited_file(output, extras, in.columns_specs);
     otherwise
         error('Output type: "%s" not recognized',in.return_type);
 end

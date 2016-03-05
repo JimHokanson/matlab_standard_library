@@ -47,7 +47,9 @@ classdef function_help_display < handle
             %
             
             FIGURE_HANDLE = 3894576; %This shouldn't be necessary
-            %but I had some luck with it 
+            %but I had some luck with it
+            
+            %How often the code runs ...
             TIMER_PERIOD = 1;
             
             %I think I'll load this from a GUI
@@ -109,6 +111,9 @@ classdef function_help_display < handle
             %
             %   sl.ml.popup_windows.function_help_display.launch
             %
+            %   When debugging:
+            %   obj = sl.ml.popup_windows.function_help_display.launch
+            %   
             
             persistent local_obj
             if isempty(local_obj) || ~ishandle(obj.fig)
@@ -127,8 +132,13 @@ classdef function_help_display < handle
             %
             %
             
+            %TODO: When we've parsed some help text and we lose focus,
+            %don't change the help text until we regain focus again ...
+            
+            
             %We'll eventually want to persist some of the results
             %so that we don't call expensive update functions
+            %
             %persistent last_location
             
             %TODO: Add sync on closing so that we don't invalidate
@@ -152,18 +162,26 @@ classdef function_help_display < handle
             %http://www.mathworks.com/matlabcentral/answers/65694-debug-code-invoked-by-timer
             
             try
-            %sl.ml.cmd_window
-            cw = obj.cmd_window;
-            editor = obj.editor;
+            
+            %Added 'loc' for 'local' to avoid warning on having same local 
+            %variable as the property 
+            %
+            loc_cw = obj.cmd_window; %Type: %sl.ml.cmd_window
+            loc_editor = obj.editor; %Type: sl.ml.editor
+            
             %Determine if we are showing help fo the command line
             %or the editor
-            if cw.has_focus
-               last_line_text = cw.getLineText(cw.line_count);
-            elseif editor.has_focus
+            if loc_cw.has_focus
+               last_line_text = loc_cw.getLineText(loc_cw.line_count);
+            elseif loc_editor.has_focus
                %TODO: check if editor has focus, otherwise allow a user
                %setabble default via launch
                %
                %get last editor text 
+               
+               active_doc = obj.editor.getActiveDocument();
+               active_doc
+               
                last_line_text = 'editor has focus';
             else
                last_line_text = 'unknown focus';

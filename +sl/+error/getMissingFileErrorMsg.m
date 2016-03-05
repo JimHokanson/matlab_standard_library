@@ -20,6 +20,11 @@ function error_msg = getMissingFileErrorMsg(file_or_folder_path,varargin)
 %   C:\repos\matlab_git\bladder_analysis\data_files\cmg_info\1401416_C.csv
 %   ________________________________________________
 %
+%                                 /\  
+%   Line above would be clickable ||
+%   
+%
+%
 %   Inputs:
 %   -------
 %   file_or_folder_path : string
@@ -27,8 +32,8 @@ function error_msg = getMissingFileErrorMsg(file_or_folder_path,varargin)
 %
 %   Optional Inputs:
 %   ----------------
-%   msg_prefix : string (Default 'Missing file':)
-%       How to prefix the missing file link
+%   msg_prefix : string     (Default 'Missing file':)
+%       How to prefix the missing file link.
 %   
 %   Outputs:
 %   --------
@@ -55,6 +60,8 @@ function error_msg = getMissingFileErrorMsg(file_or_folder_path,varargin)
 %   I'd like this to facilitate navigating to a path to see
 %   why a file is missing ...
 %
+%   2) 
+%
 
 
 in.msg_prefix = 'Missing file:';
@@ -65,6 +72,8 @@ if isempty(file_or_folder_path)
    return
 end
 
+
+
 existing_base_path = '';
 root_path = fileparts(file_or_folder_path);
 while ~isempty(root_path)
@@ -72,7 +81,19 @@ while ~isempty(root_path)
        existing_base_path = root_path;
        break
    end
-   root_path = fileparts(root_path);
+   next_root_path = fileparts(root_path);
+   if strcmp(next_root_path,root_path)
+      %TODO: This generally indicates that the drive letter is incorrect 
+      %on Windows. However it also occurs when the path is not valid.
+      %
+      %     e.g. C:\data\C:\data
+      %
+      %  Can we distinguish these cases and throw a more specific errro
+      %  msg?
+      error_msg = sprintf('The entire path is non-existant:\n%s',file_or_folder_path);
+      return
+   end
+   root_path = next_root_path;
 end
 
 if isempty(existing_base_path)

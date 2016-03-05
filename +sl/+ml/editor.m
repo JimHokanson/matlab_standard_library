@@ -102,6 +102,7 @@ classdef (Hidden) editor < sl.obj.display_class
     
     methods
         function  output = getActiveDocument(~)
+            %x Returns the currently selected document
             %
             %   output = getActiveDocument(~)
             %
