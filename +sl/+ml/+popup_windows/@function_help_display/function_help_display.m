@@ -12,8 +12,8 @@ classdef function_help_display < handle
     %
     %   Status:
     %   -------
-    %   I'm currently working 
-    %   
+    %   I'm currently working
+    %
     %   This should be implemented as a figure ...
     %
     %   TODO:
@@ -23,11 +23,20 @@ classdef function_help_display < handle
     %       - can we tell when a program is running - and stop execution
     %       -
     %
-    %   1) Create figure with display text. 
+    %   1) Create figure with display text.
     %   2) On close, destroy the object.
     %
     %   See Also:
     %   sl.help.current_line_info
+    %
+    %   Features
+    %   --------
+    %   1) Display help for current input
+    %   2) Display whether or not in debug mode, allow clicking to go
+    %   to debug location
+    %   3) Display whether busy or not
+    %   4) Allow running selected code
+    %   5) Allow running selected comment (as code, i.e. remove comment)
     
     properties
         fig %figure handle
@@ -36,7 +45,13 @@ classdef function_help_display < handle
         text_h
         t %The timer
         cmd_window %sl.ml.cmd_window
-        editor
+        
+        %Can this ever become invalidated?
+        editor %sl.ml.editor
+        
+        desktop %sl.ml.desktop
+        
+        last_focus = '' %editor,command window
     end
     
     methods
@@ -54,7 +69,7 @@ classdef function_help_display < handle
             
             %I think I'll load this from a GUI
             %=> change text size buttons
-            %=> 
+            %=>
             
             %TODO: Create a figure
             %Eventually I'll probably want to load a pre created figure
@@ -80,6 +95,7 @@ classdef function_help_display < handle
             
             obj.cmd_window = sl.ml.cmd_window.getInstance();
             obj.editor = sl.ml.editor.getInstance();
+            obj.desktop = sl.ml.desktop.getInstance();
             
             %Create and start the timer
             fh = @(~,~)sl.ml.popup_windows.function_help_display.cb__updateHelpText(obj);
@@ -88,19 +104,22 @@ classdef function_help_display < handle
             start(obj.t)
         end
         function delete(obj)
-           %try 
-               %disp('Delete ran')
-           if isa(obj.t,'timer')
-               stop(obj.t)
-               delete(obj.t)
-           else
-               obj.t
-           end
+            %try
+            %disp('Delete ran')
+            if isa(obj.t,'timer')
+                stop(obj.t)
+                delete(obj.t)
+            else
+                obj.t
+            end
         end
         function cb_closeFigure(obj)
             disp('close is running')
-           delete(obj.fig)
-           delete(obj)
+            delete(obj.fig)
+            delete(obj)
+        end
+        function update_main_text(obj,text_to_display)
+            set(obj.text_h,'String',text_to_display)
         end
     end
     
@@ -113,10 +132,10 @@ classdef function_help_display < handle
             %
             %   When debugging:
             %   obj = sl.ml.popup_windows.function_help_display.launch
-            %   
             
             persistent local_obj
-            if isempty(local_obj) || ~ishandle(obj.fig)
+            %if isempty(local_obj) || (isvalid(local_obj) && ~ishandle(local_obj.fig))
+            if isempty(local_obj) || ~isvalid(local_obj) || ~ishandle(local_obj.fig)
                 local_obj = sl.ml.popup_windows.function_help_display;
             end
             % % %            output = local_obj;
@@ -125,80 +144,93 @@ classdef function_help_display < handle
             
             %This is primarily for debugging
             if nargout
-               varargout{1} = local_obj; 
+                varargout{1} = local_obj;
             end
         end
         function cb__updateHelpText(obj)
             %
             %
             
-            %TODO: When we've parsed some help text and we lose focus,
-            %don't change the help text until we regain focus again ...
-            
-            
-            %We'll eventually want to persist some of the results
-            %so that we don't call expensive update functions
-            %
-            %persistent last_location
-            
-            %TODO: Add sync on closing so that we don't invalidate
-            %the figure midway through this code ...
-            
-            
-            %TODO: This needs to be a more appropriate check
-            %we might have made a new figure that is posing as the old
-            %one
-            %
-            %See Also:
-            %http://stackoverflow.com/questions/1956626/checking-if-a-matlab-handle-is-a-valid-one
-            if ~ishandle(obj.fig)
-               %Figure closed, delete obj
-               return
-            end
-            
-
-            
-            %TODO: Build in support for better timer debugging
-            %http://www.mathworks.com/matlabcentral/answers/65694-debug-code-invoked-by-timer
             
             try
-            
-            %Added 'loc' for 'local' to avoid warning on having same local 
-            %variable as the property 
-            %
-            loc_cw = obj.cmd_window; %Type: %sl.ml.cmd_window
-            loc_editor = obj.editor; %Type: sl.ml.editor
-            
-            %Determine if we are showing help fo the command line
-            %or the editor
-            if loc_cw.has_focus
-               last_line_text = loc_cw.getLineText(loc_cw.line_count);
-            elseif loc_editor.has_focus
-               %TODO: check if editor has focus, otherwise allow a user
-               %setabble default via launch
-               %
-               %get last editor text 
-               
-               active_doc = obj.editor.getActiveDocument();
-               active_doc
-               
-               last_line_text = 'editor has focus';
-            else
-               last_line_text = 'unknown focus';
-            end
-            
-            cli = sl.help.current_line_info(last_line_text);
-            %TODO
-            
-            
-            set(obj.text_h,'String',last_line_text)
-            
-            catch
-               disp('Error occurred in sl.ml.popup_windows.function_help_display') 
+                
+                %We'll eventually want to persist some of the results
+                %so that we don't call expensive update functions
+                %
+                %persistent last_location
+                                
+                %TODO: This needs to be a more appropriate check
+                %we might have made a new figure that is posing as the old
+                %one
+                %
+                %See Also:
+                %http://stackoverflow.com/questions/1956626/checking-if-a-matlab-handle-is-a-valid-one
+                if ~ishandle(obj.fig)
+                    %Figure closed
+                    %TODO: Does this run again, I would think we stop the
+                    %timer so this would only run once
+                    %TODO: delete obj
+                    return
+                elseif obj.desktop.is_busy
+                    %TODO: This will actually go elsewhere ...
+                    obj.update_main_text('Analysis paused during code execution')
+                    return
+                end
+                
+                %TODO: Build in support for better timer debugging
+                %http://www.mathworks.com/matlabcentral/answers/65694-debug-code-invoked-by-timer
+                
+                
+                %Added 'local' to avoid warning on possibly meaning to access
+                %property name
+                local_cw = obj.cmd_window; %Type: %sl.ml.cmd_window
+                local_editor = obj.editor; %Type: sl.ml.editor
+                
+                %Determine if we are showing help fo the command line
+                %or the editor
+                if local_cw.has_focus                    
+                    obj.last_focus = 'command window';
+                    %h__getCLIFromCW
+                    line_text = local_cw.line_text_up_to_cursor;
+                elseif local_editor.has_focus
+                    obj.last_focus = 'editor';
+                    
+                    active_doc = obj.editor.getActiveDocument();
+                    line_text = active_doc.line_text_up_to_cursor;
+                elseif strcmp(obj.last_focus,'command window')
+                    line_text = local_cw.getLineText(local_cw.line_count);
+                else
+                    active_doc = obj.editor.getActiveDocument();
+                    line_text = active_doc.cursor_line_text;
+                end
+                
+                %cli = sl.help.current_line_info(last_line_text);
+                %TODO
+                
+                obj.update_main_text(line_text);
+                
+                
+            catch ME
+                %This is temporary while I write the code
+                fprintf(2,'Encountered an error in the timer callback\n');
+                keyboard
+                disp('Error occurred in sl.ml.popup_windows.function_help_display')
             end
             
         end
+        
     end
     
+end
+
+function h__getCLIFromCW(obj)
+%sl.ml.cursor_line_info
+%TODO: Build in selection as well, not just start of the cursor
+
+end
+
+function h__getCLIFromEditor(obj)
+%sl.ml.cursor_line_info
+%TODO: Build in selection as well
 end
 

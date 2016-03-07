@@ -1,7 +1,7 @@
-classdef current_line_info < sl.obj.display_class
+classdef parsed_cursor_line_info < sl.obj.display_class
     %
     %   Class:
-    %   sl.help.current_line_info
+    %   sl.ml.parsed_cursor_line_info
     %
     %   See Also:
     %   ---------
@@ -14,9 +14,20 @@ classdef current_line_info < sl.obj.display_class
     %   not trying to resolve the line, which will be really important for
     %   getting help from variables.
     %
-    %   Next:
-    %   -----
-    %   Try and interpret context to resolve the function from variables
+    %
+    %   I think I want to redo this so that I have the following:
+    %   1) know what the current variables are:
+    %   2) know which input of the current function I am at (e.g. 1,2,3,4
+    %  
+    %   a(b(c =>  callers = {'a' 'b' 'c'} %Then need to resolve a,b,c in
+    %   the context of where I am (base, debugged workspace, file outside
+    %   of debugging)
+    %
+    %   a(1,2,b(2,c( inputs {3,2,1}
+    %       i.e. a is currently on the 3rd input
+    %            b is currently on the 2nd input
+    %            c is currently on the 1st input
+
     
     %{
     
@@ -51,7 +62,15 @@ classdef current_line_info < sl.obj.display_class
     %}
     
     properties
-        status_msg
+        %New properties
+        calls
+        inputs
+        
+        is_debugging
+        in_base
+        in_file
+        
+        status_msg = ''
         paren_found = false
         raw_text
         possible_call_found = false %True if we have something that might
@@ -62,7 +81,7 @@ classdef current_line_info < sl.obj.display_class
     end
     
     methods
-        function obj = current_line_info(raw_text,context)
+        function obj = current_line_info(raw_text,from_command_window,active_document)
             %
             %   obj = sl.help.current_line_info(raw_text,context)
             %
@@ -70,13 +89,15 @@ classdef current_line_info < sl.obj.display_class
             %   -------
             %   raw_text :
             %       The text should only go to the cursor location.
-            %   context :
-            %       I'm not sure what I want here ...
-            %       command window or filename
-            %       for now:
-            %       - '' : command window
-            %       - filename : path of file where it is coming from ...
+            %   from_command_window : logical NYI
+            %       If true, the calls should be evaluated from the
+            %       context of the command window.
+            %   active_document : NYI
+            %       Pass this in if the calls should be evaluated from the
+            %       context of being within active_document
             %
+            
+            
 
             obj.raw_text = raw_text;
             
@@ -93,6 +114,7 @@ classdef current_line_info < sl.obj.display_class
             %Get lex
             %-------
             lex = h__getLex(obj);
+            %lex : sl.mlint.mex.lex
                         
             %Find open paren
             %---------------

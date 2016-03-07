@@ -91,6 +91,30 @@ function [all_spaces,all_names,all_values] = h__getPropParts(objs)
 %       d: [4001x1 double]
 %    time: [1x1 sci.time_series.time]
 
+%TODO: I've seen this throw an error when there are display calls
+%within dependent get() methods in a class:
+%e.g.
+%{
+default_disp_str =
+
+
+start_I =
+
+        1808
+
+
+end_I =
+
+        1808
+
+  cmd_window with properties:
+
+        selection_start: 1808
+          selection_end: 1808
+
+
+%}
+
 default_disp_str = evalc('builtin(''disp'',objs)');
 lines = sl.str.getLines(default_disp_str);
 
