@@ -71,14 +71,14 @@ classdef (Hidden) editor < sl.obj.display_class
     
     
     properties
-       main_frame_h 
+       main_frame_h %TODO: This might not be a valid approach
     end
     
     properties (Dependent)
         active_filename %full path to document open in editor
         %? - what happens in split mode?
         %? - 
-        has_focus
+        has_focus %This may not be correct
     end
     
     methods

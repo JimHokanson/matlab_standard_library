@@ -2,6 +2,16 @@ classdef document < sl.obj.display_class
     %
     %   Class:
     %   sl.ml.editor.document
+    %
+    %   This class represents a programmatic interface to a document
+    %   in the Matlab editor. 
+    %
+    %   Code in this class may not be reliable across different 
+    %   versions of Matlab.
+    %
+    %   See Also:
+    %   ---------
+    %   sl.ml.editor.getInstance
     
     %   Work with text from an Editor document:
     %     indexToPositionInLine - Convert text array index to position within line.
@@ -36,8 +46,8 @@ classdef document < sl.obj.display_class
         selection_end_row
         selection_end_column
         selected_text
-        line_text_up_to_cursor
-        cursor_line_text
+        line_text_up_to_cursor %all text up to the cursor on the current line
+        cursor_line_text %all text on the line of the cursor
         modified
         editable
         line_ending_indices
@@ -68,6 +78,8 @@ classdef document < sl.obj.display_class
             value = obj.h.Selection(4);
         end
         function value = get.selected_text(obj)
+            
+            %TODO: This looks like it is a methow now ...
             local_text = obj.text;
             start_row = obj.selection_start_row;
             start_column = obj.selection_start_column;

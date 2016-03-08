@@ -183,30 +183,27 @@ classdef function_help_display < handle
                 
                 %Added 'local' to avoid warning on possibly meaning to access
                 %property name
-                local_cw = obj.cmd_window; %Type: %sl.ml.cmd_window
-                local_editor = obj.editor; %Type: sl.ml.editor
+                
+                
                 
                 %Determine if we are showing help fo the command line
                 %or the editor
                 if local_cw.has_focus                    
                     obj.last_focus = 'command window';
                     %h__getCLIFromCW
-                    line_text = local_cw.line_text_up_to_cursor;
+                    cli = h__getCLIFromCW(obj);
                 elseif local_editor.has_focus
                     obj.last_focus = 'editor';
-                    
-                    active_doc = obj.editor.getActiveDocument();
-                    line_text = active_doc.line_text_up_to_cursor;
+                    cli = h__getCLIFromEditor(obj);
                 elseif strcmp(obj.last_focus,'command window')
-                    line_text = local_cw.getLineText(local_cw.line_count);
+                    cli = h__getCLIFromCW(obj);
                 else
-                    active_doc = obj.editor.getActiveDocument();
-                    line_text = active_doc.cursor_line_text;
+                    cli = h__getCLIFromEditor(obj);
                 end
                 
                 %cli = sl.help.current_line_info(last_line_text);
                 %TODO
-                
+                 
                 obj.update_main_text(line_text);
                 
                 
@@ -223,14 +220,18 @@ classdef function_help_display < handle
     
 end
 
-function h__getCLIFromCW(obj)
+function cli = h__getCLIFromCW(obj)
 %sl.ml.cursor_line_info
 %TODO: Build in selection as well, not just start of the cursor
+local_cw = obj.cmd_window; %Type: %sl.ml.cmd_window
+line_text = local_cw.line_text_up_to_cursor;
+cli = sl.ml.cursor_line_info(true,[],line_text);
 
 end
 
-function h__getCLIFromEditor(obj)
-%sl.ml.cursor_line_info
-%TODO: Build in selection as well
+function cli = h__getCLIFromEditor(obj)
+active_doc = obj.editor.getActiveDocument();
+line_text = active_doc.line_text_up_to_cursor;
+cli = sl.ml.cursor_line_info(false,active_doc,line_text);
 end
 

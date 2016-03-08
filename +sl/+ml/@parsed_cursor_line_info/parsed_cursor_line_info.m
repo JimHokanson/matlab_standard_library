@@ -27,6 +27,12 @@ classdef parsed_cursor_line_info < sl.obj.display_class
     %       i.e. a is currently on the 3rd input
     %            b is currently on the 2nd input
     %            c is currently on the 1st input
+    %
+    %   This can get really complicated really quickly, so for now
+    %   let's only do the current call
+    %
+    %   e.g.
+    %   my_function({1,2,3,4},test(   <= input # parsing is complicated here
 
     
     %{
@@ -41,16 +47,21 @@ classdef parsed_cursor_line_info < sl.obj.display_class
     %sl.path.addPackages
     
     raw_text = 'mean(x(1'               %What do we want to do here?
+    %{'<NAME>'  '('  '<NAME>'  '('  '<INT>'  '<EOL>'  'NUL'}
+    %{'mean'  '('  'x'  '('  '1'  '<EOL>'  'NUL'}
     %x
     
     raw_text = 'load filename'          %Call via string inputs
+    %{'<NAME>'  '<Cmd Arg>'  '<EOL>'  'NUL'}
+    %{'load'  'filename'  '<EOL>'  'NUL'}
     %load - Not currently working
     
     raw_text = 'mean(''testing('
     %mean
     
     %TESTING LINE
-    obj = sl.help.current_line_info(raw_text,'')
+    cli = sl.ml.cursor_line_info(true,[],raw_text)
+    obj = sl.ml.parsed_cursor_line_info(cli)
     
     
     fp = 'C:\D\repos\matlab_git\mat_std_lib\+sl\+help\@current_line_info\test_dir\example_line_v3.m'
@@ -81,25 +92,17 @@ classdef parsed_cursor_line_info < sl.obj.display_class
     end
     
     methods
-        function obj = current_line_info(raw_text,from_command_window,active_document)
+        function obj = parsed_cursor_line_info(cursor_line_info)
             %
-            %   obj = sl.help.current_line_info(raw_text,context)
+            %   obj = sl.help.parsed_cursor_line_info(cursor_line_info)
             %
-            %   Inputs:
-            %   -------
-            %   raw_text :
-            %       The text should only go to the cursor location.
-            %   from_command_window : logical NYI
-            %       If true, the calls should be evaluated from the
-            %       context of the command window.
-            %   active_document : NYI
-            %       Pass this in if the calls should be evaluated from the
-            %       context of being within active_document
-            %
+            %   Inputs
+            %   ------
+            %   cursor_line_info : sl.ml.cursor_line_info
             
             
 
-            obj.raw_text = raw_text;
+            obj.raw_text = cursor_line_info.pre_cursor_text;
             
             %Can we find an unterminated quoted string and use that to our
             %advantage to find the text ????
@@ -115,6 +118,11 @@ classdef parsed_cursor_line_info < sl.obj.display_class
             %-------
             lex = h__getLex(obj);
             %lex : sl.mlint.mex.lex
+            
+            %We may only need to get a <NAME> followed by a (
+            %which is the right most
+            
+            keyboard
                         
             %Find open paren
             %---------------

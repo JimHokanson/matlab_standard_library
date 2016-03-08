@@ -16,19 +16,25 @@ classdef cursor_line_info < handle
     %   Build method that will call parsed_cursor_line_info
     
     properties
-       from_command_window
-       active_document
-       cursor_column_index %TODO: How do I want to # this since
+       from_command_window %logical
+       active_document %sl.ml.editor.document
+       
+       %cursor_column_index %TODO: How do I want to # this since
        %the cursor exists between letters
        %0 - beginning of line
        %1 - 1 character before the cursor
+       
        pre_cursor_text
     end
     
     methods
-        function obj =  cursor_line_info(from_command_window,active_document,cursor_column_index,pre_cursor_text)
+        function obj =  cursor_line_info(from_command_window,active_document,pre_cursor_text)
+            %
+            %   obj = sl.ml.cursor_line_info(from_command_window,active_document,pre_cursor_text)
+            %
            obj.from_command_window = from_command_window;
            obj.active_document = active_document;
+           obj.pre_cursor_text = pre_cursor_text;
         end
     end
     
