@@ -46,6 +46,11 @@ classdef parsed_cursor_line_info < sl.obj.display_class
 %     profile off
     %sl.path.addPackages
     
+    
+    raw_text = 'sl.path.addPackages(''hdf5_matlab';
+    %{'<NAME>'  '.'  '<NAME>'  '.'  '<NAME>'  '('  '<LEX_ERR>'  '<EOL>'  'NUL'}
+    %{'sl'  '.'  'path'  '.'  'addPackages'  '('  ''hdf5_matlab'  '<EOL>'  'NUL'}
+    
     raw_text = 'mean(x(1'               %What do we want to do here?
     %{'<NAME>'  '('  '<NAME>'  '('  '<INT>'  '<EOL>'  'NUL'}
     %{'mean'  '('  'x'  '('  '1'  '<EOL>'  'NUL'}
@@ -121,8 +126,6 @@ classdef parsed_cursor_line_info < sl.obj.display_class
             
             %We may only need to get a <NAME> followed by a (
             %which is the right most
-            
-            keyboard
                         
             %Find open paren
             %---------------
@@ -146,7 +149,13 @@ classdef parsed_cursor_line_info < sl.obj.display_class
             %--------
             %Command window:
             %either in debugger OR base namespace
+            keyboard
             
+            %http://www.mathworks.com/matlabcentral/answers/272228-retrieve-variables-from-workspace-that-is-being-debugged
+            %command window
+            % - could be:
+            %   1) Base workspace
+            %   2) in debug mode
             
             
             
