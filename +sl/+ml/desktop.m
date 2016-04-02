@@ -10,16 +10,24 @@ classdef desktop
     %   http://www.mathworks.com/matlabcentral/fileexchange/16650-setfigdockgroup
     
     properties
-        d
+        d %jDesktop
         main_frame
+        
+        
     end
     
     properties (Dependent)
+        %http://undocumentedmatlab.com/blog/customizing-matlabs-workspace-table
+        client_titles %cellstr
         status_text
         is_busy
+        is_debugging
     end
     
     methods
+        function value = get.client_titles(obj)
+           value = cellstr(char(obj.d.getClientTitles)); 
+        end
         function value = get.status_text(obj)
             try    % Working in R2009a and 2011b:
                 value = char(obj.main_frame.getStatusBar.getText());
@@ -32,6 +40,12 @@ classdef desktop
             %Other text:
             %Waiting for input %When in keyboard mode
             %Reply = ~isempty(statusText);
+        end
+        function value = get.is_debugging(obj)
+            %When I was writing this function, while in debug mode
+            %the status text temporarily changed ... (not sure why)
+            value = strcmpi(obj.status_text,'Waiting for input') || ...
+                strcmpi(obj.status_text,'Paused in debugger');
         end
     end
     

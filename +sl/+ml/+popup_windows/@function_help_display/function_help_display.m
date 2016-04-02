@@ -28,6 +28,7 @@ classdef function_help_display < handle
     %
     %   See Also:
     %   sl.help.current_line_info
+    %   sl.ml.cursor_line_info
     %
     %   Features
     %   --------
@@ -37,6 +38,13 @@ classdef function_help_display < handle
     %   3) Display whether busy or not
     %   4) Allow running selected code
     %   5) Allow running selected comment (as code, i.e. remove comment)
+    
+    %   raw_text
+    %   main_help
+    %   input options
+    %   examples
+    %   error
+    
     
     properties
         fig %figure handle
@@ -91,8 +99,6 @@ classdef function_help_display < handle
             
             set(f,'CloseRequestFcn',@(~,~)cb_closeFigure(obj))
             
-            %TODO: On close figure, stop timer and delete obj
-            
             obj.cmd_window = sl.ml.cmd_window.getInstance();
             obj.editor = sl.ml.editor.getInstance();
             obj.desktop = sl.ml.desktop.getInstance();
@@ -114,7 +120,7 @@ classdef function_help_display < handle
             end
         end
         function cb_closeFigure(obj)
-            disp('close is running')
+            %disp('close is running')
             delete(obj.fig)
             delete(obj)
         end
@@ -185,7 +191,8 @@ classdef function_help_display < handle
                 %property name
                 
                 
-                
+                local_cw = obj.cmd_window;
+                local_editor = obj.editor;
                 %Determine if we are showing help fo the command line
                 %or the editor
                 if local_cw.has_focus                    
@@ -201,10 +208,12 @@ classdef function_help_display < handle
                     cli = h__getCLIFromEditor(obj);
                 end
                 
+                %pcli = sl.ml.parsed_cursor_line_info(cli);
                 %cli = sl.help.current_line_info(last_line_text);
                 %TODO
                  
-                obj.update_main_text(line_text);
+                %obj.update_main_text(line_text);
+                obj.update_main_text(cli.pre_cursor_text);
                 
                 
             catch ME
@@ -223,7 +232,8 @@ end
 function cli = h__getCLIFromCW(obj)
 %sl.ml.cursor_line_info
 %TODO: Build in selection as well, not just start of the cursor
-local_cw = obj.cmd_window; %Type: %sl.ml.cmd_window
+ %Type: %sl.ml.cmd_window
+ local_cw = obj.cmd_window;
 line_text = local_cw.line_text_up_to_cursor;
 cli = sl.ml.cursor_line_info(true,[],line_text);
 

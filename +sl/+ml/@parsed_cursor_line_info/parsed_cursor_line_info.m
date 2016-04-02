@@ -106,7 +106,16 @@ classdef parsed_cursor_line_info < sl.obj.display_class
             %   cursor_line_info : sl.ml.cursor_line_info
             
             
+            persistent desktop_instance
+            
+            if isempty(desktop_instance)
+                desktop_instance = sl.ml.desktop.getInstance();
+            end
+            
+            %obj.in_base = cursor_line_info.from_command_window
 
+            obj.is_debugging = desktop_instance.is_debugging;
+            
             obj.raw_text = cursor_line_info.pre_cursor_text;
             
             %Can we find an unterminated quoted string and use that to our
