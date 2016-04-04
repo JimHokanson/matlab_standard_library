@@ -1,7 +1,25 @@
 classdef dict < handle
     %
     %   Class:
-    %   dict
+    %   sl.obj.dict
+    %
+    %   This class supports arbitrary property (attribute) names.
+    %
+    %   All attributes can be accessed via parentheses:
+    %       obj.(<property>) e.g. obj.('my awesome property!)
+    %
+    %   Valid variable names can be accessed via just the dot operator:
+    %       obj.<valid_property>  e.g. obj.valid_property
+    %
+    %   Issues:
+    %   -------
+    %   1) Providing methods for this class makes property attribute
+    %   and method lookup ambiguous. 
+    %   2) Tab complete does not work when accessing via parentheses,
+    %       e.g.: 
+    %           obj.('my_va   <= tab complete wouldn't work
+    %           obj.my_va   <= tab complete would work
+    %
     %
     %   http://undocumentedmatlab.com/blog/class-object-tab-completion-and-improper-field-names
     
@@ -73,29 +91,34 @@ classdef dict < handle
             end
 
         end
-        function disp(obj)
+        function disp(obj,amount_to_indent)
+            
+            if nargin == 1
+                amount_to_indent = 0;
+            end
+            
             %TODO: This was written when inheriting from
             %containers.Map and could be simplified 
-            k = obj.props.keys;
-            v = obj.props.values;
-            key_length = cellfun(@length,k);
+            local_props = obj.props;
+            keys = local_props.keys;
+            values = local_props.values;
+            key_length = cellfun(@length,keys);
             padding_length = max(key_length) - key_length;
-            key_displays = cellfun(@(x,y) [blanks(x) y],...
-                num2cell(padding_length),k,'un',0);
-            for iK = 1:length(k)
-                cur_key = k{iK};
+            key_displays = ...
+                cellfun(@(x,y) [blanks(amount_to_indent) blanks(x) y],...
+                num2cell(padding_length),keys,'un',0);
+            for iK = 1:length(keys)
                 cur_key_display = key_displays{iK};
                 
-                I = find(strcmp(k,cur_key),1);
-                cur_value = v{I};
+                cur_value = values{iK};
                 
-                %Not working "inside" the class
-                %cur_value = obj(cur_key);
+                %Ideally this code would go elsewhere
+                
                 %TODO: Add is logical
                 if isnumeric(cur_value) && isscalar(cur_value)
                     fprintf('%s: %d\n',cur_key_display,cur_value);
                 elseif ischar(cur_value)
-                    fprintf('%s: %s\n',cur_key_display,cur_value);
+                    fprintf('%s: ''%s''\n',cur_key_display,cur_value);
                 else
                     temp_size = sprintf('%dx',size(cur_value));
                     %Need to drop the extra 'x' in temp_size

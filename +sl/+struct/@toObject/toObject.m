@@ -29,7 +29,7 @@ classdef toObject < sl.obj.handle_light
     %- make sure to specify which fields are missing
     
     methods
-        function obj = toObject(old_obj,s,varargin)
+        function obj = toObject(s,old_obj,varargin)
             %
             %
             %   :/ I should really switch the input order

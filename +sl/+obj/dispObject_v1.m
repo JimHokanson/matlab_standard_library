@@ -5,7 +5,8 @@ function dispObject_v1(objs,varargin)
 %
 %   Optional Inputs:
 %   ----------------
-%   show_methods :
+%   show_methods : logical
+%       
 %   show_handle_methods :
 %   show_constructor : 
 %   show_hidden : 

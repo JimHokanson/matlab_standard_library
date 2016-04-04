@@ -1,10 +1,12 @@
-function navToPath(file_or_folder_path)
+function navToPath(file_or_folder_path,varargin)
 %navToPath  Opens os file-viewer to folder or file
 %
 %   sl.os.navToPath(file_or_folder_path)
 %
-%   Opens the specified file or folder using a file-system viewer (i.e.
-%   Windows explorer, Apple navigator??, etc.) 
+%   Opens the specified file or folder using a file-system viewer, i.e.:
+%       Windows Explorer
+%       Apple Finder
+%       etc.
 %
 %   Files are shown in their containing folder. 
 %
@@ -14,28 +16,33 @@ function navToPath(file_or_folder_path)
 %   -------
 %   file_or_folder_path : The path to a file or a folder.
 %
+%   Optional Inputs:
+%   ----------------
+%   
+%
 %   Improvements:
 %   -------------
 %   1) Documentation
 %   2) File support for unix and macs
-%   3) Provide root support - show folder in parent folder
 %
 %   See Also:
-%   winopen
+%   ---------
+%   sl.str.create_clickable_cmd.navigateToFileInOS
 
-%in.show_folder_in_parent = true;
-%in = sl.in.processVarargin(in,varargin);
+DIRECTORY_EXISTS_RESULT = 7;
+
+in.open_folder = false;
+in = sl.in.processVarargin(in,varargin);
 
 %Resolution to file or folder
 %--------------------------------------------------------------------------
-%NOTE: exist(input,'dir') tests for file or folder :/
-%We need to first test for a file, then test for a folder ...
-if exist(file_or_folder_path,'file')
-    file_path = file_or_folder_path;
-    is_file   = true;
-elseif exist(file_or_folder_path,'dir')
+exist_result = exist(file_or_folder_path,'file');
+if exist_result == DIRECTORY_EXISTS_RESULT    
     folder_path = file_or_folder_path;
     is_file     = false;
+elseif exist_result
+    file_path = file_or_folder_path;
+    is_file   = true;
 else
     error_msg = sl.error.getMissingFileErrorMsg(file_or_folder_path);
     error(error_msg);
@@ -46,8 +53,8 @@ if is_file
         %http://support.microsoft.com/kb/152457
         %There are other options available ...
         %NOTE: winopen will open the file using the default application
-        %which is not what we want ...s
-        system(['explorer.exe /select,' file_path]);
+        %which is not what we want
+        system(['explorer.exe /select,"' file_path '"']);
 
     elseif ismac
         %Do I need to escape the file path somehow?
@@ -57,7 +64,11 @@ if is_file
     end
 else
     if ispc
-        winopen(folder_path)
+        if in.open_folder
+            system(['explorer.exe /root,"' folder_path '"'])
+        else
+            system(['explorer.exe /select,"' folder_path '"']);
+        end
     elseif ismac
         system(['open ' folder_path]);
     elseif isunix
