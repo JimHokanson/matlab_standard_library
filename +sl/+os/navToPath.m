@@ -58,14 +58,14 @@ if is_file
 
     elseif ismac
         %Do I need to escape the file path somehow?
-        system(['open -R ' file_path])
+        system(['open -R ' file_path]);
     else
         error('Function not yet expanded to support current os')
     end
 else
     if ispc
         if in.open_folder
-            system(['explorer.exe /root,"' folder_path '"'])
+            system(['explorer.exe /root,"' folder_path '"']);
         else
             system(['explorer.exe /select,"' folder_path '"']);
         end

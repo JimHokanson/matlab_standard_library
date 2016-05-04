@@ -55,8 +55,13 @@ classdef toObject < sl.obj.handle_light
             %   1) Allow option to error when field doesn't exist
             %   2) Allow option to error when fields to ignore don't exist (lower
             %       priority)
-            %
+            %   3) Build in array support (struct array to object array
 
+
+            if nargout == 0 && ~isa(obj,'handle')
+               fprintf(2,'WARNING: Call made to sl.struct.toObject with value object and no output\n');
+            end
+            
             in.fields_ignore  = {};
             in.remove_classes = true;
             in = sl.in.processVarargin(in,varargin);

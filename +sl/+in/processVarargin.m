@@ -137,37 +137,7 @@ elseif iscell(v) && length(v) == 1 && isempty(v{1})
     parse_input = false;
 else
     parse_input = true;
-    is_str_mask = cellfun('isclass',v,'char');
-    
-    %Improvement:
-    %-------------------------------------------------
-    %Analyze calling information ...
-    %Provide stack trace for editing ...
-    %
-    %   Functions needed:
-    %   1) prototype of caller
-    %   2) calling format of parent
-    %   3) links to offending lines ...
-    %
-    %   NOTE: is_parsing_options would allow us to have different 
-    %   error messages ...
-    if ~all(is_str_mask(1:2:end))
-        %TODO: See improvement above, provide a clickable link that does
-        %dbup 3x (up to main, up to caller, up to caller's caller)
-        error('Unexpected format for varargin, not all properties are strings')
-    end
-    if mod(length(v),2) ~= 0
-        error('Property/value pairs are not balanced, length of input: %d',length(v))
-    end
-    
-    if c.allow_spaces
-       %strrep would be faster if we could guarantee
-       %only single spaces :/
-       v(1:2:end) = regexprep(v(1:2:end),'\s+','_');
-    end
-    
-    v = v(:)'; %Ensure row vector 
-    v = cell2struct(v(2:2:end),v(1:2:end),2);
+    v = sl.in.propValuePairsToStruct(v,'allow_spaces',c.allow_spaces);
 end
 
 if ~parse_input
