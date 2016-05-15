@@ -2,6 +2,12 @@ classdef looped_options < handle
     %
     %   Class:
     %   sl.in.looped_options
+    %
+    %   This class was created to allow options that vary in a loop
+    %
+    %   See sci.time_series.data
+    %
+    %   TODO: Add more documentation
     
     properties
         orig_options %Usually a struct, unless we are not going to do

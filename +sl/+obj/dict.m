@@ -23,14 +23,27 @@ classdef dict < handle
     %
     %   http://undocumentedmatlab.com/blog/class-object-tab-completion-and-improper-field-names
     
-    properties (Access = 'protected')
-        props
+    properties
+        props %containers.Map
     end
     
     methods
-        function obj = dict()
-            obj.props = containers.Map;
+        function value = get.props(obj)
+           value = obj.props; 
+           if isempty(value)
+              obj.props = containers.Map;
+              value = obj.props;
+           end
         end
+    end
+    
+    methods
+% % % %         function obj = dict()
+% % % %             %myMap = containers.Map(KEYS, VALUES)
+% % % %             
+% % % %             %TODO: This fails for large value initialization
+% % % %             %obj.props = containers.Map;
+% % % %         end
 
     end
     
@@ -83,11 +96,24 @@ classdef dict < handle
                     builtin('subsref', obj, subStruct)
                     %error('"%s" is not defined as a property', s1.subs);
                 end
+                %TODO: Can we avoid the check on prop_lookup_failed by 
+                %doing a return in the catch????
                 if ~prop_lookup_failed && length(subStruct) > 1
-                value = subsref(value,subStruct(2:end)); 
+                    value = subsref(value,subStruct(2:end)); 
                 end
             else  % '()' or '{}'
-                error('not supported');
+                %f.data(1).x
+                %   
+                %   data => sl.obj.dict
+                %
+                %   () .  <= 2 events, () followed by .
+                %
+                value = builtin('subsref', obj, subStruct(1));
+                if length(subStruct) > 1
+                   value = subsref(value,subStruct(2:end)); 
+                end
+                %builtin('subsref', obj, subStruct)
+                %error('not supported');
             end
 
         end

@@ -24,7 +24,9 @@ function [in,extras] = processVarargin(in,v,varargin)
 %       indicate that the same options are being passed into multiple
 %       functions and only some options match in some functions.
 %   allow_spaces :
-%   return_as_object : 
+%   remove_null : (default false)
+%       If files that are assigned as sl.in.NULL are removed.
+%
 %
 %
 %   allow_duplicates  : (default false) NOT YET IMPLEMENTED
@@ -64,12 +66,12 @@ if isempty(v) && nargout == 1 && isempty(varargin)
     return
 end
 
-c.return_as_object  = false;
 c.case_sensitive    = false;
 % % % c.allow_duplicates  = false;
 % % % c.partial_match     = false;
 c.allow_non_matches = false;
 c.allow_spaces      = true;
+c.remove_null       = false;
 
 
 %Update instructions on how to parse the optional inputs
@@ -86,21 +88,26 @@ c.allow_spaces      = true;
 if ~isempty(varargin)
     %Updates c based on varargin from user 
     %c = processVararginHelper(c,varargin,c2,1);
-    c = processVararginHelper(c,varargin,c,true);
+    c = processVararginHelper(c,varargin,c,true,1);
 end
 
 %Update optional inputs of calling function with this function's options now set
-[in,extras] = processVararginHelper(in,v,c,false);
+[in,extras] = processVararginHelper(in,v,c,false,nargout);
 
-if c.return_as_object
-   in = sl.in.optional_inputs(in); 
+if c.remove_null
+   fn = fieldnames(in);
+   for iField = 1:length(fn)
+      cur_field = fn{iField};
+      
+   end
+   
 end
 
 end
 
 
 
-function [in,extras] = processVararginHelper(in,v,c,is_parsing_options)
+function [in,extras] = processVararginHelper(in,v,c,is_parsing_options,n_outputs)
 %processVararginHelper
 %
 %   [in,extras] = processVararginHelper(in,v,c,is_parsing_options)
@@ -117,7 +124,13 @@ function [in,extras] = processVararginHelper(in,v,c,is_parsing_options)
 %   c  - options for processing 
 %   is_parsing_options - specifies we are parsing the parsing options
 
-extras = sl.in.process_varargin_result(in,v);
+populate_extras_flag = n_outputs > 1;
+
+if populate_extras_flag
+    extras = sl.in.process_varargin_result(in,v);
+else
+   extras = []; 
+end
 
 %Checking the optional inputs, either a structure or a prop/value cell
 %array is allowed, or various forms of empty ...
@@ -144,14 +157,18 @@ if ~parse_input
    return 
 end
 
-extras.struct_mod_input = v;
+if populate_extras_flag
+    extras.struct_mod_input = v;
+end
 
 %At this point we should have a structure ...
 fn__new_values   = fieldnames(v);
 fn__input_struct = fieldnames(in);
-extras.fn__new_values   = fn__new_values;
-extras.fn__input_struct = fn__input_struct;
 
+if populate_extras_flag
+    extras.fn__new_values   = fn__new_values;
+    extras.fn__input_struct = fn__input_struct;
+end
 
 %Matching location
 %--------------------------------------------------------------------------
@@ -162,8 +179,11 @@ else
     %NOTE: I don't currently do a check here for uniqueness of matches ...
     %Could have many fields which case-insensitive are the same ...
 end
-extras.is_present = is_present;
-extras.loc        = loc;
+
+if populate_extras_flag
+    extras.is_present = is_present;
+    extras.loc        = loc;
+end
 
 if ~all(is_present)
     if c.allow_non_matches
