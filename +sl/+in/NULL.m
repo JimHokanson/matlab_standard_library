@@ -11,7 +11,8 @@ classdef NULL
     %   See Also:
     %   sl.in.splitAndProcessVarargin
     %
-    %   e.g.
+    %   Example:
+    %   --------
     %   in.test = sl.in.NULL
     %   in.cheese = 2
     %
