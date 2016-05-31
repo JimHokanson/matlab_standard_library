@@ -1,19 +1,16 @@
-function [output,extras] = readDelimitedFile(file_path,delimiter,varargin)
-%readDelimitedFile  Reads a delimited file
+function [output,extras] = readFile(file_path,delimiter,varargin)
+%x  Reads a delimited file
 %
 %   Simple interface to regexp with some post-processing options for
 %   reading a delimited file OR DELIMITED STRING.
 %
-%   sl.io.readDelimitedFile
-%
-%
 %   Calling Forms:
 %   --------------
 %   1)
-%   [output,extras] = readDelimitedFile(file_path,delimiter,varargin)
+%   [output,extras] = sl.io.delimited.readFile(file_path,delimiter,varargin)
 %
 %   2)
-%   [output,extras] = readDelimitedFile(str_data,delimiter,'input_is_str',true,varargin)   
+%   [output,extras] = sl.io.delimited.readFile(str_data,delimiter,'input_is_str',true,varargin)   
 %   
 %   Examples:
 %   ---------
@@ -73,7 +70,8 @@ function [output,extras] = readDelimitedFile(file_path,delimiter,varargin)
 %
 %   See Also:
 %   ---------
-%   sl.io.delimited_file
+%   sl.io.delimited.column_specs
+%   sl.io.delimited.delimited_file
    
 
 in.has_column_labels = false;

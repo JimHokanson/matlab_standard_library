@@ -1,4 +1,5 @@
 function str = join(cellstr_input,varargin)
+%x Joins elements of a cellstr together into a single string
 %
 %   str = sl.cellstr.join(cellstr_input,varargin)
 %
