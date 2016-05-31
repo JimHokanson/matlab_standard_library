@@ -94,11 +94,15 @@ end
 %Update optional inputs of calling function with this function's options now set
 [in,extras] = processVararginHelper(in,v,c,false,nargout);
 
+NULL = sl.in.NULL;
+
 if c.remove_null
    fn = fieldnames(in);
    for iField = 1:length(fn)
       cur_field = fn{iField};
-      
+      if isequal(in.(cur_field),NULL)
+         in = rmfield(in,cur_field); 
+      end
    end
    
 end
