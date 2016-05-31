@@ -1,0 +1,2 @@
+	Example Text	Is Dynamic	Causes
+MATLAB:subscripting:classHasNoPropertyOrMethod	'The class dba has no property or method named 'options'.'	y	1) I often get this when there is a package and a class that overlap. In this case 'dba' is a class and a package
