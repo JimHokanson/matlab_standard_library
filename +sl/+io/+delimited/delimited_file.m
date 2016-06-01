@@ -1,7 +1,7 @@
 classdef delimited_file < sl.obj.display_class
     %
     %   Class:
-    %   sl.io.delimited_file
+    %   sl.io.delimited.delimited_file
     %
     %   This is a result class from reading a delimited file. It is meant
     %   to facilitate extracting certain types of information from the
@@ -15,43 +15,12 @@ classdef delimited_file < sl.obj.display_class
     %
     %   See Also:
     %   ---------
-    %   sl.io.readDelimitedFile
+    %   sl.io.delimited.readFile
     %
     %
     %   TODO:
     %   ----
     %   1) Build in support for missing fields
-    
-    %
-    % see dba.GSK.cmg_expt
-    % dba - Duke bladder analysis, package (+)
-    % GSK - package (+)
-    % @ = class
-    %    class:
-    %    sl.io.delimited_file
-    %
-    %{
-    
-        #Local test code
-    
-        file_path = 'D:\repos\matlab_git\bladder_analysis\data_files\gsk_matlab_analysis\cmg_info\140414_C.csv'
-        d = sl.io.readDelimitedFile(file_path,',', 'header_lines', 1, 'return_type', 'object')
-        
-    
-        %name,required,type,default_value
-        %info = {...
-        %  'File #',1,'numeric','';
-        %  'CMG #',
-    
-    
-        d.set_as_numeric({'File #','CMG #','Void Vol. (ml)','Resid. Vol. (ml)','Record','Fill Rate (ml/hr)','QP start','QP end','Start Pump','Stop Pump','Trial End'})
-        d.set_as_logical('is_good')
-    
-        s = struct
-        s.cmg_id = d.c('CMG #', 'type', 'numeric')
-        cmg_id = obj.raw_data(:, column_number)
-    %}
-    
     
     properties
         n_rows
@@ -60,12 +29,14 @@ classdef delimited_file < sl.obj.display_class
         extras %struct
         %A loosly defined structure from sl.io.readDelimitedFile
         
+        %TODO: I'm not thrilled about this setup
         optional_column_names = {} %Only populated when specs was specified
         optional_default_values
         optional_data_types
         
         column_names %Names of each column. This may not be valid
         %if the file does not contain header lines.
+        variable_names
         
         data_types %cellstr
         %   Possible types include:
@@ -103,6 +74,7 @@ classdef delimited_file < sl.obj.display_class
             obj.extras = extras;
             
             obj.column_names = obj.extras.column_labels;
+            
             %first_line = obj.extras.header_lines{1};
             %obj.column_names = strtrim(regexp(first_line, ',', 'split'));
             if ~isempty(obj.column_names)
@@ -130,6 +102,8 @@ classdef delimited_file < sl.obj.display_class
                 error('Some required columns are missing')
             end
             
+            %Fill in optional values
+            %--------------------------------------------------------------
             if any(~required)
                 obj.optional_column_names = spec_names(~required);
 
@@ -162,6 +136,10 @@ classdef delimited_file < sl.obj.display_class
                 obj.optional_default_values = default_values;
             end
             
+            obj.variable_names = cell(1,length(obj.column_names));
+            
+            %Cast data types
+            %--------------------------------------------------------------
             for iCol = 1:length(spec_names)
                 if mask(iCol)
                     cur_loc = loc(iCol);
@@ -169,6 +147,7 @@ classdef delimited_file < sl.obj.display_class
                     cur_name = spec_names{iCol};
                     data_type = specs.type{iCol};
                     obj.units{cur_loc} = specs.units{iCol};
+                    obj.variable_names(cur_loc) = specs.variable_name(iCol);
                     
                     %TODO: Description
                     switch data_type

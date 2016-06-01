@@ -214,7 +214,7 @@ switch lower(in.return_type)
     case 'cell'
         % Do nothing
     case 'object'
-        output = sl.io.delimited_file(output, extras, in.columns_specs);
+        output = sl.io.delimited.delimited_file(output, extras, in.columns_specs);
     otherwise
         error('Output type: "%s" not recognized',in.return_type);
 end
