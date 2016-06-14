@@ -2,22 +2,37 @@ classdef unit_entry
     %
     %   Class:
     %   sl.units.unit_entry
+    %
+    %   TODO: rename to unit
+    
+    %{
+
+        temp = sl.units.unit_entry('kg^2',true);
+
+    %}
     
     properties
         raw
+        base_name
+        power %x
+        in_numerator
+        
+        is_si
         type 
         %   - distance
         %   - time
         %   - unitless
         prefix
-        base_name
+        
+        
         display_str %how the string is displayed
         %this will keep user naming
         %
         %Let's convert powers of -1 so that raw and display string could
         %be different
-        power
-        in_numerator
+        short
+        long
+        base_power
     end
     
     methods
@@ -26,6 +41,44 @@ classdef unit_entry
            obj.in_numerator = in_numerator;
            obj.populateFromString();
            %TODO: Parse details
+           
+           raw = obj.raw;
+
+            temp = regexp(raw,'\^','split');
+
+            if length(temp) > 2
+                error('Expecting only a value (e.g. kg) or value with exponent (kg^2)')
+            end
+
+            root_string = temp{1};
+            if length(temp) == 2
+                obj.power = str2double(temp{2});
+                if obj.power < 0
+                   obj.power = -obj.power;
+                   obj.in_numerator = ~obj.in_numerator;
+                end
+            else
+                obj.power = 1;
+            end
+
+            if strcmp(raw,'1')
+               obj.type = 'unitless';
+               return
+            end
+
+            [obj.prefix,remaining_string] = sl.units.prefix.fromUnitString(root_string);
+            
+            obj.base_name = remaining_string;
+            
+            if obj.power == 1
+                obj.display_str = obj.base_name;
+            else
+                obj.display_str = sprintf('%s^%0g',obj.base_name,obj.power);
+            end
+            
+            keyboard
+           
+           
         end
     end
     

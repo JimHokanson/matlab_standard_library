@@ -1,4 +1,4 @@
-classdef double_with_units < double
+classdef double_with_units
     %
     %   Class:
     %   sl.units.double_with_units
@@ -20,17 +20,16 @@ classdef double_with_units < double
     %   temp_display_string
     %end
     
+    properties (Hidden)
+       data
+       units
+    end
+    
     methods
-       function obj = double_with_units(value,units_string)
-          obj = obj@double(value);
-          %obj.temp_display_string = units_string;
-       end
-       function disp(obj) %#ok<MANU>
-          %convert to pure double object and get text
-          t = evalc('disp(double(obj))');
-          disp(t)
-          %disp@double(obj) 
-       end
+        function obj = double_with_units(input_value,units_string)
+           obj.data = input_value; 
+           obj.display_string = units_string;
+        end
     end
     
 end
