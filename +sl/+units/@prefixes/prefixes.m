@@ -51,18 +51,31 @@ classdef prefixes
     end
     
     methods
-        function prefix = getPrefixMatch(obj,string)
+        function prefix = getPrefixMatch(obj,unit_string)
             %
-            %   
+            %   The goal of this function is to find a prefix which matches
+            %   the first part of the input string
+            %
+            %   Inputs
+            %   ------
+            %   unit_string : 
+            %
+            %   Outputs
+            %   -------
+            %   prefix : sl.units.prefix
             %
             
            %This could presumably be optimized ...
            
            %{
-            test_string = 'kilogram';
-            p = sl.units.prefixes.getInstance();
-            prefix = p.getPrefixMatch(test_string)
-            remaining_string = prefix.removePrefixFromString(test_string)
+                test_string = 'kilogram';
+                p = sl.units.prefixes.getInstance();
+                prefix = p.getPrefixMatch(test_string)
+                remaining_string = prefix.removePrefixFromString(test_string)
+           
+                OR
+           
+                [prefix,remaining_string] = sl.units.unit.fromUnitString(test_string)
            %}
            
            %We need to look for long first as many of the shorts are in the
@@ -71,19 +84,19 @@ classdef prefixes
            %
            %TODO: We might eventually want to return all possible prefixes
            
-           matched_long_I = find(cellfun(@(x) strncmp(x,string,length(x)),obj.long));
+           matched_long_I = find(cellfun(@(x) strncmp(x,unit_string,length(x)),obj.long));
            
            if ~isempty(matched_long_I)
                I = matched_long_I(1);
-               string = obj.long{I};
+               unit_string = obj.long{I};
                is_short = false;
            else
-               matched_short_I = find(cellfun(@(x) strncmp(x,string,length(x)),obj.short));
+               matched_short_I = find(cellfun(@(x) strncmp(x,unit_string,length(x)),obj.short));
                if isempty(matched_short_I)
                    I = [];
                else
                    I = matched_short_I(1);
-                   string = obj.short{I};
+                   unit_string = obj.short{I};
                end
                is_short = true;
            end
@@ -91,7 +104,7 @@ classdef prefixes
            if isempty(I)
                prefix = [];
            else
-               prefix = sl.units.prefix(string,obj.power(I),is_short);
+               prefix = sl.units.prefix(unit_string,obj.power(I),is_short);
            end
                       
         end

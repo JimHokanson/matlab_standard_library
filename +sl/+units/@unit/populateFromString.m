@@ -4,6 +4,8 @@ function populateFromString(obj)
 %
 %   Called from constructor:
 %   sl.units.unit_entry
+%
+%   Code moved here to reduce indentation and scrolling
 
 %{
 
@@ -37,7 +39,13 @@ end
 
 [obj.prefix,remaining_string] = sl.units.prefix.fromUnitString(root_string);
 
-keyboard
+temp = sl.units.defs.base_si_unit.createIfMatching(remaining_string);
+
+if ~isempty(temp)
+    return
+end
+
+temp = sl.units.defs.derived_si_unit.createIfMatching(remaining_string);
 
 end
 

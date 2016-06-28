@@ -1,18 +1,18 @@
-classdef unit_entry
+classdef unit
     %
     %   Class:
-    %   sl.units.unit_entry
+    %   sl.units.unit
     %
-    %   TODO: rename to unit
+    %   An individual unit element (with exponent)
     
     %{
 
-        temp = sl.units.unit_entry('kg^2',true);
+        temp = sl.units.unit('kg^2',true);
 
     %}
     
     properties
-        raw
+        raw %raw string input to the class
         base_name
         power %x
         in_numerator
@@ -36,7 +36,7 @@ classdef unit_entry
     end
     
     methods
-        function obj = unit_entry(raw,in_numerator)
+        function obj = unit(raw,in_numerator)
            obj.raw = strtrim(raw);
            obj.in_numerator = in_numerator;
            obj.populateFromString();

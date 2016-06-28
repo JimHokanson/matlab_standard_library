@@ -6,13 +6,20 @@ classdef prefix
     %   See Also:
     %   sl.units.prefixes
     
+    %{
+    [prefix_obj,remaining_string] = sl.units.prefix.fromUnitString('kg')
+    
+    
+    %}
+    
     properties
-        string
+        string %string representing the prefix
         power
         is_short %Whether the prefix is the long or short version
-        %
+        
+        %TODO:
         %To switch we should build a method in prefixes that supports
-        %switching
+        %switching from one prefix to another
     end
     
     methods
@@ -25,24 +32,26 @@ classdef prefix
         end
         function remaining_string = removePrefixFromString(obj,input_string)
             %TODO: Verify that the input does in fact match the string
-            start_I = length(obj.string) + 1;
             
+            start_I = length(obj.string) + 1;
             remaining_string = input_string(start_I:end);
         end
     end
     
     methods (Static)
-        function [obj,remaining_string] = fromUnitString(unit_string)
+        function [prefix_obj,remaining_string] = fromUnitString(unit_string)
             %
             %   [obj,remaining_string] = sl.units.prefix.fromUnitString(unit_string)
             %
             
+            %TODO: This should all be singleton
             prefixes = sl.units.prefixes.getInstance();
-            obj = prefixes.getPrefixMatch(unit_string);
-            if isempty(obj)
+            prefix_obj = prefixes.getPrefixMatch(unit_string);
+            
+            if isempty(prefix_obj)
                 remaining_string = '';
             else
-                remaining_string = obj.removePrefixFromString(unit_string);
+                remaining_string = prefix_obj.removePrefixFromString(unit_string);
             end
         end
     end
