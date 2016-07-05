@@ -34,18 +34,29 @@ else
 end
 
 if strcmp(raw,'1')
+   %TODO: Make a spec for unitless
    obj.type = 'unitless';
 end
 
 [obj.prefix,remaining_string] = sl.units.prefix.fromUnitString(root_string);
 
+%TODO: Build in function handle array of all options and run through loop
+%with potential early exit
+
 temp = sl.units.defs.base_si_unit.createIfMatching(remaining_string);
 
 if ~isempty(temp)
+    obj.spec = temp;
     return
 end
 
 temp = sl.units.defs.derived_si_unit.createIfMatching(remaining_string);
+
+if ~isempty(temp)
+    obj.spec = temp;
+    return
+end
+
 
 end
 

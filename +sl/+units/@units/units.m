@@ -2,13 +2,33 @@ classdef units
     %
     %   Class:
     %   sl.units.units
+    %
+    %   Tasks
+    %   -----
+    %   1) Load unit from string
+    %   2) Convert from one units to another
+    %   3) Simplify units
+    
+    %{
+    1) 
+
+    str = 'kg/ms';
+    temp = sl.units.units(str);
+    
+    
+    %}
     
     properties
+       parts %unit
     end
     
     methods
         function obj = units(input_string)
-            string_parts = h__getParts(input_string, true, false);
+            obj.parts = h__getParts(input_string, true, false);
+        end
+        function convertTo(new_string_or_units)
+           %TODO: Implement this ...
+           %merge specs 
         end
     end
     
@@ -16,7 +36,7 @@ end
 
 function string_parts = h__getParts(cur_str, in_numerator,in_parens)
 
-u = @sl.units.unit_entry;
+u = @sl.units.unit;
 
 string_parts = cell(1,10);
 cur_part = 0;
