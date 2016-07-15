@@ -1,7 +1,7 @@
 classdef (Hidden) editor < sl.obj.display_class
     %
     %   Class: (Singleton)
-    %   sl.editor.interface
+    %   sl.ml.editor
     %
     %   This class is meant as an interface to the editor API that Matlab
     %   created in version (???). It was originally created to facilitate
@@ -142,6 +142,9 @@ classdef (Hidden) editor < sl.obj.display_class
     
     methods (Static)
         function openAndGoToLine()
+            %TODO: This needs to be completed
+            %
+            %Allow defaults of using current file and/or current line number   
             matlab.desktop.editor.openAndGoToLine
         end
     end
