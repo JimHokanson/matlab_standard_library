@@ -66,7 +66,9 @@ classdef dict < handle
         function obj = subsasgn(obj, subStruct, value)
             if strcmp(subStruct.type,'.')
                 try
-                    obj.props(subStruct.subs) = value;
+                    %Did this change, I'm getting subs as a {'string'}
+                    %instead of 'string'
+                    obj.props(subStruct.subs{1}) = value;
                 catch
                     error('Could not assign "%s" property value', subStruct.subs);
                 end
