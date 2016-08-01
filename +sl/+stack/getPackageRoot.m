@@ -7,6 +7,7 @@ function package_root = getPackageRoot()
 %   is not in a package).
 %
 %   Examples:
+%   ---------
 %   Called from: 'C:\repos\matlab_git\my_repo\+package\my_function.m
 %   Returns: 'C:\repos\matlab_git\my_repo\'
 %
