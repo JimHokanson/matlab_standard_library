@@ -61,15 +61,11 @@ classdef dict < handle
                     %Did this change, I'm getting subs as a {'string'}
                     %instead of 'string'
                     %2016a - string
-                    %
+                    %other versions?
+                    %Does it depend on the form of the call?
                     obj.props.(name) = value;
                 catch
                     try
-                        if isempty(obj.props)
-                            %Mex needs to be changed to support an empty
-                            %input ...
-                            obj.props = struct;
-                        end
                         obj.props = sl.struct.setField(obj.props,name,value);
                     catch ME
                        error('Could not assign "%s" property value', subStruct.subs); 
