@@ -30,14 +30,9 @@ function ekeyboard()
 % See other operational comments below which consider some other
 % issues/options
 
-myObj=sl.stack.calling_function_info(2); %gets the caller of ekeyboard()
-
-if myObj.line_number==NaN
-  myObj.line_number=1;
-end
+%------------------------------------------
 
 % call the mex function
-% pass it myObj somehow... will figure that out
 % delete the timer at some point... maybe use delete(timerfind) after a pause. Probably best way
 
 end
