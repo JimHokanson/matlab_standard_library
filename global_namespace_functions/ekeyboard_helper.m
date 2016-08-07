@@ -1,9 +1,14 @@
-function ekeyboard_helper(anObj)
+function ekeyboard_helper()
 
 % anObj is from the calling_function_info class
 
 
-  function my_callback_fcn(~,~, anObj)
+  function my_callback_fcn(~,~)
+    anObj= sl.stack.calling_function_info(3); %gets the caller of ekeyboard. should be 4 as arg? need to test
+    if myObj.line_number==NaN
+    % is there a way to find where ekeyboard is in that file?
+      myObj.line_number=1;
+    end
     matlab.desktop.editor.openAndGoToLine(anObj.file_path,anObj.line_number);        
   end
 
@@ -27,7 +32,7 @@ t=timer('ExecutionMode','singleShot'); % creates a timer
 set(t,'StartDelay',0.5); % sets a short delay
 
 %sets primary timer functionality
-t.TimerFcn = {@my_callback_fcn, anObj.file_path, anObj.line_number}; 
+t.TimerFcn = {@my_callback_fcn}; 
 
 start(t);
 
