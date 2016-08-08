@@ -33,6 +33,7 @@ function ekeyboard()
 %------------------------------------------
 
 % call the mex function
+ekeyboard
 % delete the timer at some point... maybe use delete(timerfind) after a pause. Probably best way
 
 end
