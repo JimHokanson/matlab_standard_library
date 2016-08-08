@@ -57,6 +57,12 @@ classdef dict < handle
         function obj = subsasgn(obj, subStruct, value)
             if strcmp(subStruct.type,'.')
                 name = subStruct.subs;
+                
+                %NOTE: As designed we don't really support having
+                %properties in the class itself, we could try and change it
+                %so that we do, although I'm not really sure what the value
+                %would be of placing properties in the class itself ...
+                
                 try
                     %Did this change, I'm getting subs as a {'string'}
                     %instead of 'string'
@@ -104,13 +110,20 @@ classdef dict < handle
             end
 
         end
-        function disp(obj,amount_to_indent)
+        function disp(objs)
             
-            if nargin == 1
-                amount_to_indent = 0;
+            if length(objs) > 1
+                fprintf('%s of size %dx%d\n',class(objs),size(objs,1),size(objs,2));
+            else
+                %TODO: we need to check for properties that have been
+                %defined in the inherited class ...
+                if isempty(objs.props) || isempty(fieldnames(objs.props))
+                    fprintf('%s with no properties\n',size(objs,1),size(objs,2),class(objs));
+                else
+                    fprintf('%s with properties:\n\n',size(objs,1),size(objs,2),class(objs));
+                    disp(objs.props)
+                end
             end
-            
-            disp(obj.props)
             
 % % %             %TODO: Does this display properties from a subclass?    
 % % %             
