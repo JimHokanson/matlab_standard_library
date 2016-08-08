@@ -2,15 +2,14 @@ function ekeyboard_helper()
 
 % anObj is from the calling_function_info class
 
-
-  function my_callback_fcn(~,~)
-    anObj= sl.stack.calling_function_info(3); %gets the caller of ekeyboard. should be 4 as arg? need to test
-    if myObj.line_number==NaN
-    % is there a way to find where ekeyboard is in that file?
-      myObj.line_number=1;
+   function my_callback_fcn(~,~)
+        myObj= sl.stack.calling_function_info(4) %gets the caller of ekeyboard. should be 4 as arg? need to test
+        if isnan(myObj.line_number)
+            % is there a way to find where ekeyboard is in that file?
+            myObj.line_number=1;
+        end
+        matlab.desktop.editor.openAndGoToLine(myObj.file_path,myObj.line_number);
     end
-    matlab.desktop.editor.openAndGoToLine(anObj.file_path,anObj.line_number);        
-  end
 
 
 %{
@@ -18,9 +17,9 @@ function ekeyboard_helper()
   "When you create a callback function, the first two arguments must be a 
   handle to the timer object and an event structure. An event structure 
   contains two fields: Type and Data. The Type field contains a text string 
-  that identifies the type of event that caused the callback. The value of 
   this field can be any of the following strings: 'StartFcn', 'StopFcn',
   'TimerFcn', or 'ErrorFcn'. The Data field contains the time the event 
+  that identifies the type of event that caused the callback. The value of 
   occurred." (~obj ~event in the above function)
 %}
 
