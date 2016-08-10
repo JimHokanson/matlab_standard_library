@@ -3,7 +3,7 @@ function ekeyboard_helper()
 % anObj is from the calling_function_info class
 
    function my_callback_fcn(~,~)
-        myObj= sl.stack.calling_function_info(4) %gets the caller of ekeyboard. should be 4 as arg? need to test
+        myObj= sl.stack.calling_function_info(4); %gets the caller of ekeyboard. should be 4 as arg? need to test
         if isnan(myObj.line_number)
             % is there a way to find where ekeyboard is in that file?
             myObj.line_number=1;
@@ -35,5 +35,4 @@ t.TimerFcn = {@my_callback_fcn};
 
 start(t);
 
-% delete(t);      will need to figure out how to delete the timer. see ekeyboard.m
 end

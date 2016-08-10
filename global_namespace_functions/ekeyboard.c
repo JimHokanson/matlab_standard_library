@@ -21,5 +21,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     
     //This works, unlike evalin('caller','keyboard') in a .m file
     mexEvalString("keyboard");
+    mexEvalString("pause(0.6)");
+    mexEvalString("cleanKey");
     
 }
