@@ -160,6 +160,20 @@ classdef cmd_window < sl.obj.display_class
             output = local_obj;
         end
     end
+    
+    methods (Static)
+        function grabFocus(obj)
+            %
+            %   sl.ml.cmd_window.grabFocus
+            %   
+            
+            if nargin == 0
+                obj = sl.ml.cmd_window.getInstance();
+            end
+            
+            obj.h.grabFocus();
+        end
+    end
 end
 
 %TODO: We should wrap h_text with methods so that everything is 1 based
@@ -378,7 +392,10 @@ hasFocus
 hashCode                            
 hide                                
 imageUpdate                         
-incSearch                           
+incSearch             
+
+             wtf.h.grabFocus()
+
 incSearchEOL                        
 incSearchNextWord                   
 insert                              
