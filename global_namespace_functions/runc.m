@@ -42,6 +42,15 @@ function runc(varargin)
 %   the ability to determine where errors were in the selection
 %   2) runc last
 
+
+%{
+%This is test code for runc('raw')
+x = 1;
+b = 2;
+%This should throw an error
+c = x(b); 
+%}
+
 %%Testing file writing
 %   %first run (copy line below then run this function)
 %   a = 1
