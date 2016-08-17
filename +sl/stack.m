@@ -28,7 +28,8 @@ classdef (Hidden) stack
             end
             
             s = dbstack('-completenames');
-            matlab.desktop.editor.openAndGoToLine(s(idx_use).file,s(idx_use).line); 
+            matlab.desktop.editor.openAndGoToLine(s(idx_use).file,s(idx_use).line);
+            sl.ml.cmd_window.grabFocus();
         end
     end
     
