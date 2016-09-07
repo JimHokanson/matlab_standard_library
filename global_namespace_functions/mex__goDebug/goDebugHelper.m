@@ -1,13 +1,6 @@
-classdef (Hidden) stack
-    %
-    
-    properties
-    end
-    
-    methods (Hidden,Static)
-        function goDebugHelper(stack_printout)
+function goDebugHelper(stack_printout)
             %
-            %   sl.stack.goDebugHelper(stack_printout)
+            %  goDebugHelper(stack_printout)
             %
             %   This is used by goDebug.mex in order to 
             %   open the editor to the current edit point in the stack.
@@ -22,15 +15,13 @@ classdef (Hidden) stack
             
             if isempty(I)
                 %TODO: Throw warning
+                warning()
                 idx_use = 2;
             else
-                idx_use = I + 1; %We need to add 
+                idx_use = I + 1; 
             end
             
             s = dbstack('-completenames');
-            matlab.desktop.editor.openAndGoToLine(s(idx_use).file,s(idx_use).line); 
+            matlab.desktop.editor.openAndGoToLine(s(idx_use).file,s(idx_use).line);
+            sl.ml.cmd_window.grabFocus();
         end
-    end
-    
-end
-
