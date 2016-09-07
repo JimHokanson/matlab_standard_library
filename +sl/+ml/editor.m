@@ -141,11 +141,22 @@ classdef (Hidden) editor < sl.obj.display_class
     end
     
     methods (Static)
-        function openAndGoToLine()
-            %TODO: This needs to be completed
-            %
-            %Allow defaults of using current file and/or current line number   
-            matlab.desktop.editor.openAndGoToLine
+        function openAndGoToLine(file_path,line_number,varargin)
+            %UPDATE: 9/5/16--expanded some functionality to start working
+            % with different options for focus
+            in.focus = 'cmd';
+            [in, extras]=sl.in.processVarargin(in,varargin);
+            
+            % file_path comes from obj = sl.stack.calling_function_info(); 
+            % obj.file_path, obj.line_number
+            matlab.desktop.editor.openAndGoToLine(file_path,line_number);
+            % the above leaves focus in editor
+            switch in.focus
+                case 'cmd'
+                sl.ml.cmd_window.grabFocus();
+                %can add other functionality here later i.e to focus on a
+                %GUI etc.
+            end 
         end
     end
     
