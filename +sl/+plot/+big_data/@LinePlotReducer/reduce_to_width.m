@@ -118,6 +118,7 @@ tic; [xr,yr,extras] = sl.plot.big_data.LinePlotReducer.reduce_to_width(t,r,4000,
 %Mex code calls:
 %---------------
 
+
 %TODO: This should be based on how long it takes to plot a set of points
 %versus how long it takes to run this code ...
 C.ALLOW_MEX = ~ismac;
@@ -301,6 +302,15 @@ n_max_min_regions = n_output_points/2;
 
 new_m = floor(length(data)/n_max_min_regions);
 
+%This causes a problem when the # of points per region is small and the
+%round error is big:
+%35000 points
+%4000 min_max regions
+%3002 extra samples - looks really bad
+%extra_samples = length(data) - new_m*n_max_min_regions;
+
+%NEW CODE ...
+n_max_min_regions = floor(length(data)/new_m);
 extra_samples = length(data) - new_m*n_max_min_regions;
 
 indices = zeros(2,n_max_min_regions);
