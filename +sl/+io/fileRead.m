@@ -54,35 +54,18 @@ mode = in.mode;
 in = rmfield(in,'mode');
 
 % open the file
-if ischar(file_path)
-    fid = sl.io.fopenWithErrorHandling(file_path,mode,in);
-    
-    try
-        % read file
-        out = fread(fid,type)';
-    catch exception
-        % close file
-        fclose(fid);
-        throw(exception);
-    end
-    
+
+fid = sl.io.fopenWithErrorHandling(file_path,mode,in);
+
+try
+    % read file
+    out = fread(fid,type)';
+catch exception
     % close file
     fclose(fid);
-else
-    %I think this code as a brief foray into reading Java files
-    
-    %'source' - output as double
-    %'source=>output'
-    %'*source' - keep input type
-    %'N*source' or 'N*source=>output'
-    
-    %Note: endian wouldn't be handled ...
-    
-    if type(1) == '*'
-        type = type(2:end);
-        out  = typecast(org.apache.commons.io.FileUtils.readFileToByteArray(file_path),type);
-    else
-        error('Conversion type: "%s" not supported yet',type)
-    end
-    
+    throw(exception);
 end
+
+% close file
+fclose(fid);
+
