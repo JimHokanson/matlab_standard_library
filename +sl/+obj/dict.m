@@ -14,36 +14,89 @@ classdef dict < handle
     %   Issues:
     %   -------
     %   1) Providing methods for this class makes property attribute
-    %   and method lookup ambiguous. 
+    %   and method lookup ambiguous.
     %   2) Tab complete does not work when accessing via parentheses,
-    %       e.g.: 
+    %       e.g.:
     %           obj.('my_va   <= tab complete wouldn't work
     %           obj.my_va   <= tab complete would work
     %
     %
     %   http://undocumentedmatlab.com/blog/class-object-tab-completion-and-improper-field-names
     
+    %{
+    %Test Cases
+    %----------
+    %1)
+    objs_ca = cell(1,10);
+    for i = 1:10
+        temp = sl.obj.dict;
+        temp.('wtf batman') = i;
+        objs_ca{i} = temp;
+    end
+    
+    %This is a call to subsref with {:}
+    objs = [objs_ca{:}];
+    
+    %This is a call to subsref that involves field indexing within mutliple objects
+    wtf_batman = [objs.('wtf batman')];
+    assert(isequal(wtf_batman,1:10),'Failure to extract
+    
+    %}
+    
+    
     properties
         props
     end
     
-%     methods
-%         function value = get.props(obj)
-%            value = obj.props; 
-%            if isempty(value)
-%               obj.props = containers.Map;
-%               value = obj.props;
-%            end
-%         end
-%     end
+    methods
+        %These are internal functions, normally subsasgn will work
+        function addProp(obj,name,value)
+            %x  Adds a property to the class
+            %
+            %   addProp(obj,name,value)
+            %
+            %   If you are writing code inside a class that inherits
+            %   from lazy_dict, then use this method. Otherwise just
+            %   treat the class as a structure.
+            %
+            %   Matlab doesn't support calling subsref inside a function.
+            %   This means that the following type of code works
+            %   differently inside a class method, vs in other code that
+            %   calls the class:
+            %
+            %   obj.('new_prop') = value;
+            %
+            %   Inside the class:
+            %   -----------------
+            %   Tries to directly assign to the 'new_prop' property, which
+            %   doesn't exist.
+            %
+            %   Outside the class:
+            %   ------------------
+            %   Calls the class' subsasgn method which handles the logic
+            %   appropriately of adding the new property to the class.
+            %
+            %
+            %
+            
+            %obj.props is a structure, so we try and add the field
+            %via dynamic indexing. If the field name is invalid, we fall
+            %back to mex code which allows the invalid assignment
+            try
+                obj.props.(name) = value;
+            catch
+                obj.props = json.setField(obj.props,name,value);
+            end
+        end
+    end
     
-    methods (Hidden=true)
+    methods
         function mask = isfield(obj,field_or_fieldnames)
-           if ischar(field_or_fieldnames)
-               field_or_fieldnames = {field_or_fieldnames};
-               %TODO: Need to look if props is empty ...
-               mask = ismember(field_or_fieldnames,obj.fieldnames);
-           end
+            if ischar(field_or_fieldnames)
+                field_or_fieldnames = {field_or_fieldnames};
+                %TODO: Need to look if props is empty ...
+                mask = ismember(field_or_fieldnames,obj.fieldnames);
+            end
         end
         % Overload property names retrieval
         function names = properties(obj)
@@ -53,6 +106,10 @@ classdef dict < handle
         function names = fieldnames(obj)
             names = sort(fieldnames(obj.props));  % return in sorted order
         end
+        
+    end
+    
+    methods (Hidden=true)
         % Overload property assignment
         function obj = subsasgn(obj, subStruct, value)
             if strcmp(subStruct.type,'.')
@@ -74,7 +131,7 @@ classdef dict < handle
                     try
                         obj.props = sl.struct.setField(obj.props,name,value);
                     catch ME
-                       error('Could not assign "%s" property value', subStruct.subs); 
+                        error('Could not assign "%s" property value', subStruct.subs);
                     end
                 end
             else  % '()' or '{}'
@@ -82,33 +139,47 @@ classdef dict < handle
             end
         end
         % Overload property retrieval (referencing)
-        function value = subsref(obj, subStruct)
+        function varargout = subsref(obj, subStruct)
+            
             s1 = subStruct(1);
             if strcmp(s1.type,'.')
+                
+                %This is to handle temp = [objects.value]
+                if length(obj) > 1
+                    for i = 1:length(obj)
+                        varargout{i} = subsref(obj(i),subStruct);
+                    end
+                    return
+                end
+                
                 try
-                    value = obj.props.(s1.subs);
+                    varargout{1} = obj.props.(s1.subs);
                 catch
                     %TODO: Might want to look for s1.subs being a method
                     %see commented out code above
-                    builtin('subsref', obj, subStruct)
+                    keyboard
+                    varargout = {builtin('subsref', obj, subStruct)};
                     return
                 end
-                %TODO: Can we avoid the check on prop_lookup_failed by 
+                %TODO: Can we avoid the check on prop_lookup_failed by
                 %doing a return in the catch????
             else  % '()' or '{}'
                 %f.data(1).x
-                %   
+                %
                 %   data => sl.obj.dict
                 %
                 %   () .  <= 2 events, () followed by .
                 %
-                value = builtin('subsref', obj, subStruct(1));
+                varargout = {builtin('subsref', obj, subStruct(1))};
             end
             
             if length(subStruct) > 1
-                value = subsref(value,subStruct(2:end)); 
+                varargout = {subsref(varargout{:},subStruct(2:end))};
             end
-
+            
+        end
+        function output = getPropertiesStruct(obj)
+            output = obj.props;
         end
         function disp(objs)
             
@@ -118,45 +189,15 @@ classdef dict < handle
                 %TODO: we need to check for properties that have been
                 %defined in the inherited class ...
                 if isempty(objs.props) || isempty(fieldnames(objs.props))
-                    fprintf('%s with no properties\n',size(objs,1),size(objs,2),class(objs));
+                    fprintf('%s with no properties\n',class(objs));
                 else
-                    fprintf('%s with properties:\n\n',size(objs,1),size(objs,2),class(objs));
+                    fprintf('%s with properties:\n\n',class(objs));
                     disp(objs.props)
                 end
             end
             
-% % %             %TODO: Does this display properties from a subclass?    
-% % %             
-% % %             %TODO: This was written when inheriting from
-% % %             %containers.Map and could be simplified 
-% % %             local_props = obj.props;
-% % %             keys = local_props.keys;
-% % %             values = local_props.values;
-% % %             key_length = cellfun(@length,keys);
-% % %             padding_length = max(key_length) - key_length;
-% % %             key_displays = ...
-% % %                 cellfun(@(x,y) [blanks(amount_to_indent) blanks(x) y],...
-% % %                 num2cell(padding_length),keys,'un',0);
-% % %             for iK = 1:length(keys)
-% % %                 cur_key_display = key_displays{iK};
-% % %                 
-% % %                 cur_value = values{iK};
-% % %                 
-% % %                 %Ideally this code would go elsewhere
-% % %                 
-% % %                 %TODO: Add is logical
-% % %                 if isnumeric(cur_value) && isscalar(cur_value)
-% % %                     fprintf('%s: %d\n',cur_key_display,cur_value);
-% % %                 elseif ischar(cur_value)
-% % %                     fprintf('%s: ''%s''\n',cur_key_display,cur_value);
-% % %                 else
-% % %                     temp_size = sprintf('%dx',size(cur_value));
-% % %                     %Need to drop the extra 'x' in temp_size
-% % %                     fprintf('%s: [%s %s]\n',cur_key_display,temp_size(1:end-1),class(cur_value));
-% % %                 end
-% % %             end
+            
         end
     end
     
 end
-
