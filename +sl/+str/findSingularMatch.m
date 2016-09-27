@@ -1,15 +1,29 @@
 function output = findSingularMatch(string_to_match,cellstr_data,varargin)
 %
-%   output = sl.str.findSingularMatch(string_to_match,cellstr_data)
+%   indices_or_mask = sl.str.findSingularMatch(string_to_match,cellstr_data,varargin)
 %
 %   This function matches a string against an array of strings (cell array
 %   of strings) and ensures that only a singular match is found (i.e. not
 %   zero matches or more than one).
 %
-%   INPUTS
-%   -----------------------------------------------------------
+%   Inputs
+%   ------
 %   string_to_match : (char)
+%       The string to find in the cellstr_data input argument. This can
+%       be a regular expression pattern if 'use_regexp' is enabled
 %   cellstr_data : {cellstr}
+%
+%   Optional Inputs
+%   ---------------
+%   use_regexp: logical (default false)
+%       If true, the search is made using regular expressions
+%   as_mask: logical (default false)
+%       
+%   zero_ok: logical (default false)
+%
+%   Outputs
+%   -------
+%   indices_or_mask
 %
 %
 %   IMPROVEMENTS:

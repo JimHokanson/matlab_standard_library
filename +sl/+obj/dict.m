@@ -14,9 +14,9 @@ classdef dict < handle
     %   Issues:
     %   -------
     %   1) Providing methods for this class makes property attribute
-    %   and method lookup ambiguous.
+    %   and method lookup ambiguous. 
     %   2) Tab complete does not work when accessing via parentheses,
-    %       e.g.:
+    %       e.g.: 
     %           obj.('my_va   <= tab complete wouldn't work
     %           obj.my_va   <= tab complete would work
     %
@@ -24,25 +24,20 @@ classdef dict < handle
     %   http://undocumentedmatlab.com/blog/class-object-tab-completion-and-improper-field-names
     
     %{
-    %Test Cases
-    %----------
-    %1)
-    objs_ca = cell(1,10);
-    for i = 1:10
-        temp = sl.obj.dict;
-        temp.('wtf batman') = i;
-        objs_ca{i} = temp;
-    end
+    Test Cases
+    ----------
+    obj = sl.obj.dict;
+    obj.('no way') = 3;
+    obj.('test') = 5;
     
-    %This is a call to subsref with {:}
-    objs = [objs_ca{:}];
+    obj2 = sl.obj.dict;
     
-    %This is a call to subsref that involves field indexing within mutliple objects
-    wtf_batman = [objs.('wtf batman')];
-    assert(isequal(wtf_batman,1:10),'Failure to extract
+    objs = [obj obj2];
+    obj2.('test') = 6;
+    
+    objs.test
     
     %}
-    
     
     properties
         props
@@ -53,7 +48,7 @@ classdef dict < handle
         function addProp(obj,name,value)
             %x  Adds a property to the class
             %
-            %   addProp(obj,name,value)
+            %   addProp(obj,name,value)   
             %
             %   If you are writing code inside a class that inherits
             %   from lazy_dict, then use this method. Otherwise just
@@ -61,22 +56,22 @@ classdef dict < handle
             %
             %   Matlab doesn't support calling subsref inside a function.
             %   This means that the following type of code works
-            %   differently inside a class method, vs in other code that
+            %   differently inside a class method, vs in other code that 
             %   calls the class:
             %
             %   obj.('new_prop') = value;
             %
-            %   Inside the class:
+            %   Inside the class: 
             %   -----------------
             %   Tries to directly assign to the 'new_prop' property, which
             %   doesn't exist.
             %
-            %   Outside the class:
+            %   Outside the class: 
             %   ------------------
             %   Calls the class' subsasgn method which handles the logic
             %   appropriately of adding the new property to the class.
             %
-            %
+            %   
             %
             
             %obj.props is a structure, so we try and add the field
@@ -90,13 +85,13 @@ classdef dict < handle
         end
     end
     
-    methods
+    methods 
         function mask = isfield(obj,field_or_fieldnames)
-            if ischar(field_or_fieldnames)
-                field_or_fieldnames = {field_or_fieldnames};
-                %TODO: Need to look if props is empty ...
-                mask = ismember(field_or_fieldnames,obj.fieldnames);
-            end
+           if ischar(field_or_fieldnames)
+               field_or_fieldnames = {field_or_fieldnames};
+               %TODO: Need to look if props is empty ...
+               mask = ismember(field_or_fieldnames,obj.fieldnames);
+           end
         end
         % Overload property names retrieval
         function names = properties(obj)
@@ -121,17 +116,12 @@ classdef dict < handle
                 %would be of placing properties in the class itself ...
                 
                 try
-                    %Did this change, I'm getting subs as a {'string'}
-                    %instead of 'string'
-                    %2016a - string
-                    %other versions?
-                    %Does it depend on the form of the call?
                     obj.props.(name) = value;
                 catch
                     try
                         obj.props = sl.struct.setField(obj.props,name,value);
                     catch ME
-                        error('Could not assign "%s" property value', subStruct.subs);
+                       error('Could not assign "%s" property value', subStruct.subs); 
                     end
                 end
             else  % '()' or '{}'
@@ -139,47 +129,72 @@ classdef dict < handle
             end
         end
         % Overload property retrieval (referencing)
-        function varargout = subsref(obj, subStruct)
+        function varargout = subsref(obj, sub_struct)
+            %
+            %   http://www.mathworks.com/help/matlab/matlab_oop/code-patterns-for-subsref-and-subsasgn-methods.html
+            %
             
-            s1 = subStruct(1);
+            s1 = sub_struct(1);
             if strcmp(s1.type,'.')
                 
-                %This is to handle temp = [objects.value]
-                if length(obj) > 1
-                    for i = 1:length(obj)
-                        varargout{i} = subsref(obj(i),subStruct);
-                    end
-                    return
-                end
-                
                 try
-                    varargout{1} = obj.props.(s1.subs);
+                    s1_subs = s1.subs;
+                    if length(obj) > 1
+                        %TODO: This will run into problems if the name
+                        %isn't present
+                        %Not sure if this is the fastest approach ...
+                        %I bet we could mex this ...
+                        %function_handle, n_array_inputs, is_uniform, array, array, constant, constant,
+                        %
+                        %Have hard coded a set of n_array_inputs and
+                        %n_constants combos
+                        [varargout,mask] = arrayfun(@(x) h__grabPropWithCheck(x,s1_subs),obj);
+                        
+                        %mask is used here to denote whether or not the
+                        %property was present
+                        
+                        if any(mask)
+                            if ~all(mask)
+                               error('Not all of the objects contained the specified property') 
+                            end
+                        else
+                            varargout = builtin('subsref', obj, sub_struct);
+                            return
+                        end
+                        
+                        if length(sub_struct) > 1
+                            %TODO: We need a better error code ...
+                            error('Multi-level indexing detected')
+                        else
+                           return 
+                        end
+                    else
+                        varargout{1} = obj.props.(s1.subs);
+                    end
                 catch
-                    %TODO: Might want to look for s1.subs being a method
-                    %see commented out code above
-                    keyboard
-                    varargout = {builtin('subsref', obj, subStruct)};
-                    return
+                   varargout = builtin('subsref', obj, sub_struct);
+                   return
                 end
-                %TODO: Can we avoid the check on prop_lookup_failed by
-                %doing a return in the catch????
-            else  % '()' or '{}'
+            elseif strcmp(s1.type,'{}')
+                error('Dereferencing an object or objects is not supported, consider using () instead of {}')
+                
+            else% '()' or '{}'
                 %f.data(1).x
-                %
+                %   
                 %   data => sl.obj.dict
                 %
                 %   () .  <= 2 events, () followed by .
                 %
-                varargout = {builtin('subsref', obj, subStruct(1))};
+                varargout = {builtin('subsref', obj, sub_struct(1))};
             end
             
-            if length(subStruct) > 1
-                varargout = {subsref(varargout{:},subStruct(2:end))};
+            if length(sub_struct) > 1
+                varargout = {subsref(varargout{:},sub_struct(2:end))}; 
             end
-            
+
         end
         function output = getPropertiesStruct(obj)
-            output = obj.props;
+           output = obj.props; 
         end
         function disp(objs)
             
@@ -196,8 +211,19 @@ classdef dict < handle
                 end
             end
             
-            
+
         end
     end
     
 end
+
+function [value,was_found] = h__grabPropWithCheck(obj,s1_subs)
+   try
+      value = {obj.props.(s1_subs)}; 
+      was_found = true;
+   catch
+      value = {};
+      was_found = false;
+   end
+end
+
