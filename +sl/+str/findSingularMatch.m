@@ -18,20 +18,28 @@ function output = findSingularMatch(string_to_match,cellstr_data,varargin)
 %   use_regexp: logical (default false)
 %       If true, the search is made using regular expressions
 %   as_mask: logical (default false)
-%       
+%       If true, then a logical mask is returned. If false, then matching
+%       indices are returned.
 %   zero_ok: logical (default false)
 %
 %   Outputs
 %   -------
-%   indices_or_mask
+%   indices_or_mask : logical or numerical array
+%       Type depends on 'as_mask' optional input. The mask refers to a
+%       logical array, with a true value indicating a match.
 %
 %
 %   IMPROVEMENTS:
 %   --------------------------------------
-%   - allow 0?
 %   - Custom empty message
 %   - Custom +1 message
 %   - Custom strcmp -> strcmpi, strcmpn, etc
+%   - *** make this depend on findMatch
+%
+%
+
+%TODO: Add on documentation that explains how to make things singular
+error('Use findMatches instead')
 
 in.use_regexp = false;
 in.as_mask = false;
