@@ -66,6 +66,8 @@ classdef axes < sl.obj.display_class
             %        - 'right' - keep right side fixed
             in.mode = 'c';
             
+            error('Not yet implemented')
+            
             switch lower(in.mode(1))
                 case 'c'
                 case 'l'
