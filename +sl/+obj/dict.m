@@ -11,17 +11,48 @@ classdef dict < handle
     %   Valid variable names can be accessed via just the dot operator:
     %       obj.<valid_property>  e.g. obj.valid_property
     %
+    %   Internally, all values are stored in a structure (props property)
+    %   where the naming issue has been avoided by performing assignments
+    %   using mex calls.
+    %
+    %   Example
+    %   -------
+    %   temp = sl.obj.dict;
+    %   temp.('hi mom') = 'Hello';
+    %   temp.hi_dad = 'Howdy';
+    %
+    %
     %   Issues:
     %   -------
     %   1) Providing methods for this class makes property attribute
-    %   and method lookup ambiguous. 
+    %   and method lookup ambiguous, as it is unclear whether or not
+    %   you intend to access a property or method. 
+    %
     %   2) Tab complete does not work when accessing via parentheses,
     %       e.g.: 
     %           obj.('my_va   <= tab complete wouldn't work
     %           obj.my_va   <= tab complete would work
     %
-    %
     %   http://undocumentedmatlab.com/blog/class-object-tab-completion-and-improper-field-names
+    %
+    %   Inheriting from this class
+    %   --------------------------
+    %   Within a class, methods fail to trigger the overloaded subasgn
+    %   and subsref methods. This means that:
+    %   
+    %       obj.my_prop = value
+    %
+    %   will look for a property called 'my_prop', rather than calling
+    %   subsasgn with the '.' operator and 'my_prop' as the input. To
+    %   get around it is recommended that you use:
+    %
+    %   addProp(obj,'my_prop',value)
+    %
+    %   For property retrieval, valeus should be directly retrieved
+    %   from the internal props storage:
+    %
+    %   value = obj.props.my_prop OR
+    %   value = obj.props.('my cool prop!')
     
     %{
     Test Cases
@@ -158,7 +189,7 @@ classdef dict < handle
                                error('Not all of the objects contained the specified property') 
                             end
                         else
-                            varargout = builtin('subsref', obj, sub_struct);
+                            [varargout{1:nargout}] = builtin('subsref', obj, sub_struct);
                             return
                         end
                         
@@ -172,7 +203,7 @@ classdef dict < handle
                         varargout{1} = obj.props.(s1.subs);
                     end
                 catch
-                   varargout = builtin('subsref', obj, sub_struct);
+                   [varargout{1:nargout}] = builtin('subsref', obj, sub_struct);
                    return
                 end
             elseif strcmp(s1.type,'{}')

@@ -56,6 +56,12 @@ function output = findMatches(input_string,strings_to_match,varargin)
 %   mask_or_indices = sl.str.findMatches('pres',{'Bladder pressure','Urethral Pressure','EUS EMG'},...
 %           'partial_match',true,'n_rule',1,'multi_result_rule','first');
 
+%{
+mask_or_indices = sl.str.findMatches('asdf',{'ASDF'});
+
+
+%}
+
 in.n_rule = 2;
 in.as_mask = false;
 in.case_sensitive = false;
@@ -69,9 +75,9 @@ if in.partial_match
     mask = cellfun(@(x) sl.str.contains(x,input_string,'case_sensitive',in.case_sensitive),strings_to_match);
 elseif in.regex
     if in.case_sensitive
-        fh = @regexpi;
-    else
         fh = @regexp;
+    else
+        fh = @regexpi;
     end
     regexp_pattern = input_string;
     mask = ~cellfun('isempty',fh(strings_to_match,regexp_pattern));

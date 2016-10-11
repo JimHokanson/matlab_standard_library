@@ -2,21 +2,26 @@ classdef keyboard_logger < handle
     %
     %   Class:
     %   sl.os.keyboard_logger
+    %
+    %   TODO: Describe how this works
+    %
+    %   TODO: If no one is listening, then delete the object 
+    %   http://www.mathworks.com/help/matlab/ref/event.haslistener.html
+    %   - tf = event.hasListener(src,EventName)
+    %   - need to clear mex file
+    %   - :/ Unfortunately, this doesn't let you know if there is a
+    %   listener that is disabled
+    %   - would need to wrap the listener with our own logic that handles
+    %   this - perhaps add this as an issue
     
     %{
-    
-    https://www.mathworks.com/help/matlab/matlab_oop/events-and-listeners--syntax-and-techniques.html
-    
-    
-    Test Code
-    ---------
+    lh = sl.os.keyboard_logger.keyboardListerExample();
     
     %}
     
-%     properties
-%         %https://msdn.microsoft.com/en-us/library/windows/desktop/dd375731(v=vs.85).aspx
-%         vk_code_mask
-%     end
+    properties
+       t 
+    end
     
     events
        keyboard_up
@@ -27,7 +32,12 @@ classdef keyboard_logger < handle
     methods (Access = private)
         function obj = keyboard_logger()
             sl.os.log_keyboard();
+            obj.t = timer;
             %obj.vk_code_mask = false(1,256);
+        end
+        function delete(obj)
+            stop(obj.t);
+           delete(obj.t); 
         end
     end
     
@@ -41,7 +51,22 @@ classdef keyboard_logger < handle
         end
     end
     
+    methods (Hidden,Static)
+        function obj = getInstance()
+           persistent local_object
+           if isempty(local_object)
+               local_object = sl.os.keyboard_logger();
+           end;
+           
+           obj = local_object;
+        end 
+        
+    end
+    
     methods (Static)
+        function title_string = getActiveWindowTitle()
+            title_string = sl.os.user32.getActiveWindowTitle();
+        end
         function lh = addKeyboardUpListener(callback_fh)
             %
             %   sl.os.keyboard_logger.addKeyboardUpListener
@@ -55,34 +80,40 @@ classdef keyboard_logger < handle
             obj = sl.os.keyboard_logger.getInstance();
             lh = obj.addlistener('keyboard_down',callback_fh);
         end
-        function addKeyboardListener()
-            %
-            %   sl.os.keyboard_logger.addKeyboardListener
-        end
-        function obj = getInstance()
-           persistent local_object
-           if isempty(local_object)
-               disp('New object created')
-               local_object = sl.os.keyboard_logger();
-           end;
-           
-           obj = local_object;
-        end
+%         function addKeyboardListener()
+%             %
+%             %   sl.os.keyboard_logger.addKeyboardListener
+%             error('Not yet implemented')
+%         end
         function keyboardEvent(input_string)
             
-            s1 = regexp(input_string,':','split');
+            %Moving to a timer to try and avoid this problem ...
+            %Error: An outgoing call cannot be made since the application is dispatching an input-synchronous call.
+            
+            %TODO: Verify that this is non-blocking to the mex call ...
             obj = sl.os.keyboard_logger.getInstance();
+            
+            %t = timer;
+            obj.t.TimerFcn = @(~,~)obj.keyboardEventTimerFunction(obj,input_string);
+            start(obj.t)
+            
+        end
+        function keyboardEventTimerFunction(obj,input_string)
+            
+            s1 = regexp(input_string,':','split');
+            
             event_data = sl.os.keyboard_event_data();
             
+            %I might want to put this into a class
             s = struct;
             s.raw = input_string;
             s.key_pressed = strcmp(s1{1},'0');
             s.vk_code = str2double(s1{2});
             s.hw_code = str2double(s1{3});
-            s.time = str2double(s1{4});
-            s.shift = strcmp(s1{5},'1');
-            s.ctrl  = strcmp(s1{6},'1');
-            s.caps  = ~strcmp(s1{7},'0');
+            s.time    = str2double(s1{4});
+            s.shift   = strcmp(s1{5},'1');
+            s.ctrl    = strcmp(s1{6},'1');
+            s.caps    = ~strcmp(s1{7},'0');
             
             %Debugging code
 %             if ~s.key_pressed
@@ -93,7 +124,7 @@ classdef keyboard_logger < handle
 
             event_data.s = s;
             
-            notify(obj,'keyboard_event',event_data);
+            %notify(obj,'keyboard_event',event_data);
             
             if s.key_pressed
                 notify(obj,'keyboard_down',event_data);
@@ -101,6 +132,8 @@ classdef keyboard_logger < handle
                 notify(obj,'keyboard_up',event_data);
             end
             
+            %stop(t);
+            %delete(t);
         end
     end
     
