@@ -1,7 +1,7 @@
 classdef (Hidden) editor < sl.obj.display_class
     %
     %   Class: (Singleton)
-    %   sl.editor.interface
+    %   sl.ml.editor
     %
     %   This class is meant as an interface to the editor API that Matlab
     %   created in version (???). It was originally created to facilitate
@@ -141,8 +141,44 @@ classdef (Hidden) editor < sl.obj.display_class
     end
     
     methods (Static)
-        function openAndGoToLine()
-            matlab.desktop.editor.openAndGoToLine
+        function openAndGoToLine(file_path,line_number,varargin)
+            %
+            %   openAndGoToLine(file_path,line_number,varargin)
+            %
+            %   Inputs
+            %   ------
+            %   file_path :
+            %   line_number :
+            %
+            %   Optional Inputs
+            %   ---------------
+            %   focus : string 
+            %       - 'cmd' (default) keyboard focus goes to the command window
+            %       - 'editor' keyboard focus goes to the opened document
+            %  
+            
+            in.focus = 'cmd';
+            in=sl.in.processVarargin(in,varargin);
+            
+            %This appears to be a non-blocking call, which needs to be
+            %taken into consideration below with the focus change
+            matlab.desktop.editor.openAndGoToLine(file_path,line_number);
+            
+            
+            switch in.focus
+                case 'cmd'
+                    %Ideally above would be blocking :/
+                    
+                    %Hopefully this is reasonable
+                    pause(0.5); 
+                    sl.ml.cmd_window.grabFocus();
+                case 'editor'
+                    %Do nothing
+                    %can add other functionality here later i.e to focus on a
+                %GUI etc.
+                otherwise
+                    error('Unrecognized option: %s',in.focus)
+            end 
         end
     end
     

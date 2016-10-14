@@ -37,6 +37,9 @@ function axes_handles = getAxes(fig_handle)
 %   ---------
 %   findobj
 
+    if nargin == 0
+        fig_handle = gcf;
+    end
 
     children = get(fig_handle,'children');
     axes_handles = findobj(children,'Type','axes','Tag','');

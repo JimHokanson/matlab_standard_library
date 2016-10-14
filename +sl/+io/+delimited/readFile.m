@@ -1,19 +1,16 @@
-function [output,extras] = readDelimitedFile(file_path,delimiter,varargin)
-%readDelimitedFile  Reads a delimited file
+function [output,extras] = readFile(file_path,delimiter,varargin)
+%x  Reads a delimited file
 %
 %   Simple interface to regexp with some post-processing options for
 %   reading a delimited file OR DELIMITED STRING.
 %
-%   sl.io.readDelimitedFile
-%
-%
 %   Calling Forms:
 %   --------------
 %   1)
-%   [output,extras] = readDelimitedFile(file_path,delimiter,varargin)
+%   [output,extras] = sl.io.delimited.readFile(file_path,delimiter,varargin)
 %
 %   2)
-%   [output,extras] = readDelimitedFile(str_data,delimiter,'input_is_str',true,varargin)   
+%   [output,extras] = sl.io.delimited.readFile(str_data,delimiter,'input_is_str',true,varargin)   
 %   
 %   Examples:
 %   ---------
@@ -32,6 +29,7 @@ function [output,extras] = readDelimitedFile(file_path,delimiter,varargin)
 %   return_type : {'cell','object'} (default 'cell')
 %       - 'cell' => cell array
 %       - 'object' => sl.io.delimited_file
+%       - 'table' => Matlab table
 %   merge_lines  : (default true), if true returns a cell array matrix
 %                  if false, returns a cell array of cell arrays
 %   header_lines : (default 0), if non-zero then the lines should be
@@ -73,7 +71,8 @@ function [output,extras] = readDelimitedFile(file_path,delimiter,varargin)
 %
 %   See Also:
 %   ---------
-%   sl.io.delimited_file
+%   sl.io.delimited.column_specs
+%   sl.io.delimited.delimited_file
    
 
 in.has_column_labels = false;
@@ -216,7 +215,11 @@ switch lower(in.return_type)
     case 'cell'
         % Do nothing
     case 'object'
-        output = sl.io.delimited_file(output, extras, in.columns_specs);
+        output = sl.io.delimited.delimited_file(output, extras, in.columns_specs);
+    case 'table'
+        temp = cell2table(output(2:end,:));
+        temp.Properties.VariableNames = output(1,:);
+        output = temp;
     otherwise
         error('Output type: "%s" not recognized',in.return_type);
 end
