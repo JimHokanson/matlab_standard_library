@@ -55,17 +55,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     
     double *min_data = mxMalloc(8*n_chans*n_chunks);
     double *max_data = mxMalloc(8*n_chans*n_chunks);
-    
-    #pragma omp parallel for simd
+
+    #pragma omp parallel for simd collapse(2)
     for (mwSize iChan = 0; iChan < n_chans; iChan++){
-        double *current_data_point = input_data + n_samples*iChan;
-        double *local_min_data = min_data + n_chunks*iChan - 1;
-        double *local_max_data = max_data + n_chunks*iChan - 1;
-        double min;
-        double max;
         for (mwSize iChunk = 0; iChunk < n_chunks; iChunk++){
-            min = *current_data_point;
-            max = *current_data_point;
+            
+            double *current_data_point = input_data + n_samples*iChan + iChunk*samples_per_chunk;
+            double *local_min_data = min_data + n_chunks*iChan - 1 + iChunk;
+            double *local_max_data = max_data + n_chunks*iChan - 1 + iChunk;
+            
+            double min = *current_data_point;
+            double max = *current_data_point;
             
             for (mwSize iSample = 1; iSample < samples_per_chunk; iSample++){
                 if (*(++current_data_point) > max){
@@ -83,11 +83,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
         //fit evenly into the search ...
     }
     
-    
-    
-    
-    
-    
     plhs[0] = mxCreateDoubleMatrix(0, 0, mxREAL);
     plhs[1] = mxCreateDoubleMatrix(0, 0, mxREAL);
     
@@ -97,22 +92,5 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     mxSetN(plhs[0],n_chans);
     mxSetM(plhs[1],n_chunks);
     mxSetN(plhs[1],n_chans);
-    
-    
-    //1
-    
-    //Matlab code ...
-// lefts  = bound_indices(1:end-1);
-// rights = [bound_indices(2:end-1)-1 bound_indices(end)];
-// 
-// for iRegion = 1:length(lefts)
-//     yt = y(lefts(iRegion):rights(iRegion), iChan);
-//     [~, indices(1,iRegion)] = min(yt);
-//     [~, indices(2,iRegion)] = max(yt);
-// end
-// 
-// indices = bsxfun(@plus,indices,lefts-1);
-// indices = h__orderIndices(indices);
-    
-    
+
 }
