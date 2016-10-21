@@ -20,18 +20,36 @@ function str = join(cellstr_input,varargin)
 %       instead of a tab. Percents should be escaped with a percent.
 %   
 %       The final delimiter is computed as by => final_delimeter = sprintf(d)
+%
+%   
 %   keep_rows : (default false)
-%       If true, rows are escaped via \n instead of with the delimeter
-%       
+%       If, true, rows are escaped with a newline character, rather than
+%       with the specified column delimiter ('d')
+%
+%
 %   remove_empty: (default false)
 %       If true empty values are removed.
 %   
 %   Examples:
 %   ---------
+%   1)
 %   cellstr_input = {'this' 'is' 'a' 'test'};
 %   str = sl.cellstr.join(cellstr_input,'d',' ') %use space as delimiter
 %   
 %       str => 'this is a test'
+%
+%   2) 2d array input
+%   cellstr_input = {'this' 'is'; 'a' 'test'};
+%   str = sl.cellstr.join(cellstr_input,'d',' ') %use space as delimiter
+%   
+%       str => 'this is a test'
+%
+%   3) 2d array input with row preservation
+%   cellstr_input = {'this' 'is'; 'a' 'test'};
+%   str = sl.cellstr.join(cellstr_input,'d',' ','keep rows',true) %use space as delimiter
+%
+%       str => 'this is 
+%               a test'
 %
 %   Notes:
 %   ------

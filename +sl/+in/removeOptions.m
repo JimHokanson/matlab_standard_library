@@ -1,6 +1,9 @@
 function [removed_options,remaining_options] = removeOptions(varargin_data,names_to_remove,varargin)
 %x Removes a set of option names (and values) so that all names are valid
 %
+%   ******* CONSIDER USING sl.in.splitAndProcessVarargin INSTEAD *********
+%   
+%
 %   [removed_options,remaining_options] = sl.in.removeOptions(varargin_data,names_to_remove)
 %
 %   This was designed to facilitate passing options into a parent function
