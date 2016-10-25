@@ -74,6 +74,9 @@ function [output,extras] = readFile(file_path,delimiter,varargin)
 %   sl.io.delimited.column_specs
 %   sl.io.delimited.delimited_file
    
+if nargin == 1
+    error('A 2nd input that specifies the delimiter is required for this function')
+end
 
 in.has_column_labels = false;
 

@@ -220,6 +220,17 @@ classdef dict < handle
             end
             
             if length(sub_struct) > 1
+                %Errors here may be indicative of an error in the calling
+                %code ...
+                %TODO: This may be improved by printing the sub_struct
+                %and indicating the location of the error:
+                %
+                %For example this error message:
+                %   Cell contents reference from a non-cell array object.
+                %
+                %   Came when I tried to do something like:
+                %   data.field{1} but field wasn't a cell array
+                %
                 varargout = {subsref(varargout{:},sub_struct(2:end))}; 
             end
 

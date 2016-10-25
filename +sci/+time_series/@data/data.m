@@ -480,9 +480,9 @@ classdef data < sl.obj.handle_light
                 cur_obj = objs(iObj);
                 
                 if ischar(in.channels)
-                    temp = sl.plot.big_data.LinePlotReducer(time_objs_for_plot(iObj),objs(iObj).d,plotting_options{:});
+                    temp = big_plot(time_objs_for_plot(iObj),objs(iObj).d,plotting_options{:});
                 else
-                    temp = sl.plot.big_data.LinePlotReducer(time_objs_for_plot(iObj),objs(iObj).d(:,in.channels),plotting_options{:});
+                    temp = big_plot(time_objs_for_plot(iObj),objs(iObj).d(:,in.channels),plotting_options{:});
                 end
                 if ~isempty(in.axes)
                     temp.h_axes = in.axes;
