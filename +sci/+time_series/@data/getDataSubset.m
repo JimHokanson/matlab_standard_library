@@ -45,19 +45,26 @@ function data_subset_objs = getDataSubset(objs,varargin)
 %       ex. '-times',[1.3 1.6]
 %
 %
-%   <start_event_name>,<event_indices or 'all'> Requires Stop Input
+%    Requires Stop Input
 %           'start_e','qp_start',1
 %           'start_e','bladder_contraction_starts','all'
-%   <start_event_name>,<event_indices or 'all'>,'-t_win',<window_values>
-%   <start_event_name>,<event_indices or 'all'>,'-s_win',<window_values>
-%   <start_event_name>,<event_indices or 'all'>,'-t_dur',<time duration>
-%   <start_event_name>,<event_indices or 'all'>,'-s_dur',<sample duration>
+%   1) <start_event_name>   <event_indices or 'all'>    <stop_event_name>   <event_indices or 'all'>
+%   2) <start_event_name>   <event_indices or 'all'>    '-t_win'    <window_values>
+%   3) <start_event_name>   <event_indices or 'all'>    '-s_win'    <window_values>
+%   4) <start_event_name>   <event_indices or 'all'>    '-t_dur'    <time duration>
+%   5) <start_event_name>   <event_indices or 'all'>    '-s_dur'    <sample duration>
+%   6) <epoch_name>         <event_indices or 'all'>
+%   7) <epoch_name>,<event_indices or 'all'>,'-pct',<pct grab>
 %
-%   <epoch_name>,<event_indices or 'all'>
-%           'fill',1
-%   <epoch_name>,<event_indices or 'all'>,'-pct',<pct grab>
-%           'fill',1,'-pct',[0.20 0.80]
+%   Examples:
+%   ---------
+%           
+%   6) getDataSubset('fill',1) %Grab the first fill epoch
+%   7) getDataSubset('fill',1,'-pct',[0.20 0.80]) %Grab from 20% to 80% of the fill epoch
+%   
+%   TODO: Keep updating documentation
 %   <epoch_name>,<event_indices or 'all'>,'-t_win',<time window values>
+%
 %           'fill',1,'-t_win',[10 -10]
 %   <epoch_name>,<event_indices or 'all'>,'-s_win',<sample window values>
 %
@@ -91,6 +98,7 @@ function data_subset_objs = getDataSubset(objs,varargin)
 %
 %   Examples:
 %   ---------
+%   These examples are a limited subset of the options
 %   Some setup:
 %       c = dba.GSK.cmg_expt('140806_C');
 %       p = c.getData('pres');
