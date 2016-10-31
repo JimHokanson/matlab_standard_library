@@ -4,7 +4,7 @@ function varargout = verticalLines(x_positions,varargin)
 %
 %   Inputs:
 %   -------
-%
+%   x_positions:
 %   
 %
 %   Optional Inputs, all line properties as well as:
@@ -19,6 +19,9 @@ function varargout = verticalLines(x_positions,varargin)
 %       For when the values are meant to specified in terms of the viewing
 %       limits. 
 %       NOT YET IMPLEMENTED: 
+%
+%   parent: 
+%       Can be used to specify which axes to plot into ...
 %
 %   TODO: Finish documentation
 

@@ -37,42 +37,28 @@ function data_subset_objs = getDataSubset(objs,varargin)
 %   1 to indicate that
 %
 %
-%   Start Inputs:
-%   -------------
-%   '-samples',<samples>
-%       ex. '-samples',[10 1000]
-%   '-times',<times>
-%       ex. '-times',[1.3 1.6]
-%
-%
-%    Requires Stop Input
-%           'start_e','qp_start',1
-%           'start_e','bladder_contraction_starts','all'
-%   1) <start_event_name>   <event_indices or 'all'>    <stop_event_name>   <event_indices or 'all'>
-%   2) <start_event_name>   <event_indices or 'all'>    '-t_win'    <window_values>
-%   3) <start_event_name>   <event_indices or 'all'>    '-s_win'    <window_values>
-%   4) <start_event_name>   <event_indices or 'all'>    '-t_dur'    <time duration>
-%   5) <start_event_name>   <event_indices or 'all'>    '-s_dur'    <sample duration>
-%   6) <epoch_name>         <event_indices or 'all'>
-%   7) <epoch_name>,<event_indices or 'all'>,'-pct',<pct grab>
+%   Calling Forms:
+%   --------------
+%   1) '-samples', <samples>
+%   2) '-times',<times>
+%   3) <start_event_name>   <event_indices or 'all'>    <stop_event_name>   <event_indices or 'all'>
+%   4) <start_event_name>   <event_indices or 'all'>    '-t_win'    <window_values>
+%   5) <start_event_name>   <event_indices or 'all'>    '-s_win'    <window_values>
+%   6) <start_event_name>   <event_indices or 'all'>    '-t_dur'    <time duration>
+%   7) <start_event_name>   <event_indices or 'all'>    '-s_dur'    <sample duration>
+%   8) <epoch_name>         <event_indices or 'all'>
+%   9) <epoch_name>,<event_indices or 'all'>,'-pct',<pct grab>
 %
 %   Examples:
 %   ---------
-%           
-%   6) getDataSubset('fill',1) %Grab the first fill epoch
-%   7) getDataSubset('fill',1,'-pct',[0.20 0.80]) %Grab from 20% to 80% of the fill epoch
-%   
-%   TODO: Keep updating documentation
-%   <epoch_name>,<event_indices or 'all'>,'-t_win',<time window values>
-%
-%           'fill',1,'-t_win',[10 -10]
-%   <epoch_name>,<event_indices or 'all'>,'-s_win',<sample window values>
-%
-%
-%   Stop Inputs:
-%   ------------
-%   <event_name>,<event_indices or 'all'>
-%
+%   1) getDataSubset('-samples',[1 100])
+%   2) getDataSubset('-times','[1.3 2.6])
+%   3) getDataSubset('start_pump',1,'stop_pump',1)
+%   4) getDataSubset('start_pump',1,'-t_win',[-1 2]) %Grab 1 second before
+%   and 2 seconds after the first 'start_pump' event
+%   TODO 5 - 7
+%   8) getDataSubset('fill',1) %Grab the first fill epoch
+%   9) getDataSubset('fill',1,'-pct',[0.20 0.80]) %Grab from 20% to 80% of the fill epoch
 %
 %   Optional Inputs:
 %   ----------------
@@ -96,7 +82,7 @@ function data_subset_objs = getDataSubset(objs,varargin)
 %       input name that does the same thing but I don't want to use
 %       'UniformOutput', perhaps 'collapse'?
 %
-%   Examples:
+%   Examples: (TODO: Move everything up ...)
 %   ---------
 %   These examples are a limited subset of the options
 %   Some setup:

@@ -115,7 +115,7 @@ end
 if nargout
     plot_result = sci.time_series.data.plot_result;
     plot_result.render_objs = render_objs;
-    plot_result.axes = render_objs{1}.h_axes;
+    plot_result.axes = render_objs{1}.h_and_l.h_axes;
     varargout{1} = plot_result;
 end
 
