@@ -31,12 +31,14 @@ switch combined_units
         fh = @(x)times(x,1e6);
     case 'V#mV'
         fh = @(x)times(x,1e3);
-    case {'cmH20#cm H20','cm H20#cm H2O'};
+    case {'cmH20#cm H20','cm H20#cm H2O','cmH20#cm H2O'};
         %Yikes, why aren't we using the letter O instead of the # 0 ...
         fh = @(x)x;
 % % %     case 's#ms'
 % % %     case 's#min'
 % % %     case 's#hr
+    case {'#mV'}
+        fh = @(x)x;
     otherwise
         error('Unsupported case: From "%s" to "%s"',source_unit,output_unit)
 end
