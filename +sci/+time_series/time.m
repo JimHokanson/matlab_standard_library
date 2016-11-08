@@ -328,6 +328,10 @@ classdef time < sl.obj.display_class
             %        will represent a value of the start_offset + dt.
             %
             %
+            
+            %TODO: Do an indices check
+            %Make this optional with a default of true ...
+            %sorted check?
             times = obj.start_offset + (indices-1)*obj.dt;
             times = h__getTimeScaled(obj,times);
         end        
