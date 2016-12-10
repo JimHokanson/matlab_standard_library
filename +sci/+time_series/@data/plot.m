@@ -9,6 +9,7 @@ function varargout = plot(objs,varargin)
 %
 %   Optional Inputs:
 %   ----------------
+%   start_
 %   time_units : {'s','min','ms','h'} (default 's')
 %       - s , seconds
 %       - h , hours
