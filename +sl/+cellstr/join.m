@@ -20,15 +20,13 @@ function str = join(cellstr_input,varargin)
 %       instead of a tab. Percents should be escaped with a percent.
 %   
 %       The final delimiter is computed as by => final_delimeter = sprintf(d)
-%
-%   
 %   keep_rows : (default false)
 %       If, true, rows are escaped with a newline character, rather than
 %       with the specified column delimiter ('d')
-%
-%
 %   remove_empty: (default false)
 %       If true empty values are removed.
+%   keep_last_d: (default false)
+%       If true, the last entry will have an extra delimiter
 %   
 %   Examples:
 %   ---------
@@ -56,6 +54,7 @@ function str = join(cellstr_input,varargin)
 %   In 2013a Matlab introduced strjoin() which does something similar
 %   although the implementation was subpar.
 
+in.keep_last_d = false;
 in.d         = ',';
 in.keep_rows = false;
 in.remove_empty = false;
@@ -90,6 +89,8 @@ else
        P(2,n_columns:n_columns:end) = {sprintf('\n')};
     end
     
-    P{2,end} = [] ;
+    if ~in.keep_last_d
+        P{2,end} = [] ;
+    end
     str = sprintf('%s',P{:});
 end
