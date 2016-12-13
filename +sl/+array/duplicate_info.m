@@ -4,6 +4,8 @@ classdef duplicate_info < handle
     %   sl.array.duplicate_info
     %
     %   Provides information on duplicates, if any
+    %
+    %   Returns an array, 1 for each entry
     
     %{
     info = sl.array.duplicate_info([1,2,3,4,5,6,4,2])
@@ -13,6 +15,8 @@ classdef duplicate_info < handle
     info = sl.array.duplicate_info([])
     
     info = sl.array.duplicate_info({'test' 'cheese' 'why' 'cheese'})
+    
+    info = sl.array.duplicate_info({'test' 'cheese' 'why' 'cheese' 'why'})
     
     %}
     
@@ -26,6 +30,8 @@ classdef duplicate_info < handle
         function obj = duplicate_info(array_data)
             %
             %   obj = sl.array.duplicate_info(array_data);
+            %
+            %   Returns an array of objects, 1 for each duplicate ...
             
             if nargin > 0
                 [unique_values,uI] = sl.array.uniqueWithGroupIndices(array_data);
