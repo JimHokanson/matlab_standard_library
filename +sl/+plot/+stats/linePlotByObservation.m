@@ -1,9 +1,15 @@
-function linePlotByObservation(data,names,varargin)
+function s = linePlotByObservation(data,varargin)
 %
-%
+%   s = sl.plot.stats.linePlotByObservation(data,varargin)
+%   
 %   TODO: Finish this function
 %
 %   Goal is to plot each data point across the different conditions
+
+in.labels = {};
+in = sl.in.processVarargin(in,varargin);
+
+s = struct;
 
 subplot(1,2,1)
 %bar chart data

@@ -1,5 +1,8 @@
 %**************************************************************************
 %
+%   I am replacing this with sl.plot.stats.barWithError
+%   
+%
 %   sl.plot.type.barwitherr
 %
 %   This is a simple extension of the bar plot to include error bars.  It
