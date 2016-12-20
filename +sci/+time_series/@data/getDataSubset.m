@@ -1,64 +1,57 @@
 function data_subset_objs = getDataSubset(objs,varargin)
-%
-%   Returns a new object that only has a subset of the data.
-%
+%x  Returns a new object that only has a subset of the data.
+%   
 %   data_subset_objs = getDataSubset(objs,varargin)
 %
-%   There are many ways of calling this function. See:
-%       "Specifying the Data Range"
-%   below for more details.
+%   
 %
-%   Specifying the Data Range:
-%   --------------------------
 %   This function is meant to simplify data retrieval of a subset of data.
-%   To get a subset a start and stop sample must be specified. There are
-%   numerous ways of doing this. For example one could literally specify a
-%   start and a stop sample, or alternatively, specify a start and a stop
-%   time which are then internally converted to samples. Since this class
-%   has events associated with it, one can also specify events from which
-%   times are defined.
+%   To get a subset, a start and stop sample must be specified. There are
+%   numerous ways of doing this. See "Calling Forms" and "Examples" below.
 %
 %   Events:
 %   -------
-%   Class events are kept within the 'event_info' property. The name of
-%   events can be seen in the 'event_names' property. Events come in 2
-%   types:
-%       - discrete events
-%       - epoch events
-%
-%   Discrete events occur at a single time point whereas epochs are defined
-%   by a span of time from a start time to a stop time.
-%
-%   Discrete events can be resolved into single start or stop times whereas
-%   epoch events specify both a start and stop time.
+%   Events are kept within the 'event_info' property. The name of events 
+%   can be seen in the 'event_names' property. Events come in 2 types:
+%       - discrete events - occur as a single time point
+%       - epoch events - occurs as a start and stop time
 %
 %   In order to resolve to a given time point, an event index must be
 %   given, as an event object can have multiple events. This index is often
-%   1 to indicate that
-%
+%   1 to indicate that the first value should be used.
 %
 %   Calling Forms:
 %   --------------
-%   1) '-samples', <samples>
-%   2) '-times',<times>
+%   0) options --> accessed via: sci.time_series.subset_options.()
+%
+%   1) '-samples'           <samples>
+%   2) '-times'             <times>
 %   3) <start_event_name>   <event_indices or 'all'>    <stop_event_name>   <event_indices or 'all'>
 %   4) <start_event_name>   <event_indices or 'all'>    '-t_win'    <window_values>
 %   5) <start_event_name>   <event_indices or 'all'>    '-s_win'    <window_values>
 %   6) <start_event_name>   <event_indices or 'all'>    '-t_dur'    <time duration>
 %   7) <start_event_name>   <event_indices or 'all'>    '-s_dur'    <sample duration>
 %   8) <epoch_name>         <event_indices or 'all'>
-%   9) <epoch_name>,<event_indices or 'all'>,'-pct',<pct grab>
+%   9) <epoch_name>         <event_indices or 'all'>    '-pct',     <pct grab>
+%  10) <epoch_name>         <event_indices or 'all'>    '-s_win',   <window_values>
+%  11) <epoch_name>         <event_indices or 'all'>    '-t_win',   <window_values>
 %
 %   Examples:
 %   ---------
-%   1) getDataSubset('-samples',[1 100])
-%   2) getDataSubset('-times','[1.3 2.6])
+%   1) getDataSubset('-samples',[1 100]) - Grab from sample 1 to sample 100
+%   2) getDataSubset('-times','[1.3 2.6]) - Grab from 1.3 to 2.6 seconds
 %   3) getDataSubset('start_pump',1,'stop_pump',1)
-%   4) getDataSubset('start_pump',1,'-t_win',[-1 2]) %Grab 1 second before
-%   and 2 seconds after the first 'start_pump' event
+%   4) getDataSubset('start_pump',1,'-t_win',[-1 2]) - Grab 1 second before
+%                   and 2 seconds after the first 'start_pump' event
 %   TODO 5 - 7
 %   8) getDataSubset('fill',1) %Grab the first fill epoch
 %   9) getDataSubset('fill',1,'-pct',[0.20 0.80]) %Grab from 20% to 80% of the fill epoch
+%
+%   p = trial.getData('pres');
+%   p_fill  = p.getDataSubset('fill_to_first_bc',1);
+%   p_fillp = p.getDataSubset('fill',1,'-pct',[0.2 0.8]);
+%   %We need 'un',0 to handle multiple contractions
+%   p_bc = p.getDataSubset('bladder_contraction','all','un',0);
 %
 %   Optional Inputs:
 %   ----------------
@@ -76,35 +69,18 @@ function data_subset_objs = getDataSubset(objs,varargin)
 %
 %           'UniformOutput', false
 %       These functions however only check for the first two characters
-%       being 'un' so it is much more succint to enter 'un',0 instead.
+%       being 'un' so it is much more succinct to enter 'un',0 instead.
 %
 %       NOTE: If we wanted, we could also alias this with a longer optional
 %       input name that does the same thing but I don't want to use
 %       'UniformOutput', perhaps 'collapse'?
 %
-%   Examples: (TODO: Move everything up ...)
-%   ---------
-%   These examples are a limited subset of the options
-%   Some setup:
-%       c = dba.GSK.cmg_expt('140806_C');
-%       p = c.getData('pres');
-%
-%   1) Retrieve data over the 1st 'fill' epoch
-%
-%       p_fill = p.getDataSubset('fill',1);
-%
-%
-%   2) " " from 20% to 80% of the 1st 'fill' epoch
-%
-%       p_fillp = p.getDataSubset('fill',1,'-pct',[0.2 0.8]);
-%
-%
-%   3) Get all bladder contractions (NOTE: 'un',0) is required since
-%   there could be multiple contractions per 'p' instance.
-%
-%       p_bc = p.getDataSubset('bladder_contraction','all','un',0);
+%   Improvement:
+%   Allow splitting ..., 'splits',n_splits or pct splits
+%       This would only be allowed with a singular thing ...
 %
 %   See Also:
+%   sci.time_series.subset_options
 %   sci.time_series.data.getDataAlignedToEvent()
 %   sci.time_series.data.zeroTimeByEvent()
 
@@ -113,6 +89,9 @@ function data_subset_objs = getDataSubset(objs,varargin)
 %   'start_t',<start_times>
 %           'start_t',5.323
 %           'stop_t',[5.3 20 50 100]  %???? 1 per object or all per object
+%           Would need to default to all per object, with cells to
+%           distinguish between objects
+%   
 %   'start_s',<start_samples>
 %           'start_s',10
 
@@ -153,8 +132,7 @@ function data_subset_objs = getDataSubset(objs,varargin)
 
 h__checkValiditySamples(start_samples,stop_samples);
 
-%start_samples : cell
-%stop_samples : cell
+%start_samples & stop_samples : {1 x n_objects}[1 x n_times]
 
 in.un = true; %UniformOutput
 in.align_time_to_start = false;
@@ -177,7 +155,6 @@ end
 %     first_sample_time = [];
 % end
 
-%TODO: This all needs to be simplified ...
 n_objs = length(start_samples);
 temp_objs_1 = cell(1,n_objs);
 for iObj = 1:n_objs
@@ -212,8 +189,8 @@ for iObj = 1:n_objs
     
     %objs.zeroTimeByEvent(event_times)
     
-    %We can always collapse these objects. It is just across objects that
-    %we might not be able to collapse
+    %We can always collapse these objects. 
+    %*** It is just across objects that we might not be able to collapse
     new_time_objs = [new_time_objs{:}];
     temp_objs_2_array = [temp_objs_2{:}];
     if in.align_time_to_start
@@ -253,6 +230,14 @@ function [start_samples,stop_samples,varargin] = h__handleInput(objs,varargin)
 %   'start_e','qp_start',1,'duration_s',10 %duration in seconds
 %   'start_e','qp_start',1,'window',[-10 10] %20 seconds around a given start event
 %   'epoch','fill',[20 80]
+
+%TODO: Move all the code into the options processors
+%Have functions that translate from varargin to an options object
+
+if isobject(varargin{1})
+    [start_samples,stop_samples,varargin] = varargin{1}.getStartAndStopSamples(objs);
+    return
+end
 
 first_name = varargin{1};
 if first_name(1) == '-'

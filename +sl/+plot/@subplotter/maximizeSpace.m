@@ -1,6 +1,8 @@
 function maximizeSpace(obj)
 %
 %
+%   NOT YET IMPLEMENTED
+%
 %   maximizeSpace(obj)
 %
 %
@@ -10,3 +12,5 @@ function maximizeSpace(obj)
 %   http://www.mathworks.com/matlabcentral/fileexchange/34055-tightfig/content//tightfig.m
 
 %This could be very complex 
+
+error('Not yet implemented')

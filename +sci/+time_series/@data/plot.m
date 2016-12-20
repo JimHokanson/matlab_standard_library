@@ -9,7 +9,6 @@ function varargout = plot(objs,varargin)
 %
 %   Optional Inputs:
 %   ----------------
-%   start_
 %   time_units : {'s','min','ms','h'} (default 's')
 %       - s , seconds
 %       - h , hours
@@ -24,6 +23,8 @@ function varargout = plot(objs,varargin)
 %   time_spacing: (default [])
 %       If not empty, then subsequent trials are spaced by the specified
 %       amount (Units: same as 'time_units')
+%
+%   Other optional inputs are passed to the line handle
 %
 %   Example:
 %   plot(p,'time_units','h','Color','k')

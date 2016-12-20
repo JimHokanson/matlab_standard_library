@@ -175,9 +175,13 @@ classdef subplotter < sl.obj.display_class
            %        The value -1 indicates that all rows should be
            %        compressed.
            %    columns : 
+           %        Which columns are affected
            %
            %    Optional Inputs:
            %    ----------------
+           %    gap_size: default 0.02
+           %        The normalized figure space that should be placed
+           %        between figures.
            %    remove_x_labels : logical (default true)
            %
            %    

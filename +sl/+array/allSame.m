@@ -16,5 +16,10 @@ function same = allSame(data)
 %   1) Including a tolerance
 %
 
-same = all(data == data(1));
+if iscell(data)
+    same = all(cellfun(@(x) isequal(data{1},x),data));
+else
+    same = all(data == data(1));
+end
+
 end

@@ -595,6 +595,8 @@ classdef data < sl.obj.handle_light
             %   event_elements : See sci.time_series.events_holder.addEvents
             %
             %   See Also:
+            %   sci.time_series.discrete_events
+            %   sci.time_series.epochs
             %   sci.time_series.events_holder
             %   sci.time_series.events_holder.addEvents
             
@@ -610,7 +612,7 @@ classdef data < sl.obj.handle_light
             %   history_elements : cell or string
             %       See definition of the 'history' property in this class
             %
-            if iscell(history_elements);
+            if iscell(history_elements)
                 if size(history_elements,2) > 1
                     history_elements = history_elements';
                 end

@@ -41,11 +41,12 @@ classdef smoothing < handle
             %
             %   Optional Inputs:
             %   ----------------
-            %   type : {'tri','rect'}
+            %   type : {'tri','rect'} (default 'tri')
             %       The shape to use for smoothing ...
             %       'tri' - triangular window
             %       'rect' - rectangular window
-            %   width_type : {'seconds','samples'}
+            %   width_type : {'seconds','samples'} (default 'seconds')
+            %       Units of the width
             %   zero_phase : logical (default true)
             %       If true the data are filtered forwards and backwards
             %       using filtfilt() instead of filter()
