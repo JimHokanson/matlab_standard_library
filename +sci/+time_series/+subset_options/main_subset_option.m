@@ -5,7 +5,8 @@ classdef (Hidden) main_subset_option < handle
     
     properties
         d0 = '-----     Additonal Options    ------'
-        n_splits
+        n_parts
+        
         %NYI
         split_percentages
         un
@@ -18,23 +19,28 @@ classdef (Hidden) main_subset_option < handle
     end
     methods
         function [start_samples,stop_samples] = processSplits(obj,start_samples,stop_samples)
-            if ~isempty(obj.n_splits) || ~isempty(obj.split_percentages)
+            %This can be called by objects after the samples have been
+            %resolved to split the subset into smaller subsets ...
+            if ~isempty(obj.n_parts) || ~isempty(obj.split_percentages)
                 %1) Verify singular times ...
                 split_eligible = all(cellfun('length',start_samples) == 1);
-                if ~isempty(obj.n_splits)
+                if ~split_eligible
+                   error('Objects are not split eligible, splitting requires only a single start/stop pair for each object')
+                end
+                
+                obj.un = false;
+                
+                if ~isempty(obj.n_parts)
                     
                     %TODO: see sl.array.split
                     %make sl.array.getSplitIndices
                     
-                    n_objects = length(start_samples);
-                    start_new = cell(1,n_objects);
-                    stop_new = cell(1,n_objects);
-                    for iObject = 1:length(n_objects)
-                        
-                    end
-                    
+                    [start_samples,stop_samples] = ...
+                            cellfun(@(x,y) sl.array.split.getSplitIndices(x,y,'n_parts',obj.n_parts),...
+                                    start_samples,stop_samples,'un',0);     
+                else
+                    error('Not yet implemented')
                 end
-                keyboard
             end
         end
         function options = getOtherOptions(obj)

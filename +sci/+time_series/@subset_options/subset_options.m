@@ -2,15 +2,21 @@ classdef subset_options
     %
     %   Class:
     %   sci.time_series.subset_options
+    %
+    %   I'm using this as a container for static methods, not as a class.
+    %
+    %   It might be good to merge with:
+    %   sci.time_series.subset_options.main_subset_option
     
     %Layout:
-    %-----------------
+    %---------------------------------------------------------------------
     %  These functions are supposed to build objects. These objects
     %  then do the processing
     %
     %   At this time I've only created:
     %   sci.time_series.subset_options.epoch
-    %   and it doesn't do anything yet ...
+    %
+    %   need discrete_event and times_or_samples (not sure of name)
     
     properties
     end
