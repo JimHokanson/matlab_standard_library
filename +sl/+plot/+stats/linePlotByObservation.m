@@ -2,6 +2,10 @@ function s = linePlotByObservation(data,varargin)
 %
 %   s = sl.plot.stats.linePlotByObservation(data,varargin)
 %   
+%   Inputs
+%   ------
+%   data: cell array of vectors
+%
 %   TODO: Finish this function
 %
 %   Goal is to plot each data point across the different conditions

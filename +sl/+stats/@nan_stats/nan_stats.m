@@ -1,31 +1,18 @@
-classdef nan_stats < handle
+classdef nan_stats
     %
     %   Class:
     %   sl.stats.nan_stats
     
-    %   TODO:
-    %   Goal is to expose various status for either a cell array of vectors
-    %   or a matrix without:
-    %   1) Using the stats toolbox
-    %   2) Needing to constantly reprocess values
-    %   3) without memory changing - implement in C where possible
-    
-    properties (Dependent)
-        mean
-        std
-        sem
-    end
-    
-    properties (Hidden)
-       %Log values once computed
-       h__mean
-       h__std
-       h__sem
-    end
-    
-    methods
-        function obj = nan_stats()
-            
+    methods (Static)
+        function value = sem(data,dim)
+            %
+            %   value = sl.stats.nan_stats.sem(data,dim);
+            %
+            if nargin < 2
+               dim = sl.array.firstNonSingletonDimension(data);
+            end
+            n_values = sum(~isnan(data),dim);
+            value = std(data,0,dim,'omitnan')./sqrt(n_values);
         end
     end
     

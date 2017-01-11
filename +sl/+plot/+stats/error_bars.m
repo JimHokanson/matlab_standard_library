@@ -27,6 +27,21 @@ classdef error_bars
             %
             %   obj = sl.plot.stats.error_bars(x,y,l,h);
             %
+            %   Inputs
+            %   ---------------
+            %   l: 
+            %       lower error, should be relative
+            %   h: 
+            %       higher error, should be relative
+            %
+            %   Optional Inputs
+            %   ---------------
+            %   width:
+            %   widths:
+            %   bar_options:
+            %   line_options:
+            %   plot_line: default false
+            %
             
             in.width = [];
             in.widths = [];
@@ -37,7 +52,7 @@ classdef error_bars
             
             
             if in.plot_line
-                error('Not yet implemented')
+                obj.h_data_line = plot(x,y,in.line_options{:});
             end
             
             n_points = length(x);
@@ -64,6 +79,13 @@ classdef error_bars
             
             %Bar Plotting
             %--------------------------------------------------------------
+            has_color = any(strcmp(in.bar_options(1:2:end),'color'));
+            if ~has_color
+                last_index = get(gca,'ColorOrderIndex')-1;
+                colors = get(gca,'ColorOrder');
+                last_color = colors(last_index,:);
+                in.bar_options = [in.bar_options {'color' last_color}];
+            end
             options = h__expandOptions(n_points,in.bar_options);
             for iPoint = 1:n_points
                 h_lines(iPoint) = line([H_x1(iPoint) H_x2(iPoint)],[H_y(iPoint),H_y(iPoint)],options{iPoint,:});
@@ -76,7 +98,10 @@ classdef error_bars
 end
 
 function expanded_options = h__expandOptions(n_points,options)
-
+    %
+    %   The main idea here is that a cell is expanded to individual
+    %   values where as scalars are simply replicated
+    
     expanded_options = cell(n_points,length(options));
     for iOption = 2:2:length(options)
         cur_name = options{iOption-1};

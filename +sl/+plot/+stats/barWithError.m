@@ -35,6 +35,7 @@ s = struct;
 
 %Computing data values
 %--------------------------------------------------------------------------
+%Use sl.stats.nan_stats.sem instead ...
 if iscell(data)
     n_bars = length(data);
     n_per_bar = cellfun(@(x) sum(~isnan(x)),data);
@@ -48,7 +49,7 @@ if iscell(data)
     end
 else
     n_bars = size(data,2);
-    n_per_bar = sum(~isnan(data),2);
+    n_per_bar = sum(~isnan(data),1);
     y_bar = nanmean(data,2);
     switch in.error_type
         case 'sem'
