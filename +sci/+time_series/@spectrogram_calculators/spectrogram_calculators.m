@@ -26,11 +26,11 @@ classdef spectrogram_calculators < sl.obj.display_class
             %   Inputs:
             %   -------
             %   data_obj : sci.time_series.data
-            %   window_width : scalar
+            %   window_width : scalar 
+            %       Default units are seconds. Can be changed to samples by
+            %       setting optional input 'width_is_time' to false.
             %       Represents how much data should be used in computing
-            %       the transform. This is either specified as a time in
-            %       seconds (default) or as samples ('width_is_time' =
-            %       false)
+            %       the transform. 
             %
             %   Optional Inputs:
             %   ----------------
