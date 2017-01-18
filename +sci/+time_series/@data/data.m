@@ -126,6 +126,7 @@ classdef data < sl.obj.handle_light
         n_channels
         n_reps
         n_samples
+        calculators %TODO implement this %  sci.time_series.calculators
     end
     
     %Dependent Methods ----------------------------------------------------

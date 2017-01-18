@@ -1,11 +1,18 @@
 classdef linear_regression_result
-    %UNTITLED6 Summary of this class goes here
-    %   Detailed explanation goes here
+    %
+    %   Class: 
+    %   sci.time_series.calculators.regression.linear_regression_result
+    %
     
     properties
+        coeffs
+        x_data
+        y_data       
     end
     
     methods
+        function linear_regression_result()
+        end 
     end
     
 end
