@@ -1,6 +1,6 @@
 classdef regression
-    %   
-    %   Class: 
+    %
+    %   Class:
     %   sci.time_series.calculators.regression
     
     properties
@@ -8,20 +8,13 @@ classdef regression
     
     methods (Static)
         function result = linearFit(to_fit)
-   
-            time_dat=linspace(to_fit.time.start_time,to_fit.time.end_time,to_fit.time.n_samples)
-            pressure_dat=to_fit.d;
-            
-            b=glmfit(time_dat,pressure_dat);
-            
+            [d t] = to_fit.getRawDataAndTime;    % d is the pressure, t is the time
+            b = glmfit(t,d);
             result = sci.time_series.calculators.regression.linear_regression_result();
-           
-            result.coeff = b;
-            %result.x_orig = 
-            %result.y_orig = 
-            
+            result.coeffs = b;
+            result.orig_data = to_fit;
         end
     end
-       
+    
 end
 

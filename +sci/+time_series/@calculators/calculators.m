@@ -13,11 +13,9 @@ classdef calculators
     end
     
     methods
-        function obj=calculators()
-            %TODO: Constructor, instiate the calculators
-            %do only regression for now ...
-            
-            regression= sci.time_series.calculators.regression()
+        function obj = calculators()
+            % obj = sci.time_series.calculators
+            obj.regression = sci.time_series.calculators.regression;
         end
     end
 end

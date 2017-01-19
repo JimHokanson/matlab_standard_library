@@ -143,6 +143,9 @@ classdef data < sl.obj.handle_light
         function value = get.n_reps(obj)
             value = size(obj.d,3);
         end
+        function value = get.calculators(obj) %#ok<MANU>
+            value = sci.time_series.calculators;
+        end
     end
     
     %Constructor ----------------------------------------------------------
