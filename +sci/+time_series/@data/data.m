@@ -126,6 +126,7 @@ classdef data < sl.obj.handle_light
         n_channels
         n_reps
         n_samples
+        calculators %TODO implement this %  sci.time_series.calculators
     end
     
     %Dependent Methods ----------------------------------------------------
@@ -141,6 +142,9 @@ classdef data < sl.obj.handle_light
         end
         function value = get.n_reps(obj)
             value = size(obj.d,3);
+        end
+        function value = get.calculators(obj) %#ok<MANU>
+            value = sci.time_series.calculators;
         end
     end
     
