@@ -51,6 +51,16 @@ classdef calling_function_info < sl.obj.handle_light
             end
             
             s = dbstack('-completenames');
+% % % %             msgbox(evalc('disp(s(3))'));
+% % % %             
+% % % %             all_s = cell(length(s),1);
+% % % %             for iS = 1:length(s)
+% % % %                 all_s{iS} = evalc(sprintf('disp(s(%d))',iS));
+% % % %             end
+% % % %             
+% % % %             msgbox(sl.cellstr.join(all_s,'\n'));
+                
+            
             assert(level > 0,'The input ''level'' must be > 0, %d observed',level);
 
             %NOTE: Stack has most recent on top

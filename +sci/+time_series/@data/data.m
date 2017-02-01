@@ -313,6 +313,11 @@ classdef data < sl.obj.handle_light
     %Display handlers -----------------------------------------------------
     methods
         function disp(objs)
+            
+           % msgbox('hi mom');
+            %keyboard
+            wtf = sl.stack.calling_function_info();
+            
             sl.obj.dispObject_v1(objs,'show_methods',false);
             
             SECTION_NAMES = {'constructor related','visualization','events and history','time changing','data changing','math','miscellaneous'};

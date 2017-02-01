@@ -14,6 +14,7 @@ classdef regression
             result.coeffs = b;
             result.orig_data = to_fit;
         end
+        result = theilSen(data);
     end
     
 end
