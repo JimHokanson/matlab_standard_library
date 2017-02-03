@@ -4,9 +4,11 @@ function getCurrentFunctionName(input_args)
 
 e = sl.ml.editor.getInstance();
 temp = e.getActiveDocument();
-file_path = temp.filename
+file_path = temp.filename;
 
-fpi = sl.obj.file_path_info(file_path)
+fpi = sl.obj.file_path_info(file_path);
+
+disp(fpi.full_name);
 
 
 end
