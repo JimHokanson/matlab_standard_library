@@ -1,5 +1,5 @@
 function writeArray(file_path,data,varargin)
-%x Writes an array of data to a CSV file 
+%x Writes an array of data to a delimited file 
 %
 %   sl.io.delimited.writeArray(filepath,data)
 

@@ -20,8 +20,10 @@ end
 cd(fileparts(repo_root));
 
 gnf_dir = fullfile(repo_root,'global_namespace_functions');
-
 addpath(gnf_dir)
+
+fex_dir = fullfile(repo_root,'fex');
+addpath(fex_dir)
 
 %runc support
 %TODO: I don't think this is needed anymore

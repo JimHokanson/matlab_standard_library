@@ -60,24 +60,17 @@ classdef file_path_info
                 %Remove extension if present
                 [~,next_name] = fileparts(next_name);
                 
-                
                 if next_name(1) == '@'
-                    % TODO: fix this, we might have a class method
                     obj.class_name = next_name(2:end);
-                    
-                    pen_ult = entries{end-1};
-                    ult = entries{end};
-                    obj.is_class = strcmp(next_name(2:end),ult);
-                    obj.is_class_method=~is_class_name;
+                    obj.is_class = true;
+                    obj.is_class_method = strcmp(obj.class_name,obj.name);
                     if obj.is_class
                         obj.full_name  = [obj.package_prefix '.' obj.class_name];
                     else
                         obj.full_name  = [obj.package_prefix '.' obj.class_name '.' obj.name];
                         
                     end
-                    
                 else
-                    
                     obj.full_name  = [obj.package_prefix '.' obj.name];
                     if exist(obj.full_name,'class') == 8
                         obj.is_class = true;
@@ -85,9 +78,7 @@ classdef file_path_info
                     else
                         obj.is_function = true;
                     end
-                    
                 end
-                
             else % class without package
                 % looking for the presence of @ symbol or not
                 % @ would be second to last-- grab entries(end-1);
@@ -106,6 +97,9 @@ classdef file_path_info
                 pen_ult = entries{end-1};
                 ult = entries{end};
                 
+                %TODO: This should be merged with above
+                %Where we pass in a package prefix and build the name
+                %conditionally ...
                 if pen_ult(1) == '@' % class folder (or class method in class folder)
                     obj.class_name = pen_ult(2:end);
                     obj.is_class = strcmp(obj.name,obj.class_name);

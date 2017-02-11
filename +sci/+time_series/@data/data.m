@@ -126,7 +126,8 @@ classdef data < sl.obj.handle_light
         n_channels
         n_reps
         n_samples
-        calculators %TODO implement this %  sci.time_series.calculators
+        calculators %sci.time_series.calculators
+        %TODO: Can we build in a subset retrieval assistance tool
     end
     
     %Dependent Methods ----------------------------------------------------
@@ -572,6 +573,16 @@ classdef data < sl.obj.handle_light
     
     %Add Event or History to data object ----------------------------------
     methods
+        function newEventFromEvent(objs,old_name,new_name)
+           %The example use case is when a file has been marked with a
+           %particular comment
+           %
+           %    We want to find all strings that match some value
+           %    then extract those times (and values?) and move those 
+           %    to a new event
+           %
+           %    TODO: What do we need from the user ?????
+        end
         function events = getEvent(objs,name)
             %x Gets a specific event name for all objects
             %
