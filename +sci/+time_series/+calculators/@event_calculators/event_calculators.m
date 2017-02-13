@@ -8,6 +8,8 @@ classdef event_calculators < sl.obj.display_class
     
     methods (Static)
         result_obj = simpleThreshold(data_obj,threshold_value,look_for_positive,varargin)
+        
+        %TODO: Get this from OW code
         function peakDetection()
         end
     end

@@ -25,7 +25,7 @@ function [in,extras] = processVarargin(in,v,varargin)
 %       functions and only some options match in some functions.
 %   allow_spaces :
 %   remove_null : (default false)
-%       If files that are assigned as sl.in.NULL are removed.
+%       Values that are assigned as sl.in.NULL are removed. 
 %
 %
 %
@@ -104,7 +104,6 @@ if c.remove_null
          in = rmfield(in,cur_field); 
       end
    end
-   
 end
 
 end
@@ -156,6 +155,8 @@ else
     parse_input = true;
     v = sl.in.propValuePairsToStruct(v,'allow_spaces',c.allow_spaces);
 end
+
+%At this point v is an object or a struct
 
 if ~parse_input
    return 

@@ -127,7 +127,7 @@ classdef data < sl.obj.handle_light
         n_reps
         n_samples
         calculators %sci.time_series.calculators
-        %TODO: Can we build in a subset retrieval assistance tool
+        subset
     end
     
     %Dependent Methods ----------------------------------------------------
@@ -146,6 +146,9 @@ classdef data < sl.obj.handle_light
         end
         function value = get.calculators(obj) %#ok<MANU>
             value = sci.time_series.calculators;
+        end
+        function value = get.subset(obj)
+           value = sci.time_series.subset_retrieval(obj); 
         end
     end
     

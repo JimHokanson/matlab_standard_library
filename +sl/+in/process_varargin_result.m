@@ -5,7 +5,8 @@ classdef (Hidden) process_varargin_result < sl.obj.handle_light
     %
     %   This is a result class from running sl.in.processVarargin
     %
-    %   See Also:
+    %   See Also
+    %   --------
     %   sl.in.processVarargin
     
     %Inputs  ==============================================================
