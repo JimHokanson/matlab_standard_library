@@ -11,6 +11,8 @@ classdef processor < handle
     
     properties
       	n_parts
+        
+        %TODO: NYI
         truncation_rule = 0
         %0 - always silent
         %1 - error if only event is present
@@ -34,8 +36,12 @@ classdef processor < handle
             
             return_as_cell = ~obj.un;
             if ~return_as_cell
-                if any(cellfun('length',start_samples)~= 1)
-                    error('Sorry, please add ,''un'',0 at the end of the to the input (output will be a cell array, 1 entry per object')
+                if any(cellfun('length',start_samples) ~= 1)
+                    if all(cellfun('length',start_samples) == 0)
+                        error('The requested event or epoch returned no times')
+                    else
+                        error('Sorry, please add ,''un'',0 at the end of the to the input (output will be a cell array, 1 entry per object')
+                    end
                 end
             end
             

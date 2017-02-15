@@ -44,6 +44,8 @@ classdef io
                 else
                     %Can we get any more detailed as to why????
                     %   perhaps via some fopen('all')
+                    %
+                    %TODO: This is also called from fileWrite
                     error(message('sl:io:fileRead:cannotOpenFile', file_path, msg));
                 end
             end
