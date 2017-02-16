@@ -1,17 +1,21 @@
 function results = simpleThreshold(data_objs,threshold_value,look_for_positive,varargin)
 %x Thresholds a time series and groups consecutive true values as events
 %
-%   sci.time_series.event_calculators.simpleThreshold(data_obj,threshold_value,look_for_positive,varargin)
+%   sci.time_series.calculators.event_calculators(data_obj,threshold_value,look_for_positive,varargin)
 %
 %   
 %   Inputs:
 %   -------
 %   data_objs :
 %   threshold_value :
-%   look_for_positive :
+%   look_for_positive : logical
+%       - true, values should be above the threshold
+%       - false, values should be below the threshold
 %
 %   Optional Inputs: (Note, the majority of these are not used by default)
 %   ----------------
+%   mask_fh : function handle
+%       Given an input array of values, it should return a mask.
 %   min_intertime : 
 %       Nullifies an event if it occurs too soon
 %   min_time :

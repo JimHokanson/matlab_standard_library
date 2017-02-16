@@ -25,7 +25,7 @@ classdef calling_function_info < sl.obj.handle_light
        %    least for static methods ...)
        %    3) The name lacks the package
        is_cmd_window = false
-       class_file_path_info
+       file_path_info
     end
     
     methods
@@ -76,7 +76,7 @@ classdef calling_function_info < sl.obj.handle_light
                 obj.name        = s(idx).name;
                 obj.file_path   = s(idx).file;
                 obj.line_number = s(idx).line;
-                obj.class_file_path_info = sl.obj.file_path_info(obj.file_path);
+                obj.file_path_info = sl.obj.file_path_info(obj.file_path);
             end
         end
     end

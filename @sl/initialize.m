@@ -5,6 +5,8 @@ function initialize()
 %   standard library.
 %   
 
+MODULES = {'plotBig'};
+
 repo_root = sl.stack.getPackageRoot;
 
 %Temp directory creation
@@ -16,14 +18,24 @@ end
 
 %repo_root - points to folder containing +sl, not +sl itself
 
-%Why am I changing the directory
+%Why am I changing the directory????
 cd(fileparts(repo_root));
 
+%Adding other directories
+%---------------------------------------------
 gnf_dir = fullfile(repo_root,'global_namespace_functions');
 addpath(gnf_dir)
 
 fex_dir = fullfile(repo_root,'fex');
 addpath(fex_dir)
+
+module_root = fullfile(repo_root,'modules');
+for iModule = 1:length(MODULES)
+    cur_module_root = fullfile(module_root,MODULES{iModule});
+    addpath(cur_module_root);
+end
+
+%---------------------------------------------
 
 %runc support
 %TODO: I don't think this is needed anymore

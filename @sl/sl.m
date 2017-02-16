@@ -5,7 +5,7 @@ classdef (Hidden) sl
     %
     %   sl => standard library
     
-    properties (Constant)
+    properties (Constant,Hidden)
        TEMP_DIR = fullfile(sl.getRoot,'temp_directory'); 
     end
     
@@ -15,7 +15,7 @@ classdef (Hidden) sl
         function root = getRoot()
            %This is needed as this call can't be resolved in a property
            %block
-           root = sl.stack.getPackageRoot; 
+           root = sl.stack.getPackageRoot(); 
         end
         function runTests()
            %

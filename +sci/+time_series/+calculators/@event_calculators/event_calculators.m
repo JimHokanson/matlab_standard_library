@@ -1,7 +1,7 @@
 classdef event_calculators < sl.obj.display_class
     %
     %   Class:
-    %   sci.time_series.event_calculators
+    %   sci.time_series.calculators.event_calculators
     
     properties
     end
