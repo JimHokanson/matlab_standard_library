@@ -320,7 +320,7 @@ classdef data < sl.obj.handle_light
             
            % msgbox('hi mom');
             %keyboard
-            wtf = sl.stack.calling_function_info();
+         %   wtf = sl.stack.calling_function_info();
             
             sl.obj.dispObject_v1(objs,'show_methods',false);
             
