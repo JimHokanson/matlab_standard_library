@@ -24,9 +24,15 @@
 %
 %   d = 1:1e7;
 %   d(2) = 2.002;
-%   flag = sl.array.similiarity.sameDiff(d);
+%   flag = sl.array.similiarity.sameDiff(d)
 %   %Let's make this less strict ...
-%   flag = sl.array.similiarity.sameDiff(d,0.01); 
+%   flag = sl.array.similiarity.sameDiff(d,0.01) 
+%   
+%
+%   Improvements
+%   ------------
+%   1) Allow for drifting similiarity vs the current approach
+%   which fixes everything on the first value (see commented out c code)
 
 %{
 Compile via:

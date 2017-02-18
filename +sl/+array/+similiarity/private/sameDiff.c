@@ -22,6 +22,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     //      ------------
     //      1) parallel
     //      2) simd
+    //      
+    //      See Also
+    //      --------
+    //      sl.array.similiarity.sameDiff
     
     double tolerance_multiplier = 0.00001;
     
@@ -57,31 +61,38 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     
     double last_sample    = *data;
     double current_sample = *(++data);
-    double current_diff   = current_sample - last_sample;
-    double last_diff      = current_diff;
+    double first_diff   = current_sample - last_sample;
     
-    double MAX_DIFF = tolerance_multiplier*fabs(last_diff);
+    //This needs to be initialized to enter the while loop
+    double current_diff = first_diff;
+    
+    double MAX_DIFF_OF_DIFFS = tolerance_multiplier*fabs(first_diff);
      
     //sentinel block - don't need to worry about running past the end
     //since the last value will always be false
     double end_array_value = *(p_start+n_samples_data-1);
     *(p_start+n_samples_data-1) = mxGetNaN();
 
-    //Newer code, not clear that it is that much faster
-    //-------------------------------------------------
-    while (fabs(current_diff - last_diff) < MAX_DIFF){
-        last_diff      = current_diff;
+    while (fabs(current_diff - first_diff) < MAX_DIFF_OF_DIFFS){
         last_sample    = current_sample;
         current_sample = *(++data);
         current_diff   = current_sample - last_sample; 
     }
+    
+    //Alternative approach, this allows for slow drifts over time
+//     while (fabs(current_diff - last_diff) < MAX_DIFF){
+//         last_diff      = current_diff;
+//         last_sample    = current_sample;
+//         current_sample = *(++data);
+//         current_diff   = current_sample - last_sample; 
+//     }
     
     //Reset terminal value
     *(p_start+n_samples_data-1) = end_array_value;
     
     if (data == p_start+n_samples_data-1){
         current_diff = end_array_value - last_sample;
-        *pl = (fabs(current_diff - last_diff) < MAX_DIFF);
+        *pl = (fabs(current_diff - first_diff) < MAX_DIFF_OF_DIFFS);
     }else{
         *pl = false;
     }

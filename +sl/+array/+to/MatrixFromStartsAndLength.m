@@ -1,7 +1,7 @@
-function out = toMatrixFromStartsAndLength(data_in,starts,n_samples_per_grab)
+function out = MatrixFromStartsAndLength(data_in,starts,n_samples_per_grab)
 %
 %
-%   out = sl.array.toMatrixFromStartStopIndices(data_in,starts,n_samples_per_grab)
+%   out = sl.array.to.MatrixFromStartStopIndices(data_in,starts,n_samples_per_grab)
 %
 %   Ouputs
 %   -----------------------------------------------------------------------
@@ -19,6 +19,11 @@ function out = toMatrixFromStartsAndLength(data_in,starts,n_samples_per_grab)
 %   1) More error checking
 %   2) Allow assignment of spans to rows or columns, currently each
 %   assignment spans a column
+%
+%   I also wrote:
+%   sl.matrix.from.startAndLength
+%
+%   I'm not sure which approach is better ...
 
 n_grabs = length(starts);
 

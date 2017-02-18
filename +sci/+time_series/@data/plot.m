@@ -60,7 +60,7 @@ if ~isempty(in.time_spacing)
 
 else
     start_datetimes = [time_objs.start_datetime];
-    if ~sl.array.allSame(start_datetimes) && in.time_shift
+    if ~sl.array.similiarity.allExactSame(start_datetimes) && in.time_shift
     %TODO: Eventually each plotting routine should consult
     %the absolute time that is being used by the first to plot
     %and adjust accoridingly (both units and start time)

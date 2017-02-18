@@ -52,6 +52,8 @@ if ~failed
       
       current_mex_file_path = fullfile(parent_path,sl.dir.changeFileExtension(file_name,mexext()));
       function_name = sl.file_path.toFunctionName(current_mex_file_path);
+      
+      %Asked about: https://www.mathworks.com/matlabcentral/answers/325415-unable-to-clear-mex-file
       clear(function_name)
       %We might need a mex unlock call ...
       movefile(mexed_file_path,parent_path)

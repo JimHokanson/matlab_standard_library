@@ -25,9 +25,23 @@ classdef calling_function_info < sl.obj.handle_light
        %    least for static methods ...)
        %    3) The name lacks the package
        is_cmd_window = false
-       file_path_info
+       
     end
     
+    properties (Dependent)
+       file_path_info %sl.file_path.info
+    end
+    
+    methods
+        function value = get.file_path_info(obj)
+            if isempty(obj.file_path)
+                value = [];
+            else
+                value = sl.file_path.info(obj.file_path);
+            end
+        end
+    end
+
     methods
         function obj = calling_function_info(level)
             %calling_function_info  Returns the caller of the calling function.
@@ -51,16 +65,7 @@ classdef calling_function_info < sl.obj.handle_light
             end
             
             s = dbstack('-completenames');
-% % % %             msgbox(evalc('disp(s(3))'));
-% % % %             
-% % % %             all_s = cell(length(s),1);
-% % % %             for iS = 1:length(s)
-% % % %                 all_s{iS} = evalc(sprintf('disp(s(%d))',iS));
-% % % %             end
-% % % %             
-% % % %             msgbox(sl.cellstr.join(all_s,'\n'));
-                
-            
+ 
             assert(level > 0,'The input ''level'' must be > 0, %d observed',level);
 
             %NOTE: Stack has most recent on top
@@ -76,7 +81,6 @@ classdef calling_function_info < sl.obj.handle_light
                 obj.name        = s(idx).name;
                 obj.file_path   = s(idx).file;
                 obj.line_number = s(idx).line;
-                obj.file_path_info = sl.obj.file_path_info(obj.file_path);
             end
         end
     end
