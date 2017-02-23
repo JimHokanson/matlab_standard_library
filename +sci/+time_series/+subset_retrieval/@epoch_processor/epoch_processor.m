@@ -10,11 +10,17 @@ classdef epoch_processor < sci.time_series.subset_retrieval.processor
     %   sci.time_series.subset_retrieval.event_processor
     %
     %   This class returns data subsets for epochs
+    %
+    %   Supported Calling Forms
+    %   -----------------------
+    %   
     
     properties
         d0 = '---------  Must have values -----------'
         epoch_name
-        indices = 1
+        
+        indices = 'all'
+        
         un = true;
         align_time_to_start = false;
         

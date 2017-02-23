@@ -29,11 +29,6 @@ addpath(gnf_dir)
 fex_dir = fullfile(repo_root,'fex');
 addpath(fex_dir)
 
-module_root = fullfile(repo_root,'modules');
-for iModule = 1:length(MODULES)
-    cur_module_root = fullfile(module_root,MODULES{iModule});
-    addpath(cur_module_root);
-end
 
 %---------------------------------------------
 

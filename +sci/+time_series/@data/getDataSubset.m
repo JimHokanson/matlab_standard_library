@@ -3,6 +3,16 @@ function data_subset_objs = getDataSubset(objs,varargin)
 %   
 %   data_subset_objs = getDataSubset(objs,varargin)
 %
+%
+%
+%
+%   This function has been rewritten by calling the subset function
+%   of the data object.
+%
+%
+%
+%
+%
 %   
 %
 %   This function is meant to simplify data retrieval of a subset of data.

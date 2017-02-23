@@ -1,4 +1,4 @@
-classdef subset_retrieval
+classdef subset_retrieval < sl.obj.display_class
     %
     %   Class:
     %   sci.time_series.subset_retrieval
@@ -27,6 +27,40 @@ classdef subset_retrieval
     %       be executed using the fromProcessor() method.
     %           data.subset.fromProcessor(p)
     %
+    %   Examples
+    %   ----------------------------------
+    %   1) In this approach we save a processor for later use.
+    %
+    %   subset_processor = my_data.subset.fromEpoch('my_epoch','p_only',true);
+    %   data_subset = my_data.subset.fromProcessor(subset_processor)
+    %   other_subset = other_data.subset.fromProcessor(subset_processor)
+    %
+    %
+    %   2) Technically processors can be called directly. The functions
+    %   in this class are meant to provide clearer access to the underlying
+    %   processors.
+    %
+    %   subset_processor = sci.time_series.subset_retrieval.event_processor();
+    %   subset_processor.start_name = 'my_event'
+    %   subset_processor.time_duration = 10
+    %   data_subset = my_data.subset.fromProcessor(subset_processor)
+    %
+    %   3) Typical usage examples
+    %
+    %   data_subset = my_data.subset.fromEpoch('fill')
+    %   data_subset = my_data.subset.fromEpoch('bladder_contraction','un',0)
+    %
+    %   4) For multiple data objects
+    %   sr = sci.time_series.subset_retrieval(my_data_objects);
+    %   data_subsets = sr.fromProcessor(subset_processor)
+    %   data_subsets = sr.fromEpoch('fill')
+    %
+    %   TODO
+    %   --------------------------------------------------
+    %   1) Clarify output rules with respect to cell arrays and arrays of
+    %   objects
+    %   2) Add testing code ...
+    
     
     properties
         data %sci.time_series.data
@@ -38,6 +72,7 @@ classdef subset_retrieval
         end
     end
     
+    %Epoch -----------------------------------------
     methods
         function output = fromEpoch(obj,epoch_name,varargin)
             %
@@ -59,7 +94,6 @@ classdef subset_retrieval
             %   Example
             %   -------
             %   subset = my_data.subset.fromEpoch('fill')
-            %
             
             [~,p_only,varargin] = sl.in.getOptionalParameter(varargin,'p_only','default',false,'remove',true);
             ep = sci.time_series.subset_retrieval.epoch_processor;
@@ -176,6 +210,10 @@ classdef subset_retrieval
                 output = ep.getSubset(obj.data);
             end
         end
+    end
+    
+    %Event -----------------------------------------
+    methods
         function output = fromStartAndStopEvent(obj,start_name,stop_name,varargin)
             %
             %   output = fromStartAndStopEvent(obj,epoch_name,start_time_offset,stop_time_offset,varargin)
@@ -348,6 +386,10 @@ classdef subset_retrieval
                 output = ep.getSubset(obj.data);
             end
         end
+    end
+    
+    %Helper Methods --------------------------------
+    methods
         function output = fromProcessor(obj,processor)
             %
             %   In this usage case, the processor is populated,
@@ -356,5 +398,74 @@ classdef subset_retrieval
         end
     end
     
+    %Generic ---------------------------------------
+    methods
+        %TODO: These need to be documented ...
+        function output =  fromStartAndStopSamples(obj,start_samples,stop_samples,varargin)
+            [ep,p_only] = h__initGeneric(varargin);
+            ep.start_samples = start_samples;
+            ep.stop_samples = stop_samples;
+            output = h__executeGeneric(obj,ep,p_only);
+        end
+        function output = fromStartSampleAndSampleDuration(obj,start_samples,sample_duration,varargin)
+            [ep,p_only] = h__initGeneric(varargin);
+            ep.start_samples = start_samples;
+            ep.sample_duration = sample_duration;
+            output = h__executeGeneric(obj,ep,p_only);        
+        end
+        function output = fromStartSampleAndTimeDuration(obj,start_samples,time_duration,varargin)
+            [ep,p_only] = h__initGeneric(varargin);
+            ep.start_samples = start_samples;
+            ep.time_duration = time_duration;
+            output = h__executeGeneric(obj,ep,p_only);
+        end
+        function output = fromStartAndStopTimes(obj,start_times,stop_times,varargin)
+            [ep,p_only] = h__initGeneric(varargin);
+            ep.start_times = start_times;
+            ep.stop_times = stop_times;
+            output = h__executeGeneric(obj,ep,p_only);
+        end
+        function output = fromStartTimesAndSampleDuration(obj,start_times,sample_duration,varargin)
+            [ep,p_only] = h__initGeneric(varargin);
+            ep.start_times = start_times;
+            ep.sample_duration = sample_duration;
+            output = h__executeGeneric(obj,ep,p_only);
+        end
+        function output = fromStartTimesAndTimeDuration(obj,start_times,time_duration,varargin)
+        	[ep,p_only] = h__initGeneric(varargin);
+            ep.start_times = start_times;
+            ep.time_duration = time_duration;
+            output = h__executeGeneric(obj,ep,p_only);
+        end
+        function output = fromPercentSubset(obj,start_percentage,stop_percentage,varargin)
+          	[ep,p_only] = h__initGeneric(varargin);
+            ep.subset_pct = [start_percentage,stop_percentage];
+            output = h__executeGeneric(obj,ep,p_only);
+        end
+        function output = intoNParts(obj,n_parts,varargin)
+            [ep,p_only] = h__initGeneric(varargin);
+            ep.n_parts = n_parts;
+            output = h__executeGeneric(obj,ep,p_only);
+        end
+        function output = splitAtPercentages(obj,split_percentages,varargin)
+            [ep,p_only] = h__initGeneric(varargin);
+            ep.split_percentages = split_percentages;
+            output = h__executeGeneric(obj,ep,p_only);
+        end
+    end
+    
 end
 
+function [ep,p_only] = h__initGeneric(varargin)
+[~,p_only,varargin] = sl.in.getOptionalParameter(varargin,'p_only','default',false,'remove',true);
+ep = sci.time_series.subset_retrieval.generic_processor;
+ep = sl.in.processVarargin(ep,varargin);
+end
+
+function output = h__executeGeneric(obj,ep,p_only)
+if p_only
+    output = ep;
+else
+    output = ep.getSubset(obj.data);
+end
+end

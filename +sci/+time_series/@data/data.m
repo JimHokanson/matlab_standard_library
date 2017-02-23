@@ -149,10 +149,24 @@ classdef data < sl.obj.handle_light
             value = sci.time_series.calculators;
         end
         function value = get.subset(obj)
+            %This only works well for a single object
            value = sci.time_series.subset_retrieval(obj); 
         end
         function value = get.ftime(obj)
            value = sci.time_series.time_functions(obj); 
+        end
+    end
+    
+    methods
+        function value = subset_retriever(objs)
+            %I added this on because the subset property
+            %only works for scalar objects, not for object arays :/
+            %
+            %   Example Usage
+            %   -------------
+            %   sr = my_data_objects.subset_retriever;
+            %   data_subsets = sr.fromEpoch('my_epoch');
+            value = sci.time_series.subset_retrieval(objs); 
         end
     end
     
