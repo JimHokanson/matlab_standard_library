@@ -1,15 +1,23 @@
 #include "mex.h"
-#include <math.h> 
-#include "float.h"
+#include "zlib.h"
+
+//This might work:
+//https://github.com/qbittorrent/qBittorrent/wiki/Compiling-with-MSVC-2013-(static-linkage)#compiling-zlib
 
 //  d = linspace(0,100,1e7);
 //  tic; wtf = same_diff(d); toc;    
 
+//LDFLAGS="$LDFLAGS -lz" 
 //  Compile via:
-//  mex decompressDeflateStream.c
+//  mex -lz decompressDeflateStream.c 
+
+
+//%C:\Program Files\MATLAB\R2015b\bin\win64
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {
+    //
+    //  http://undocumentedmatlab.com/blog/matlab-mex-in-place-editing
     //
     //   Usage
     //   -----
@@ -24,38 +32,41 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     //   like modifications of RHS variables
     
     
-    if (nrhs != 1){
-        mexErrMsgIdAndTxt("SL:decompressDeflateStream:call_error","Invalid # of inputs, 1 expected");
-    }else if !mxIsClass(prhs[0],"uint8")
-        mexErrMsgIdAndTxt("SL:decompressDeflateStream:call_error","The input must be of type uint8");
+    if (nrhs != 2){
+        mexErrMsgIdAndTxt("SL:decompressDeflateStream:call_error","Invalid # of inputs, 2 expected");
+    }else if (!mxIsClass(prhs[0],"uint8")){
+        mexErrMsgIdAndTxt("SL:decompressDeflateStream:call_error","The 1st input must be of type uint8");
+    }else if (!mxIsClass(prhs[1],"double")){
+        mexErrMsgIdAndTxt("SL:decompressDeflateStream:call_error","The 2nd input must be of type double");
     }
 
-    if (!(nlhs == 1)){
-        mexErrMsgIdAndTxt("SL:decompressDeflateStream:call_error","Invalid # of outputs, 1 expected");
-    }
+//     if (!(nlhs == 1)){
+//         mexErrMsgIdAndTxt("SL:decompressDeflateStream:call_error","Invalid # of outputs, 1 expected");
+//     }
 
     mwSize n_data_samples = mxGetNumberOfElements(prhs[0]);
     Bytef *data_in = mxGetData(prhs[0]);
     
+    mwSize n_samples_out = mxGetScalar(prhs[1]);
     
     
-    plhs[0] = mxCreateLogicalMatrix(1,1);
-    mxLogical *pl = mxGetLogicals(plhs[0]);
-    
-    *pl = true;
-    if (n_samples_data < 3){
-        return;
-    }
-    
-    double *data = mxGetData(prhs[0]);
-    double *p_start = data;
-    
-    double last_sample    = *data;
-    double current_sample = *(++data);
-    double current_diff   = current_sample - last_sample;
-    double last_diff      = current_diff;
-    
-    double MAX_DIFF = tolerance_multiplier*fabs(last_diff);
+//     plhs[0] = mxCreateLogicalMatrix(1,1);
+//     mxLogical *pl = mxGetLogicals(plhs[0]);
+//     
+//     *pl = true;
+//     if (n_samples_data < 3){
+//         return;
+//     }
+//     
+//     double *data = mxGetData(prhs[0]);
+//     double *p_start = data;
+//     
+//     double last_sample    = *data;
+//     double current_sample = *(++data);
+//     double current_diff   = current_sample - last_sample;
+//     double last_diff      = current_diff;
+//     
+//     double MAX_DIFF = tolerance_multiplier*fabs(last_diff);
 
 
     //--------------------------------------------------------
@@ -88,7 +99,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     strm.zalloc = Z_NULL; //We shouldn't need to allocate ...
     strm.zfree = Z_NULL;
     strm.opaque = Z_NULL;
-    strm.avail_in = 0; //TODO: This needs to be set ...
+    strm.avail_in = Z_NULL; //TODO: This needs to be set ...
     strm.next_in = Z_NULL; //TODO: This is a a pointer to the input data
     
     //Next output bytes go here ...
@@ -100,16 +111,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     }
     
     
-    ret = inflate(&strm, Z_NO_FLUSH);
-    assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
-    switch (ret) {
-    case Z_NEED_DICT:
-        ret = Z_DATA_ERROR;     /* and fall through */
-    case Z_DATA_ERROR:
-    case Z_MEM_ERROR:
-        (void)inflateEnd(&strm);
-        return ret;
-    }
+// // // // //     ret = inflate(&strm, Z_NO_FLUSH);
+// // // // //     assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
+// // // // //     switch (ret) {
+// // // // //     case Z_NEED_DICT:
+// // // // //         ret = Z_DATA_ERROR;     /* and fall through */
+// // // // //     case Z_DATA_ERROR:
+// // // // //     case Z_MEM_ERROR:
+// // // // //         (void)inflateEnd(&strm);
+// // // // //         return ret;
+// // // // //     }
     
 //     nErr= inflate( &zInfo, Z_FINISH );
     
@@ -126,57 +137,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 //     zInfo.next_out= abDst;
 
     
-
+    //http://www.zlib.net/zpipe.c
+    
+    /* clean up and return */
+    (void)inflateEnd(&strm);
+    //return ret == Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
     
 
     
     //--------------------------------------------------------
-    
-    
-    
-    
-    mwSize n_samples_data = mxGetNumberOfElements(prhs[0]);
-    
-    plhs[0] = mxCreateLogicalMatrix(1,1);
-    mxLogical *pl = mxGetLogicals(plhs[0]);
-    
-    *pl = true;
-    if (n_samples_data < 3){
-        return;
-    }
-    
-    double *data = mxGetData(prhs[0]);
-    double *p_start = data;
-    
-    double last_sample    = *data;
-    double current_sample = *(++data);
-    double current_diff   = current_sample - last_sample;
-    double last_diff      = current_diff;
-    
-    double MAX_DIFF = tolerance_multiplier*fabs(last_diff);
-     
-    //sentinel block - don't need to worry about running past the end
-    //since the last value will always be false
-    double end_array_value = *(p_start+n_samples_data-1);
-    *(p_start+n_samples_data-1) = mxGetNaN();
 
-    //Newer code, not clear that it is that much faster
-    //-------------------------------------------------
-    while (fabs(current_diff - last_diff) < MAX_DIFF){
-        last_diff      = current_diff;
-        last_sample    = current_sample;
-        current_sample = *(++data);
-        current_diff   = current_sample - last_sample; 
-    }
-    
-    //Reset terminal value
-    *(p_start+n_samples_data-1) = end_array_value;
-    
-    if (data == p_start+n_samples_data-1){
-        current_diff = end_array_value - last_sample;
-        *pl = (fabs(current_diff - last_diff) < MAX_DIFF);
-    }else{
-        *pl = false;
-    }
     
 }
