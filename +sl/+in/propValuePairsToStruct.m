@@ -2,27 +2,55 @@ function struct_output = propValuePairsToStruct(cell_input,varargin)
 %
 %   struct_output = sl.in.propValuePairsToStruct(cell_input,varargin)
 %
+%   Inputs
+%   ------
+%   cell_input
 %
+%   Optional Inputs
+%   ---------------
+%   allow_spaces : default false
+%   force_lower : default false
+%   force_upper : default false
+%
+%   Examples
+%   ------------
+%   1) We allow spaces so that 'test 2' becomes 'test_2'
 %   s = struct;
 %   s.allow_spaces = true;
-%   struct_output = sl.in.propValuePairsToStruct({'test',1,'test2',2},s)
+%   struct_output = sl.in.propValuePairsToStruct({'test',1,'test 2',2},s)
 %
-%   TODO: Finish documentation
-
-%TODO: Fix this to allow options ...
+%   2) Another approach for specifiying options
+%   out = sl.in.propValuePairsToStruct({'test',1,'test 2',2},'allow_spaces',true)
+%
+%   See Also
+%   --------
+%   sl.in.processVarargin
+%
 
 in.allow_spaces = false;
 in.force_lower  = false;
 in.force_upper  = false;
 
-%The checking on this could improve ...
+%The idea here is that sl.in.processVarargin
+%would set this so that we set errors that are specific to the parsing options
+%that the user specified vs the optional inputs
+%
+%e.g. sl.in.processVarargin(varargin,'allowspaces',false)
+%                                           ^
+%                                           location of error, not from varargin
+%
+in.is_parsing_options = false; %NYI
+
+%Option processing
+%-----------------------------------------
 if isempty(varargin)
     %pass
 elseif isstruct(varargin{1})
-    fn = fieldnames(varargin);
+    struct_input = varargin{1};
+    fn = fieldnames(struct_input);
     for iName = 1:length(fn)
        cur_name = fn{iName};
-       in.(cur_name) = varargin.(cur_name);
+       in.(cur_name) = struct_input.(cur_name);
     end
 elseif iscell(varargin)
     for iName = 1:2:length(varargin)
@@ -31,8 +59,7 @@ elseif iscell(varargin)
        in.(cur_name) = cur_value;
     end
 end
-
-%in = sl.in.processVarargin(in,varargin);
+%----------------------------------------------------
 
 is_str_mask = cellfun('isclass',cell_input,'char');
 
@@ -48,6 +75,7 @@ is_str_mask = cellfun('isclass',cell_input,'char');
 %
 %   NOTE: is_parsing_options would allow us to have different 
 %   error messages ...
+%
 if ~all(is_str_mask(1:2:end))
     %TODO: See improvement above, provide a clickable link that does
     %dbup 3x (up to main, up to caller, up to caller's caller)
