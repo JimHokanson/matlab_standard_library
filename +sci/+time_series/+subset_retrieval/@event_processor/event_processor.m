@@ -6,24 +6,46 @@ classdef event_processor < sci.time_series.subset_retrieval.processor
     %   The main access point is meant to be in:
     %       sci.time_series.subset_retrieval
     %
-    %   
-    %
     %   See Also
     %   --------
     %   sci.time_series.subset_retrieval
+    %
+    %   Global Optional Inputs
+    %   ----------------------
+    %   These optional inputs can be added to any of the inputs.
+    %
+    %   un: (default true)
+    %   align_time_to_start: (default false)
+    %   start_indices: 'all', scalar, array, or function handle
+    %       When a function handle is used, the start event is passed
+    %       in and times must be returned.
+    %       e.g. start_indices = @(x)x.times(strcmp(x.msgs,'my_marker'));
+    %       Use times where the message is 'my_marker'
+    %   n_parts: 
+    %       If specified, the resulting subset is further split into
+    %       the specified number of parts.
+    %   split_percentages:
+    %       NYI - the idea is to specify locations to split.
+    %
+    %   Supported Calling Forms
+    %   -----------------------
+    %   1) start_event, stop_event              fromStartAndStopEvent       (stop_indices)
+    %   2) start_event, time_offsets            fromEventAndTimeWindow      
+    %   3) start_event, sample_offsets          fromEventAndSampleWindow      
+    %   4) start_event, time_duration           fromEventAndTimeDuration
+    %   5) start_event, sample_duration         fromEventAndSampleDuration
     
-    %TODO: Can we pass an object into processVarargin???
     
     properties
         d0 = '---------  Must have values -----------'
         start_name
-        start_indices = 1;
+        start_indices = 'all';
         un = true;
         align_time_to_start = false;
         
-        %These are optional
+        d1 = '-------- Optional ---------'
         stop_name
-        stop_indices = 1;
+        stop_indices = 'all';
         time_duration
         sample_duration
         time_offsets
@@ -39,11 +61,7 @@ classdef event_processor < sci.time_series.subset_retrieval.processor
             
             %Note, that we have 1 event for each
             start_events = data_objects.getEvent(obj.start_name);
-            
-            
-            
-            
-            
+
             %1) Retrieval of times ...
             %--------------------------------------------------------------
             start_times = h__process_indices(obj,obj.start_indices,n_objects,start_events);

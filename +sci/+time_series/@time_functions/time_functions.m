@@ -49,6 +49,31 @@ classdef time_functions
                 value = [temp{:}];
             end
         end
+        function varargout = getNearestIndices(obj,times)
+            %x Given a set of times, return the closest indices
+            %
+            %   [indices,result] = getNearestIndices(obj,times)
+            %
+            %   Inputs:
+            %   -------
+            %   times: array of numerices
+            %       
+            %   Outputs:
+            %   --------
+            %   indices :
+            %   result : sci.time_series.time.nearest_indices_result
+            %
+            %   Improvements:
+            %   -------------
+            %   1) Add on a reference object to ensure the same offset
+            %   and time units.   
+            
+            dobj = obj.data_objects;
+            if length(dobj) > 1
+                error('unhandled case')
+            end
+            [varargout{1:nargout}] = dobj.time.getNearestIndices(times);
+        end
         function n_samples = durationToNSamples(obj,duration)
             %
             %   n_samples = durationToNSamples(obj,duration)

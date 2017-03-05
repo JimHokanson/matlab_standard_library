@@ -55,11 +55,11 @@ classdef time < sl.obj.display_class
     %Dependent Methods ----------------------------------------------------
     methods
         function set.output_units(obj,value)
-           if ismember(value,{'h','hours','milliseconds','min','minutes','ms','s','seconds'})
-              obj.output_units = value; 
-           else
-              error('Unable to change time to given units') 
-           end 
+            if ismember(value,{'h','hours','milliseconds','min','minutes','ms','s','seconds'})
+                obj.output_units = value;
+            else
+                error('Unable to change time to given units')
+            end
         end
         function value = get.fs(obj)
             value = 1/obj.dt;
@@ -73,7 +73,7 @@ classdef time < sl.obj.display_class
             value = h__getTimeScaled(obj,value);
         end
         function value = get.elapsed_time(obj)
-           value = obj.end_time - obj.start_time; 
+            value = obj.end_time - obj.start_time;
         end
     end
     
@@ -146,7 +146,7 @@ classdef time < sl.obj.display_class
             else
                 start_offsets = in.new_start_offset;
             end
-                
+            
             
             %x Creates a deep copy
             n_objs = length(objs);
@@ -212,18 +212,18 @@ classdef time < sl.obj.display_class
             new_time_object.output_units = obj.output_units;
         end
         function s_objs = export(objs)
-           s_objs = sl.obj.toStruct(objs); 
+            s_objs = sl.obj.toStruct(objs);
         end
     end
     
     methods (Static)
-    	function objs = fromStruct(s_objs)
+        function objs = fromStruct(s_objs)
             %
             %   objs = sci.time_series.time.fromStruct(s_objs)
             %
             %   Example:
-            %       
-            %      
+            %
+            %
             
             n_objs  = length(s_objs);
             temp_ca = cell(1,n_objs);
@@ -234,55 +234,55 @@ classdef time < sl.obj.display_class
                 temp_ca{iObj} = obj;
             end
             objs = [temp_ca{:}];
-        end 
+        end
     end
     
     methods
-% %         function n_samples = samplesPerTimeDuration(obj,time_duration)
-% %            %
-% %            %
-% %            %
-% %            
-% %            n_samples = round(time_duration*obj.fs);
-% %            
-% %            
-% %         end
+        % %         function n_samples = samplesPerTimeDuration(obj,time_duration)
+        % %            %
+        % %            %
+        % %            %
+        % %
+        % %            n_samples = round(time_duration*obj.fs);
+        % %
+        % %
+        % %         end
         function changeOutputUnits(objs,new_units_value)
-           %TODO: I don't know that this triggers the set function :/
-           %So we should do the check here as well
-           % => call the same function for both
-           for iObj = 1:length(objs)
-              objs(iObj).output_units = new_units_value; 
-           end
+            %TODO: I don't know that this triggers the set function :/
+            %So we should do the check here as well
+            % => call the same function for both
+            for iObj = 1:length(objs)
+                objs(iObj).output_units = new_units_value;
+            end
         end
         function shiftStartTime(obj,start_dt)
-           %x Shifts the start time
-           %
-           %    shiftStartTime(obj,start_dt)
-           %
-           %    This function also changes the start_datetime so that
-           %    absolute time doesn't actually change, only the 
-           %    'start_offset' (relative) time changes.
-           %
-           %    Inputs:
-           %    -------
-           %    start_dt : scalar
-           %        Get's added to the start_offset.
-           %    
-           %        obj.start_offset = obj.start_offset + start_dt;
-           
-           obj.start_offset   = obj.start_offset + start_dt;
-           
-           %
-           %
-           %    Samples:
-           %    
-           %    1 2 3 4 5 <= samples
-           %    0 1 2 3 4 <= time
-           %
-           
-           %TODO: Do we want + or - ????
-           obj.start_datetime = obj.start_datetime + h__secondsToDays(start_dt);
+            %x Shifts the start time
+            %
+            %    shiftStartTime(obj,start_dt)
+            %
+            %    This function also changes the start_datetime so that
+            %    absolute time doesn't actually change, only the
+            %    'start_offset' (relative) time changes.
+            %
+            %    Inputs:
+            %    -------
+            %    start_dt : scalar
+            %        Get's added to the start_offset.
+            %
+            %        obj.start_offset = obj.start_offset + start_dt;
+            
+            obj.start_offset   = obj.start_offset + start_dt;
+            
+            %
+            %
+            %    Samples:
+            %
+            %    1 2 3 4 5 <= samples
+            %    0 1 2 3 4 <= time
+            %
+            
+            %TODO: Do we want + or - ????
+            obj.start_datetime = obj.start_datetime + h__secondsToDays(start_dt);
         end
     end
     
@@ -334,11 +334,11 @@ classdef time < sl.obj.display_class
             %sorted check?
             times = obj.start_offset + (indices-1)*obj.dt;
             times = h__getTimeScaled(obj,times);
-        end        
-        function [indices,time_errors] = getNearestIndices(obj,times)
+        end
+        function [indices,result] = getNearestIndices(obj,times)
             %x Given a set of times, return the closest indices
             %
-            %   TODO: Document ...
+            %   [indices,result] = getNearestIndices(obj,times)
             %
             %   Inputs:
             %   -------
@@ -347,21 +347,42 @@ classdef time < sl.obj.display_class
             %   Outputs:
             %   --------
             %   indices :
-            %   time_errors :
+            %   result : sci.time_series.time.nearest_indices_result
             %
             %   Improvements:
             %   -------------
             %   1) Handle out of range data - somehow
             %   2) Provide rounding options - expansive, contractive, or
-            %   nearest
+            %   nearest (for expansive and contractive, I think I meant
+            %   that samples that were almost out of bounds should be
+            %   rounded to the edges i.e. index of 0.3 could go to 1
+            %   instead of 0 - I also might have meant floor and ceiling)
             
             
             times = h__unscaleTime(obj,times);
             
             raw_indices = (times - obj.start_offset)./obj.dt;
             indices = round(raw_indices)+1;
+            
+            %Error check on indices being in bounds
+            %--------------------------------------
+            if ~issorted(times)
+                %This isn't a problem, I just need to handle it ...
+                error('Unhandled case, unsorted times input')
+            else
+                if indices(1) < 1
+                    error('The first sample (and possibly others) is out of range, less than 1')
+                elseif indices(end) > obj.n_samples
+                    error('The last sample (and possibly others) is out of range, greater than the # of samples')
+                end
+            end
+            
             if nargout == 2
+                result = sci.time_series.time.nearest_indices_result;
                 time_errors = (indices - (raw_indices + 1))*obj.dt;
+                result.time_errors = time_errors;
+            else
+                result = [];
             end
         end
     end
@@ -369,7 +390,7 @@ classdef time < sl.obj.display_class
 end
 
 function days = h__secondsToDays(seconds)
-   days = seconds/86400;
+days = seconds/86400;
 end
 
 %TODO: Document these functions

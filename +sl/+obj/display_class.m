@@ -20,9 +20,6 @@ classdef display_class < handle
            %This gets called when mousing over an object
            str = evalc('builtin(''disp'',objs)');
         end
-        function methods(objs)
-            
-        end
     end
     
     methods (Hidden)

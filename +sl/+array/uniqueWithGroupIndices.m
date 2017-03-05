@@ -1,4 +1,4 @@
-function [u,uI] = uniqueWithGroupIndices(A)
+function [u,uI] = uniqueWithGroupIndices(A,varargin)
 %uniqueWithGroupIndices Returns groupings for each unique element
 %
 %   [u,uI] = sl.array.uniqueWithGroupIndices(A)
@@ -55,20 +55,32 @@ function [u,uI] = uniqueWithGroupIndices(A)
 %1) input must be number
 %2) NaN handling
 
+in.rows = false;
+in = sl.in.processVarargin(in,varargin);
+
 if isempty(A)
    u = [];
    uI = {};
    return
-elseif length(A) == 1
+elseif (in.rows && size(A,1) == 1) || length(A) == 1
    u = A;
    uI = {1};
    return
 end
 
 %JAH TODO: Document code
-[Y,I2] = sort(A(:));
+if in.rows
+    [Y,I2] = sortrows(A);
+else
+    [Y,I2] = sort(A(:));
+end
 
-if isnumeric(Y)
+
+
+if in.rows
+	neighbor_mask = Y(1:end-1,:) ~= Y(2:end,:);
+ 	Itemp         = find(any(neighbor_mask,2));
+elseif isnumeric(Y)
     if isnan(Y)
         error('NaN handling not yet supported')
     end
@@ -82,15 +94,21 @@ end
 Istart = [1; Itemp+1];
 Iend   = [Itemp; length(A)]; 
 
+if in.rows
+u = Y(Istart,:);    
+else
 u = Y(Istart);
+end
 
-%Handling row vectors, note that matrices will come out
-%as column vectors, just like for unique()
-rows = size(A,1);
-cols = size(A,2);
-if (rows == 1) && (cols > 1)
-   u  = u'; 
-   I2 = I2';
+if ~in.rows
+    %Handling row vectors, note that matrices will come out
+    %as column vectors, just like for unique()
+    rows = size(A,1);
+    cols = size(A,2);
+    if (rows == 1) && (cols > 1)
+       u  = u'; 
+       I2 = I2';
+    end
 end
 
 %Population of uI

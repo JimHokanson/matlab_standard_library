@@ -42,12 +42,12 @@ struct_d2 = cellfun(@(x) size(x,2),structs);
 
 if in.cat_direction == 'h'
     %d1 needs to be the same
-    if ~sl.array.allSame(struct_d1)
+    if ~sl.array.similiarity.allExactSame(struct_d1)
         error('Horizontal concatenation requires the same # of rows in all structs')
     end
     output_size = [struct_d1(1) sum(struct_d2)];
 else
-    if ~sl.array.allSame(struct_d2)
+    if ~sl.array.similiarity.allExactSame(struct_d2)
         error('Vertical concatenation requires the same # of columns in all structs')
     end
     output_size = [sum(struct_d1) struct_d2(1)];

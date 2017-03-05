@@ -5,8 +5,6 @@ function initialize()
 %   standard library.
 %   
 
-MODULES = {'plotBig'};
-
 repo_root = sl.stack.getPackageRoot;
 
 %Temp directory creation
@@ -29,11 +27,8 @@ addpath(gnf_dir)
 fex_dir = fullfile(repo_root,'fex');
 addpath(fex_dir)
 
-module_root = fullfile(repo_root,'modules');
-for iModule = 1:length(MODULES)
-    cur_module_root = fullfile(module_root,MODULES{iModule});
-    addpath(cur_module_root);
-end
+sl.modules.initialize();
+
 
 %---------------------------------------------
 
@@ -63,7 +58,7 @@ javaaddpath(sigar_path);
 %     %Do nothing
 % else
     %javaaddpath(sl.java.read_buffered_stream);
-    sl.git.initialize()
+    
 % end
 
 end

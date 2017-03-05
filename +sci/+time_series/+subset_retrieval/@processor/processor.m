@@ -10,6 +10,12 @@ classdef processor < handle
     %   sci.time_series.subset_retrieval.epoch_processor
     
     properties
+        %NYI, every subset_retrieval method should populate this ...
+        %Although we also have optional inputs
+        %-perhaps we convert the input to string
+        %e.g. (fromEvent
+        history
+        
       	n_parts
         
         %TODO: NYI
@@ -137,13 +143,19 @@ classdef processor < handle
     
     methods (Static)
         function samples = timesToSamples(data_objs,times)
+            %
+            %   Inputs
+            %   ------
+            %   data_objs
+            %   times: cell array, 1 for each object
+            %   
+            
             n_objs = length(data_objs);
             samples = cell(1,n_objs);
             for iObj = 1:n_objs
                 cur_obj = data_objs(iObj);
                 cur_times = times{iObj};
-                %TODO: Introduce a bounds error check in getNearestIndices
-                samples{iObj} = cur_obj.time.getNearestIndices(cur_times);
+                samples{iObj} = cur_obj.ftime.getNearestIndices(cur_times);
             end
         end
     end

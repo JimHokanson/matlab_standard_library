@@ -14,7 +14,8 @@ function help_str = getH1Line(method_name)
 %  tags: help, parsing
 %  see also: help
 
-%This is really really slow ...
+%This line is really really slow ...
+%https://github.com/JimHokanson/matlab_standard_library/issues/44
 help_raw = help(method_name);
 
 help_str = regexp(help_raw,'^\s*\w+\s+(.+)','tokens','dotexceptnewline','once');

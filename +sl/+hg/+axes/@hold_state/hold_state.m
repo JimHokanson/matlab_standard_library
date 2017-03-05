@@ -47,7 +47,8 @@ classdef hold_state
                 case 'add'
                     hold_style = getappdata(h_axes_input,'PlotHoldStyle');
                     
-                    if graphicsversion(h_axes_input,'handlegraphics')
+                    %if graphicsversion(h_axes_input,'handlegraphics')
+                    if verLessThan('matlab','8.4.0')
                                         
                         if ~islogical(hold_style)
                             error('Unexpected value of PlotHoldStyle')

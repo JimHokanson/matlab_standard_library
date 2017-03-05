@@ -18,7 +18,7 @@ classdef stim_artifact_remover < sl.obj.display_class
         d0 = '---------  Blanking Options  -----------'
         blank_artifact = true
         
-        blanking_type = 1
+        blanking_type = 3
         %1) set to 0
         %2) set to NaN
         %3) linear interpolation - NYI
@@ -182,19 +182,59 @@ classdef stim_artifact_remover < sl.obj.display_class
                         otherwise
                             error('No other options have been implemented')
                     end
+                    h2 = sprintf('blanking width determined by algorithm %d',obj.n_samples_blank_algorithm);
                 else
                     n_samples_blank_local = obj.n_samples_blank;
+                    h2 = sprintf('blanking width specified by the user');
                 end
                 
                 cur_data = data_obj.d;
-                for iStart = 1:n_stims
-                    cur_start_I = start_I(iStart);
-                    %cur_end_I = cur_start_I + min_sample_width-1;
-                    cur_data(cur_start_I:cur_start_I+n_samples_blank_local-1) = 0;
-                    %cur_data(cur_start_I:cur_end_I) = cur_data(cur_start_I:cur_end_I)-avg_response;
+                %The actual blanking
+                %-------------------
+                switch obj.blanking_type
+                    %1 - 0
+                    %2 - NaN
+                    %3 - linear interpolation
+                    case {1,2}
+                        if obj.blanking_type == 1
+                            blanking_value = 0;
+                            h3 = 'values set to 0';
+                        else
+                            blanking_value = NaN;
+                            h3 = 'values set to NaN';
+                        end
+                        for iStart = 1:n_stims
+                            cur_start_I = start_I(iStart);
+                            %cur_end_I = cur_start_I + min_sample_width-1;
+                            cur_data(cur_start_I:cur_start_I+n_samples_blank_local-1) = blanking_value;
+                            %cur_data(cur_start_I:cur_end_I) = cur_data(cur_start_I:cur_end_I)-avg_response;
+                        end
+                    case 3
+                        x = 0:n_samples_blank_local+1;
+                        for iStart = 1:n_stims
+                            %These are now off by 1 so that we can grab
+                            %the first and last and interpolate
+                            cur_start_I = start_I(iStart)-1;
+                            cur_end_I = cur_start_I+n_samples_blank_local+1;
+                            
+                            b = cur_data(cur_start_I);
+                            m = (cur_data(cur_end_I)-b)/(n_samples_blank_local+1);
+                            %cur_end_I = cur_start_I + min_sample_width-1;
+                            cur_data(cur_start_I:cur_end_I) = m*x + b;
+                            %cur_data(cur_start_I:cur_end_I) = cur_data(cur_start_I:cur_end_I)-avg_response;
+                        end
+                        h3 = 'values set by linear interpolation';
                 end
+                
+                %h2 - method of determining width
+                %h3 - blanking value
+
+
                 filtered_data = copy(data_obj);
                 filtered_data.d = cur_data;
+             	history = sprintf('%d Artifacts blanked over %d samples, %s, %s',n_stims,n_samples_blank_local,h2,h3);
+                filtered_data.addHistoryElements(history);
+                
                 
             else
                 %We need to check if the artifact is changing over time ...
