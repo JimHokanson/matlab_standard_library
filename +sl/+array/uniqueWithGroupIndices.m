@@ -74,6 +74,7 @@ if isnumeric(Y)
     end
     Itemp = find(diff(Y) ~= 0);
 else
+    %TODO: Throw warning on this ...
     %could add case sensitivity
     Itemp = find(~strcmp(Y(1:end-1),Y(2:end)));  
 end

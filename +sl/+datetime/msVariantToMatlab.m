@@ -1,6 +1,6 @@
 function time_out = msVariantToMatlab(time_in)
 %
-%   sl.datetime.msVariantToMatlab
+%   time_out = sl.datetime.msVariantToMatlab(time_in)
 %
 
 %http://msdn.microsoft.com/en-us/library/aa912065.aspx
