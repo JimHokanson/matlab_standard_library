@@ -6,6 +6,9 @@ function time_out = msBase1601ToMatlab(time_in)
 %   Is there a better source on this?
 %   http://msdn.microsoft.com/en-us/library/windows/desktop/ms675098(v=vs.85).aspx
 %
+%   This might be better ...
+%   https://en.wikipedia.org/wiki/System_time
+%
 %   Outputs:
 %   -----------------------------------------------------------------------
 %   time_out : (double), Matlab representation of time, the time zone.
@@ -39,4 +42,6 @@ end
 
 time_since_1601_s = double(time_in)/8.64e11;
 
+%TODO: I think this is wrong, aren't we working in days, not hours?
+%i.e. time_zone/24
 time_out = 584755 + time_since_1601_s + sl.datetime.getTimeZone;
