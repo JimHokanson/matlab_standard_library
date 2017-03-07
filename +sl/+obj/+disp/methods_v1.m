@@ -106,6 +106,12 @@ else
     %------
     method_names = {meta_method_objs.Name};
 
+    %TODO: Make this smarter ...
+    METHODS_REMOVE = {'isvalid','cat','vertcat','horzcat'};
+    [mask,loc] = ismember(method_names,METHODS_REMOVE);
+  	meta_method_objs(mask) = [];
+  	method_names(mask)     = [];
+    
     %2.1) Remove constructor
     if ~in.show_constructor
         class_constructor_name = sl.obj.getClassNameWithoutPackages(class_name);
