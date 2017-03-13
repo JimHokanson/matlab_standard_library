@@ -1,140 +1,102 @@
-function [i1,i2] = ofDataWithinEdges(data,edges,varargin)
+function [I1,I2] = ofDataWithinEdges(data,varargin)
 %x Compute data indices that bound either side of each 
 %
-%   ofDataWithinEdges or ofEdgesBoundingData?
-%   -----------------------------------------
-%   I had a really hard time 
+%   [I1,I2] = sl.array.indices.ofDataWithinEdges(data,edges)
 %
-%   NOTE: This implementation is suboptimal because it uses histc instead
-%   of a merge sort approach (possibly, although histc may have an alternte 
-%   path with a issorted check).
+%   [I1,I2] = sl.array.indices.ofDataWithinEdges(data,left_edges,right_edges)
 %
-%   Regardless, we should move the mex_computeEdgeIndices code into place
-%   so that it is used by default instead ...
-%
-%   OLD NAME: computeEdgeIndices
-%
-%   TODO: DOCUMENATION BELOW IS OUT OF DATE
-%
-%   Calling forms:
-%   --------------
-%   1)
-%   [I1,I2] = sl.array.computeEdgeIndices(ts,edges,varargin)
+%   Purpose. This function was originally written to go from times
+%   to a continuous rate code, where the times are the 'data' and the
+%   edges are time samples.
 %   
-%   2)
-%   [I1,I2] = sl.array.computeEdgeIndices(ts,left_edges,right_edges,varargin)
+%   Pseudocode
+%   ----------
+%   for i = 1:length(left_edges)
+%       temp = find(data > left_edges(i) & data <= right_edges(i);
+%       if ~isempty(temp)
+%           I1(i) = temp(1);
+%           I2(i) = temp(end);
+%       else
+%           I1(i) = 1;
+%           I2(i) = 0;
+%       end
+%   end
 %
 %
+%   TODO: This should be the fallback for mex code. The mex code has
+%   been moved locally but still needs to be reorganized.
 %
-%   TODO: Documentation needs to be updated
+%   Inputs
+%   ------
+%   data : array
+%       Values. MUST BE SORTED.
+%   edges : array
+%       When edges are passed in, the boundaries are defined as being
+%       greater than one edge and less than its neighbor.
+%   left_edges: array
+%       Paired with right_edges. We are thus looking for values that
+%       are greater than the left edge and less than the right edge.
+%   right_edges: array
 %
-%
-%
-%   Inputs:
+%   Outputs
 %   -------
-%   ts : array
-%       time of events
-%   bound_values :
-%   t1 :
-%   t2 :
+%   I1 : 
+%       Left indices of data that falls within the edge boundaries.
+%       i.e. I1(i) corresponds to the index of the data point that 
+%       is the FIRST TO SATISFY:
+%       i.e. data(I1(i))  > left_edges(i) & < right_edges(i)
 %
-%
-%   Outputs:
-%   --------
-%   I1 :
+%       This value is set to 1 when no values are valid.
 %   I2 : 
+%       Right indices of data ...
+%       This is the index that is LAST TO SATISFY ...
 %
-%   Optional Inputs:
-%   ----------------
-%   
+%       This value is set to 0 when no values are valid
 %
-%   [I1,I2] = computeEdgeIndices(TS,T1,T2,*CHECK) computes the edge indices
-%   for every T1 & T2 pair where T1 < TS <= T2.  I1 is the first value
-%   where this is true, and I2 is the last, and is equivalent to
-%   the code below, assuming that T1(n) < T2(n), but should be alot faster.
+%   note, the # of values between each edge can be computed as:
+%   n_values_between_edges = I2 - I1 + 1;
 %
-%   Note: For missing pairs (no events between them), these get
-%   returned as 1,0 for I1 & I2 respectively.  Searching for I2 = 0 will
-%   indicate which pairs have no events in between.  In addition the # of
-%   events can be calculated as I2 - I1 + 1, which results in 0, for I2 = 0
-%   and I1 = 0.
-%
-%   I1      : For every T1,T2 pair, the FIRST index at which TS falls
-%             between the two times values
-%   I2      : For every T1,T2 pair, the LAST index, "               "
-%
-%   TS      : Time of events
-%   T1      : Left time edges for computing indices
-%   T2      : Right time edges for computing indices
-%   *CHECK  : (default false), if true, calculates I1 & I2 via for loops,
-%              to check that the approach is correct
-%
-%   COMPUTING EFFICIENCY (IMPORTANT REQUIREMENT):
-%   The computing efficiency comes in from the assumption that both T1 and
-%   T2 are ordered within themselves, T1(n) < T1(n+1) & the same for T2,
-%   this means when searching for TS events that are between T1(n) and
-%   T2(n), we only need to start the search (on the left side) whereever
-%   T1(n-1) left off.  I.E. If TS = [1 3 5] and I1(n-1) is index 2, we know
-%   that I1(n), if valid (i.e. not empty and hence = 1), has to be at least
-%   2 because T1(n - 1) is greater than 1 (the first index of Ts), and
-%   hence T1(n) will also be.  This means that instead of every T1,T2 pair
-%   searching over all Ts, it can do search in sliding windows, starting
-%   the search wherever the last index left off.
-%
-%   Improvements:
-%   -------------
-%   1) Move mex code into place from old SVN repo
-%   2) Create tests for this code
-%
-%   Example:
+%   Examples
 %   --------
-%   TS = [1 3 5 10];
-%   T1 = [0 2 8];
-%   T2 = [2 9 10];
+%   data = 3:10
+%   edges = 1:3:20
+%   [I1,I2] = sl.array.indices.ofDataWithinEdges(data,edges)
+%   I1 => [1,3,6,1,1,1]
+%   I2 => [2,5,8,0,0,0]
 %
-%   [I1,I2] = computeEdgeIndices(TS,T1,T2);
+%   Explanation of the example
+%   --------------------------
+%   Edges:         1     4     7     10       13  ...
+%   data               3 4 5 6 7 8 9 10
+%   indices of data    1 2 3 4 5 6 7 8
+%      I1 indices      x   x     x               
+%      I2 indices        x     x     x
 %
-%   I1 => [1 2 4];
-%   I2 => [1 3 4];
+%   Note this example also exposes the equality rules, that we are looking
+%   for > and <=
+%   Eventually this could be extended to better rules, but this would be 
+%   difficult with this approach ...
 %
-%   Note, this says, for T1(1) = 0 & T2(1) = 2
-%   I1(1) = 1
-%   I2(1) = 1
-%   indicating that  TS(1:1) is between 0 and 2
+%   Why (for example) is I1(2) => 3
+%   Because: data(3) => 5
+%       and this is the first value that is greater than
+%       edges(2) (value of 4)
+%   Another example, why is I2(3) => 8
+%   Because
 %
-%   For T1(2) = 2 & T2(2) = 9
-%   I1(2) = 2
-%   I2(2) = 3
-%   indicating that TS(2:3) is between 2 and 9
+%   Because the 3rd value of data has a value of 5, which is the FIRST VALUE 
+%   that is greater than the 2nd index of the edges (4
 %
+%   in words, I1(2) => 3, because data(3) (value=5) is the first value that 
+%   is greater than the 2nd edge value
 %
-%   See also:
-%
+%  
 
-%Bounds assignment
-%-----------------
-%We use 2 cases:
-%1) A t2 value was not specified. In this case the 2nd bound is the
-%right bound for the first span and the left bound on the 2nd span. 
-%
-%   L1      L2/R1        L3/R2        L4/R3
-%
-%
-%2) A t2 value has been specified, and the bound_values are t1 values. This
-%is useful in cases in which the left and right bounds may overlap with
-%each other.
-%
-%   L1       L2        L3        L4       L5
-%                   R1                R2                 R3
-%
-%   This case was originally written for computing a smoothed firing rate.
-%
-
-if nargin > 2 && isnumeric(varargin{1})
-    t1 = edges;
-    t2 = varargin{1};
-    varargin(1) = [];
+if nargin == 3
+    t1 = varargin{1};
+    t2 = varargin{2};
 else
+    edges = varargin{1};
     t1 = edges(1:end-1);
     t2 = edges(2:end);    
 end
@@ -143,31 +105,24 @@ if length(t1) ~= length(t2)
     error('Inputs t1 & t2 must be the same size')
 end
 
-
-
-in.check = false;
-in = sl.in.processVarargin(in,varargin);
-
 if isempty(data)
     %Maintains size
-    i1 = ones(size(t1));
-    i2 = zeros(size(t2));
+    I1 = ones(size(t1));
+    I2 = zeros(size(t2));
     return
 end
-
-
-
 
 I = find(t1 >= data(end),1);
 
 %MAGIC, BEWARE :)
+%------------------------------------------------
 %I forgot where I first saw this trick being used
 if size(data,1) > 1
-    [~,i1] = histc(t1,[-inf; data]);
+    [~,I1] = histc(t1,[-inf; data]);
 else
-    [~,i1] = histc(t1,[-inf data]);
+    [~,I1] = histc(t1,[-inf data]);
 end
-i1(I:end) = 1;
+I1(I:end) = 1;
 
 if nargout == 1
     return
@@ -178,11 +133,11 @@ if t2(end) == inf
 end
 
 if size(data,1) > 1
-    [~,i2] = histc(t2,[data; inf]);
+    [~,I2] = histc(t2,[data; inf]);
 else
-    [~,i2] = histc(t2,[data inf]);
+    [~,I2] = histc(t2,[data inf]);
 end
-i2(I:end) = 0; %This provides empty indexing and lengths of 0
+I2(I:end) = 0; %This provides empty indexing and lengths of 0
 
 end
 

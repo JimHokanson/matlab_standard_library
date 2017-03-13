@@ -130,31 +130,51 @@ classdef time < sl.obj.display_class
             obj.n_samples = n_samples;
         end
         function new_objs = copy(objs,varargin)
+            %x Creates a copy of the time object from the current version.
             %
-            %
-            %   Optional Inputs:
-            %   ----------------
-            %   new_start_offset :
+            %   Optional Inputs
+            %   ---------------
+            %   dt : scalar or array
+            %       Inverse of the sampling rate
+            %   n_samples : scalar or array
+            %   new_start_offset : scalar or array
+            %       AKA t0
             
+            %output = h__repIfNecessary(value,n_objects)
+            
+            in.dt = [];
+            in.n_samples = [];
             in.new_start_offset = [];
             in = sl.in.processVarargin(in,varargin);
             
+            n_objects = length(objs);
+            
             if isempty(in.new_start_offset)
                 start_offsets = [objs.start_offset];
-            elseif length(in.new_start_offset) == 1
-                start_offsets = repmat(in.new_start_offset,1,length(objs));
             else
-                start_offsets = in.new_start_offset;
+               start_offsets = h__repIfNecessary(in.new_start_offset,n_objects); 
+            end
+
+            if isempty(in.dt)
+                local_dt = [objs.dt];
+            else
+                local_dt = h__repIfNecessary(in.dt,n_objects); 
             end
             
+            if isempty(in.n_samples)
+                local_n_samples = [objs.n_samples];
+            else
+                local_n_samples = h__repIfNecessary(in.n_samples,n_objects); 
+            end
             
-            %x Creates a deep copy
-            n_objs = length(objs);
-            temp_ca = cell(1,n_objs);
-            for iObj = 1:n_objs
+            %Creates the deep copy
+            %-----------------------
+            n_objects = length(objs);
+            temp_ca = cell(1,n_objects);
+            for iObj = 1:n_objects
                 obj = objs(iObj);
-                new_obj = sci.time_series.time(obj.dt,...
-                    obj.n_samples,...
+                new_obj = sci.time_series.time(local_dt(iObj),...
+                    local_n_samples(iObj),...
                     'start_datetime',obj.start_datetime,...
                     'start_offset',start_offsets(iObj));
                 new_obj.output_units = obj.output_units;
@@ -195,20 +215,20 @@ classdef time < sl.obj.display_class
             first_sample_real_time = (start_sample-1)*obj.dt + obj.start_offset;
             
             if isempty(in.first_sample_time)
-                start_offset   = first_sample_real_time; %#ok<PROP>
-                start_datetime = obj.start_datetime; %#ok<PROP>
+                start_offset   = first_sample_real_time;  %#ok<PROPLC>
+                start_datetime = obj.start_datetime; %#ok<PROPLC>
             else
                 
-                start_offset   = in.first_sample_time; %#ok<PROP>
-                time_change    = first_sample_real_time - start_offset;%#ok<PROP>
+                start_offset   = in.first_sample_time; %#ok<PROPLC>
+                time_change    = first_sample_real_time - start_offset; %#ok<PROPLC>
                 
-                start_datetime = obj.start_datetime + h__secondsToDays(time_change);%#ok<PROP>
+                start_datetime = obj.start_datetime + h__secondsToDays(time_change); %#ok<PROPLC>
             end
             
             new_time_object = sci.time_series.time(...
                 obj.dt,n_samples,...
-                'start_offset',start_offset,... %#ok<PROP>
-                'start_datetime',start_datetime);%#ok<PROP>
+                'start_offset',start_offset,...     %#ok<PROPLC>
+                'start_datetime',start_datetime);   %#ok<PROPLC>
             new_time_object.output_units = obj.output_units;
         end
         function s_objs = export(objs)
@@ -429,5 +449,14 @@ end
 if ~for_output
     scale_factor = 1/scale_factor;
 end
+end
+
+function output = h__repIfNecessary(value,n_objects)
+    %Written for the copy method
+    if length(value) == n_objects
+        output = repmat(value,1,n_objects);
+    else
+        output = value;
+    end
 end
 

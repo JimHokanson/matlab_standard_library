@@ -1,4 +1,4 @@
-classdef time_functions
+classdef time_functions < sl.obj.display_class
     %
     %   Class:
     %   sci.time_series.time_functions
@@ -16,6 +16,7 @@ classdef time_functions
     %}
     
     properties
+        %Currently this is always singular ...
         data_objects
     end
     
@@ -24,6 +25,7 @@ classdef time_functions
             obj.data_objects = data_objects;
         end
         function value = getProp(obj,prop_name)
+            %x Retrieves a time property from the objects
             %
             %   Retrieves a property from the time objects. Values are
             %   concatenated together for all objects.
@@ -73,6 +75,13 @@ classdef time_functions
                 error('unhandled case')
             end
             [varargout{1:nargout}] = dobj.time.getNearestIndices(times);
+        end
+        function times = getTimesFromIndices(obj,indices)
+            dobj = obj.data_objects;
+            if length(dobj) > 1
+                error('unhandled case')
+            end
+            times = dobj.time.getTimesFromIndices(indices);
         end
         function n_samples = durationToNSamples(obj,duration)
             %

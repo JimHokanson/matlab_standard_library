@@ -3,7 +3,7 @@ function [in,extras] = processVarargin(in,v,varargin)
 %
 %   Function to override default options.
 %
-%   [in,extras] = sl.in.processVarargin(in,v,varargin) 
+%   [in,extras] = sl.in.processVarargin(in,v,varargin)
 %
 %   Inputs:
 %   -------
@@ -20,12 +20,12 @@ function [in,extras] = processVarargin(in,v,varargin)
 %       If true values must have the same casing in order to match
 %   allow_non_matches: (default false)
 %       If true, then an option can be passed in and not match. Generally
-%       this is indicative of a spelling error but occasionally it might 
+%       this is indicative of a spelling error but occasionally it might
 %       indicate that the same options are being passed into multiple
 %       functions and only some options match in some functions.
 %   allow_spaces :
 %   remove_null : (default false)
-%       Values that are assigned as sl.in.NULL are removed. 
+%       Values that are assigned as sl.in.NULL are removed.
 %
 %
 %
@@ -76,7 +76,7 @@ c.remove_null       = false;
 
 %Update instructions on how to parse the optional inputs
 %--------------------------------------------------------------------------
-%This type of code would allow a bit more flexibility on how to process 
+%This type of code would allow a bit more flexibility on how to process
 %the processing options if we ever decided they needed to be different
 %
 %
@@ -86,7 +86,7 @@ c.remove_null       = false;
 %NOTE: If we don't pass in any instructions on how to parse the data
 %differently we can skip this step ...
 if ~isempty(varargin)
-    %Updates c based on varargin from user 
+    %Updates c based on varargin from user
     %c = processVararginHelper(c,varargin,c2,1);
     c = processVararginHelper(c,varargin,c,true,1);
 end
@@ -97,13 +97,13 @@ end
 NULL = sl.in.NULL;
 
 if c.remove_null
-   fn = fieldnames(in);
-   for iField = 1:length(fn)
-      cur_field = fn{iField};
-      if isequal(in.(cur_field),NULL)
-         in = rmfield(in,cur_field); 
-      end
-   end
+    fn = fieldnames(in);
+    for iField = 1:length(fn)
+        cur_field = fn{iField};
+        if isequal(in.(cur_field),NULL)
+            in = rmfield(in,cur_field);
+        end
+    end
 end
 
 end
@@ -115,7 +115,7 @@ function [in,extras] = processVararginHelper(in,v,c,is_parsing_options,n_outputs
 %
 %   [in,extras] = processVararginHelper(in,v,c,is_parsing_options)
 %
-%   This function does the actual work. It is a separate function because 
+%   This function does the actual work. It is a separate function because
 %   we use this function to handle the options on how this function should
 %   work for the user's inputs. We use the same approach for the processing
 %   options as we do the user's inputs.
@@ -124,7 +124,7 @@ function [in,extras] = processVararginHelper(in,v,c,is_parsing_options,n_outputs
 %   =======================================================================
 %   in - (structure input)
 %   v  - varargin input, might be structure or prop/value pairs
-%   c  - options for processing 
+%   c  - options for processing
 %   is_parsing_options - specifies we are parsing the parsing options
 
 populate_extras_flag = n_outputs > 1;
@@ -132,7 +132,7 @@ populate_extras_flag = n_outputs > 1;
 if populate_extras_flag
     extras = sl.in.process_varargin_result(in,v);
 else
-   extras = []; 
+    extras = [];
 end
 
 %Checking the optional inputs, either a structure or a prop/value cell
@@ -148,10 +148,14 @@ elseif isstruct(v{1}) && length(v) == 1
     %Single structure was passed in as sole argument for varargin
     v = v{1};
     parse_input = true;
+elseif isobject(v{1}) && length(v) == 1
+    v = v{1};
+    parse_input = true;
 elseif iscell(v) && length(v) == 1 && isempty(v{1})
     %User passed in empty cell option to varargin instead of just ommitting input
     parse_input = false;
 else
+    %This is generally for cells ...
     parse_input = true;
     v = sl.in.propValuePairsToStruct(v,'allow_spaces',c.allow_spaces);
 end
@@ -159,7 +163,7 @@ end
 %At this point v is an object or a struct
 
 if ~parse_input
-   return 
+    return
 end
 
 if populate_extras_flag
@@ -178,7 +182,7 @@ end
 %Matching location
 %--------------------------------------------------------------------------
 if c.case_sensitive
-	[is_present,loc] = ismember(fn__new_values,fn__input_struct);
+    [is_present,loc] = ismember(fn__new_values,fn__input_struct);
 else
     [is_present,loc] = ismember(upper(fn__new_values),upper(fn__input_struct));
     %NOTE: I don't currently do a check here for uniqueness of matches ...
@@ -207,8 +211,8 @@ end
 %---------------------------------------------------------------
 for i = 1:length(fn__new_values)
     if is_present(i)
-    %NOTE: By using fn_i we ensure case matching
-    in.(fn__input_struct{loc(i)}) = v.(fn__new_values{i});
+        %NOTE: By using fn_i we ensure case matching
+        in.(fn__input_struct{loc(i)}) = v.(fn__new_values{i});
     end
 end
 

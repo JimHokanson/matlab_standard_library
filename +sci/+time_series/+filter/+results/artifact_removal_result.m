@@ -5,6 +5,7 @@ classdef artifact_removal_result %< sl.obj.dict
     
 
     properties
+        stim_trigger_info %sci.time_series.filter.results.artifact_removal.stim_trigger_info
         triggered_responses
     	avg_response
         original_data

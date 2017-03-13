@@ -121,7 +121,7 @@ classdef data < sl.obj.handle_light
         
     end
     
-    properties (Dependent)
+    properties (Dependent,GetObservable)
         event_names
         n_channels
         n_reps
@@ -130,6 +130,12 @@ classdef data < sl.obj.handle_light
         subset
         ftime
     end
+    
+%     methods
+%         function preGet(varargin)
+%             disp(length(varargin{1}))
+%         end
+%     end
     
     %Dependent Methods ----------------------------------------------------
     methods
@@ -150,6 +156,9 @@ classdef data < sl.obj.handle_light
         end
         function value = get.subset(obj)
             %This only works well for a single object
+            %TODO: use input_name and check for single value ...
+            %- throw error if not a single object ...
+            %crap - but then we run into indexing problems ...
            value = sci.time_series.subset_retrieval(obj); 
         end
         function value = get.ftime(obj)
@@ -222,6 +231,8 @@ classdef data < sl.obj.handle_light
             
             obj.d = data_in;
             
+%             addlistener(obj , 'ftime' , 'PreGet' ,  @obj.preGet);
+            
             if obj.n_samples == 1 && obj.n_channels >= MIN_CHANNELS_FOR_WARNING
                 sl.warning.formatted(['Current specification for the data is' ...
                     ' to have %d channels all with 1 sample, perhaps you meant' ...
@@ -253,28 +264,62 @@ classdef data < sl.obj.handle_light
             %   This allows someone to make changes to the properties
             %   without it also changing the original object.
             %
+            %   Optional Inputs
+            %   ---------------
+            %   raw_data : array or cell array of arrays
+            %       NOTE, currently changing the # of channels is not
+            %       supported with this approach.
+            %   dt : scalar or array
+            %       Inverse of the sampling rate
+            %   new_start_offset : scalar or array
+            %       AKA t0
+            %
             %   See Also:
             %   ---------
             %   sci.time_series.events_holder
             %   sci.time_series.time
             
+            in.units = {};
+            in.raw_data = []; 
+            in.dt = [];
             in.new_start_offset = [];
             in = sl.in.processVarargin(in,varargin);
             
             n_objs    = length(old_objs);
             temp_objs = cell(1,n_objs);
             
+            if isempty(in.raw_data)
+                local_n_samples = [];
+                raw_data = {old_objs.d};
+            elseif iscell(in.raw_data)
+                local_n_samples = cellfun('length',in.raw_data);
+                raw_data = in.raw_data;
+            else
+                local_n_samples = length(in.raw_data);
+                raw_data = {in.raw_data};
+            end
+            
+            if isempty(in.units)
+                local_units = {old_objs.units};
+            elseif iscell(in.units)
+                local_units = in.units;
+            else
+                local_units = repmat({in.units},1,n_objs);
+            end
+            
             old_time_objs = [old_objs.time];
-            new_time_objs = copy([old_objs.time],'new_start_offset',in.new_start_offset);
+            new_time_objs = copy([old_objs.time],...
+                'new_start_offset',in.new_start_offset,...
+                'dt',in.dt,'n_samples',local_n_samples);
             
             for iObj = 1:n_objs
                 time_shift = old_time_objs(iObj).start_offset-new_time_objs(iObj).start_offset;
                 cur_obj = old_objs(iObj);
                 temp_objs{iObj} = sci.time_series.data(...
-                    cur_obj.d,...
+                    raw_data{iObj},...
                     new_time_objs(iObj),...
                     'history',      cur_obj.history,...
-                    'units',        cur_obj.units,...
+                    'units',        local_units{iObj},...
                     'channel_labels',cur_obj.channel_labels,...
                     'events',       copy(cur_obj.event_info,'time_shift',time_shift),...
                     'y_label',      cur_obj.y_label);
