@@ -6,12 +6,18 @@ function [u,uI] = uniqueWithGroupIndices(A,varargin)
 %   This function is a quicker way of getting the indices which 
 %   match a particular unique value.
 %
-%   Inputs:
-%   -------
+%   Inputs
+%   ------
 %   A : vector
 %       Must be:
 %       1) sortable via sort()
 %       2) able to compare neighbors via diff or strcmp
+%
+%   Optional Inputs
+%   ---------------
+%   stable : default false
+%   rows : default false
+%
 %
 %   Outputs:
 %   --------
@@ -55,6 +61,7 @@ function [u,uI] = uniqueWithGroupIndices(A,varargin)
 %1) input must be number
 %2) NaN handling
 
+in.stable = false;
 in.rows = false;
 in = sl.in.processVarargin(in,varargin);
 
