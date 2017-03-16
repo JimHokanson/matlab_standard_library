@@ -33,7 +33,7 @@ classdef stim_artifact_remover < sl.obj.display_class
         blanking_type = 3
         %1) set to 0
         %2) set to NaN
-        %3) linear interpolation - NYI
+        %3) linear interpolation
         
         n_samples_blank = -1
         %If specified, this is the # of samples that will be removed
@@ -220,6 +220,8 @@ classdef stim_artifact_remover < sl.obj.display_class
                     n_samples_blank_local = obj.n_samples_blank;
                     h2 = sprintf('blanking width specified by the user');
                 end
+                
+                result.n_samples_blanked = n_samples_blank_local;
                 
                 %TODO: Move these sections to local helpers
                 

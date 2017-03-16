@@ -12,6 +12,7 @@ classdef artifact_removal_result %< sl.obj.dict
         filtered_data
         blanking_used
         start_indices
+        n_samples_blanked
         n_samples_blanking_result %Type varies depending on the approach used
         %Although currently only 1 approach is implemented
         %   sci.time_series.filter.results.artifact_removal.n_samples_blanking_approach1
