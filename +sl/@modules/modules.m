@@ -30,6 +30,10 @@ classdef (Hidden) modules
             %
             %   sl.modules.initialize()
             
+            if ~sl.git.is_installed
+               sl.warning.formatted('Git not installed, unable to download and/or update modules');
+               return
+            end
             
             %1) Get the path to the modules folder
             %2) If missing, create that path
@@ -53,7 +57,7 @@ classdef (Hidden) modules
                 if ~exist(module_folder_path,'dir')
                     cur_remote_address = module_remotes_local{iModule};
                     fprintf('Cloning %s ...',cur_remote_address);
-                    sl.git.clone(module_remotes_local{iModule},fileparts(module_folder_path))
+                    sl.git.clone(module_remotes_local{iModule},fileparts(module_folder_path));
                     fprintf('Done\n');
                 end
                 

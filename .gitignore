@@ -2,6 +2,7 @@
 *.bin
 *.m~
 
+modules/
 temp_directory/
 global_namespace_functions/z_runc_exec_file.m
 
