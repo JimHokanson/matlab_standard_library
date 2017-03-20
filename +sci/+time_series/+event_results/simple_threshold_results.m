@@ -9,6 +9,7 @@ classdef simple_threshold_results < sl.obj.display_class
     
     properties
         data
+        original_data
         %TODO: We could do lazy evaluation if we hold onto the
         %bool_transition_info and the mask
         threshold_start_times
@@ -22,6 +23,7 @@ classdef simple_threshold_results < sl.obj.display_class
         n_epochs
         durations
         epoch_averages
+        epoch_averages_original_data
     end
     
     methods
@@ -34,6 +36,15 @@ classdef simple_threshold_results < sl.obj.display_class
         function value = get.epoch_averages(obj)
             value = zeros(1,obj.n_epochs);
             raw_data = obj.data.d;
+            start_I = obj.threshold_start_I;
+            end_I = obj.threshold_end_I;
+            for i = 1:obj.n_epochs
+               value(i) = mean(raw_data(start_I(i):end_I(i)));
+            end
+        end
+        function value = get.epoch_averages_original_data(obj)
+            value = zeros(1,obj.n_epochs);
+            raw_data = obj.original_data.d;
             start_I = obj.threshold_start_I;
             end_I = obj.threshold_end_I;
             for i = 1:obj.n_epochs
@@ -68,8 +79,11 @@ classdef simple_threshold_results < sl.obj.display_class
         end
         function plot(obj)
             clf
-            plot(obj.data)
+            if ~isempty(obj.original_data)
+                plot(obj.original_data)
+            end
             hold on
+            plot(obj.data)
             plotEpochs(obj)
         end
         function plotEpochs(obj)

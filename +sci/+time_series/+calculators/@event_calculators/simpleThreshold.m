@@ -36,6 +36,9 @@ function results = simpleThreshold(data_objs,threshold_value,look_for_positive,v
 %   allow_ending_true: (default true)
 %   allow_border_trues: (default true)
 %
+%   original_data : 
+%       This can pass an 'original dataset' to the results for later
+%       plotting in cases when the input data has been processed
 %   min_intertime :  (default, not used)
 %       Nullifies an event if it occurs too soon.
 %   min_time : (default, not used)
@@ -69,7 +72,7 @@ function results = simpleThreshold(data_objs,threshold_value,look_for_positive,v
 %   --------
 %   sl.array.bool_transition_info
 
-
+in.original_data = [];
 in.mask_fh = [];
 in.allow_starting_true = true;
 in.allow_ending_true = true;
@@ -128,10 +131,13 @@ for iObj = 1:length(data_objs)
         time = cur_data_obj.time;
         
     else
-        %cur_data_obj - sci.time_series.calculators.event_calculators.simpleThreshold
+        %cur_data_obj: sci.time_series.event_results.simple_threshold_results
         epoch_value = look_for_positive;
         mask = cur_data_obj.getMask(epoch_value);
         time = cur_data_obj.data.time;
+        if isempty(in.original_data)
+            in.original_data = cur_data_obj.original_data;
+        end
         cur_data_obj = cur_data_obj.data;
     end
     
@@ -218,6 +224,12 @@ for iObj = 1:length(data_objs)
     temp = sci.time_series.event_results.simple_threshold_results;
     
     temp.data = copy(cur_data_obj);
+    if isempty(in.original_data)
+        temp.original_data = temp.data;
+    else
+        temp.original_data = in.original_data;
+    end
+    
     temp.threshold_start_times = bti.true_start_times(mask2);
     temp.threshold_start_I     = bti.true_start_indices(mask2);
     temp.threshold_end_times   = bti.true_end_times(mask2);
