@@ -126,5 +126,20 @@ for iUnique = 1:length(u)
 end
 
 
+if in.stable
+    %Istart is the first of the unique values
+    if in.rows
+        error('Not yet implemented')
+    end
+    I3 = I2(Istart);
+    remapped_indices = zeros(1,length(A));
+    remapped_indices(I3) = 1:length(u);
+    keep_mask = remapped_indices > 0;
+    u = A(keep_mask);
+    %wtf = unique(A,'stable');
+    %isequal(wtf,u)
+    uI = uI(remapped_indices(keep_mask));
+end
+
 
 

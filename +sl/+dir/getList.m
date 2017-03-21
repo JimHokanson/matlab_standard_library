@@ -362,6 +362,15 @@ switch in.output_type
         lr = sl.dir.list_result;
         lr.root_folder_path = root_folder_path;
         
+        switch in.numeric_search_type
+            case 0
+                lr.search_type = 'files';
+            case 1
+                lr.search_type = 'folders';
+            case 2
+                lr.search_type = 'files and folders';
+        end
+                
         if ismember(in.numeric_search_type,1:2)
             lr.folder_names = s.folder_names;
             lr.folder_paths = s.folder_paths;

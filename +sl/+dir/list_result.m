@@ -17,6 +17,7 @@ classdef (Hidden) list_result < sl.obj.handle_light
     
     properties
         method_used = '' 
+        search_type
         %This can specify how the listing was accomplished
         elapsed_time
         

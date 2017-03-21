@@ -17,18 +17,21 @@
 //      sl.io.decompressDeflateStream(uint8(1),2)
 
 //  d = linspace(0,100,1e7);
-//  tic; wtf = same_diff(d); toc;    
+//  tic; wtf = same_diff(d); toc;
 
-//LDFLAGS="$LDFLAGS -lz" 
+//LDFLAGS="$LDFLAGS -lz"
 //  Compile via:
 //  mex decompressDeflateStream.c zlibstat.lib
 //
-//  
+//  mac command
+//  mex -lz decompressDeflateStream.c
 
 //%C:\Program Files\MATLAB\R2015b\bin\win64
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {
+    //
+    //  This blog post describes how to modify rhs values safely
     //
     //  http://undocumentedmatlab.com/blog/matlab-mex-in-place-editing
     //
@@ -44,6 +47,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     //   Ideally we could output to a larger stream, but Matlab doesn't
     //   like modifications of RHS variables
     
+    //mexPrintf("Whats up\n");
     
     if (nrhs != 2){
         mexErrMsgIdAndTxt("SL:decompressDeflateStream:call_error","Invalid # of inputs, 2 expected");
@@ -52,11 +56,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     }else if (!mxIsClass(prhs[1],"double")){
         mexErrMsgIdAndTxt("SL:decompressDeflateStream:call_error","The 2nd input must be of type double");
     }
-
+    
     if (!(nlhs == 1)){
         mexErrMsgIdAndTxt("SL:decompressDeflateStream:call_error","Invalid # of outputs, 1 expected");
     }
-
+    
     mwSize n_data_samples = mxGetNumberOfElements(prhs[0]);
     Bytef *data_in = mxGetData(prhs[0]);
     
@@ -64,32 +68,32 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     
     plhs[0] = mxCreateNumericMatrix(1,0,mxUINT8_CLASS,0);
     uint8_t *data_out = mxMalloc(n_samples_out);
-
+    
     //--------------------------------------------------------
     //  http://www.zlib.net/manual.html#Stream
     // typedef struct z_stream_s {
     //     z_const Bytef *next_in;     /* next input byte */
     //     uInt     avail_in;  /* number of bytes available at next_in */
     //     uLong    total_in;  /* total number of input bytes read so far */
-    // 
+    //
     //     Bytef    *next_out; /* next output byte will go here */
     //     uInt     avail_out; /* remaining free space at next_out */
     //     uLong    total_out; /* total number of bytes output so far */
-    // 
+    //
     //     z_const char *msg;  /* last error message, NULL if no error */
     //     struct internal_state FAR *state; /* not visible by applications */
-    // 
+    //
     //     alloc_func zalloc;  /* used to allocate the internal state */
     //     free_func  zfree;   /* used to free the internal state */
     //     voidpf     opaque;  /* private data object passed to zalloc and zfree */
-    // 
+    //
     //     int     data_type;  /* best guess about the data type: binary or text
     //                            for deflate, or the decoding state for inflate */
     //     uLong   adler;      /* Adler-32 or CRC-32 value of the uncompressed data */
     //     uLong   reserved;   /* reserved for future use */
     // } z_stream;
-
-
+    
+    
     z_stream strm;
     
     //These are apparently necessary to specify ...
@@ -98,7 +102,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     strm.opaque = Z_NULL;
     
     //  uInt     avail_in;  /* number of bytes available at next_in */
-    strm.avail_in = n_data_samples; 
+    strm.avail_in = n_data_samples;
     //  z_const Bytef *next_in;     /* next input byte */
     strm.next_in = data_in; //TODO: This is a a pointer to the input data
     
@@ -107,7 +111,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     //Bytef    *next_out; /* next output byte will go here */
     strm.next_out = data_out;
     
-   // http://stackoverflow.com/questions/18700656/zlib-inflate-failing-with-3-z-data-error
+    // http://stackoverflow.com/questions/18700656/zlib-inflate-failing-with-3-z-data-error
     
     int ret = inflateInit2(&strm,-15);
     
@@ -119,19 +123,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
         mexErrMsgIdAndTxt("SL:decompressDeflateStream:decompression_error","Something went wrong ...");
     }
     
-
+    
     ret = inflate( &strm, Z_FINISH );
     
-        if (!(ret == Z_STREAM_END || ret == Z_OK)){
+    if (!(ret == Z_STREAM_END || ret == Z_OK)){
         //??? How is the error message allocated??? strm.msg
         mexPrintf("Return: %d",ret);
         (void)inflateEnd(&strm);
         mexErrMsgIdAndTxt("SL:decompressDeflateStream:decompression_error","Something went wrong ...");
     }
     
-        mxSetData(plhs[0],data_out);
+    mxSetData(plhs[0],data_out);
     mxSetN(plhs[0],n_samples_out);
-
+    
     // #define Z_OK            0
     // #define Z_STREAM_END    1    - all done
     // #define Z_NEED_DICT     2
@@ -167,7 +171,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 //     zInfo.avail_out= nLenDst;
 //     zInfo.next_in= (BYTE*)abSrc;
 //     zInfo.next_out= abDst;
-
+    
     
     //http://www.zlib.net/zpipe.c
     
@@ -175,9 +179,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     (void)inflateEnd(&strm);
     //return ret == Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
     
-
+    
     
     //--------------------------------------------------------
-
+    
     
 }
