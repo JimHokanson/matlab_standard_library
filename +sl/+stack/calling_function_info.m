@@ -49,9 +49,10 @@ classdef calling_function_info < sl.obj.handle_light
             %   obj = sl.stack.calling_function_info(*level)
             %
             %
-            %   INPUTS
-            %   ============================================================
-            %   level : (scalar, default: 2) which caller to retrieve,
+            %   Inputs
+            %   ------
+            %   level : (scalar, default: 2) 
+            %       Which caller to retrieve,
             %       where 1 denotes caller of this function, 2 caller of
             %       the function calling this function, etc
             %
