@@ -98,8 +98,10 @@ else
     Itemp = find(~strcmp(Y(1:end-1),Y(2:end)));  
 end
 
+
 Istart = [1; Itemp+1];
 Iend   = [Itemp; length(A)]; 
+
 
 if in.rows
 u = Y(Istart,:);    
@@ -116,12 +118,15 @@ if ~in.rows
        u  = u'; 
        I2 = I2';
     end
+    n_elements = length(u);
+else
+    n_elements = size(u,1);
 end
 
 %Population of uI
 %-----------------------------
-uI = cell(1,length(u));
-for iUnique = 1:length(u)
+uI = cell(1,n_elements);
+for iUnique = 1:n_elements
    uI{iUnique} = I2(Istart(iUnique):Iend(iUnique));
 end
 

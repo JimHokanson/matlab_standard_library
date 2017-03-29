@@ -86,7 +86,8 @@ classdef time < sl.obj.display_class
             %   Inputs:
             %   -------
             %   dt :
-            %       Time between sample points.
+            %       Time between sample points. Inverse of the sampling
+            %       rate.
             %   n_samples :
             %       # of samples in the data.
             %

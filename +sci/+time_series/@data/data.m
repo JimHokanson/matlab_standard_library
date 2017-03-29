@@ -231,9 +231,14 @@ classdef data < sl.obj.handle_light
             
             obj.d = data_in;
             
-%             addlistener(obj , 'ftime' , 'PreGet' ,  @obj.preGet);
-            
-            if obj.n_samples == 1 && obj.n_channels >= MIN_CHANNELS_FOR_WARNING
+            if isobject(time_object_or_dt)
+                if time_object_or_dt.n_samples ~= size(data_in,1)
+                    %TODO: This may be because of a transpose error
+                    %make the error clearer in that case (i.e.) that
+                    %the tranpose of the data needs to be passed in
+                    error('The # of samples in the data does not equal the # of samples specified in the time')
+                end
+            elseif obj.n_samples == 1 && obj.n_channels >= MIN_CHANNELS_FOR_WARNING
                 sl.warning.formatted(['Current specification for the data is' ...
                     ' to have %d channels all with 1 sample, perhaps you meant' ...
                     ' to transpose the input so that you have %d samples for 1 channel'],...

@@ -95,6 +95,25 @@ classdef simple_threshold_results < sl.obj.display_class
                 set(p,'FaceAlpha',0.3);
             end
         end
+        function value = getAverageActivity(obj,data)
+            %
+            %   This was written because I was processing on one set of
+            %   data but I needed another set of processed data to average
+            %   (besides the already added original data)
+         	value = zeros(1,obj.n_epochs);
+            raw_data = data.d;
+            start_I = obj.threshold_start_I;
+            end_I = obj.threshold_end_I;
+            for i = 1:obj.n_epochs
+               value(i) = mean(raw_data(start_I(i):end_I(i)));
+            end
+        end
+        function deleteEntries(obj,delete_indices_or_mask)
+            obj.threshold_start_times(delete_indices_or_mask) = [];
+            obj.threshold_start_I(delete_indices_or_mask) = [];
+            obj.threshold_end_times(delete_indices_or_mask) = [];
+            obj.threshold_end_I(delete_indices_or_mask) = [];
+        end
     end
     
 end
