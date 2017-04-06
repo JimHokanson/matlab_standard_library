@@ -43,6 +43,11 @@ function varargout = getList(root_folder_path,varargin)
 %
 %   Output (See 'output_type' option):
 %   ----------------------------------
+%   The output varies depending on the 'output_type' selected. The
+%   following are possible outputs.
+%   TODO: Specifiy what 'output_type' and 'search_type' values give us each of these
+%
+%
 %   list_result : sl.dir.list_result
 %       An object that can contain both file and folder info.
 %   file_names : cellstr
