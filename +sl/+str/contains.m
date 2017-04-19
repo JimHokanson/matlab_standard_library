@@ -15,6 +15,7 @@ function flag = contains(input_string,string_to_match,varargin)
 %       - 'start'
 %       - 'end'
 %       - 'anywhere'
+%   case_sensitive : default true
 %
 %   Examples:
 %   ----------
