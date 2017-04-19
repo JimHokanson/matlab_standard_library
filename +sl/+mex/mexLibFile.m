@@ -14,7 +14,7 @@ function mexLibFile(file_name,varargin)
 %   configs that Matlab provides.
 
 %{
-    sl.mex.mexLibFile('same_diff.c','move_up',true)
+    sl.mex.mexLibFile('same_diff_mex.c','move_up',true)
 %}
 
 in.move_up = false;
