@@ -16,14 +16,18 @@ function mask = contains(data,strings_or_patterns,varargin)
 %   case_sensitive : logical (default false)
 %   regexp : logical (default false)
 %
+%       The default behavior is to OR the matches, i.e. true if any of
+%       the strings match. For AND, all the strings must match.
+%   use_or: logical (default [])
+%       - true - OR
+%       - false - AND
+%   use_and: logical (default [])
+%       - true - AND
+%       - false - OR
 %   
-%
-%   TODO: Insert usage example and finish documentation
-%
 %   Improvements:
 %   -------------
-%   1) Provide 'and' functionality
-%   2) Allow specifying a regxp flag for every pattern (i.e. 'regexp' would
+%   1) Allow specifying a regxp flag for every pattern (i.e. 'regexp' would
 %   be an array)
 %
 %
@@ -31,32 +35,41 @@ function mask = contains(data,strings_or_patterns,varargin)
 %   ---------
 %   1)
 %   data = {'this is a test','example I am','cheeseburger'}
-%   strings_or_patterns = {'test' 'cheese'};
-%   mask = sl.cellstr.contains(data,strings_or_patterns)
+%   strings = {'test' 'cheese'};
+%   mask = sl.cellstr.contains(data,strings)
 %   mask => [1 0 1]
 %
 %   2) 
 %   data = {'qp1','this is a qp','qp today'}
-%   strings_or_patterns = {'^qp\s*\d+'}
-%   mask = sl.cellstr.contains(data,strings_or_patterns,'regexp','true')
+%   patterns = {'^qp\s*\d+'}
+%   mask = sl.cellstr.contains(data,patterns,'regexp','true')
 %   mask => [1 0 0]
 %
+%   3)
+%   data = {'this is a test','test'}
+%   strings = {'this','test'}
+%   %Both true, because we match one of the patterns
+%   mask = sl.cellstr.contains(data,strings_or_patterns,'use_or',true)
+%   %Only the first one is true, because it contains both patterns
+%   mask = sl.cellstr.contains(data,strings,'use_and',true)
 %
 %   See Also:
 %   ---------
 %   sl.str.contains
 
-%{
-a = 1:4
-for i = 1:5
-   a(i);
-end
-%}
-
-in.relationship = 'or'; %NYI, could do 'AND' as well
+in.use_or = []; 
+in.use_and = [];
 in.case_sensitive = false;
 in.regexp = false;
 in = sl.in.processVarargin(in,varargin);
+
+if isempty(in.use_or) && isempty(in.use_and)
+    
+elseif ~isempty(in.use_or)
+    or_results = in.use_or;
+else
+    or_results = ~in.use_and;
+end
 
 if in.case_sensitive
     fh = @regexp;
@@ -68,26 +81,41 @@ if ~iscell(data)
     error('Input data must be a cellstr')
 end
 
-mask = false(1,length(data));
-
 if ischar(strings_or_patterns)
     strings_or_patterns = {strings_or_patterns};
 end
 
+n_patterns = length(strings_or_patterns);
+if n_patterns == 0
+    mask = false(1,length(data));
+    return
+elseif or_results
+    mask = false(1,length(data));
+else
+	mask = true(1,length(data));
+end
+
 for iPattern = 1:length(strings_or_patterns)
-    str_or_pattern = strings_or_patterns{iPattern};
+    cur_str_or_pattern = strings_or_patterns{iPattern};
     
     if ~in.regexp
-       str_or_pattern = regexptranslate('escape',str_or_pattern);
+       cur_str_or_pattern = regexptranslate('escape',cur_str_or_pattern);
     end
 
-    cur_mask = mask;
+    temp_mask = mask;
     
+    %In this case we test only the ones that we need to ...
     %negating cur_mask provides an 'or' function rather than not negating
     %which would do 'and'
-    I = fh(data(~cur_mask),str_or_pattern,'once');
-
-    mask(~cur_mask) = ~cellfun('isempty',I);
+    if or_results
+        process_mask = ~mask;
+    else
+        process_mask = mask;
+    end
+    
+    data_to_test = data(process_mask);
+    match_I = fh(data_to_test,cur_str_or_pattern,'once');
+    mask(process_mask) = ~cellfun('isempty',match_I);
 end
 
 end
