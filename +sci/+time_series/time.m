@@ -379,6 +379,16 @@ classdef time < sl.obj.display_class
             %   rounded to the edges i.e. index of 0.3 could go to 1
             %   instead of 0 - I also might have meant floor and ceiling)
             
+            if isempty(times)
+               indices = [];
+               if nargout == 2
+                   result = sci.time_series.time.nearest_indices_result;
+               else
+                   result = [];
+               end
+               return
+            end
+            
             
             times = h__unscaleTime(obj,times);
             

@@ -1,6 +1,11 @@
 function output = concatenate(varargin)
+%x Concatenate a set of structures that might have different fields
 %
 %   output = sl.struct.concatenate(varargin);
+%
+%   Note this is different than merging structures into a single structure.
+%   The output from this function is a result which can yield a structure
+%   array or table.
 %
 
 %Optional inputs not yet handled
@@ -53,8 +58,9 @@ else
     output_size = [sum(struct_d1) struct_d2(1)];
 end
 
-values = cell(n_structs,output_size(1),output_size(2));
-is_missing = true(n_structs,output_size(1),output_size(2));
+n_fields = length(u_fields);
+values = cell(n_fields,output_size(1),output_size(2));
+is_missing = true(n_fields,output_size(1),output_size(2));
 
 end_I = 0;
 
