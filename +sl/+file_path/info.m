@@ -38,7 +38,7 @@ classdef info
             
             pattern = regexptranslate('escape',sep_type);
             entries = regexp(file_path,pattern,'split');
-            is_package = cellfun(@(x) x(1) == '+',entries);
+            is_package = cellfun(@(x) ~isempty(x) && x(1) == '+',entries);
             
             %check if file is .m extension and define name
             file_name_w_exten = entries{end};

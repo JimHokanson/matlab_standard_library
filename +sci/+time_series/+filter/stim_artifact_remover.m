@@ -41,9 +41,7 @@ classdef stim_artifact_remover < sl.obj.display_class
         n_samples_blank_algorithm = 2
         %1) - Looks for a decrease in the correlation of sliding
         %windows that start at different locations.
-        %2) - An improvement upon 1, whereby we look at the magnitude
-        %of the stimulation artifact, and only remove the artifact
-        %if it is relatively small
+        %2) - Blaking is based upon the duration of the stimulus trigger
         
         
         nsb_n_samples_corr = 15
@@ -80,11 +78,19 @@ classdef stim_artifact_remover < sl.obj.display_class
             %   ------------
             %   1) Look for amplifier saturation
             %   2) Allow going backward in time
-                        
+                   
+            result = sci.time_series.filter.results.artifact_removal_result();
+            
+            if isempty(start_times)
+               filtered_data = copy(data);
+               info = result;
+               return;
+            end
+            
             in.trigger_chan = [];
             in = sl.in.processVarargin(in,varargin);
             
-            result = sci.time_series.filter.results.artifact_removal_result();
+            
 
             if ~isempty(in.trigger_chan)
                 trig_info = sci.time_series.filter.results.artifact_removal.stim_trigger_info(in.trigger_chan,start_times);

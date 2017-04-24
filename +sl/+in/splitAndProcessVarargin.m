@@ -59,14 +59,32 @@ end
 
 
 %We need to split the names by each section
-%This is hard for the user to write cleanly so we split her
-%If the user had done incremental setdiff, diffing all names (for the 3rd)
-%on valid names for the 2nd
+%This is hard for the user to write cleanly so we split here.
 %
-%   e.g. s2 = setdiff(fieldnames(in),s1)
+%   names{1} = first set of fieldnames
+%   names{2} = first and second set of fieldnames
+%   names{3} = first, second, and third set of fieldnames
+%
+%   An earlier algorithm was calling setdiff in the caller, but the
+%   following problem was encountered
+%
+%        e.g.:
+%        in.a = 1;
+%        s1 = fieldnames(in)
+%        in.b = 1;
+%        in.c = 2;
+%        s2 = setdiff(fieldnames(in),s1)
+%        in.d = 5
 %        s3 = setdiff(fieldnames(in),s2)
 %
-%Would put values from the first (s1) into s3, since s1 is not in s2
+%   This example code above looks like it will identify the components
+%   defined in each section, but in this example s3 will incorrectly
+%   contain 'a', since 'a' is not in s2
+%
+%   i.e. s3 => {'a' 'd'} when it should be just {'d'}
+%
+%   In this loop below, names is cumulative, so we don't run into this
+%   problem
 real_names = cell(1,n_names);
 real_names{1} = names{1};
 for iName = 2:n_names
@@ -75,18 +93,21 @@ end
 names = real_names;
 
 
-
 if iscell(varargin_data)
    varargin_data = sl.in.propValuePairsToStruct(varargin_data); 
 else
-   %This should be straightforward but I just want to see how it come in
+   %This should be straightforward but I just want to see how it comes in
    error('Not yet implemented')
 end
 
 new_names = fieldnames(varargin_data);
 for iNew = 1:length(new_names)
     cur_name = new_names{iNew};
-    in.(cur_name) = varargin_data.(cur_name);
+    if isfield(in,cur_name)
+        in.(cur_name) = varargin_data.(cur_name);
+    else
+        error('Specified field: "%s" is not a valid optional input',cur_name);
+    end
 end
 
 varargout = cell(1,nargout);

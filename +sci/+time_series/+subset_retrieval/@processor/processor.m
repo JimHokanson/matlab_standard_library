@@ -38,6 +38,11 @@ classdef processor < handle
             
             [start_samples,stop_samples] = obj.getStartAndStopSamples(objs);
             %start_samples & stop_samples : {1 x n_objects}[1 x n_times]
+            
+            
+            %TODO: This misses NaN values, which occurs if there is no
+            %data and more specifically, if the time object is not well
+            %specified (start_offset and dt are invalid)
             obj.h__checkValiditySamples(start_samples,stop_samples);
             
             return_as_cell = ~obj.un;

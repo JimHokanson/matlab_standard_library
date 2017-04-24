@@ -138,6 +138,10 @@ classdef dict < handle
     methods (Hidden=true)
         % Overload property assignment
         function obj = subsasgn(obj, subStruct, value)
+            
+            %TODO: This fails for 
+            %a.b.c = d
+            %since subStruct is an array
             if strcmp(subStruct.type,'.')
                 name = subStruct.subs;
                 

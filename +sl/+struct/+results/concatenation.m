@@ -19,7 +19,7 @@ classdef concatenation
     end
     
     properties (Hidden)
-        raw_cell
+        raw_cell %[n_fields rows columns]
         is_missing
     end
     
@@ -37,6 +37,11 @@ classdef concatenation
             %TODO: Use options from concatenate
         end
         function output = getRawOutput(obj)
+            
+            %Number of field names must match number of fields in new structure.
+            %
+            %S = cell2struct(C,FIELDS,DIM) 
+            %
             output = cell2struct(obj.raw_cell,obj.unique_field_names,1);
         end
         function output = getRawTable(obj)
