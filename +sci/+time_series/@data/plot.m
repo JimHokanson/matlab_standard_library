@@ -35,6 +35,7 @@ function varargout = plot(objs,varargin)
 %   TODO: How do we want to plot multiple repetitions ...
 
 % in.slow = false;
+in.quick_plot = true;
 in.time_units = 's';
 in.time_shift = true;
 in.time_spacing = [];
