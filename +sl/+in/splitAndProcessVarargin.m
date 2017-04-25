@@ -106,6 +106,7 @@ for iNew = 1:length(new_names)
     if isfield(in,cur_name)
         in.(cur_name) = varargin_data.(cur_name);
     else
+        %TODO: Provide a clickable link to valid field names ...
         error('Specified field: "%s" is not a valid optional input',cur_name);
     end
 end
