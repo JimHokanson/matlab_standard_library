@@ -103,7 +103,9 @@ end
 %--------------------------------------------------------------------------
 %C:\test\cheese\ => with ..\..\path.txt => moving up 2 points to C:\ not C:\test
 %Discard the extra delimier at the end by adjusting n_up
+end_has_fs = false;
 if length(starting_path) == I(end)
+    end_has_fs = true;
     n_up = n_up + 1;
 end
 
@@ -111,8 +113,23 @@ if length(I) < n_up
     error('Number of identified directory delimiters on the starting path is insufficient')
 end
 
-last_char_keep_I = I(length(I) - n_up + 1);
-absolute_path = [starting_path(1:last_char_keep_I) file_path(cur_start_char_I:end)];
+%n_up = 0
+if n_up == 0
+    %TODO: If we are adding nothing, do we want to add the file separator?
+    %sl.dir.getAbsolutePath('./',cd)  - expected behavior?
+    if end_has_fs
+        char_add = '';
+    else
+        char_add = filesep;
+    end
+    absolute_path = [starting_path char_add file_path(cur_start_char_I:end)];
+else
+    %/this/is/a/test
+    last_char_keep_I = I(length(I) - n_up + 1);
+    absolute_path = [starting_path(1:last_char_keep_I) file_path(cur_start_char_I:end)];
+
+end
+
 
 end
 
