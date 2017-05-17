@@ -4,11 +4,11 @@ function varargout = horizontalLines(y_positions,varargin)
 %
 %   JAH TODO: Update documenation
 %
-%   Check this out: http://www.mathworks.com/matlabcentral/fileexchange/1039-hline-and-vline
-%
 %   Local Options:
 %   --------------
-%   y_as_pct:
+%   y_as_pct: logical (default false)
+%       If true, the y_positions are interpreted as being a fraction of the
+%       range of the current axes [0 1]
 %       
 %   x_values: [n 2] numeric array
 %       Column 1: x_starts
@@ -16,16 +16,18 @@ function varargout = horizontalLines(y_positions,varargin)
 %   x_pct : [n 2] numeric array
 %       For when the values are meant to specified in terms of the viewing
 %       limits. 
-%       NOT YET IMPLEMENTED: 
+%
+%   Other options are passed directly to the line constructor
 %
 %   Examples
 %   --------
-%   TODO
+%   x = [10 30; 50  90];
+%   sl.plot.type.horizontalLines(0.05,'y_as_pct',true,'x_values',x,'color','k');
 
 
 in.y_pct_vary_with_zoom = false; %NYI - on zoom, change values
 in.x_pct_vary_with_zoom = false; %NYI - on zoom, change values
-in.y_as_pct = false; %NYI
+in.y_as_pct = false; 
 in.x_values = [];
 in.x_pct = [];
 [local_options,line_options] = sl.in.removeOptions(varargin,fieldnames(in),'force_cell',true);

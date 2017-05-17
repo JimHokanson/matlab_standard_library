@@ -622,9 +622,9 @@ classdef data < sl.obj.handle_light
             hold all
             for iPlot = 1:n_plots
                 plotting_options = loop_options.getNext();
-                temp = sl.plot.big_data.LinePlotReducer(local_time(iPlot),local_data{iPlot}+all_shifts(iPlot),plotting_options{:});
+                temp = big_plot(local_time(iPlot),local_data{iPlot}+all_shifts(iPlot),plotting_options{:});
                 temp.renderData();
-                line_handles(iPlot) = temp.h_plot(1);
+                line_handles(iPlot) = temp.h_and_l.h_plot(1);
             end
             hold off
             

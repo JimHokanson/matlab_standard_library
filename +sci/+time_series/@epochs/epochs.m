@@ -3,25 +3,20 @@ classdef epochs < sl.obj.display_class
     %   Class:
     %   sci.time_series.epochs
     %
-    %   This class was added to support 
-    %   
     %   See Also:
     %   sci.time_series.discrete_events
     
-    %{
-    c = dba.GSK.cmg_expt('140806_C');
-    p = c.getData('pres');
-    %}
-    
     properties
-       prop_name %string
-       %    This should be a unique identifier and must also be a safe
-       %    variable name.
-       name
-       start_times
-       stop_times
-       durations
-       values
+        prop_name %string
+        %    This should be a unique identifier and must also be a safe
+        %    variable name.
+        name %string
+        %   I think this is just for the user ...
+        
+        start_times
+        stop_times
+        durations
+        values
     end
     
     methods
@@ -32,7 +27,7 @@ classdef epochs < sl.obj.display_class
             %   Optional Inputs:
             %   ----------------
             %   name :
-            %   values : 
+            %   values :
             
             in.name = '';
             in.values = [];
@@ -61,13 +56,27 @@ classdef epochs < sl.obj.display_class
             end
         end
         function new_obj = copy(old_obj,varargin)
-           
+            
             in.time_shift = 0;
             in = sl.in.processVarargin(in,varargin);
             
-           new_obj = sci.time_series.epochs(old_obj.prop_name,old_obj.start_times-in.time_shift,old_obj.stop_times-in.time_shift);
-           new_obj.name = old_obj.name;
-           new_obj.values = old_obj.values;
+            new_obj = sci.time_series.epochs(old_obj.prop_name,old_obj.start_times-in.time_shift,old_obj.stop_times-in.time_shift);
+            new_obj.name = old_obj.name;
+            new_obj.values = old_obj.values;
+        end
+        function plotHorizontalLines(obj,varargin)
+            %
+            %TODO: Clean this up ...
+            
+            Y_PCT_POS = 0.05;
+            
+            if ~isempty(obj.start_times)
+                x = [obj.start_times(:) obj.stop_times];
+                
+            
+                line_handles = sl.plot.type.horizontalLines(Y_PCT_POS,'y_as_pct',true,'x_values',x,'color','k');
+            end
+
         end
     end
     
