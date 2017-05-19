@@ -100,6 +100,10 @@ classdef stim_artifact_remover < sl.obj.display_class
                 back_time = 0;
             end
             
+            %We run into problems if any of the stimuli preceed the data
+            %...
+            start_times(start_times < data.time.start_offset) = [];
+            
             %Translation of stimulus times to indices of the input data
             start_I = data.ftime.getNearestIndices(start_times + back_time);
 
