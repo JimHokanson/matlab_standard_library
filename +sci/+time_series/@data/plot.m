@@ -9,6 +9,8 @@ function varargout = plot(objs,varargin)
 %
 %   Optional Inputs:
 %   ----------------
+%   axes
+%       -pass in axes to plot on
 %   time_units : {'s','min','ms','h'} (default 's')
 %       - s , seconds
 %       - h , hours
@@ -98,7 +100,7 @@ for iObj = 1:length(objs)
         temp = big_plot(time_objs_for_plot(iObj),objs(iObj).d(:,in.channels),plotting_options{:});
     end
     if ~isempty(in.axes)
-        temp.h_axes = in.axes;
+        temp.h_and_l.h_axes = in.axes;
     end
     temp.renderData();
     
