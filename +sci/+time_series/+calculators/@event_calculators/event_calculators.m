@@ -11,6 +11,8 @@ classdef event_calculators < sl.obj.display_class
         %TODO: Get this from OW code
         
         function obj =  findPeaks(data,type,varargin)
+            %TODO: the output of this function is hard to deal with/not at
+            %all efficient
             %   inputs:
             %   -data: sci.time_series.data class
             %   -varargin: name-value pairs for findpeaks (see matlab documentation) 
