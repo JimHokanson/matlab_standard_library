@@ -9,7 +9,7 @@ classdef event_calculators < sl.obj.display_class
     methods (Static)
         result_obj = simpleThreshold(data_obj,threshold_value,look_for_positive,varargin)
         %TODO: Get this from OW code
-        function result_class = findLocalMaxima(data, type, threshold, varargin)
+        function result_class = findLocalMaxima(data, search_type, threshold, varargin)
             %   sci.time_series.calculators.event_calculators(data, type, threshold, varargin)
             %
             %   Improves upon the speed of findPeaks by removing various
@@ -52,17 +52,17 @@ classdef event_calculators < sl.obj.display_class
                     error('unrecognized input type')
             end
             
-            switch type
+            switch search_type
                 case 1
                     %note that pks and locs get returned as row vectors
                     %(lots of columns)
-                    [pks locs] = h__findLocalMaxima(d,threshold);
+                    [pks, locs] = h__findLocalMaxima(d,threshold);
                 case 2
-                    [pks locs] = h__findLocalMaxima(-d,threshold);
+                    [pks, locs] = h__findLocalMaxima(-d,threshold);
                     pks = -pks;
                 case 3
-                    [maxs max_locs] = h__findLocalMaxima(d,threshold);
-                    [mins min_locs] = h__findLocalMaxima(-d,threshold);
+                    [maxs, max_locs] = h__findLocalMaxima(d,threshold);
+                    [mins, min_locs] = h__findLocalMaxima(-d,threshold);
                     mins = -mins;
                     
                     pks = cell(1,2);
@@ -76,7 +76,7 @@ classdef event_calculators < sl.obj.display_class
                     error('unrecognized type input')
             end
 
-            if type == 1 || type == 2
+            if search_type == 1 || search_type == 2
                 if data_class_flag
                     %we can find the time locations as well as the indices
                     time_locs = data.ftime.getTimesFromIndices(locs);
@@ -117,7 +117,7 @@ classdef event_calculators < sl.obj.display_class
     end  
 end
 
-function [pks, locs] =  h__findLocalMaxima(d, threshold)
+function [pk, lc] =  h__findLocalMaxima(d, threshold)
 pks = [];
 locs = [];
 
@@ -125,10 +125,10 @@ locs = [];
 %   the possibility that the first datapoint is a local maximum
 %   likewise, it does not include the possibility that the last
 %   datapoint is a local maximum.
-for i = 2:length(d)
-    if i == length(d)
-        break; %can't use last data point
-    end
+d_size = length(d);
+for i = 2:d_size-1
+ %can't use last data point
+
     %is the middle value greater than the two adjacent points?
     % yes: local max
     % no:  not a max
@@ -145,40 +145,44 @@ for i = 2:length(d)
     %}
     %boundary condition:first point
     %TODO!
-    
-    if (d(i)>d(i-1)) && (d(i)>d(i+1))
-        %this is a local max
-        pks(end+1,1) = d(i);
-        locs(end+1,1) = i;
-        
-    elseif (d(i)>d(i-1)) && (d(i) == d(i+1))
-        %this might be a local max... keep going right
-        count = 1;
-        while(1)
-            if d(i) > d(i+count)
-                %this is a local max
-                pks(end+1,1) = d(i);
-                locs(end+1,1) = i;
-                break;
-            elseif d(i) < d(i+count)
-                %this is not a local max
-                break;
-            end
+    if (d(i) > d(i-1))
+        if (d(i) < d(i+1)) 
+            %not a local max
             
-            % don't want to go outside of the data we have
-            % this is a highly unlikely case
-            if (i+count) == length(d)
-                break;
+        elseif (d(i) > d(i+1))
+            %this is a local max
+            pks(end+1) = d(i);
+            locs(end+1) = i;
+            
+        else %(d(i) == d(i+1))
+            %this might be a local max... keep going right
+            count = 1;
+            while((i + count) < d_size)
+                %TODO: include a give up value
+                if  d(i) < d(i+count)
+                    %this is not a local max
+                    break
+                elseif d(i) > d(i+count)
+                    %this is a local max
+                    pks(end+1) = d(i);
+                    locs(end+1) = i;
+                    break
+                else %d(i) == d(i+count)
+                    count = count + 1;
+                end
             end
-            count = count + 1;
         end
     end
 end
 
 %threshold calculations
 if threshold ~= 0
-    pks = pks(pks > threshold);
-    locs = locs(pks>threshold);
+    pk = pks(pks > threshold);
+    lc = locs(pks>threshold);
+else
+    pk = pks;
+    lc = locs;
 end
+
 end
     
