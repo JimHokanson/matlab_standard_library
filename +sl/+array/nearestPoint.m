@@ -18,7 +18,7 @@ function result = nearestPoint(x,y,mode)
 %               - no values come before x(1)
 %               - y(3) is the closest previous value in y to x(2) and x(3)
 % 
-%       - 'p1' : For each x, find the cloesest previous y, but ONLY
+%       - 'p1' : For each x, find the closest previous y, but ONLY
 %                   assign if it is the closest for all x
 %
 %

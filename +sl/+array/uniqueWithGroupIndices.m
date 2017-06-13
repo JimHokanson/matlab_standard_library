@@ -32,6 +32,9 @@ function [u,uI] = uniqueWithGroupIndices(A,varargin)
 %   uI{1} => [1 3];
 %   uI{2} => [2 4 5];
 %
+%
+%   [u,uI] = sl.array.uniqueWithGroupIndices([4 1 4 1 5 1 4],'stable',true)
+%
 %   NOTE: u(#) has the same value as all A(uI{#})
 
 
