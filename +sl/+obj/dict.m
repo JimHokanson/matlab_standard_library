@@ -71,7 +71,9 @@ classdef dict < handle
     %}
     
     properties
-        props
+        props = struct(); %initialize to structure so
+        %that we don't get errors when assuming a structure
+        %and instead we have a double instead
     end
     
     methods

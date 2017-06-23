@@ -1,11 +1,28 @@
-function output = typecastMatrix(data,format,keep_columns)
-%
+function output = typecastMatrix(data,output_format,keep_columns)
+%x Converts a matrix to an array with appropriate typecasting
 %
 %   output = sl.io.typecastMatrix(data,format,keep_columns)
 %
-%   
-%   keep_columns -> data spans rows
-%   ~keep_columns -> data spans columns
+%   Inputs
+%   ------
+%   data : matrix
+%   output_format : 
+%   keep_columns :
+%       - true - an element spans rows
+%       - false - an element spans columns
+%       Put another way if the data spans rows, then the # of columns
+%       will be the same for the input and the output (thus the name
+%       'keep_columns')
+%
+%   Examples
+%   --------
+%   data = uint8([1 3 0 0; 
+%                 2 4 0 0]);
+%   output = sl.io.typecastMatrix(data,'uint32',false)
+%   %output => [769; 1026];
+%
+%   output = sl.io.typecastMatrix(data,'uint16',true)
+%   %output => [513 1027 0 0];
 %   
 %   Improvements
 %   -----------------------------------------------------------------------
@@ -25,11 +42,11 @@ n_cols = size(data,2);
 %I've also passed a cell array in ...
 
 if keep_columns
-   temp_output = typecast(data(:),format);
+   temp_output = typecast(data(:),output_format);
    output      = reshape(temp_output,n_cols,length(temp_output)/n_cols)'; 
 else
    temp_data   = data';
-   temp_output = typecast(temp_data(:),format);
+   temp_output = typecast(temp_data(:),output_format);
    output      = reshape(temp_output,length(temp_output)/n_rows,n_rows)'; 
 end
 
