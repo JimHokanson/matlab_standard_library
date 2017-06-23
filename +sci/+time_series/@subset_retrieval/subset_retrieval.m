@@ -457,6 +457,7 @@ classdef subset_retrieval < sl.obj.display_class
 end
 
 function [ep,p_only] = h__initGeneric(varargin)
+varargin = varargin{1};
 [~,p_only,varargin] = sl.in.getOptionalParameter(varargin,'p_only','default',false,'remove',true);
 ep = sci.time_series.subset_retrieval.generic_processor;
 ep = sl.in.processVarargin(ep,varargin);
