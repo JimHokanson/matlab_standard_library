@@ -9,19 +9,9 @@
 //This might work:
 //https://github.com/qbittorrent/qBittorrent/wiki/Compiling-with-MSVC-2013-(static-linkage)#compiling-zlib
 
-// input = 1:10000;
-//  buffer = java.io.ByteArrayOutputStream();
-//  zlib = java.util.zip.DeflaterOutputStream(buffer);
-//  zlib.write(input, 0, numel(input));
-//  zlib.close();
-//  output = typecast(buffer.toByteArray(), 'uint8')';
 
+//    wtf = sl.io.compressStream(uint8(1:100));
 
-
-//      sl.io.decompressDeflateStream(uint8(1),2)
-
-//  d = linspace(0,100,1e7);
-//  tic; wtf = same_diff(d); toc;
 
 //LDFLAGS="$LDFLAGS -lz"
 //  Compile via:
@@ -39,12 +29,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     //
     //  http://undocumentedmatlab.com/blog/matlab-mex-in-place-editing
     //
-    //  I don't think this technique is used in this code ...
-    
-    //
     //   Usage
     //   -----
-    //   output_data = sl.io.decompressDeflateStream(uint8_data,n_bytes_out);
+    //   output_data = decompressDeflateStream(uint8_data,n_bytes_out);
     //
     //   TODO: We should also have an input of the form:
     //   (uint8_data,n_bytes_out,start_I_1_based,n_samples)
@@ -53,7 +40,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     //
     //   Ideally we could output to a larger stream, but Matlab doesn't
     //   like modifications of RHS variables
-        
+    
+    //mexPrintf("Whats up\n");
+    
     if (nrhs != 2){
         mexErrMsgIdAndTxt("SL:decompressDeflateStream:call_error","Invalid # of inputs, 2 expected");
     }else if (!mxIsClass(prhs[0],"uint8")){
@@ -74,7 +63,89 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     plhs[0] = mxCreateNumericMatrix(1,0,mxUINT8_CLASS,0);
     uint8_t *data_out = mxMalloc(n_samples_out);
     
-    //  Structure of z_stream, for reference
+    //---------------------------------------------------------------------
+    
+    int ret, flush;
+    unsigned have;
+    
+    z_stream strm;
+    unsigned char in[CHUNK];
+    unsigned char out[CHUNK];
+
+    /* allocate deflate state */
+    strm.zalloc = Z_NULL;
+    strm.zfree = Z_NULL;
+    strm.opaque = Z_NULL;
+    ret = deflateInit(&strm, level);
+    
+    //TODO: Change this
+    if (ret != Z_OK)
+        return ret;
+    
+    
+    //1) strm.avail_in = n_bytes_to_process
+    //2) strm.next_in = //provide pointer to bytes to process
+
+    
+    
+    /* run deflate() on input until output buffer not full, finish
+           compression if all of source has been read in */
+        do {
+            strm.avail_out = CHUNK;
+            strm.next_out = out;
+            ret = deflate(&strm, flush);    /* no bad return value */
+            assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
+            have = CHUNK - strm.avail_out;
+            if (fwrite(out, 1, have, dest) != have || ferror(dest)) {
+                (void)deflateEnd(&strm);
+                return Z_ERRNO;
+            }
+    /* compress until end of file */
+    do {
+        strm.avail_in = fread(in, 1, CHUNK, source);
+        if (ferror(source)) {
+            (void)deflateEnd(&strm);
+            return Z_ERRNO;
+        }
+        flush = feof(source) ? Z_FINISH : Z_NO_FLUSH;
+        strm.next_in = in;
+
+        /* run deflate() on input until output buffer not full, finish
+           compression if all of source has been read in */
+        do {
+            strm.avail_out = CHUNK;
+            strm.next_out = out;
+            ret = deflate(&strm, flush);    /* no bad return value */
+            assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
+            have = CHUNK - strm.avail_out;
+            if (fwrite(out, 1, have, dest) != have || ferror(dest)) {
+                (void)deflateEnd(&strm);
+                return Z_ERRNO;
+            }
+        } while (strm.avail_out == 0);
+        assert(strm.avail_in == 0);     /* all input will be used */
+
+        /* done when last data in file processed */
+    } while (flush != Z_FINISH);
+    assert(ret == Z_STREAM_END);        /* stream will be complete */
+
+    /* clean up and return */
+    (void)deflateEnd(&strm);
+    return Z_OK;
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     //--------------------------------------------------------
     //  http://www.zlib.net/manual.html#Stream
     // typedef struct z_stream_s {
@@ -99,8 +170,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     //     uLong   reserved;   /* reserved for future use */
     // } z_stream;
     
-    //This code is based on:
-    //https://zlib.net/zpipe.c
     
     z_stream strm;
     
@@ -112,7 +181,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     //  uInt     avail_in;  /* number of bytes available at next_in */
     strm.avail_in = n_data_samples;
     //  z_const Bytef *next_in;     /* next input byte */
-    strm.next_in = data_in; //This is a a pointer to the input data
+    strm.next_in = data_in; //TODO: This is a a pointer to the input data
     
     //uInt     avail_out; /* remaining free space at next_out */
     strm.avail_out = n_samples_out;
@@ -121,13 +190,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     
     // http://stackoverflow.com/questions/18700656/zlib-inflate-failing-with-3-z-data-error
     
-    //We don't expect gzip headers, so we need a negative number
-    //Not sure why -15 is better than any other negative number
     int ret = inflateInit2(&strm,-15);
+    
     
     if (!(ret == Z_STREAM_END || ret == Z_OK)){
         //??? How is the error message allocated??? strm.msg
-        //Is it on the stack?
         mexPrintf("Return: %d",ret);
         (void)inflateEnd(&strm);
         mexErrMsgIdAndTxt("SL:decompressDeflateStream:decompression_error","Something went wrong ...");
@@ -155,7 +222,35 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     // #define Z_MEM_ERROR    (-4)
     // #define Z_BUF_ERROR    (-5)
     // #define Z_VERSION_ERROR (-6)
-
+    
+    
+// // // // //     ret = inflate(&strm, Z_NO_FLUSH);
+// // // // //     assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
+// // // // //     switch (ret) {
+// // // // //     case Z_NEED_DICT:
+// // // // //         ret = Z_DATA_ERROR;     /* and fall through */
+// // // // //     case Z_DATA_ERROR:
+// // // // //     case Z_MEM_ERROR:
+// // // // //         (void)inflateEnd(&strm);
+// // // // //         return ret;
+// // // // //     }
+    
+//     nErr= inflate( &zInfo, Z_FINISH );
+    
+    //This is the no error case ...
+//     if ( nErr == Z_STREAM_END ) {
+//         nRet= zInfo.total_out;
+//     }
+    
+    
+//     zInfo.total_in =  zInfo.avail_in=  nLenSrc;
+//     zInfo.total_out=0;
+//     zInfo.avail_out= nLenDst;
+//     zInfo.next_in= (BYTE*)abSrc;
+//     zInfo.next_out= abDst;
+    
+    
+    //http://www.zlib.net/zpipe.c
     
     /* clean up and return */
     (void)inflateEnd(&strm);
