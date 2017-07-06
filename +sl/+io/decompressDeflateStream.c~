@@ -4,7 +4,7 @@
 
 //TODO: look into chunk size
 //..CHUNK is simply the buffer size for feeding data to and pulling data from the zlib routines. Larger buffer sizes would be more efficient, especially for inflate(). If the memory is available, buffers sizes on the order of 128K or 256K bytes should be used.
-//#define CHUNK 16384
+..#define CHUNK 16384
 
 //This might work:
 //https://github.com/qbittorrent/qBittorrent/wiki/Compiling-with-MSVC-2013-(static-linkage)#compiling-zlib
@@ -39,12 +39,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     //
     //  http://undocumentedmatlab.com/blog/matlab-mex-in-place-editing
     //
-    //  I don't think this technique is used in this code ...
-    
-    //
     //   Usage
     //   -----
-    //   output_data = sl.io.decompressDeflateStream(uint8_data,n_bytes_out);
+    //   output_data = decompressDeflateStream(uint8_data,n_bytes_out);
     //
     //   TODO: We should also have an input of the form:
     //   (uint8_data,n_bytes_out,start_I_1_based,n_samples)
@@ -53,7 +50,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     //
     //   Ideally we could output to a larger stream, but Matlab doesn't
     //   like modifications of RHS variables
-        
+    
+    //mexPrintf("Whats up\n");
+    
     if (nrhs != 2){
         mexErrMsgIdAndTxt("SL:decompressDeflateStream:call_error","Invalid # of inputs, 2 expected");
     }else if (!mxIsClass(prhs[0],"uint8")){
@@ -74,7 +73,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     plhs[0] = mxCreateNumericMatrix(1,0,mxUINT8_CLASS,0);
     uint8_t *data_out = mxMalloc(n_samples_out);
     
-    //  Structure of z_stream, for reference
     //--------------------------------------------------------
     //  http://www.zlib.net/manual.html#Stream
     // typedef struct z_stream_s {
@@ -99,8 +97,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     //     uLong   reserved;   /* reserved for future use */
     // } z_stream;
     
-    //This code is based on:
-    //https://zlib.net/zpipe.c
     
     z_stream strm;
     
@@ -112,7 +108,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     //  uInt     avail_in;  /* number of bytes available at next_in */
     strm.avail_in = n_data_samples;
     //  z_const Bytef *next_in;     /* next input byte */
-    strm.next_in = data_in; //This is a a pointer to the input data
+    strm.next_in = data_in; //TODO: This is a a pointer to the input data
     
     //uInt     avail_out; /* remaining free space at next_out */
     strm.avail_out = n_samples_out;
@@ -121,13 +117,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     
     // http://stackoverflow.com/questions/18700656/zlib-inflate-failing-with-3-z-data-error
     
-    //We don't expect gzip headers, so we need a negative number
-    //Not sure why -15 is better than any other negative number
     int ret = inflateInit2(&strm,-15);
+    
     
     if (!(ret == Z_STREAM_END || ret == Z_OK)){
         //??? How is the error message allocated??? strm.msg
-        //Is it on the stack?
         mexPrintf("Return: %d",ret);
         (void)inflateEnd(&strm);
         mexErrMsgIdAndTxt("SL:decompressDeflateStream:decompression_error","Something went wrong ...");
@@ -155,7 +149,35 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     // #define Z_MEM_ERROR    (-4)
     // #define Z_BUF_ERROR    (-5)
     // #define Z_VERSION_ERROR (-6)
-
+    
+    
+// // // // //     ret = inflate(&strm, Z_NO_FLUSH);
+// // // // //     assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
+// // // // //     switch (ret) {
+// // // // //     case Z_NEED_DICT:
+// // // // //         ret = Z_DATA_ERROR;     /* and fall through */
+// // // // //     case Z_DATA_ERROR:
+// // // // //     case Z_MEM_ERROR:
+// // // // //         (void)inflateEnd(&strm);
+// // // // //         return ret;
+// // // // //     }
+    
+//     nErr= inflate( &zInfo, Z_FINISH );
+    
+    //This is the no error case ...
+//     if ( nErr == Z_STREAM_END ) {
+//         nRet= zInfo.total_out;
+//     }
+    
+    
+//     zInfo.total_in =  zInfo.avail_in=  nLenSrc;
+//     zInfo.total_out=0;
+//     zInfo.avail_out= nLenDst;
+//     zInfo.next_in= (BYTE*)abSrc;
+//     zInfo.next_out= abDst;
+    
+    
+    //http://www.zlib.net/zpipe.c
     
     /* clean up and return */
     (void)inflateEnd(&strm);

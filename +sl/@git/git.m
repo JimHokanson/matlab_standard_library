@@ -55,6 +55,9 @@ classdef git
               throw_error = true; 
            end
            
+           %Not sure if this will work, this is for github
+           %C:\Users\Jim\AppData\Local\GitHub\GitHub.appref-ms --open-shell
+           
            if isempty(git_string)
                if ispc
                    GIT_STRINGS_TRY = {'git' '"C:\Program Files (x86)\Git\bin\git.exe"' 'C:\Program Files\Git\bin\git.exe'};
