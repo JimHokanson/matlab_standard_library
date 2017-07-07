@@ -2,57 +2,39 @@
 #include "zlib.h"
 #include <stdint.h>
 
-//TODO: look into chunk size
-//..CHUNK is simply the buffer size for feeding data to and pulling data from the zlib routines. Larger buffer sizes would be more efficient, especially for inflate(). If the memory is available, buffers sizes on the order of 128K or 256K bytes should be used.
-//#define CHUNK 16384
+//  sl.io.decompressDeflateStream
 
-//This might work:
-//https://github.com/qbittorrent/qBittorrent/wiki/Compiling-with-MSVC-2013-(static-linkage)#compiling-zlib
-
-// input = 1:10000;
-//  buffer = java.io.ByteArrayOutputStream();
-//  zlib = java.util.zip.DeflaterOutputStream(buffer);
-//  zlib.write(input, 0, numel(input));
-//  zlib.close();
-//  output = typecast(buffer.toByteArray(), 'uint8')';
+/*
+ TODO: Provide round trip example
+ *
+ *
+ *
+ */
 
 
+// The tricky part of this code is getting the proper zlib library code
+// in place for Windows. I don't remember how I did this :/ 
+// It involved compiling from source. For Macs, the -lz flag works.
 
-//      sl.io.decompressDeflateStream(uint8(1),2)
-
-//  d = linspace(0,100,1e7);
-//  tic; wtf = same_diff(d); toc;
-
-//LDFLAGS="$LDFLAGS -lz"
-//  Compile via:
+//  Compiling
+//  --------------------------------
+//  windows command:
 //  mex decompressDeflateStream.c zlibstat.lib
 //
-//  mac command
+//  mac command:
 //  mex -lz decompressDeflateStream.c
 
-//%C:\Program Files\MATLAB\R2015b\bin\win64
+void throwError(int ret){
+    //TODO: Add on strm.msg, requires presumably copying before clearing
+    mexErrMsgIdAndTxt("SL:decompressDeflateStream:decompression_error","decompressionError: %d, something went wrong ...",ret);
+}
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
-{
-    //
-    //  This blog post describes how to modify rhs values safely
-    //
-    //  http://undocumentedmatlab.com/blog/matlab-mex-in-place-editing
-    //
-    //  I don't think this technique is used in this code ...
-    
-    //
+{    
     //   Usage
     //   -----
     //   output_data = sl.io.decompressDeflateStream(uint8_data,n_bytes_out);
     //
-    //   TODO: We should also have an input of the form:
-    //   (uint8_data,n_bytes_out,start_I_1_based,n_samples)
-    //
-    //   This is for when the input is part of a larger stream
-    //
-    //   Ideally we could output to a larger stream, but Matlab doesn't
-    //   like modifications of RHS variables
         
     if (nrhs != 2){
         mexErrMsgIdAndTxt("SL:decompressDeflateStream:call_error","Invalid # of inputs, 2 expected");
@@ -74,7 +56,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     plhs[0] = mxCreateNumericMatrix(1,0,mxUINT8_CLASS,0);
     uint8_t *data_out = mxMalloc(n_samples_out);
     
-    //  Structure of z_stream, for reference
+    //Structure of z_stream, for reference
     //--------------------------------------------------------
     //  http://www.zlib.net/manual.html#Stream
     // typedef struct z_stream_s {
@@ -119,18 +101,24 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     //Bytef    *next_out; /* next output byte will go here */
     strm.next_out = data_out;
     
-    // http://stackoverflow.com/questions/18700656/zlib-inflate-failing-with-3-z-data-error
+    //This is some old code for when I thought a project I was working with
+    //had stripped the leading zlib header. I was just passing in the wrong
+    //data section. Eventually we could provide this feature as an optional
+    //input to this function
     
+    // http://stackoverflow.com/questions/18700656/zlib-inflate-failing-with-3-z-data-error 
     //We don't expect gzip headers, so we need a negative number
     //Not sure why -15 is better than any other negative number
-    int ret = inflateInit2(&strm,-15);
+    //int ret = inflateInit2(&strm,-15);
+    
+    int ret = inflateInit(&strm);
     
     if (!(ret == Z_STREAM_END || ret == Z_OK)){
         //??? How is the error message allocated??? strm.msg
         //Is it on the stack?
         mexPrintf("Return: %d",ret);
         (void)inflateEnd(&strm);
-        mexErrMsgIdAndTxt("SL:decompressDeflateStream:decompression_error","Something went wrong ...");
+        throwError(ret);
     }
     
     
@@ -138,9 +126,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     
     if (!(ret == Z_STREAM_END || ret == Z_OK)){
         //??? How is the error message allocated??? strm.msg
-        mexPrintf("Return: %d",ret);
+        //TODO: Figure out how to 
         (void)inflateEnd(&strm);
-        mexErrMsgIdAndTxt("SL:decompressDeflateStream:decompression_error","Something went wrong ...");
+        throwError(ret);
     }
     
     mxSetData(plhs[0],data_out);

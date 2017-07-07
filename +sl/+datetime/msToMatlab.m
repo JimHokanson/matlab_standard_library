@@ -2,7 +2,10 @@ function matlab_time = msToMatlab(ms_time,varargin)
 %
 %   matlab_time = sl.datetime.msToMatlab(ms_time)
 %
-%   This is the # of 100 ns increments since January 1, 0 AD
+%   Inputs
+%   ------
+%   ms_time : [int64] 
+%       This is the # of 100 ns increments since January 1, 0 AD
 
 %These options are not yet implemented ...
 in.is_utc = false;
