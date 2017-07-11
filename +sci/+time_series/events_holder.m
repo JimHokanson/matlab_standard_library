@@ -89,6 +89,27 @@ classdef events_holder < dynamicprops
                 h__addSingleEvent(new_obj,copy(old_obj.(cur_name),'time_shift',in.time_shift))
             end
         end
+        function objs = getEpochs(obj)
+            %
+            %   Gets all the epochs object
+            %
+            
+            all_events = cellfun(@(x) obj.(x), obj.p__all_event_names, 'un', 0);
+            names = cellfun(@(x) class(x), all_events, 'UniformOutput', false);
+            t = cellfun(@(x) strfind(x,'epochs'), names, 'UniformOutput', false);
+            t2 = cellfun(@(x) ~isempty(x), t);       
+            
+            objs = all_events(t2);
+        end
+        function epoch_names = getEpochNames(obj)
+             all_events = cellfun(@(x) obj.(x), obj.p__all_event_names, 'un', 0);
+            all_names = cellfun(@(x) class(x), all_events, 'UniformOutput', false);
+            t = cellfun(@(x) strfind(x,'epochs'), all_names, 'UniformOutput', false);
+            t2 = cellfun(@(x) ~isempty(x), t);       
+            epoch_names = all_names(t2);  
+        end
+        
+        
     end
     
 end

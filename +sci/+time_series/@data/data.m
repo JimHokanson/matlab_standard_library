@@ -862,6 +862,17 @@ classdef data < sl.obj.handle_light
             data = obj.d;
             time = obj.time.getTimeArray();
         end       
+        function varargout = dif2Loop(objs)
+               if nargout
+                temp = copy(objs);
+            else
+                temp = objs;
+            end
+            temp.runFunctionsOnData({@h__dif2Loop});
+            if nargout
+                varargout{1} = temp;
+            end
+        end
         function varargout = dif2(objs)
             if nargout
                 temp = copy(objs);
@@ -1496,7 +1507,55 @@ new_time_object = obj.time.getNewTimeObjectForDataSubset(first_sample,n_samples,
     'first_sample_time',in.first_sample_time);
 
 end
+function fd = h__dif2Loop(f)
+%dif2Loop  Computes two point diference estimate of velocity.
+%
+%  DIFFERENCE = dif2Loop(SIGNAL)
+%
+%  Computes the difference at a point as being the average of slopes on
+%  either side of the point, returns a vector DIFFERENCE, the same size as
+%  in the input SIGNAL
+%
+%  Does computation using a loop instead of logical masks (see h__dif2).
+%  This method may be faster for large datasets as it should require less
+%  memory allocation and seems to be an optimized process by matlab...
+%           ONLY WRITTEN FOR THE SINGLE-DIM VECTOR CASE!
+%
+%  If SIGNAL is a matrix it takes the difference of the rows in each column
+%
+%  To convert the output to dif2 to the proper units multiply by fs
+%
+% tags: math, calculus, slope
 
+[r, c] = size(f);
+if isempty(f)
+    fd = f;
+    return
+end
+
+if r == 1 && c == 1
+    error('Dif2 is undefined for a single point')
+elseif r >1 && c > 1
+    error('Dif2Loop is undefined for multidimensional arrays. Use the regular dif2(f) function.')
+    %{
+    TODO: rewrite this as a loop as well
+    
+    fd=zeros(r,c);
+    fd(1,:)=f(2,:)-f(1,:);
+    fd(r,:)=f(r,:)-f(r-1,:);
+    df=diff(f);
+    fd(2:r-1,:)=.5*(df(2:r-1,:)+df(1:r-2,:));
+    %}
+else %The single vector case
+    fd=zeros(r,c);
+    fd(1) = f(2) - f(1);
+    fd(end) = f(end) - f(end - 1);
+   
+    for k = 2:(length(f) - 1)
+    fd(k) = 0.5*((f(k) - f(k-1)) + (f(k+1) - f(k)));   
+    end
+end
+end
 function fd = h__dif2(f)
 %dif2  Computes two point diference estimate of velocity.
 %

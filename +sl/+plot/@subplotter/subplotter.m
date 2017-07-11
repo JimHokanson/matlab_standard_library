@@ -110,7 +110,7 @@ classdef subplotter < sl.obj.display_class
            end
            obj.last_index = sp_index;
         end
-        function setColWidthByTime(obj)
+        function setColWidthByTime(obj,varargin)
             %x Adjust column widths so that they are proportional to time
             %
             %   setColWidthByTime(obj)
@@ -126,7 +126,18 @@ classdef subplotter < sl.obj.display_class
             %- it does, so the xlim needs to be manual before this ...
             %
             %   TODO: Units need to be normalized ...
-
+            %
+            %   Optional Inputs
+            %   ---------------
+            %   axis: 'auto', 'normal' (default), 'tight', 'fill' (etc. see
+            %   help(axis))
+            
+            
+            in.axis = 'normal';
+            
+            in = sl.in.processVarargin(in,varargin);
+            
+            
            all_positions = get([obj.handles{1,:}],'position');
            all_xlims     = get([obj.handles{1,:}],'xlim');
 
@@ -152,10 +163,13 @@ classdef subplotter < sl.obj.display_class
            for iColumn = 1:n_columns
                cur_width = new_widths(iColumn);
                for iRow = 1:n_rows
-                  cur_position = get(obj.handles{iRow,iColumn},'position');
-                  cur_position(1) = next_left;
-                  cur_position(3) = cur_width;
-                  set(obj.handles{iRow,iColumn},'position',cur_position)
+                   cur_axes = obj.handles{iRow,iColumn};
+                   cur_position = get(cur_axes,'position');
+                   cur_position(1) = next_left;
+                   cur_position(3) = cur_width;
+                   set(cur_axes,'position',cur_position)
+                   
+                   axis(cur_axes,in.axis)
                end
                if iColumn ~= n_columns
                   next_left = next_left + cur_width + gap_widths(iColumn); 
