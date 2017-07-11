@@ -1,4 +1,4 @@
-function lines = getLines(str)
+function lines = getLines(str,varargin)
 %x Take a string and return each line in a cell array
 %
 %   lines = sl.str.getLines(str)
@@ -28,7 +28,13 @@ function lines = getLines(str)
 %Note, this is a relatively simple function but I think it is a bit
 %cleaner, easier, and clearer to call this function than it is to call the 
 %code below.
-
+in.remove_last_if_empty = true;
+in = sl.in.processVarargin(in,varargin);
 
 lines = regexp(str,'\r\n|\n|\r','split');
+
+if in.remove_last_if_empty && ~isempty(lines) && isempty(lines{end})
+    lines(end) = [];
+end
+
 end
