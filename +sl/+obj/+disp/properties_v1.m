@@ -122,8 +122,14 @@ lines = sl.str.getLines(default_disp_str);
 %display.
 %1) Class display line
 %2) spacer line
-%end-1:end - end of the display is padded with 2 empty lines
-lines([1:2 end-1:end]) = [];
+%end-1:end - end of the display is padded with 2 empty lines - NOT ALWAYS -
+%added a fix below to check
+lines(end) = [];
+if isempty(lines{end})
+    lines(end) = [];
+end
+lines(1:2) = [];
+
 
 multiple_objs = length(objs) > 1;
 
