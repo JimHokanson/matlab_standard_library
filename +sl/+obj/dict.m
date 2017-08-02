@@ -122,9 +122,9 @@ classdef dict < handle
         function mask = isfield(obj,field_or_fieldnames)
            if ischar(field_or_fieldnames)
                field_or_fieldnames = {field_or_fieldnames};
+           end
                %TODO: Need to look if props is empty ...
                mask = ismember(field_or_fieldnames,obj.fieldnames);
-           end
         end
         % Overload property names retrieval
         function names = properties(obj)
