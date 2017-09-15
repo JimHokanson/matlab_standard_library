@@ -109,8 +109,11 @@ end
 
 %We want to know start time and units ...
 %TODO: This start time might need to change ...
-setappdata(gca,'time_series_time',time_objs_for_plot(1));
-
+if isempty(in.axes)
+    setappdata(gca,'time_series_time',time_objs_for_plot(1));
+else
+    setappdata(in.axes,'time_series_time',time_objs_for_plot(1));
+end
 
 if length(objs) > 1
     hold_state.restore();
@@ -127,14 +130,19 @@ end
 
 %Add labels:
 %-----------
+
+if isempty(in.axes)
+   in.axes = gca; 
+end
+
 if isempty(cur_obj.units) && isempty(cur_obj.y_label)
     %do nothing
 elseif isempty(cur_obj.units)
-    ylabel(sprintf('%s',cur_obj.y_label))
+    ylabel(in.axes,sprintf('%s',cur_obj.y_label))
 elseif isempty(cur_obj.y_label)
-    ylabel(sprintf('(%s)',cur_obj.units))
+    ylabel(in.axes, sprintf('(%s)',cur_obj.units))
 else
-    ylabel(sprintf('%s (%s)',cur_obj.y_label,cur_obj.units))
+    ylabel(in.axes,sprintf('%s (%s)',cur_obj.y_label,cur_obj.units))
 end
-xlabel(sprintf('Time (%s)',in.time_units))
+xlabel(in.axes, sprintf('Time (%s)',in.time_units))
 end
