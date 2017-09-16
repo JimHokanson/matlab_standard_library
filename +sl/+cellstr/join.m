@@ -19,7 +19,9 @@ function str = join(cellstr_input,varargin)
 %       backlash. For example, this '\\t' will join strings with '\t'
 %       instead of a tab. Percents should be escaped with a percent.
 %   
-%       The final delimiter is computed as by => final_delimeter = sprintf(d)
+%       The final delimiter is computed as: 
+%               final_delimeter = sprintf(d)
+%
 %   keep_rows : (default false)
 %       If, true, rows are escaped with a newline character, rather than
 %       with the specified column delimiter ('d')

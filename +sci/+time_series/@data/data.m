@@ -1221,6 +1221,9 @@ classdef data < sl.obj.handle_light
         %- exp
         %- log
         %- log10
+        function out_objs = plus(A,B)
+           out_objs = add(A,B); 
+        end
         
         function out_objs = add(A,B)
             %x Performs the addition operation

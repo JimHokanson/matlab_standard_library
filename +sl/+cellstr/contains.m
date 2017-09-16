@@ -64,7 +64,7 @@ in.regexp = false;
 in = sl.in.processVarargin(in,varargin);
 
 if isempty(in.use_or) && isempty(in.use_and)
-    
+    or_results = true;
 elseif ~isempty(in.use_or)
     or_results = in.use_or;
 else

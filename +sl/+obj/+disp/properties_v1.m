@@ -75,13 +75,33 @@ end
 
 
 function [all_spaces,all_names,all_values] = h__getPropParts(objs)
+%
+%
+%
+%
+%   Outputs
+%   -------
+%   all_spaces : cellstr
+%       Contains spaces for indenting the name to the proper position
+%   all_names : cellstr
+%       The property name
+%   all_values : cellstr
+%       The value, includes leading spaces (everything after the colon)
+%
+%   all values are paired and are of the form:
+%   "<space><name>:<value>"
+%
+%   
+%
+
+
 %The current approach grabs the default display and then adds on
 %edit links.
 %
 %TODO: Eventually it would be good to write our own property display
 %methods instead of extracting the displays from Matlab. This would
 %allow us to not evaluate certain properties if they are time consuming.
-%We'll do this one we get the markup language in place
+%We'll do this once we get the markup language in place
 
 
 %The default display is something like:
@@ -90,6 +110,9 @@ function [all_spaces,all_names,all_values] = h__getPropParts(objs)
 %
 %       d: [4001x1 double]
 %    time: [1x1 sci.time_series.time]
+
+
+
 
 %TODO: I've seen this throw an error when there are display calls
 %within dependent get() methods in a class:
@@ -117,6 +140,9 @@ end_I =
 
 default_disp_str = evalc('builtin(''disp'',objs)');
 lines = sl.str.getLines(default_disp_str);
+
+%TODO: For classes with no properties, this breaks ...
+
 
 %Note, we can't remove empty lines as it might be part of a multi-line
 %display.

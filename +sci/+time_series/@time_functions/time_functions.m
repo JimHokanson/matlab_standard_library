@@ -3,7 +3,7 @@ classdef time_functions < sl.obj.display_class
     %   Class:
     %   sci.time_series.time_functions
     
-    %TODO: We're going to 
+    %TODO: We're going to
     
     %{
               getDataAlignedToEvent . :Aligns subsets of the data to a time
@@ -59,7 +59,7 @@ classdef time_functions < sl.obj.display_class
             %   Inputs:
             %   -------
             %   times: array of numerices
-            %       
+            %
             %   Outputs:
             %   --------
             %   indices :
@@ -68,7 +68,7 @@ classdef time_functions < sl.obj.display_class
             %   Improvements:
             %   -------------
             %   1) Add on a reference object to ensure the same offset
-            %   and time units.   
+            %   and time units.
             
             dobj = obj.data_objects;
             if length(dobj) > 1
@@ -94,7 +94,7 @@ classdef time_functions < sl.obj.display_class
             %   e.g. for duration = 2.2 seconds with a dt of 0.5
             %       |-----------------| 2.2 seconds
             %   t = 0  0.5  1  1.5  2
-            %       x   x   x   x   x  - samples  
+            %       x   x   x   x   x  - samples
             %           1   2   3   4  - count
             %   n_samples => 4 (not including the first one)
             
@@ -102,7 +102,7 @@ classdef time_functions < sl.obj.display_class
             n_samples = floor(duration/dt) + 1;
         end
         function event_aligned_data = getReps(obj,start_times,new_time_range,varargin)
-          %x Aligns subsets of the data to a time
+            %x Aligns subsets of the data to a time
             %
             %   event_aligned_data = getDataAlignedToEvent(obj,event_times,new_time_range,varargin)
             %
@@ -113,7 +113,7 @@ classdef time_functions < sl.obj.display_class
             %   -------
             %   event_times :
             %   new_time_range : [min max] with 0 being the event times
-            %       This specifies how far left
+            %       This specifies how much data to grab around the event.
             %
             %   Optional Inputs:
             %   ----------------
@@ -136,7 +136,7 @@ classdef time_functions < sl.obj.display_class
             
             %TODO: Build in multiple object support ...
             
-        	in.allow_overlap = true;
+            in.allow_overlap = true;
             in = sl.in.processVarargin(in,varargin);
             
             dobj = obj.data_objects;
@@ -181,6 +181,7 @@ classdef time_functions < sl.obj.display_class
             
             new_data = zeros(n_samples_new,dobj.n_channels,n_events,'like',dobj.d);
             cur_data = dobj.d;
+            
             %TODO: Is this is rate limiting step, should we mex it ????
             for iEvent = 1:n_events
                 cur_start = data_start_indices(iEvent);
@@ -193,16 +194,24 @@ classdef time_functions < sl.obj.display_class
             
             new_time_object = dobj.time.getNewTimeObjectForDataSubset(new_time_range(1),n_samples_new,'first_sample_time',new_time_range(1));
             
-            event_aligned_data = sci.time_series.data(new_data,new_time_object);  
+            event_aligned_data = sci.time_series.data(new_data,new_time_object);
         end
         function removeOffset(obj)
-           %TODO 
+            %TODO
+            d = obj.data_objects;
+            for i = 1:length(d)
+                cur_d = d(i);
+                cur_d.time.start_offset = 0;
+            end
+        end
+        function setOffset(obj)
+            error('Not yet implemented') 
         end
         function zeroTimeByEvent(obj)
-            
+            error('Not yet implemented')
         end
         function resample(obj)
-            
+            error('Not yet implemented')
         end
     end
     

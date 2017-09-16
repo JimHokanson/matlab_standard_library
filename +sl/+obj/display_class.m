@@ -18,6 +18,9 @@ classdef display_class < handle
         end
         function str = datatipinfo(objs)
            %This gets called when mousing over an object
+           
+           %TODO: I think we want to change this behavior
+           
            str = evalc('builtin(''disp'',objs)');
         end
     end

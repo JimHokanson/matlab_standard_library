@@ -12,6 +12,7 @@ function runc(varargin)
 %   -----
 %   last - use last command
 %   disp - display the command in the command window
+%   raw  - don't uncomment
 %
 %   To Run:
 %   -------
@@ -62,12 +63,16 @@ persistent uncommented_str
 
 in.use_last = false; %flag - last
 in.show_code = false; %flag - disp
+in.is_raw = false;
 %TODO: Write a formal function that handles this ...
 if any(strcmp(varargin,'last'))
    in.use_last = true; 
 end
 if any(strcmp(varargin,'disp'))
    in.use_last = true; 
+end
+if any(strcmp(varargin,'raw'))
+   in.is_raw = true; 
 end
 
 
@@ -84,7 +89,11 @@ if in.use_last
     end
 else
     str = clipboard('paste');
-    uncommented_str = regexprep(str,'^\s*%\s*','','lineanchors');
+    if in.is_raw
+        uncommented_str = str;
+    else
+        uncommented_str = regexprep(str,'^\s*%\s*','','lineanchors');
+    end
 end
 
 if in.show_code

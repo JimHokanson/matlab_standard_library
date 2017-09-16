@@ -10,7 +10,7 @@ function output = getField(cellstruct,field_name,varargin)
 %
 %   Outputs
 %   -------
-%   output : ?
+%   output : array or cell array
 %       The output from the structure ...
 %
 %   Optional Inputs

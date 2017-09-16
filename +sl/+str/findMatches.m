@@ -111,16 +111,22 @@ I = -1; %Change this to indicate an actual result
 switch in.n_rule
     case 0 %only match zero or 1 result
         if n_matches > 1
-           error('Multiple matches found for: "%s" but only 0 or 1 allowed',input_string); 
+           temp = h__getMatchList(strings_to_match(mask));
+           error('Multiple matches found for: "%s" but only 0 or 1 allowed\nMatches were:\n%s',...
+               input_string,temp); 
         end
     case 1 %match 1, but follow rule
         if n_matches ~= 1
             switch in.multi_result_rule
                 case 'error'
                     if n_matches == 0
-                        error('No matches found for: "%s", expecting 1',input_string); 
+                        temp = h__getMatchList(strings_to_match);
+                        error('No matches found for: "%s", expecting 1\nOptions were:\n%s',...
+                            input_string,temp); 
                     else
-                        error('Multiple matches found for: "%s" but only 1 allowed',input_string); 
+                        temp = h__getMatchList(strings_to_match(mask));
+                        error('Multiple matches found for: "%s" but only 1 allowed\nMatches were:\n%s',...
+                            input_string,temp); 
                     end
                 case 'first'
                     I = find(mask,1);
@@ -181,4 +187,10 @@ else
     end
 end
 
+end
+
+function output = h__getMatchList(matched_strings)
+    %TODO: If greater than 20, show that the list is truncated
+    %and provide a clickable link to show more ...
+    output = sl.cellstr.join(matched_strings,'d','\n');
 end

@@ -30,6 +30,7 @@ function s_objs = toStruct(objs,varargin)
 
 %Additional options? - ignore constants
 
+in.builtin = true;
 in.fields_to_remove = {};
 in = sl.in.processVarargin(in,varargin);
 
@@ -39,7 +40,11 @@ all_objects = cell(1,n_objs);
 
 w = warning('off','MATLAB:structOnObject');
 for iObj = 1:n_objs
-    s = struct(objs(iObj));
+    if in.builtin
+        s = builtin('struct',objs(iObj));
+    else
+        s = struct();
+    end
     
     if ~isempty(in.fields_to_remove);
         %NOTE: rmfield will throw an error if not present ...
