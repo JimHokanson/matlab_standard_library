@@ -59,8 +59,25 @@ classdef data < sl.obj.handle_light
     %   Examples:
     %   ---------
     %   1)
-    %       wtf = sci.time_series.data(rand(1e8,1),0.01);
+    %       d1 = sci.time_series.data(rand(1e8,1),0.01);
     %
+    %   2) 
+    %       dt = 0.001;
+    %       time_object = sci.time_series.time(dt,n_samples,'sample_offset',100)
+    %       d2 = sci.time_series.data(rand(n_samples,1),time_object);
+    %
+    
+    
+                %   start_datetime : datenum
+            %      Start of the data collection with date and time
+            %      information.
+            %   start_offset : (default 0)
+            %       Normally this will be 0.
+            %   sample_offset :
+            %       This can be specified instead of "start_offset" in
+            %       cases in which it is more natural to specify which
+            %       sample is being used.
+    
     
     %Other Files:
     %-------------
