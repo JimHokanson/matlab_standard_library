@@ -40,7 +40,7 @@ in = sl.in.processVarargin(in,local_options);
 
 n_lines = max([length(x_positions), size(in.y_values,1), size(in.y_pct,1)]);
 
-if n_lines > x_positions
+if n_lines > length(x_positions)
     if length(x_positions) == 1
         %scaler passed in, replicated based on x specification
         x_positions = repmat(x_positions,[n_lines 1]);
