@@ -108,8 +108,27 @@ classdef events_holder < dynamicprops
             t2 = cellfun(@(x) ~isempty(x), t);       
             epoch_names = all_names(t2);  
         end
-        
-        
+        function plotEvent(obj,event_name,varargin)
+            %x
+            %
+            %   sci.time_series.events_holder.plotEvent(obj,event_name,varargin)
+            %
+            %   Optional Inputs
+            %   --------------------------------
+            %   Details in: sci.time_series.discrete_events.plot
+            %   TODO: List name here
+            %
+            %   See Also
+            %   --------
+            %   sci.time_series.discrete_events.plot
+            
+            event = obj.(event_name);
+            %TODO: Verify that this is an event and not an epoch ...
+            plot(event,varargin{:});
+        end
+        function plotEpochDuration(obj)
+           error('Not yet implemented') 
+        end
     end
     
 end

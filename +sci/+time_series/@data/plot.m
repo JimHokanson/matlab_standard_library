@@ -25,6 +25,8 @@ function varargout = plot(objs,varargin)
 %   time_spacing: (default [])
 %       If not empty, then subsequent trials are spaced by the specified
 %       amount (Units: same as 'time_units')
+%   zero_time : (default false)
+%       If true all plots are zerod to their first sample.
 %
 %   Other optional inputs are passed to the line handle
 %
@@ -37,6 +39,7 @@ function varargout = plot(objs,varargin)
 %   TODO: How do we want to plot multiple repetitions ...
 
 % in.slow = false;
+in.zero_time = false;
 in.quick_plot = true;
 in.time_units = 's';
 in.time_shift = true;
@@ -61,6 +64,13 @@ if ~isempty(in.time_spacing)
        last_time_obj = cur_time_obj;
    end
 
+elseif in.zero_time
+   time_objs_for_plot = copy(time_objs);
+
+   for iObj = 1:length(time_objs_for_plot)
+       cur_time_obj = time_objs_for_plot(iObj);
+       cur_time_obj.start_offset = 0;
+   end
 else
     start_datetimes = [time_objs.start_datetime];
     if ~sl.array.similiarity.allExactSame(start_datetimes) && in.time_shift

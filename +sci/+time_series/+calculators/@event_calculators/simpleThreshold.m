@@ -6,7 +6,7 @@ function results = simpleThreshold(data_objs,threshold_value,look_for_positive,v
 %   sci.time_series.calculators.event_calculators.simpleThreshold(threshold_result,1,epoch_value,varargin)
 %
 %   In the 2nd case, we use the epochs to generate a mask. This class
-%   then serves to furether refine the epochs.
+%   then serves to further refine the epochs.
 %
 %
 %   Inputs
@@ -59,14 +59,25 @@ function results = simpleThreshold(data_objs,threshold_value,look_for_positive,v
 %       Intertimes that are less than this value allow are combined. This
 %       is done before the other filters ...
 %   join_after_time : (default, not used)
-%       This is run after the other filters.
-%   epoch_value : (default true)
-%       This is only for when a previous threshold result is passed in ...
+%       Same as 'join_time', but this is run after the other filters (i.e.
+%       after min max filters)
+%   epoch_value : logical (default true)
+%       This is only for when a previous threshold result is passed in.
+%       A value of true indicates that the output should be true based on
+%       when the intput is true. A value of false indicates that the output
+%       should be true when the input is false.
 %
 %   Outputs
 %   -------
 %   results : sci.time_series.event_results.simple_threshold_results
 %       One object for every input data object is returned.
+%
+%   Improvements
+%   -----------------------------------------------------------------------
+%   1) Allow a set of filters such as:
+%   'filters',{'min_time' 3 'join_time' 2 'max_time',5}
+%   This would then create epochs based on the min_time and then
+%   run the output against join_time
 %
 %   See Also
 %   --------
@@ -94,10 +105,6 @@ if ~isempty(in.allow_border_trues)
     in.allow_starting_true = in.allow_border_trues;
     in.allow_ending_true = in.allow_border_trues;
 end
-%   allow_starting_true : (default true)
-%   allow_ending_true: (default true)
-%   allow_border_trues: (default true)
-
 
 %We might be able to borrow ideas from:
 %https://github.com/JimHokanson/SegwormMatlabClasses/blob/master/%2Bseg_worm/%2Bevents/findEvent.m
@@ -230,6 +237,8 @@ for iObj = 1:length(data_objs)
         temp.original_data = in.original_data;
     end
     
+    temp.bti = bti;
+    temp.start_time = bti.start_time;
     temp.threshold_start_times = bti.true_start_times(mask2);
     temp.threshold_start_I     = bti.true_start_indices(mask2);
     temp.threshold_end_times   = bti.true_end_times(mask2);

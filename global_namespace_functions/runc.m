@@ -59,7 +59,7 @@ c = x(b);
 %   b = 1:5
 %   b(10)  %Should cause an error in the file
 
-persistent uncommented_str
+persistent last_input_string
 
 in.use_last = false; %flag - last
 in.show_code = false; %flag - disp
@@ -84,17 +84,26 @@ TEST_FILE_NAME = 'z_runc_exec_file.m';
 script_name = TEST_FILE_NAME(1:end-2); 
 
 if in.use_last
-    if isempty(uncommented_str)
+    if isempty(last_input_string)
         fprintf(2,'Last execution string was cleared or never initialized\n');
     end
+    str = last_input_string;
 else
     str = clipboard('paste');
-    if in.is_raw
-        uncommented_str = str;
-    else
-        uncommented_str = regexprep(str,'^\s*%\s*','','lineanchors');
-    end
 end
+    
+if in.is_raw
+    uncommented_str = str;
+else
+    %TODO: figure out whether to run raw or not ...
+    %1) look for # of newlines
+    %2) look for # of commments
+    %3) If we have more newlines than comments, run raw
+    
+    %temp = regexp(str,'^\s*%\s*','lineanchors');
+    uncommented_str = regexprep(str,'^\s*%\s*','','lineanchors');
+end
+
 
 if in.show_code
     disp(uncommented_str)
@@ -117,10 +126,12 @@ catch ME
 end
 
 %TODO: Do I ever want to do 'caller' instead? Is 'caller' preferred?
+%
+%When debugging caller is almost certainly preferred
 if run_file
-    evalin('base',script_name);
+    evalin('caller',script_name);
 else
-    evalin('base',uncommented_str);
+    evalin('caller',uncommented_str);
 end
 
 end

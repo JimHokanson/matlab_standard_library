@@ -61,22 +61,22 @@ classdef data < sl.obj.handle_light
     %   1)
     %       d1 = sci.time_series.data(rand(1e8,1),0.01);
     %
-    %   2) 
+    %   2)
     %       dt = 0.001;
     %       time_object = sci.time_series.time(dt,n_samples,'sample_offset',100)
     %       d2 = sci.time_series.data(rand(n_samples,1),time_object);
     %
     
     
-                %   start_datetime : datenum
-            %      Start of the data collection with date and time
-            %      information.
-            %   start_offset : (default 0)
-            %       Normally this will be 0.
-            %   sample_offset :
-            %       This can be specified instead of "start_offset" in
-            %       cases in which it is more natural to specify which
-            %       sample is being used.
+    %   start_datetime : datenum
+    %      Start of the data collection with date and time
+    %      information.
+    %   start_offset : (default 0)
+    %       Normally this will be 0.
+    %   sample_offset :
+    %       This can be specified instead of "start_offset" in
+    %       cases in which it is more natural to specify which
+    %       sample is being used.
     
     
     %Other Files:
@@ -148,11 +148,11 @@ classdef data < sl.obj.handle_light
         ftime
     end
     
-%     methods
-%         function preGet(varargin)
-%             disp(length(varargin{1}))
-%         end
-%     end
+    %     methods
+    %         function preGet(varargin)
+    %             disp(length(varargin{1}))
+    %         end
+    %     end
     
     %Dependent Methods ----------------------------------------------------
     methods
@@ -176,10 +176,10 @@ classdef data < sl.obj.handle_light
             %TODO: use input_name and check for single value ...
             %- throw error if not a single object ...
             %crap - but then we run into indexing problems ...
-           value = sci.time_series.subset_retrieval(obj); 
+            value = sci.time_series.subset_retrieval(obj);
         end
         function value = get.ftime(obj)
-           value = sci.time_series.time_functions(obj); 
+            value = sci.time_series.time_functions(obj);
         end
     end
     
@@ -192,7 +192,7 @@ classdef data < sl.obj.handle_light
             %   -------------
             %   sr = my_data_objects.subset_retriever;
             %   data_subsets = sr.fromEpoch('my_epoch');
-            value = sci.time_series.subset_retrieval(objs); 
+            value = sci.time_series.subset_retrieval(objs);
         end
     end
     
@@ -211,7 +211,7 @@ classdef data < sl.obj.handle_light
             %   data_in : array [samples x channels]
             %       'data_in' must be with samples going down the rows.
             %   time_object : sci.time_series.time
-            %       Specification regarding the start time and sampling 
+            %       Specification regarding the start time and sampling
             %       rate of the data.
             %   dt: number
             %
@@ -302,7 +302,7 @@ classdef data < sl.obj.handle_light
             %   sci.time_series.time
             
             in.units = {};
-            in.raw_data = []; 
+            in.raw_data = [];
             in.dt = [];
             in.new_start_offset = [];
             in = sl.in.processVarargin(in,varargin);
@@ -471,14 +471,14 @@ classdef data < sl.obj.handle_light
             %   ----------------
             %   link_option: (default 'x')
             %       - x   - link x axes of all plots
-            %       - xy  - 
+            %       - xy  -
             %       - y
-            %   Additional arguments can be specified via the 
+            %   Additional arguments can be specified via the
             %
             %   Outputs:
             %   --------
             %   plot_results : sci.time_series.data.plot_result
-            %       
+            %
             %
             %   Example:
             %   --------
@@ -488,13 +488,13 @@ classdef data < sl.obj.handle_light
             %   ---------
             %   sci.time_series.data.plot
             
-
+            
             plot_results = cell(1,length(objs));
             
             in.link_option = 'x';
             [local_options,plot_options] = sl.in.removeOptions(varargin,fieldnames(in),'force_cell',true);
             in = sl.in.processVarargin(in,local_options);
-
+            
             n_objs = length(objs);
             
             for iObj = 1:n_objs
@@ -510,7 +510,7 @@ classdef data < sl.obj.handle_light
             
             %TODO: Build in cleanup code ...
         end
-
+        
         function result_object = plotStacked(objs,varargin)
             %
             %
@@ -584,7 +584,7 @@ classdef data < sl.obj.handle_light
             in = sl.in.processVarargin(in,varargin);
             
             if ~isempty(in.zero_by_event)
-               objs = objs.zeroTimeByEvent(in.zero_by_event); 
+                objs = objs.zeroTimeByEvent(in.zero_by_event);
             end
             
             
@@ -648,12 +648,12 @@ classdef data < sl.obj.handle_light
             set(gca,'YGrid','on')
             
             if ~isempty(in.y_tick_labels)
-               set(gca,'YTick',all_shifts,'YTickLabel',in.y_tick_labels)
+                set(gca,'YTick',all_shifts,'YTickLabel',in.y_tick_labels)
             end
             
             if ~isempty(in.zero_by_event)
-               event_fixed = regexprep(in.zero_by_event,'_',' ');
-               xlabel(sprintf('Time since %s (%s)',event_fixed,in.time_units));
+                event_fixed = regexprep(in.zero_by_event,'_',' ');
+                xlabel(sprintf('Time since %s (%s)',event_fixed,in.time_units));
             end
             
             result_object.line_handles = line_handles;
@@ -664,14 +664,14 @@ classdef data < sl.obj.handle_light
     %Add Event or History to data object ----------------------------------
     methods
         function newEventFromEvent(objs,old_name,new_name)
-           %The example use case is when a file has been marked with a
-           %particular comment
-           %
-           %    We want to find all strings that match some value
-           %    then extract those times (and values?) and move those 
-           %    to a new event
-           %
-           %    TODO: What do we need from the user ?????
+            %The example use case is when a file has been marked with a
+            %particular comment
+            %
+            %    We want to find all strings that match some value
+            %    then extract those times (and values?) and move those
+            %    to a new event
+            %
+            %    TODO: What do we need from the user ?????
         end
         function events = getEvent(objs,name)
             %x Gets a specific event name for all objects
@@ -709,6 +709,24 @@ classdef data < sl.obj.handle_light
             %   sci.time_series.epochs
             %   sci.time_series.events_holder
             %   sci.time_series.events_holder.addEvents
+            %
+            %   Example
+            %   -------
+            %   %1) ----------------
+            %   event_fh = @sci.time_series.discrete_events;
+            %
+            %   event_ca{1} = event_fh('qp_start',   cur_meta.qp_start);
+            %   event_ca{2} = event_fh('qp_end',     cur_meta.qp_end);
+            %
+            %   ev2_fh = @sci.time_series.epochs;
+            %   event_ca{8}  = ev2_fh('quiet_period',cur_meta.qp_start,cur_meta.qp_end);
+            %   event_ca{9}  = ev2_fh('fill',cur_meta.start_pump,cur_meta.bladder_contraction_starts(1));
+            %
+            %   cur_data.addEventElements(event_ca);
+            %   cur_data.addHistoryElements('Events and epochs added to the data, dba.expt_objects.trial.single_fill_cystometry');
+            %
+            %   %2) -------------------
+            %   TODO: Should show adding comments as well...
             
             obj.event_info.addEvents(event_elements);
         end
@@ -739,15 +757,15 @@ classdef data < sl.obj.handle_light
     %Time related manipulations -------------------------------------------
     methods
         %getDataSubset - in a separate file
-% % % %         function varargout = scaleTime(objs)
-% % % %            %x 
-% % % %            %    
-% % % %            %    This function was originally written to handle cases in
-% % % %            %    which
-% % % %            %
-% % % %            %    - we have 2 issues, changing the sampling rate and scaling
-% % % %         end
-
+        % % % %         function varargout = scaleTime(objs)
+        % % % %            %x
+        % % % %            %
+        % % % %            %    This function was originally written to handle cases in
+        % % % %            %    which
+        % % % %            %
+        % % % %            %    - we have 2 issues, changing the sampling rate and scaling
+        % % % %         end
+        
         function varargout = zeroTimeByEvent(objs,event_name_or_time_array,varargin)
             %x Redefines time such that the time of event is now at time zero.
             %
@@ -878,9 +896,9 @@ classdef data < sl.obj.handle_light
             %   [p_data,p_time] = p.getRawDataAndTime
             data = obj.d;
             time = obj.time.getTimeArray();
-        end       
+        end
         function varargout = dif2Loop(objs)
-               if nargout
+            if nargout
                 temp = copy(objs);
             else
                 temp = objs;
@@ -900,8 +918,8 @@ classdef data < sl.obj.handle_light
             if nargout
                 varargout{1} = temp;
             end
-        end       
-    end 
+        end
+    end
     
     %Data changing --------------------------------------------------------
     methods
@@ -911,7 +929,7 @@ classdef data < sl.obj.handle_light
             %   Performs the operation:
             %   B = A - min(A)
             %
-            %   
+            %
             in.dim = [];
             in = sl.in.processVarargin(in,varargin);
             
@@ -936,7 +954,7 @@ classdef data < sl.obj.handle_light
             
             if nargout
                 varargout{1} = temp;
-            end 
+            end
         end
         function varargout = meanSubtract(objs,varargin)
             %x Subtracts the mean of the data from the data
@@ -1239,7 +1257,7 @@ classdef data < sl.obj.handle_light
         %- log
         %- log10
         function out_objs = plus(A,B)
-           out_objs = add(A,B); 
+            out_objs = add(A,B);
         end
         
         function out_objs = add(A,B)
@@ -1324,18 +1342,42 @@ classdef data < sl.obj.handle_light
         end
         
         function out_objs = mean(objs,dim,varargin)
-           if nargin == 1 || isempty(dim)
-               dim = 1;
-           end
+            %
+            %
+            %   Improvements
+            %   ------------
+            %   Support returning an object from this ...
+            
+            if nargin == 1 || isempty(dim)
+                dim = 1;
+            end
             n_objs = length(objs);
             output = cell(1,n_objs);
             
-           for iObj = 1:length(objs)
-               output{iObj} = mean(objs(iObj).d,dim);
-           end
-           
-           out_objs = [output{:}];
-
+            for iObj = 1:length(objs)
+                output{iObj} = mean(objs(iObj).d,dim);
+            end
+            
+            out_objs = [output{:}];
+            
+        end
+        function out_objs = times(A,B)
+            if isobject(A) && isobject(B)
+                out_objs = copy(A);
+                for iObj = 1:length(A)
+                    out_objs(iObj).d = A(iObj).d .* B(iObj).d;
+                end
+            elseif isobject(A)
+                out_objs = copy(A);
+                for iObj = 1:length(A)
+                    out_objs(iObj).d = A(iObj).d .* B;
+                end
+            else
+                out_objs = copy(B);
+                for iObj = 1:length(A)
+                    out_objs(iObj).d = A .* B(iObj).d;
+                end
+            end
         end
         function varargout = mrdivide(objs,B)
             if nargout
@@ -1570,9 +1612,9 @@ else %The single vector case
     fd=zeros(r,c);
     fd(1) = f(2) - f(1);
     fd(end) = f(end) - f(end - 1);
-   
+    
     for k = 2:(length(f) - 1)
-    fd(k) = 0.5*((f(k) - f(k-1)) + (f(k+1) - f(k)));   
+        fd(k) = 0.5*((f(k) - f(k-1)) + (f(k+1) - f(k)));
     end
 end
 end

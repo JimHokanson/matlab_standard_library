@@ -15,8 +15,12 @@ classdef bool_transition_info < sl.obj.display_class
     
     properties
         first_sample %logical
-        %   `If we start with a set of true values this will be true.
         %
+        %   This is the value of the first sample
+        %
+        %   `If we start with a set of true values this will be true.
+        
+        
         n_samples
         %NOTE: We assume that the first index indicates the "start"
         %of something and that the last index indcates the "end" of an
@@ -44,6 +48,7 @@ classdef bool_transition_info < sl.obj.display_class
         %------------------------------------------------------------------
         n_true
         n_false
+        start_time
         true_start_times
         true_end_times
         false_start_times
@@ -172,6 +177,13 @@ classdef bool_transition_info < sl.obj.display_class
             in = sl.in.processVarargin(in,varargin);
             
             obj.time = in.time;
+            
+            if ~isempty(in.time)
+                obj.start_time = in.time.start_offset;
+            else
+                %Really samples ...
+                obj.start_time = 1;
+            end
             
             if length(logical_data) <= 1
                 return

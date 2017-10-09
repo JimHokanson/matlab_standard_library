@@ -11,8 +11,8 @@ classdef discrete_events < sl.obj.display_class
     %   See Also:
     %   sci.time_series.time
     %   sci.time_series.data
-    %   sci.time_series.data.getDataSubset
     %   sci.time_series.events_holder
+    %   sci.time_series.epochs
     
     properties
         prop_name %string
