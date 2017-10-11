@@ -60,7 +60,7 @@ classdef git
            
            if isempty(git_string)
                if ispc
-                   GIT_STRINGS_TRY = {'git' '"C:\Program Files (x86)\Git\bin\git.exe"' 'C:\Program Files\Git\bin\git.exe'};
+                   GIT_STRINGS_TRY = {'git' '"C:\Program Files (x86)\Git\bin\git.exe"' '"C:\Program Files\Git\bin\git.exe"' '"C:\Program Files\Git\cmd\git.exe"'};
                else
                    GIT_STRINGS_TRY = {'git'};
                end
