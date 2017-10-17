@@ -52,7 +52,13 @@ function str = join(cellstr_input,varargin)
 %   Notes:
 %   ------
 %   In 2013a Matlab introduced strjoin() which does something similar
-%   although the implementation was subpar.
+%   although the implementation was subpar. In 2016b or 2017a they now
+%   use the string class internally which is probably faster ...
+%
+%   Improvements
+%   -------------
+%   1) Provide a switch on version to use internal (if significantly
+%   faster)
 
 in.keep_last_d = false;
 in.d         = ',';
