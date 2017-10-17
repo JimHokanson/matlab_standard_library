@@ -35,6 +35,7 @@ classdef stim_artifact_remover < sl.obj.display_class
         %2) set to NaN
         %3) linear interpolation
         
+        
         n_samples_blank = -1
         %If specified, this is the # of samples that will be removed
         

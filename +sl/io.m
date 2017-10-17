@@ -46,7 +46,7 @@ classdef io
                     %   perhaps via some fopen('all')
                     %
                     %TODO: This is also called from fileWrite
-                    error(message('sl:io:fileRead:cannotOpenFile', file_path, msg));
+                    error('sl:io:fileRead:cannotOpenFile','Unable to open the specified file:\n%s\nreason: %s',file_path, msg);
                 end
             end
         end
