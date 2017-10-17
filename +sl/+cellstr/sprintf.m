@@ -11,8 +11,8 @@ function output = sprintf(format,varargin)
 %
 %   See examples below ...
 %
-%   EXAMPLES:
-%   ====================================================
+%   Examples
+%   -----------------------------------
 %   output = sl.cellstr.sprintf('%d-%d',1:4,2:5)
 %   output => 
 %       {'1-2'    '2-3'    '3-4'    '4-5'}
