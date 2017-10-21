@@ -9,7 +9,7 @@ function addPackages(package_folders,varargin)
 %   Inputs:
 %   -------
 %   package_folders: string or cellstr
-%   
+%
 %
 %   Optional Inputs:
 %   ----------------
@@ -22,17 +22,17 @@ in.root_path = fileparts(sl.stack.getPackageRoot);
 in = sl.in.processVarargin(in,varargin);
 
 if ischar(package_folders)
-   package_folders = {package_folders}; 
+    package_folders = {package_folders};
 end
 
 for iPackage = 1:length(package_folders)
     cur_package_name = package_folders{iPackage};
-   cur_package_path = fullfile(in.root_path,cur_package_name); 
-   
-   init_path = fullfile(cur_package_path,'initialize.m');
-   if exist(init_path,'file')
-       run(init_path)
-   else
-       addpath(cur_package_path);
-   end
+    cur_package_path = fullfile(in.root_path,cur_package_name);
+    
+    init_path = fullfile(cur_package_path,'initialize.m');
+    if exist(init_path,'file')
+        run(init_path)
+    else
+        addpath(cur_package_path);
+    end
 end
