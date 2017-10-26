@@ -32,7 +32,11 @@ classdef subplotter < sl.obj.display_class
     
     properties
         dims
-        handles
+        handles %cell array of Axes objects - some may be empty ...
+        %
+        %
+        %
+        
         last_index = 0
         %This can be used to omit specification of the axes
         %when calling the axes() method
@@ -58,6 +62,62 @@ classdef subplotter < sl.obj.display_class
             value = obj.dims(2);
         end
     end
+    
+    %Static Methods
+    %-----------------------------------------------
+    methods (Static)
+        function subplot_index = linearToSubplotIndex(id,n_rows,n_cols)
+           %
+           %    TODO: Document the point of the function ...
+           %
+           %    subplot_index = sl.plot.subplotter.linearToSubplotIndex(id,n_rows,n_cols)
+           %
+           %    Also works for a vector ...
+           
+           
+           %    TODO: We might want to shadow this in a sl.hg.subplot class
+           
+           %    1  4     =>    1  2
+           %    2  5           3  4
+           %    3  6           5  6 
+           
+           col = floor((id-1)./n_rows) + 1;
+           row = id - n_rows.*(col-1);
+           
+           subplot_index = (row - 1).*n_cols + col;
+        end
+    end
+    
+    %Constructors
+    %-----------------------------------------------
+    methods (Static)
+        function obj = fromFigure(fig_handle,shape)
+            %
+            %
+            %   sp = sl.plot.subplotter.fromFigure(fig_handle,*shape)
+            %
+            %   Inputs
+            %   ------
+            %   shape : 2 element vector [n_rows, n_columns]
+            %
+            
+            %Push this to getSubplotAxesHandles?? 
+            if exist('shape','var')
+                handles = findobj(gcf,'Type','axes');
+                grid_handles = reshape(flip(handles),shape(1),shape(2));
+            else
+                temp = sl.hg.figure.getSubplotAxesHandles(fig_handle);
+                grid_handles = temp.grid_handles;
+            end
+            sz = size(grid_handles);
+            
+            obj = sl.plot.subplotter(sz(1),sz(2));
+            obj.handles = num2cell(grid_handles);
+            
+        end
+    end
+    
+    
     methods
         function obj = subplotter(n_rows,n_columns,varargin)
             %
@@ -324,14 +384,19 @@ classdef subplotter < sl.obj.display_class
             
             for iRow = 1:length(rows)
                 cur_row_I = rows(iRow);
-                cur_top = new_tops(iRow);
-                cur_bottom = new_bottoms(iRow);
+                cur_new_top = new_tops(iRow);
+                cur_new_bottom = new_bottoms(iRow);
                 for iCol = 1:length(columns)
                     cur_col_I = columns(iCol);
                     cur_ax = obj.handles{cur_row_I,cur_col_I};
                     a = sl.hg.axes(cur_ax);
-                    a.position.top = cur_top;
-                    a.position.bottom = cur_bottom;
+                    
+                    %We can run into problems if we get a negative
+                    %height between these two calls, so we need one that
+                    %sets these at the same time
+                    a.position.setTopAndBottom(cur_new_top,cur_new_bottom);
+%                     a.position.top = cur_new_top;
+%                     a.position.bottom = cur_new_bottom;
                 end
             end
             %TODO: Verify continuity of rows
@@ -355,23 +420,20 @@ classdef subplotter < sl.obj.display_class
                 linkaxes(all_handles,'x');
             end
         end
-    end
-    methods (Static)
-        function obj = fromFigure(fig_handle)
-            %
-            %
-            %   sp = sl.plot.subplotter.fromFigure(fig_handle)
-            %
-            %
+        function linkYAxes(obj,varargin)
             
-            temp = sl.hg.figure.getSubplotAxesHandles(fig_handle);
-            sz = size(temp.grid_handles);
-            
-            obj = sl.plot.subplotter(sz(1),sz(2));
-            obj.handles = num2cell(temp.grid_handles);
-            
+            for i = 1:obj.n_rows
+                %TODO: Do we need to expand first
+                %I think this sometimes shrinks rather than expanding :/
+                ax = [obj.handles{i,:}];
+                linkaxes(ax,'y')
+            end
+        end
+        function changeWidths(obj,new_width)
+            %TODO: Not sure how we want to organize this ...
         end
     end
+
     
 end
 

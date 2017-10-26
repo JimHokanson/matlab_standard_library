@@ -51,12 +51,49 @@ s = sl.hg.figure.getSubplotAxesHandles(gcf)
     %This should work in 2014b, not sure if it works earlier ...
     %Works in 2014a
     %There is a bug in 2015a
-    s.grid_handles = flipud(getappdata(figure_handle, 'SubplotGrid'));
-
-    %TODO: Get all and compare against grid
-    %return missing
     
-    
-    %temp = sl.figure.getAxes(fig_h);
+    %This also fails after any manipulations ...
+    %I found this to be wrong in some cases
+    %s.grid_handles = flipud(getappdata(figure_handle, 'SubplotGrid'));
 
-%keyboard
+    %THIS NEEDS TO BE FIXED - NOT ROBUST TO MINOR DIFFERENCES IN GRID
+    %LOCATIONS
+    
+    % - close should be determined by the magnitude of spacing between
+    %   axes
+    % - TODO: We can also try assuming a full grid and factor
+    %       e.g. 8 should be either 2 x 4 or 4 x 2
+    %       - this however assumes no extra axes ...
+    
+    %if isempty(s.grid_handles)
+    
+    %TODO: This will fail if we have extra axes ...
+    %Can we make it more robust????
+    
+    handles=findobj(figure_handle,'Type','axes');
+    
+    positions = vertcat(handles.Position);
+    
+    %left bottom heigh width
+    
+    unique_col_positions = unique(positions(:,1)); %lefts
+    unique_row_positions = unique(positions(:,2)); %bottoms
+    
+    n_rows = length(unique_row_positions);
+    n_cols = length(unique_col_positions);
+    
+    temp = cell(n_rows,n_cols);
+    
+    for i = 1:length(handles)
+        cur_h = handles(i);
+        r_I = find(positions(i,2) == unique_row_positions);
+        c_I = find(positions(i,1) == unique_col_positions);
+        temp{r_I,c_I} = cur_h;
+    end
+    
+    temp1 = [temp{:}];
+    temp2 = reshape(temp1,n_rows,n_cols);
+    
+        s.grid_handles = flipud(temp2);
+    %end
+    
