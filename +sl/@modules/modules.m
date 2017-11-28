@@ -12,7 +12,9 @@ classdef (Hidden) modules
     
     properties (Constant)
         modules_folder_name = 'matlab_sl_modules'
-        module_remotes = {'https://github.com/JimHokanson/plotBig_Matlab'}
+        module_remotes = {...
+            'https://github.com/JimHokanson/plotBig_Matlab',
+            'https://github.com/JimHokanson/libgit2_matlab'}
     end
     
     properties (Dependent)
@@ -31,8 +33,8 @@ classdef (Hidden) modules
             %   sl.modules.initialize()
             
             if ~sl.git.is_installed
-               sl.warning.formatted('Git not installed, unable to download and/or update modules');
-               return
+                sl.warning.formatted('Git not installed, unable to download and/or update modules');
+                return
             end
             
             %1) Get the path to the modules folder
@@ -61,11 +63,12 @@ classdef (Hidden) modules
                     fprintf('Done\n');
                 end
                 
+                sl.path.addPackages(module_folder_path);
+                
                 %TODO: Pull
                 %Notify if a pull is necessary (i.e. we are out of date)
                 %Provide a link to a module GUI
                 
-                addpath(module_folder_path);
                 %TODO: Initialize if need be ...
                 
             end

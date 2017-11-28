@@ -1,5 +1,6 @@
 function value = getBitNumber(input,start,stop)
-%x
+%x Extracts a value from a subset of bits
+%
 %   value = sl.io.tc.getBitNumber(input,start,stop)
 %
 %   
