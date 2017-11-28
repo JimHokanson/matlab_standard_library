@@ -13,8 +13,9 @@ classdef (Hidden) modules
     properties (Constant)
         modules_folder_name = 'matlab_sl_modules'
         module_remotes = {...
-            'https://github.com/JimHokanson/plotBig_Matlab',
-            'https://github.com/JimHokanson/libgit2_matlab'}
+            'https://github.com/JimHokanson/plotBig_Matlab'}
+        
+            %'https://github.com/JimHokanson/libgit2_matlab'}
     end
     
     properties (Dependent)
