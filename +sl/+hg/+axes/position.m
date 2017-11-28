@@ -57,10 +57,10 @@ classdef (Hidden) position < handle
     
     methods
         function value = get.center_x(obj)
-           value = obj.left + 0.5*(obj.right - obj.left);
+            value = obj.left + 0.5*(obj.right - obj.left);
         end
         function value = get.center_y(obj)
-           value = obj.bottom + 0.5*(obj.top - obj.bottom);
+            value = obj.bottom + 0.5*(obj.top - obj.bottom);
         end
         %TODO: Implement set functions for center_x and center_y ...
         function value = get.raw_position(obj)
@@ -116,17 +116,17 @@ classdef (Hidden) position < handle
             obj.raw_position = temp;
         end
         function set.left(obj,value)
-           temp = obj.raw_position;
-           new_width = obj.right - value;
-           temp(1) = value;
-           temp(3) = new_width;
-           obj.raw_position = temp;
+            temp = obj.raw_position;
+            new_width = obj.right - value;
+            temp(1) = value;
+            temp(3) = new_width;
+            obj.raw_position = temp;
         end
         function set.right(obj,value)
-           temp = obj.raw_position;
-           new_width = value - temp(1);
-           temp(3) = new_width;
-           obj.raw_position = temp;
+            temp = obj.raw_position;
+            new_width = value - temp(1);
+            temp(3) = new_width;
+            obj.raw_position = temp;
         end
     end
     
@@ -134,7 +134,7 @@ classdef (Hidden) position < handle
         function obj = position(h,type)
             %
             %   obj = position(h,type)
-            %   
+            %
             %   Inputs:
             %   -------
             %   type: {'position','outerposition','tightinset'}
@@ -142,15 +142,24 @@ classdef (Hidden) position < handle
             obj.h = h;
             obj.type = type;
         end
-% % % % %         function changePosition(obj,varargin)
-% % % % %             %
-% % % % %             %   How do I want this function to work ...
-% % % % %             in.ll = obj.ll;
-% % % % %             in.lr = obj.lr;
-% % % % %             in.ul = obj.ul;
-% % % % %             in.ur = obj.ur;
-% % % % %             in = sl.in.processVarargin(in,varargin);
-% % % % %         end
+        function setTopAndBottom(obj,top,bottom)
+            %We can't always set these independently because then we might
+            %get a negative height between the two calls
+            temp = obj.raw_position;
+            new_height = top - bottom;
+            temp(2) = bottom;
+            temp(4) = new_height;
+            obj.raw_position = temp;
+        end
+        % % % % %         function changePosition(obj,varargin)
+        % % % % %             %
+        % % % % %             %   How do I want this function to work ...
+        % % % % %             in.ll = obj.ll;
+        % % % % %             in.lr = obj.lr;
+        % % % % %             in.ul = obj.ul;
+        % % % % %             in.ur = obj.ur;
+        % % % % %             in = sl.in.processVarargin(in,varargin);
+        % % % % %         end
     end
     
 end

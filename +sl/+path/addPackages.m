@@ -6,7 +6,9 @@ function addPackages(package_folders,varargin)
 %   This function is meant to facilitate adding code to the path on
 %   startup.
 %
-%   
+%   Inputs:
+%   -------
+%   package_folders: string or cellstr
 %
 %
 %   Inputs
@@ -50,14 +52,13 @@ end
 
 for iPackage = 1:length(package_folders)
     cur_package_name = package_folders{iPackage};
-    
+
     if exist(cur_package_name,'dir')
         cur_package_path = cur_package_name;
     else
         cur_package_path = fullfile(in.root_path,cur_package_name);
     end
-    
-    
+
     init_path = fullfile(cur_package_path,'initialize.m');
     if exist(init_path,'file')
         run(init_path)

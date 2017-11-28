@@ -64,15 +64,24 @@ classdef axes < sl.obj.display_class
             %        - 'centered' - keep position centered
             %        - 'left' - keep left side fixed
             %        - 'right' - keep right side fixed
+            
             in.mode = 'c';
+            in = sl.in.processVarargin(in,varargin);
             
-            error('Not yet implemented')
+            %error('Not yet implemented')
             
+            p = obj.position;
             switch lower(in.mode(1))
                 case 'c'
+                    center_x = p.center_x;
+                    new_left = center_x - 0.5*value;
+                    new_right = center_x + 0.5*value;
                 case 'l'
                 case 'r'
             end
+            
+            p.left = new_left;
+            p.right = new_right;
         end
         function setHeight(obj,value,varargin)
             in.mode = 'c';
