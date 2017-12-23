@@ -309,7 +309,7 @@ classdef time < sl.obj.display_class
     
     %Raw data and index methods -------------------------------------------
     methods
-        function time_array = getTimeArray(obj)
+        function time_array = getTimeArray(obj,varargin)
             %x Creates the full time array.
             %
             %    In general this should be avoided if possible.
@@ -322,8 +322,22 @@ classdef time < sl.obj.display_class
             %   See Also:
             %   getTimesFromIndices
             
-            time_array = ((0:obj.n_samples-1)*obj.dt + obj.start_offset)';
+            in.start_index = 1;
+            in.end_index = obj.n_samples;
+            in = sl.in.processVarargin(in,varargin);
+            
+            I1 = in.start_index - 1;
+            I2 = in.end_index - 1;
+            
+            time_array = ((I1:I2)*obj.dt + obj.start_offset)';
             time_array = h__getTimeScaled(obj,time_array);
+        end
+        function indices = getIndicesFromTimes(obj,times)
+            %JAH: Added this for compatibility with streaming data
+            %
+            %We need to handle having both this and getNearestIndices
+                raw_indices = (times - obj.start_offset)./obj.dt;
+                indices = round(raw_indices)+1;
         end
         function times = getTimesFromIndices(obj,indices)
             %x Given sample indices return times of these indices (in seconds)
