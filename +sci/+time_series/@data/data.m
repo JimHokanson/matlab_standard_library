@@ -1362,6 +1362,9 @@ classdef data < sl.obj.handle_light
             
         end
         function out_objs = times(A,B)
+            %
+            %
+            
             if isobject(A) && isobject(B)
                 out_objs = copy(A);
                 for iObj = 1:length(A)
@@ -1374,7 +1377,13 @@ classdef data < sl.obj.handle_light
                 end
             else
                 out_objs = copy(B);
-                for iObj = 1:length(A)
+                %   Is this correct?
+                % I think technically this is only for scalars and
+                %   that we need to support a case where A is an array
+                if length(A) > 1
+                    error('Case not yet supported')
+                end
+                for iObj = 1:length(B)
                     out_objs(iObj).d = A .* B(iObj).d;
                 end
             end
