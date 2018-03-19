@@ -143,6 +143,7 @@ lines = sl.str.getLines(default_disp_str);
 
 %TODO: For classes with no properties, this breaks ...
 
+%{'  event_calculators with no properties.'}    {0×0 char}
 
 %Note, we can't remove empty lines as it might be part of a multi-line
 %display.
@@ -151,6 +152,12 @@ lines = sl.str.getLines(default_disp_str);
 %end-1:end - end of the display is padded with 2 empty lines - NOT ALWAYS -
 %added a fix below to check
 lines(end) = [];
+if length(lines) == 1
+    all_spaces = {};
+    all_names = {};
+    all_values = {};
+    return
+end
 if isempty(lines{end})
     lines(end) = [];
 end
