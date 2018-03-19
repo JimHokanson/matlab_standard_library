@@ -10,6 +10,7 @@ classdef calculators
         spectrogram
         eventz
         regression %sci.time_series.calculators.regression
+        derivatives
     end
     
     methods
@@ -20,6 +21,7 @@ classdef calculators
             obj.regression = sci.time_series.calculators.regression;
             obj.eventz = sci.time_series.calculators.event_calculators;
             obj.spectrogram = sci.time_series.calculators.spectrogram_calculators;
+            obj.derivatives = sci.time_series.calculators.derivatives;
         end
     end
 end
