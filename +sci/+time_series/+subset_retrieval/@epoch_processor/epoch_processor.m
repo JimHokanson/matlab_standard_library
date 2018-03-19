@@ -3,6 +3,10 @@ classdef epoch_processor < sci.time_series.subset_retrieval.processor
     %   Class:
     %   sci.time_series.subset_retrieval.epoch_processor
     %
+    %   Accessed from:
+    %   sci.time_series.subset_retrieval
+    %
+    %
     %   See Also
     %   --------
     %   sci.time_series.subset_retrieval.processor
