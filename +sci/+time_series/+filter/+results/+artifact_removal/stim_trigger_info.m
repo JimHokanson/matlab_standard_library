@@ -35,7 +35,18 @@ classdef stim_trigger_info
            min_sample_diff = min(diff(trigger_start_I));
            
            %TODO: This is arbitrary and might need to change ...
-           stim_aligned = sl.matrix.from.startAndLength(trig_chan.d,trigger_start_I-N_SAMPLES_BACK,round(FRACTION_SAMPLES_USE*min_sample_diff),'by_row',false);
+           start_grab_I = trigger_start_I-N_SAMPLES_BACK;
+           raw_array_data = trig_chan.d;
+           n_samples_grab = round(FRACTION_SAMPLES_USE*min_sample_diff);
+           if start_grab_I(end) + n_samples_grab > length(raw_array_data)
+               %I think technically it should only be the last sample but
+               %...
+               start_grab_I(start_grab_I + n_samples_grab > length(raw_array_data)) = [];
+           end
+           stim_aligned = sl.matrix.from.startAndLength(raw_array_data,start_grab_I,...
+               n_samples_grab,'by_row',false);
+           
+           
            avg_stim = mean(stim_aligned,2);
            obj.avg_trigger = avg_stim;
            

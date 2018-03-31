@@ -238,7 +238,7 @@ classdef stim_artifact_remover < sl.obj.display_class
                 
                 cur_data = data.d;
                 %The actual blanking
-                %-------------------
+                %----------------------------------------------
                 switch obj.blanking_type
                     %1 - 0
                     %2 - NaN
@@ -259,11 +259,28 @@ classdef stim_artifact_remover < sl.obj.display_class
                         end
                     case 3
                         x = 0:n_samples_blank_local+1;
+                        for iStart = 1:(n_stims-1)
+                            %These are now off by 1 so that we can grab
+                            %the first and last and interpolate
+                            cur_start_I = start_I(iStart)-1;
+                            cur_end_I = cur_start_I+n_samples_blank_local+1;
+                            
+                            b = cur_data(cur_start_I);
+                            m = (cur_data(cur_end_I)-b)/(n_samples_blank_local+1);
+                            %cur_end_I = cur_start_I + min_sample_width-1;
+                            cur_data(cur_start_I:cur_end_I) = m*x + b;
+                            %cur_data(cur_start_I:cur_end_I) = cur_data(cur_start_I:cur_end_I)-avg_response;
+                        end
                         for iStart = 1:n_stims
                             %These are now off by 1 so that we can grab
                             %the first and last and interpolate
                             cur_start_I = start_I(iStart)-1;
                             cur_end_I = cur_start_I+n_samples_blank_local+1;
+                            if cur_end_I > length(cur_data)
+                                cur_end_I = length(cur_data);
+                                max_I = cur_end_I-cur_start_I + 1;
+                                x = x(1:max_I);
+                            end
                             
                             b = cur_data(cur_start_I);
                             m = (cur_data(cur_end_I)-b)/(n_samples_blank_local+1);
