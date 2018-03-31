@@ -29,6 +29,9 @@ classdef processor < handle
     end
     
     methods (Abstract)
+        %Implementations
+        %-----------------
+        %sci.time_series.subset_retrieval.generic_processor.getStartAndStopSamples
         [start_samples,stop_samples] = getStartAndStopSamples(obj,data_objects)
         %start_samples & stop_samples : {1 x n_objects}[1 x n_times]
     end
