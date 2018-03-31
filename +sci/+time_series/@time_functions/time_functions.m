@@ -83,7 +83,7 @@ classdef time_functions < sl.obj.display_class
             end
             times = dobj.time.getTimesFromIndices(indices);
         end
-        function n_samples = durationToNSamples(obj,duration)
+        function n_samples = durationToNSamples(obj,duration,varargin)
             %
             %   n_samples = durationToNSamples(obj,duration)
             %
@@ -97,9 +97,45 @@ classdef time_functions < sl.obj.display_class
             %       x   x   x   x   x  - samples
             %           1   2   3   4  - count
             %   n_samples => 4 (not including the first one)
+            %
+            %   Optional Inputs
+            %   ---------------
+            %   method : default @floor
+            %       The conversion from time to samples will not always be
+            %       exact. This specifes how to convert from time
+            %       to samples.
+            %
+            %       - @floor
+            %       - 'floor'
+            %       - @ceil
+            %       - 'ceil'
+            %       - @round
+            %       - 'round'
+            
+            in.method = @floor;
+            in = sl.in.processVarargin(in,varargin);
+            
+            if ischar(in.method)
+                switch lower(in.method)
+                    case 'floor'
+                        fh = @floor;
+                    case 'ceil'
+                        fh = @ceil;
+                    case 'round'
+                        fh = @round;
+                end
+            else
+                fh = in.method;
+            end
             
             dt = obj.getProp('dt');
-            n_samples = floor(duration/dt) + 1;
+            
+            %JAH: Not sure why I have + 1 here as it is wrong and even goes 
+            %against my documentation, removing 2018-03-19
+            %
+            %n_samples = fh(duration/dt) + 1;
+            
+            n_samples = fh(duration/dt);
         end
         function event_aligned_data = getReps(obj,start_times,new_time_range,varargin)
             %x Aligns subsets of the data to a time

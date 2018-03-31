@@ -82,7 +82,10 @@ classdef generic_processor < sci.time_series.subset_retrieval.processor
             %Stop Samples
             %-------------------------------------------
             if isempty(stop_samples)
-                if ~isempty(obj.stop_times)
+                if ~isempty(obj.stop_samples)
+                    stop_samples = cell(1,n_objects);
+                    stop_samples(:) = {obj.stop_samples};
+                elseif ~isempty(obj.stop_times)
                     stop_times = cell(1,n_objects);
                     stop_times(:) = {obj.stop_times};
                     stop_samples = obj.timesToSamples(data_objects,stop_times);

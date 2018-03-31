@@ -1,9 +1,11 @@
 function results = simpleThreshold(data_objs,threshold_value,look_for_positive,varargin)
 %x Thresholds a time series and groups consecutive true values as events
 %
-%   sci.time_series.calculators.event_calculators.simpleThreshold(data_obj,threshold_value,look_for_positive,varargin)
+%   results = sci.time_series.calculators.event_calculators.simpleThreshold(...
+%               data_obj,threshold_value,look_for_positive,varargin)
 %
-%   sci.time_series.calculators.event_calculators.simpleThreshold(threshold_result,1,epoch_value,varargin)
+%   results = sci.time_series.calculators.event_calculators.simpleThreshold(...
+%               threshold_result,1,epoch_value,varargin)
 %
 %   In the 2nd case, we use the epochs to generate a mask. This class
 %   then serves to further refine the epochs.
@@ -78,6 +80,8 @@ function results = simpleThreshold(data_objs,threshold_value,look_for_positive,v
 %   'filters',{'min_time' 3 'join_time' 2 'max_time',5}
 %   This would then create epochs based on the min_time and then
 %   run the output against join_time
+%   2) Provide a filter based on energy (either averages, i.e. normalized
+%   to time or just the absolute value, not-normalized to time)
 %
 %   See Also
 %   --------

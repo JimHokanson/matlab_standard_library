@@ -1085,7 +1085,7 @@ classdef data < sl.obj.handle_light
             end
         end
         function decimated_data = decimateData(objs,bin_width,varargin)
-            %x Resample time series after some smoothing function is applied
+            %x Resample time series at some lower rate
             %
             %   decimated_data = decimateData(objs,bin_width)
             %
@@ -1097,6 +1097,12 @@ classdef data < sl.obj.handle_light
             %   bin_width : scalar (s)
             %       The width of each bin for decimation
             %
+            %   Optional Inputs
+            %   ---------------
+            %   approach :
+            %       - 'mean_absolute'
+            %       - 'mean'
+            %       - 'nth' - NYI -just grab every nth sample
             %   Example:
             %   --------
             %   p_dec = p.decimateData(1);
@@ -1135,6 +1141,12 @@ classdef data < sl.obj.handle_light
                             temp_data = cur_data(start_Is(iBin):end_Is(iBin),:,:);
                             %NOTE: Eventually we might want additional methods
                             new_data(iBin,:,:) = mean(abs(temp_data),1);
+                        end
+                    case 'mean'
+                        for iBin = 1:n_bins
+                            temp_data = cur_data(start_Is(iBin):end_Is(iBin),:,:);
+                            %NOTE: Eventually we might want additional methods
+                            new_data(iBin,:,:) = mean(temp_data,1);
                         end
                     otherwise
                         error('unexpeced decimation approach')
@@ -1362,6 +1374,9 @@ classdef data < sl.obj.handle_light
             
         end
         function out_objs = times(A,B)
+            %
+            %
+            
             if isobject(A) && isobject(B)
                 out_objs = copy(A);
                 for iObj = 1:length(A)
@@ -1374,7 +1389,13 @@ classdef data < sl.obj.handle_light
                 end
             else
                 out_objs = copy(B);
-                for iObj = 1:length(A)
+                %   Is this correct?
+                % I think technically this is only for scalars and
+                %   that we need to support a case where A is an array
+                if length(A) > 1
+                    error('Case not yet supported')
+                end
+                for iObj = 1:length(B)
                     out_objs(iObj).d = A .* B(iObj).d;
                 end
             end

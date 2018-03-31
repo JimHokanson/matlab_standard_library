@@ -1,45 +1,50 @@
 function result = findLocalPeak(data, search_type, varargin)
-%
+%x Finds local peak based on criteria
 %
 %   result = sci.time_series.calculators.event_calculators.findLocalPeak
 %                   (data, search_type, varargin)
 %
-%   Assumptions
-%   -----------
+%   Whereas min() or max() return the global minima and maxima, this
+%   function returns peaks that are greater (or less than) its neighbors
+%   (depending upon if we are looking for maxima or minima respectively).
 %
 %   Inputs
 %   ------
 %   data : sci.time_series.data or double
 %   search_type :
-%       - 'max'
-%       - 'min'
-%       - 'both'
-%
+%       - 'max' - peaks must be highest
+%       - 'min' - peaks must be lowest
+%       - 'both' - peaks must be highest or lowest
 %
 %   Optional Inputs
 %   ---------------
+%   edges_can_be_peaks : default false
+%       If true then the first and last samples may be peaks as well.
+%       Unlike other samples the result only depends on one neighboring
+%       sample, rather than two.
+%   max_threshold : default []
+%       Used only when search_type = 'max' or 'both'. Peaks are only peaks
+%       if greater than this value.
+%   min_threshold : default []
+%       Used only whjen search_type = 'min' or 'both'. Peaks are only
+%       peaks if less than this value.
+%   threshold : default []
+%       Can be used rather than 'max_threshold' or 'min_threshold' with
+%       the sign interpretation depending upon 'search_type'
+%   n_peaks_guess : (default 20)
+%       Used to optimize memory allocation.
 %
+%   Outputs
+%   -------
+%   result : sci.time_series.calculators.event_calculators.find_local_peaks_result
 %
-%   -data: sci.time_series.data or double
-%   -type:
-%        1: maximums     2: minimums     3: both max and min
-%   -threshold: the minimum peak magnitude. enter 0 for no min
-%       peak size
-%   -varargin: TODO (probably add threshold as a varargin)
-%
-%   outputs:
-%   -pks: the magnitudes of the peaks which were found
-%   -locs:  the index in the data of where the  pks were found
-%
-%   examples:
-%       TODO!
-%
-%{
-               TODO
-%}
-
-%   TODO: add option for different threshold for mins and maxs
+%   Improvements
+%   ------------
+%   1) add option for different threshold for mins and maxs
 %   when calculating both with the same method call.
+%   2) Allow filtering peaks based on width. In other words a peak
+%   is a peak if it is greater than X number of samples to the right and
+%   left.
 
 in.edges_can_be_peaks = false;
 in.max_threshold = [];
@@ -51,6 +56,7 @@ in = sl.in.processVarargin(in,varargin);
 data_class_flag = 0;
 switch class(data)
     case 'sci.time_series.data'
+        %TODO: Verify 1 channel
         d = data.d;
         data_class_flag = 1;
     case 'double'
@@ -79,10 +85,39 @@ switch search_type
             threshold = in.threshold;
         end
         peak_indices = h__findLocalMaxima(d,threshold,in);
+        is_max = true(1,length(peak_indices));
     case 'min'
+        if isempty(in.threshold) && isempty(in.min_threshold)
+            threshold = NaN;
+        elseif isempty(in.threshold)
+            threshold = in.min_threshold;
+        else
+            threshold = in.threshold;
+        end
         peak_indices = h__findLocalMaxima(-d,threshold);
-        pks = -pks;
+        is_max = false(1,length(peak_indices));
     case 'both'
+        
+        error('Not yet implemented')
+        
+        if isempty(in.threshold) && isempty(in.max_threshold)
+            mex_threshold = NaN;
+        elseif isempty(in.threshold)
+            mex_threshold = in.max_threshold;
+        else
+            mex_threshold = in.threshold;
+        end
+        
+        if isempty(in.threshold) && isempty(in.min_threshold)
+            min_threshold = NaN;
+        elseif isempty(in.threshold)
+            min_threshold = in.min_threshold;
+        else
+            min_threshold = in.threshold;
+        end
+        
+        
+        
 %         [maxs, max_locs] = h__findLocalMaxima(d,threshold);
 %         [mins, min_locs] = h__findLocalMaxima(-d,threshold);
 %         mins = -mins;
@@ -94,11 +129,20 @@ switch search_type
 %         locs = cell(1,2);
 %         locs{1} = max_locs;
 %         locs{2} = min_locs;
+
+%Would need to merge min and max
     otherwise
         error('unrecognized type input')
 end
 
-result = peak_indices;
+if data_class_flag
+    times = data.ftime.getTimesFromIndices(peak_indices);
+else
+    times = [];
+end
+
+values = d(peak_indices);
+
 
 % if search_type == 1 || search_type == 2
 %     if data_class_flag
@@ -117,6 +161,11 @@ result = peak_indices;
 %         result = sci.time_series.calculators.event_calculators.local_max_result(pks, locs);
 %     end
 % end
+
+result = sci.time_series.calculators.event_calculators.find_local_peaks_result(...
+                  peak_indices,times,values,is_max);
+
+
 end
 
 function peak_indices = h__findLocalMaxima(d, threshold, in)

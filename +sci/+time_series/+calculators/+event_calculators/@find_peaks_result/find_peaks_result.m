@@ -1,4 +1,10 @@
 classdef find_peaks_result <handle
+    %   
+    %   Class:
+    %   sci.time_series.calculators.event_calculators.find_peaks_result
+    %
+    %   JAH: This method is outdated and shouldn't be used
+    %
     %   stores the result of
     %   sci.time_series.calculators.event_calculators.findPeaks
     %   

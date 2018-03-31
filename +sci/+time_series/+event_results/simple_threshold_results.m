@@ -11,7 +11,12 @@ classdef simple_threshold_results < sl.obj.display_class
     properties
         data %Data used for thresholding
         
+        %Who stores this?
         original_data %This is only for reference (storage and plotting)
+        
+        data_stores_equal = true
+        %Goal is to be able to know whether data and original_data are thes
+        %same.
         
         bti %sl.array.bool_transition_info
         
@@ -102,18 +107,27 @@ classdef simple_threshold_results < sl.obj.display_class
             end
         end
         function plot(obj,varargin)
-            
-            %NOT YET IMPLEMENTED
+            %
+            %   plot(obj,varargin)
+            %
+            %   Optional Inputs
+            %   ---------------
+            %   zero_time :
+            %       
+
             in.zero_time = true;
             in = sl.in.processVarargin(in,varargin);
             
-            clf
             if ~isempty(obj.original_data)
                 plot(obj.original_data,'zero_time',in.zero_time)
             end
+            %TODO: If this is the same as the original data then
+            %we shouldn't plot it ...
             hold on
-            plot(obj.data)
+            plot(obj.data,'zero_time',in.zero_time)
+            
             plotEpochs(obj,'zero_time',in.zero_time)
+            hold off
         end
         function plotEpochs(obj,varargin)
             
@@ -141,6 +155,11 @@ classdef simple_threshold_results < sl.obj.display_class
                 set(p,'FaceAlpha',in.face_alpha);
             end
         end
+        function epoch_data = getEpochData(obj,index)
+           start_I = obj.threshold_start_I(index);
+           end_I = obj.threshold_end_I(index);
+           epoch_data = obj.data.subset.fromStartAndStopSamples(start_I,end_I);
+        end
         function value = getAverageActivity(obj,data)
             %x Calculates mean values of input data over these epochs
             %
@@ -159,6 +178,9 @@ classdef simple_threshold_results < sl.obj.display_class
             end
         end
         function deleteEntries(obj,delete_indices_or_mask)
+            %x Delete entries based on indices or mask
+            %
+            %   deleteEntries(obj,delete_indices_or_mask)
             obj.threshold_start_times(delete_indices_or_mask) = [];
             obj.threshold_start_I(delete_indices_or_mask) = [];
             obj.threshold_end_times(delete_indices_or_mask) = [];
