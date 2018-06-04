@@ -726,7 +726,9 @@ classdef data < sl.obj.handle_light
             %   cur_data.addHistoryElements('Events and epochs added to the data, dba.expt_objects.trial.single_fill_cystometry');
             %
             %   %2) -------------------
-            %   TODO: Should show adding comments as well...
+            %   %Add 'comments' event, populating times and strings (msgs)
+            %   c2 = sci.time_series.discrete_events('comments',c.times,'msgs',c.strings)
+            %   cur_data.addEventElements(c2)
             
             obj.event_info.addEvents(event_elements);
         end

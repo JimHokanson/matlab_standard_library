@@ -25,9 +25,11 @@ classdef discrete_events < sl.obj.display_class
         %    as the prop_name if it is not specified.
         
         times %array of times
+        
 %         output_units = 's'
         values %anything
-        %numeric is preferable but any sort of value could be associaited
+        %numeric is preferable but any sort of value could be associated
+        
         msgs %cellstr
         %    Any associated strings with each event. This can be empty. This
         %    was originally designed for comments from raw data files where
@@ -58,6 +60,11 @@ classdef discrete_events < sl.obj.display_class
             %   name :
             %   values :
             %   msgs : 
+            %
+            %   Examples
+            %   -----------------------------------------------------------
+            %   comment_events =
+            %   sci.time_series.discrete_events('comments',c.times,'msgs',c.strings)
             %
             
             in.name   = '';
