@@ -90,6 +90,9 @@ classdef data_filterer < handle
 
             for iObject = 1:length(data_objs)
                 raw_data = data_objs(iObject).d;
+                if isempty(raw_data)
+                    continue
+                end
                 fs = data_objs(iObject).time.fs;
                 %The actual filtering
                 %-----------------------------

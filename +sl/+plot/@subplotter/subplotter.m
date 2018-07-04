@@ -204,6 +204,10 @@ classdef subplotter < sl.obj.display_class
 %             end
 %             obj.last_index = sp_index;
 %         end
+        function setRowYLim(obj,row_I,ylim)
+            ax = [obj.handles{row_I,:}];
+            set(ax,'ylim',ylim);
+        end
         function setColWidthByTime(obj,varargin)
             %x Adjust column widths so that they are proportional to time
             %
@@ -406,6 +410,7 @@ classdef subplotter < sl.obj.display_class
             %
             %
             
+            in.clear_previous_links = false; %NYI
             in.by_column = false;
             in = sl.in.processVarargin(in,varargin);
                 
@@ -413,20 +418,29 @@ classdef subplotter < sl.obj.display_class
             if in.by_column
                 for i = 1:obj.n_columns
                     column_h = [h{:,i}];
+                    %syncLimits(column_h,'XLim');
+                    %linkprop(column_h,'XLim');
                     linkaxes(column_h,'x');
                 end
             else
                 all_handles = [h{:}];
                 linkaxes(all_handles,'x');
+                %syncLimits(all_handles,'XLim');
+             	%linkprop(ax,'XLim');
             end
         end
         function linkYAxes(obj,varargin)
-            
+                        
+            in.clear_previous_links = false; %NYI  
+            in = sl.in.processVarargin(in,varargin);
+
             for i = 1:obj.n_rows
                 %TODO: Do we need to expand first
                 %I think this sometimes shrinks rather than expanding :/
                 ax = [obj.handles{i,:}];
                 linkaxes(ax,'y')
+                %syncLimits(ax,'YLim');
+             	%linkprop(ax,'YLim');
             end
         end
         function changeWidths(obj,new_width)
@@ -435,5 +449,30 @@ classdef subplotter < sl.obj.display_class
     end
 
     
+end
+
+% function h__linkAxes(ax,
+function syncLimits(ax,prop)
+bestlim = [inf -inf];
+nonNumericLims = false(size(ax));
+classes = cell(size(ax));
+for k=1:length(ax)
+    axlim = get(ax(k),prop);
+    if isnumeric(axlim)
+        bestlim = [min(axlim(1),bestlim(1)) max(axlim(2),bestlim(2))];
+    else
+        nonNumericLims(k) = true;
+        classes{k} = class(axlim);
+    end
+end
+if any(nonNumericLims)
+    if ~all(nonNumericLims) || ~all(strcmp(classes{1},classes))
+        error(message('MATLAB:linkaxes:CompatibleData'))
+    end
+end
+set(ax,[prop 'Mode'],'manual')
+if bestlim(1) < bestlim(2)
+    set(ax, prop, bestlim)
+end
 end
 

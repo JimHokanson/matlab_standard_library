@@ -1,4 +1,4 @@
-classdef regression
+classdef regression < sl.obj.display_class
     %
     %   Class:
     %   sci.time_series.calculators.regression

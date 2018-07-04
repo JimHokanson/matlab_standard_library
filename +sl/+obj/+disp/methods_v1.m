@@ -107,7 +107,7 @@ else
     method_names = {meta_method_objs.Name};
 
     %TODO: Make this smarter ...
-    METHODS_REMOVE = {'isvalid','cat','vertcat','horzcat'};
+    METHODS_REMOVE = {'isvalid','cat','vertcat','horzcat','listener'};
     [mask,loc] = ismember(method_names,METHODS_REMOVE);
   	meta_method_objs(mask) = [];
   	method_names(mask)     = [];

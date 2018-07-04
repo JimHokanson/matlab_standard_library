@@ -22,9 +22,10 @@ classdef git
             %
             %   version_string = sl.git.version()
                         
-            version_string = sl.git.runGitCommand('--version');
+            version_string = strtrim(sl.git.runGitCommand('--version'));
             %git version 1.9.5.msysgit.0
             %git version 2.10.1 (Apple Git-78)
+            %git version 2.11.1.windows.1
         end
         function result = clone(source_path,parent_path)
             %

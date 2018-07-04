@@ -94,9 +94,8 @@ classdef cmd_window < sl.obj.display_class
             %   getText() - 0 based
             %   returns carets ...
             
-            n_chars = end_char-start_char+1;
-            
-            if nargin
+            if nargin > 1
+                n_chars = end_char-start_char+1;
                 text = char(obj.h_text.getText(start_char-1,n_chars));
             else
                 text = char(obj.h_text.getText());
