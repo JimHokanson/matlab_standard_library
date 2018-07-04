@@ -7,12 +7,41 @@ function [unique_rows,I,J] = uniqueRows(input_cell_array,varargin)
 %   --------
 %   unique_rows :
 %       Values of all unique rows.
-%   I : array
+%   I : array, length == size(unique_rows,1)
 %       Parallels the 'I' output from unique in that:
 %               unique_rows = input_cell_array(I,:) 
-%   J : array
+%       In other words this helps us bring other variables
+%       into the unique space, i.e. only keeping one example
+%       of some other array where our input is unique
+%
+%           i.e. in_array1 = {'a'; 'b'; 'a'; 'b'} 
+%                in_array2 = [1 2 3 4]
+%
+%       [unique_rows,I,J] = sl.cell.uniqueRows(in_array1)
+%
+%       If we get "examples" from in_array2 from unique examples of
+%       "in_array1" - using I - we would get the values 1 and 2.
+%
+%       array2_examples = in_array2(I);
+%       => [1,2]
+%
+%   J : array, length == size(input_cell_array,1)
 %       Parallels the 'J' output from unique in that:
 %               input_cell_array = unique_rows(J,:);
+%       In other words this helps us to identify how each
+%       member of the orginal array relates to the unique values
+%       and can be used to do some common operation to all members
+%       of an array which have the same unique value for this index.
+%
+%           
+%           i.e. in_array1 = {'a'; 'b'; 'a'; 'b'} 
+%                in_array2 = [1 2 3 4]
+%       
+%       [unique_rows,I,J] = sl.cell.uniqueRows(in_array1)
+%
+%       If we group in_array2 by J values this tells us that 'a'
+%       contains [1,3] and 'b' contains [2,4]
+%
 %
 %   Inputs:
 %   -------
