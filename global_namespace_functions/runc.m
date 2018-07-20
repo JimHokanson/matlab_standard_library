@@ -101,7 +101,21 @@ else
     %3) If we have more newlines than comments, run raw
     
     %temp = regexp(str,'^\s*%\s*','lineanchors');
-    uncommented_str = regexprep(str,'^\s*%\s*','','lineanchors');
+    
+    %This fails when we strip multiple lines
+    %   e.g.:
+    %
+    %     %  %Good Comment
+    %     %
+    %     %  n = 1
+    %     %  x = 2
+    %
+    %   The n = 1 doesn't get uncommented because we consume the leading
+    %   whitespace since the previous line doesn't have any text
+    %   %%uncommented_str = regexprep(str,'^\s*%\s*','','lineanchors');
+    
+    %https://stackoverflow.com/questions/3469080/match-whitespace-but-not-newlines
+    uncommented_str = regexprep(str,'^\s*%[^\S\n]*','','lineanchors');
 end
 
 
@@ -125,13 +139,20 @@ catch ME
     run_file = false; 
 end
 
-%TODO: Do I ever want to do 'caller' instead? Is 'caller' preferred?
+
+%NOTE: If this fails here see the file:
 %
-%When debugging caller is almost certainly preferred
+%   z_runc_exec_file.m
+%
+%   Or click on the link in the command window
 if run_file
     evalin('caller',script_name);
 else
     evalin('caller',uncommented_str);
 end
+
+%JAH Note:
+%- compile errors get thrown here :/
+%- runtime errors get thrown from file as desired
 
 end
