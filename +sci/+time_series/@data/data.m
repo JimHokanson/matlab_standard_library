@@ -659,6 +659,31 @@ classdef data < sl.obj.handle_light
             result_object.line_handles = line_handles;
             
         end
+        
+        function plotMarkers(obj,times,varargin)
+            %X Plot individual data samples
+            %
+            %   plotMarkers(obj,times)
+            %
+            %   Basically this function just plots individual samples
+            %   without any fancy fast plotting like the main plot
+            %   function. It also looks up indices based on the input
+            %   times.
+            %
+            %   Example
+            %   -------
+            %   times = 10000:200:10600
+            %   data.plotMarkers(times,'k*','MarkerSize',10)
+            
+            if obj.n_channels > 1
+                error('Not implemented for more than 1 channel')
+            end
+            
+            %TODO: We could allow interpolation for non-exact indices
+            
+            I = obj.ftime.getNearestIndices(times);
+            plot(times,obj.d(I),varargin{:})
+        end
     end
     
     %Add Event or History to data object ----------------------------------
@@ -1273,7 +1298,26 @@ classdef data < sl.obj.handle_light
         function out_objs = plus(A,B)
             out_objs = add(A,B);
         end
-        
+        function out_objs = diff(A,N)
+            
+            %NOTE: no support for non-sample based diff
+            %i.e. can't diff across samples (yet ...)
+            if nargin < 2
+                N = 1;
+            end
+            
+            history_string = sprintf('Computed %d sample diff using diff()',N);
+            
+            out_objs = copy(A);
+            for iObj = 1:length(A)
+                out_objs(iObj).d = diff(A(iObj).d,N,1);
+                out_objs(iObj).addHistoryElements(history_string);
+                temp_time = out_objs(iObj).time;
+                temp_time.n_samples = size(out_objs(iObj).d,1);
+                time_shift = temp_time.dt*0.5*N;
+                temp_time.start_offset = temp_time.start_offset + time_shift;
+            end
+        end
         function out_objs = add(A,B)
             %x Performs the addition operation
             %
@@ -1440,6 +1484,8 @@ classdef data < sl.obj.handle_light
         %
         %   The design of these methods might change ...
         function output = max(objs,varargin)
+            %
+            %   TODO: Support I as an output ...
             
             in.dim = 1;
             in.un = true;
