@@ -1,7 +1,7 @@
 function [likely_normal, p, sw_statistic] = normalitySW(x, varargin)
 %x Shapiro-Wilk parametric hypothesis test of composite normality.
 %
-%   [h, p, sw_statistic] = sl.stats.dist.normal.normalitySW(x, varargin)
+%   [likely_normal, p, sw_statistic] = sl.stats.dist.normal.normalitySW(x, varargin)
 %
 %   This actually runs either Shapiro-Wilk or Shapiro-Francia based 
 %   on the kurtosis
@@ -23,8 +23,10 @@ function [likely_normal, p, sw_statistic] = normalitySW(x, varargin)
 %
 %   Outputs
 %   -------
-%   likely_normal: logical
-%   p:
+%   likely_normal : logical
+%       If true it indicates the data likely come from a normal
+%       distribution.
+%   p :
 %       Probability of data originating from a normal distribution
 %   sw_statistic:
 %       The test statistic (non normalized).    
