@@ -12,7 +12,8 @@ function runc(varargin)
 %   -----
 %   last - use last command
 %   disp - display the command in the command window
-%   raw  - don't uncomment
+%   raw  - don't uncomment (NOTE: This is largely obsolete with smart
+%           processing of the copied string
 %
 %   To Run:
 %   -------
@@ -38,10 +39,8 @@ function runc(varargin)
 %
 %   Improvments:
 %   ------------
-%   1) Allow running code without uncommenting - this would allow
-%   evaluating a selection that isn't commented but would still provide
-%   the ability to determine where errors were in the selection
-%   2) runc last
+%   1) runc last - ???? I'm not sure what I had in mind
+%       since normally we change things ...
 
 
 %{
@@ -95,27 +94,27 @@ end
 if in.is_raw
     uncommented_str = str;
 else
-    %TODO: figure out whether to run raw or not ...
-    %1) look for # of newlines
-    %2) look for # of commments
-    %3) If we have more newlines than comments, run raw
+    n_newlines = length(strfind(str,sprintf('\n'))); %#ok<SPRINTFN>
+    n_newlines_with_comments = length(regexp(str,'^\s*%','lineanchors'));
+
+    if n_newlines == n_newlines_with_comments
+     	%This fails when we strip multiple lines
+        %   e.g.:
+        %
+        %     %  %Good Comment
+        %     %
+        %     %  n = 1
+        %     %  x = 2
+        %
+        %   The n = 1 doesn't get uncommented because we consume the leading
+        %   whitespace since the previous line doesn't have any text
+        %   %%uncommented_str = regexprep(str,'^\s*%\s*','','lineanchors');
     
-    %temp = regexp(str,'^\s*%\s*','lineanchors');
-    
-    %This fails when we strip multiple lines
-    %   e.g.:
-    %
-    %     %  %Good Comment
-    %     %
-    %     %  n = 1
-    %     %  x = 2
-    %
-    %   The n = 1 doesn't get uncommented because we consume the leading
-    %   whitespace since the previous line doesn't have any text
-    %   %%uncommented_str = regexprep(str,'^\s*%\s*','','lineanchors');
-    
-    %https://stackoverflow.com/questions/3469080/match-whitespace-but-not-newlines
-    uncommented_str = regexprep(str,'^\s*%[^\S\n]*','','lineanchors');
+        %https://stackoverflow.com/questions/3469080/match-whitespace-but-not-newlines
+        uncommented_str = regexprep(str,'^\s*%[^\S\n]*','','lineanchors');
+    else
+        uncommented_str = str;
+    end
 end
 
 
