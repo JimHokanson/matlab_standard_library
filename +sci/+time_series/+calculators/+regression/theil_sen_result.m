@@ -1,7 +1,11 @@
-classdef theil_sen_result
+classdef theil_sen_result < sci.time_series.calculators.regression.result
     %
     %   Class:
     %   sci.time_series.calculators.regression.theil_sen_result
+    %
+    %   See Also
+    %   --------
+    %   sci.time_series.calculators.regression.theilSen
     
     properties
         training_data
@@ -11,31 +15,16 @@ classdef theil_sen_result
     
     properties (Dependent)
         y_hat 
-        residuals
     end
     
     methods
         function value = get.y_hat(obj)
             value = obj.t_training*obj.slope + obj.intercept;
         end
-        function value = get.residuals(obj)
-           value = obj.y_training - obj.y_hat;
-        end
+
     end
     
-    properties (Dependent)
-        t_training
-        y_training
-    end
-    
-    methods
-        function value = get.t_training(obj)
-            [~,value] = obj.training_data.getRawDataAndTime();
-        end
-        function value = get.y_training(obj)
-            value = obj.training_data.getRawDataAndTime();
-        end
-    end
+
     
     methods
         function plot(obj)

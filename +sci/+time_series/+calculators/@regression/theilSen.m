@@ -1,6 +1,13 @@
 function result = theilSen(data)
 %
 %   result = sci.time_series.calculators.regression.theilSen(data)
+%
+%   Outputs
+%   -------
+%   result = sci.time_series.calculators.regression.theil_sen_result
+
+%TODO: This might be better in some generic regression package
+%with a wrapper here for time series
 
 %http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.TheilSenRegressor.html#sklearn.linear_model.TheilSenRegressor
 %http://scikit-learn.org/stable/auto_examples/linear_model/plot_theilsen.html

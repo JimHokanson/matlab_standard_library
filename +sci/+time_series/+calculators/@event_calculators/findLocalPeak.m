@@ -45,7 +45,9 @@ function result = findLocalPeak(data, search_type, varargin)
 %   2) Allow filtering peaks based on width. In other words a peak
 %   is a peak if it is greater than X number of samples to the right and
 %   left.
+%   3) Rename to be plural!!!!
 
+in.min_distance = [];
 in.edges_can_be_peaks = false;
 in.max_threshold = [];
 in.min_threshold = [];
@@ -56,7 +58,9 @@ in = sl.in.processVarargin(in,varargin);
 data_class_flag = 0;
 switch class(data)
     case 'sci.time_series.data'
-        %TODO: Verify 1 channel
+        if data.n_channels > 1
+            error('Only a single channel is supported')
+        end
         d = data.d;
         data_class_flag = 1;
     case 'double'
@@ -94,7 +98,7 @@ switch search_type
         else
             threshold = in.threshold;
         end
-        peak_indices = h__findLocalMaxima(-d,threshold);
+        peak_indices = h__findLocalMaxima(-d,threshold,in);
         is_max = false(1,length(peak_indices));
     case 'both'
         

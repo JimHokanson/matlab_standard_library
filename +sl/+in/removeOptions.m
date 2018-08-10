@@ -3,6 +3,12 @@ function [removed_options,remaining_options] = removeOptions(varargin_data,names
 %
 %   ******* CONSIDER USING sl.in.splitAndProcessVarargin INSTEAD *********
 %   
+%   This is actually useful for unspecified variables, such as for plotting
+%
+%   JAH: Nevermind, probably best not to use ...
+%
+%   
+%
 %
 %   [removed_options,remaining_options] = sl.in.removeOptions(varargin_data,names_to_remove)
 %
@@ -46,6 +52,10 @@ function [removed_options,remaining_options] = removeOptions(varargin_data,names
 %
 %
 %   The default behavior is to keep the same kind of output as the input
+%
+%   See Also:
+%   ---------
+%   sl.in.splitAndProcessVarargin
 
 in.output_types = {};
 in.force_cell = false;

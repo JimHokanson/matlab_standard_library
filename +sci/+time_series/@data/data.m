@@ -665,6 +665,8 @@ classdef data < sl.obj.handle_light
             %
             %   plotMarkers(obj,times)
             %
+            %   plotMarkers(obj,indices,'is_time',false)
+            %
             %   Basically this function just plots individual samples
             %   without any fancy fast plotting like the main plot
             %   function. It also looks up indices based on the input
@@ -675,13 +677,20 @@ classdef data < sl.obj.handle_light
             %   times = 10000:200:10600
             %   data.plotMarkers(times,'k*','MarkerSize',10)
             
+            in.is_time = true;
+            [in,varargin] = sl.in.processVararginWithRemainder(in,varargin);
+            
             if obj.n_channels > 1
                 error('Not implemented for more than 1 channel')
             end
             
             %TODO: We could allow interpolation for non-exact indices
-            
-            I = obj.ftime.getNearestIndices(times);
+            if in.is_time
+                I = obj.ftime.getNearestIndices(times);
+            else
+                I = times;
+                times = obj.ftime.getTimesFromIndices(I);
+            end
             plot(times,obj.d(I),varargin{:})
         end
     end
@@ -950,6 +959,16 @@ classdef data < sl.obj.handle_light
     
     %Data changing --------------------------------------------------------
     methods
+        function new_objs = lowpass(objs,f_low,varargin)
+            ORDER = 1;
+            filter_design = sci.time_series.filter.butter(ORDER,f_low,'low');
+            new_objs = objs.filter(filter_design);
+        end
+        function new_objs = highpass(objs,f_low,varargin)
+            ORDER = 1;
+            filter_design = sci.time_series.filter.butter(ORDER,f_low,'high');
+            new_objs = objs.filter(filter_design);
+        end
         function varargout = minSubtract(objs,varargin)
             %x Subtracts the min of the data from the data
             %
@@ -1476,6 +1495,7 @@ classdef data < sl.obj.handle_light
             end
         end
     end
+    
     %Data reduction basic math methods -------------- e.g. max,min
     methods (Hidden)
         %TODO: Describe some of the concerns with these methods
@@ -1550,6 +1570,30 @@ classdef data < sl.obj.handle_light
             temp = cell(1,n_objs);
             for iObj = 1:n_objs
                 temp{iObj} = sum(objs(iObj).d,in.dim);
+            end
+            
+            if ~in.un
+                output = temp;
+            else
+                if any(cellfun(@numel,temp) ~= 1)
+                    error('One of the objects has more than 1 channel or rep, "''un'',0" required for the input')
+                end
+                output = [temp{:}];
+            end
+        end
+        function output = auc(objs,varargin)
+           	in.dim = 1;
+            in.un = true;
+            in = sl.in.processVarargin(in,varargin);
+            
+            if in.dim ~= 1
+                error('Only dim=1 is currently supported')
+            end
+            
+            n_objs = length(objs);
+            temp = cell(1,n_objs);
+            for iObj = 1:n_objs
+                temp{iObj} = sum(objs(iObj).d,in.dim)./objs(iObj).time.fs;
             end
             
             if ~in.un
