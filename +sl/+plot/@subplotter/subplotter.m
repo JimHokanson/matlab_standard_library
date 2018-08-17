@@ -230,14 +230,19 @@ classdef subplotter < sl.obj.display_class
             %
             %   Optional Inputs
             %   ---------------
+            %   axis : default 'normal'
+            %       'auto'
+            %       'normal'
+            %       'tight'
+            %       'fill'
+            %       etc => see help(axis)
+            %
             %   axis: 'auto', 'normal' (default), 'tight', 'fill' (etc. see
             %   help(axis))
             
             
             in.axis = 'normal';
-            
             in = sl.in.processVarargin(in,varargin);
-            
             
             all_positions = get([obj.handles{1,:}],'position');
             all_xlims     = get([obj.handles{1,:}],'xlim');
@@ -259,11 +264,11 @@ classdef subplotter < sl.obj.display_class
             gap_widths = all_lefts(2:end) - all_rights(1:end-1);
             
             next_left = left_extent;
-            n_columns = obj.dims(2);
-            n_rows = obj.dims(1);
-            for iColumn = 1:n_columns
+            n_columns_l = obj.dims(2); %l => local
+            n_rows_l = obj.dims(1);
+            for iColumn = 1:n_columns_l
                 cur_width = new_widths(iColumn);
-                for iRow = 1:n_rows
+                for iRow = 1:n_rows_l
                     cur_axes = obj.handles{iRow,iColumn};
                     cur_position = get(cur_axes,'position');
                     cur_position(1) = next_left;
@@ -272,10 +277,32 @@ classdef subplotter < sl.obj.display_class
                     
                     axis(cur_axes,in.axis)
                 end
-                if iColumn ~= n_columns
+                if iColumn ~= n_columns_l
                     next_left = next_left + cur_width + gap_widths(iColumn);
                 end
             end
+        end
+        function setHeightByPct(obj,pct)
+            %
+            %   JAH: At this point ...
+            all_positions = get([obj.handles{1,:}],'position');
+            
+            all_bottoms = cellfun(@(x) x(2),all_positions);
+            all_tops = cellfun(@(x) x(2)+x(4),all_positions);
+            
+            bottom_extent  = all_bottoms(1);
+            top_extent = all_tops(end);
+            
+            all_heights = all_tops - all_bottoms;
+            all_time_durations = cellfun(@(x) x(2)-x(1),all_xlims);
+            
+            total_width = sum(all_heights);
+            
+            pct_durations = all_time_durations/sum(all_time_durations);
+            new_widths = pct_durations*total_width;
+            
+            gap_widths = all_bottoms(2:end) - all_tops(1:end-1);
+           keyboard 
         end
         function removeVerticalGap(obj,rows,columns,varargin)
             %x Removes vertical gaps from subplots

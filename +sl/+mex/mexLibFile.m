@@ -1,4 +1,5 @@
 function mexLibFile(file_name,varargin)
+%X Wrapper for mexing simple functions 
 %
 %   sl.mex.mexLibFile(file_name,varargin)
 %

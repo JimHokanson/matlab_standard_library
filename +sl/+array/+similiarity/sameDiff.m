@@ -6,7 +6,7 @@
 %       diffs = diff(data);
 %       flag  = all(diff(diffs) < 0.00001*diffs(1))
 %
-%   The main advantage of this ciode is that it avoids creating large
+%   The main advantage of this code is that it avoids creating large
 %   temporary arrays in memory.
 %
 %   Inputs
@@ -38,3 +38,4 @@
 Compile via:
 sl.mex.mexLibFile('sameDiff.c','move_up',true)
 %}
+error('Function not compiled, please compile ...')

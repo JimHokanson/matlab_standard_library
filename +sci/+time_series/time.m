@@ -50,6 +50,7 @@ classdef time < sl.obj.display_class
         end_time
         start_time
         elapsed_time
+        start_end_times
     end
     
     %Dependent Methods ----------------------------------------------------
@@ -74,6 +75,9 @@ classdef time < sl.obj.display_class
         end
         function value = get.elapsed_time(obj)
             value = obj.end_time - obj.start_time;
+        end
+        function value = get.start_end_times(obj)
+            value = [obj.start_time obj.end_time]; 
         end
     end
     

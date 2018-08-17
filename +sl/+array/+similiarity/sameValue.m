@@ -16,6 +16,7 @@
 %   Optional Inputs
 %   ---------------
 %   absolute_max_difference: (default: 1e-10)
+%   TODO: Need percent max difference ...
 %
 %   Example
 %   --------

@@ -4,8 +4,8 @@ function varargout = horizontalLines(y_positions,varargin)
 %
 %   JAH TODO: Update documenation
 %
-%   Local Options:
-%   --------------
+%   Optional Inputs
+%   ---------------
 %   y_as_pct: logical (default false)
 %       If true, the y_positions are interpreted as being a fraction of the
 %       range of the current axes [0 1]
@@ -17,7 +17,7 @@ function varargout = horizontalLines(y_positions,varargin)
 %       For when the values are meant to specified in terms of the viewing
 %       limits. 
 %
-%   Other options are passed directly to the line constructor
+%       *** Other options are passed directly to the line constructor
 %
 %   Examples
 %   --------
@@ -30,12 +30,12 @@ in.x_pct_vary_with_zoom = false; %NYI - on zoom, change values
 in.y_as_pct = false; 
 in.x_values = [];
 in.x_pct = [];
-[local_options,line_options] = sl.in.removeOptions(varargin,fieldnames(in),'force_cell',true);
-in = sl.in.processVarargin(in,local_options);
+
+[in,line_options] = sl.in.processVararginWithRemainder(in,varargin);
 
 %NOTE: We need to know the y limit of the parents
 
-n_lines = max([length(y_positions) length(in.x_values) length(in.x_pct)]);
+n_lines = max([length(y_positions) size(in.x_values,1) size(in.x_pct,1)]);
 
 
 

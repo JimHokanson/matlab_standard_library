@@ -4,13 +4,18 @@ classdef calculators
     %   sci.time_series.calculators
     %
     %   This class holds calculators as properties
+    %
+    %   Example
+    %   -------
+    %   c = data.calaculators;
+    %   result = c.eventz.findLocalPeaks(data,'min')
     
     properties
-        frequency
-        spectrogram
-        eventz
-        regression %sci.time_series.calculators.regression
-        derivatives
+        frequency   %sci.time_series.calculators.spectrum_calculators
+        spectrogram %sci.time_series.calculators.spectrogram_calculators
+        eventz      %sci.time_series.calculators.event_calculators
+        regression  %sci.time_series.calculators.regression
+        derivatives %sci.time_series.calculators.derivatives
     end
     
     methods

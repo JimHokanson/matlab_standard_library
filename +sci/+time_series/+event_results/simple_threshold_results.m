@@ -15,10 +15,12 @@ classdef simple_threshold_results < sl.obj.display_class
         original_data %This is only for reference (storage and plotting)
         
         data_stores_equal = true
-        %Goal is to be able to know whether data and original_data are thes
+        %Goal is to be able to know whether data and original_data are the
         %same.
         
         bti %sl.array.bool_transition_info
+        
+        deleted_entries %debugging
         
         start_time
         %TODO: We could do lazy evaluation if we hold onto the
@@ -28,6 +30,8 @@ classdef simple_threshold_results < sl.obj.display_class
         threshold_end_times
         threshold_end_I
         n_samples
+        
+        
     end
     
     properties (Dependent)
@@ -37,14 +41,38 @@ classdef simple_threshold_results < sl.obj.display_class
         rectified_epoch_averages
         epoch_averages_original_data
         rectified_epoch_averages_original_data
+        min_epoch_values %mininum value during each epoch
+        max_epoch_values %maximum value during each epoch
     end
     
     methods
+        function value = get.min_epoch_values(obj)
+            value = zeros(1,obj.n_epochs);
+            raw_data = obj.data.d;
+            start_I = obj.threshold_start_I;
+            end_I = obj.threshold_end_I;
+            for i = 1:obj.n_epochs
+                value(i) = min(raw_data(start_I(i):end_I(i)));
+            end
+        end
+        function value = get.max_epoch_values(obj)
+            value = zeros(1,obj.n_epochs);
+            raw_data = obj.data.d;
+            start_I = obj.threshold_start_I;
+            end_I = obj.threshold_end_I;
+            for i = 1:obj.n_epochs
+                value(i) = max(raw_data(start_I(i):end_I(i)));
+            end
+        end
         function value = get.n_epochs(obj)
             value = length(obj.threshold_start_times);
         end
         function value = get.durations(obj)
             value = obj.threshold_end_times - obj.threshold_start_times;
+            %TODO: This should be fixed earlier in BTI
+            if size(value,1) > 1
+                value = value';
+            end
         end
         function value = get.epoch_averages(obj)
             value = zeros(1,obj.n_epochs);
@@ -177,14 +205,54 @@ classdef simple_threshold_results < sl.obj.display_class
                 value(i) = mean(raw_data(start_I(i):end_I(i)));
             end
         end
-        function deleteEntries(obj,delete_indices_or_mask)
+        function deleteEntries(obj,delete_indices_or_mask,reason,extras)
             %x Delete entries based on indices or mask
             %
-            %   deleteEntries(obj,delete_indices_or_mask)
+            %   deleteEntries(obj,delete_indices_or_mask,*reason,*extras)
+            %
+            %   Inputs
+            %   ------
+            %   delete_indices_or_mask : indices or mask
+            %       Values to be deleted, generally based on some
+            %       calculated property ...
+            %   reason : default 'Unspecified'
+            %       This string goes into a deleted entry ...
+            %
+            %   Examples
+            %   --------
+            %   results.deleteEntries(results.epoch_averages < in.min_average,'low energy removal');
+            
+            if nargin < 3
+                reason = 'Unspecified';
+            end
+            if nargin < 4
+                extras = [];
+            end
+            
+            s = struct;
+            s.threshold_start_times = obj.threshold_start_times(delete_indices_or_mask);
+            s.threshold_start_I = obj.threshold_start_I(delete_indices_or_mask);
+            s.threshold_end_times = obj.threshold_end_times(delete_indices_or_mask);
+            s.threshold_end_I = obj.threshold_end_I(delete_indices_or_mask);
+            s.reason = reason;
+            s.delete = delete_indices_or_mask;
+            if isnumeric(s.delete)
+                s.n_remove = length(s.delete);
+            else 
+                s.n_remove = sum(s.delete);
+            end
+            s.extras = extras;
+            
             obj.threshold_start_times(delete_indices_or_mask) = [];
             obj.threshold_start_I(delete_indices_or_mask) = [];
             obj.threshold_end_times(delete_indices_or_mask) = [];
             obj.threshold_end_I(delete_indices_or_mask) = [];
+            
+            if isempty(obj.deleted_entries)
+                obj.deleted_entries = s;
+            else
+                obj.deleted_entries = [obj.deleted_entries s];
+            end
         end
     end
     

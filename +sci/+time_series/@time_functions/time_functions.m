@@ -24,6 +24,9 @@ classdef time_functions < sl.obj.display_class
         function obj = time_functions(data_objects)
             obj.data_objects = data_objects;
         end
+        function value = getRawTime(obj)
+            value = obj.data_objects.time.getTimeArray();
+        end
         function value = getProp(obj,prop_name)
             %x Retrieves a time property from the objects
             %

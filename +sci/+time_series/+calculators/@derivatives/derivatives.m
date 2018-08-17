@@ -30,10 +30,15 @@ classdef derivatives
             %       Edge samples get this value. The # of samples which
             %       receive this value is depenendent on the width of the
             %       differentiation.
-            %   sample_width :
-            %   time_width :
+            %   sample_width : (default 2)
+            %       # of samples over which to calculate the derivative.
+            %       The default behavior calculates the derivative at
+            %       a point based on the neighboring points.
+            %   time_width : (default, not used)
             %       Time over which to calculate the derivative, centered
-            %       on the sample itself.
+            %       on the sample itself. For example a 1 second width
+            %       calculates the derivate at a point based on samples
+            %       that are 0.5 seconds on either side
             %   filt_freq : default []
             %       Cutoff frequency for lowpass Butterworth filter. If no
             %       frequency is specified no filtering occurs.

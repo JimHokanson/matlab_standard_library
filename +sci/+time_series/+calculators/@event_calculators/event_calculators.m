@@ -21,35 +21,7 @@ classdef event_calculators < sl.obj.display_class
         
         
         
-        result = findLocalPeak(data, search_type, varargin)
-        %TODO: Get this from OW code
-        
-%         function obj =  findPeaks(data,type,varargin)
-%             %x Wrapper for Matlab's findPeaks function.
-%             %
-%             %   This function is a wrapper to Matlab's findPeaks() function.
-%             %   We might remove it if we can provide better functionality
-%             %   in the other functions.
-%             %
-%             %   TODO: the output of this function is hard to deal with/not at
-%             %   all efficient
-%             %   inputs:
-%             %   -data: sci.time_series.data class
-%             %   -varargin: name-value pairs for findpeaks (see matlab documentation)
-%             %   -type:
-%             %       1: just maximums
-%             %       2: just minimums
-%             %       3: both maximums and minimums
-%             %
-%             %   outputs:
-%             %   -obj: sci.time_series.calculators.event_calculators.find_peaks_result
-%             
-%             %   examples:
-%             %{
-%              findPeaks(data,3,'MinPeakHeight',threshold)
-%             %}
-%             obj = sci.time_series.calculators.event_calculators.find_peaks_result(data,type,varargin{:});
-%         end
+        result = findLocalPeaks(data, search_type, varargin)
     end
 end
 

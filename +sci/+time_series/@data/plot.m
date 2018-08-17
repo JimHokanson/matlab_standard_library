@@ -32,7 +32,8 @@ function varargout = plot(objs,varargin)
 %
 %   Time Scale
 %   ------------------------------------------
-%   TODO: Finish this
+%   TODO: Finish this documentation - below are methods for altering the
+%   time
 %   - zero_time
 %   - time_spacing
 %   - absolute time
