@@ -40,7 +40,16 @@ function runc(varargin)
 %   Improvments:
 %   ------------
 %   1) runc last - ???? I'm not sure what I had in mind
-%       since normally we change things ...
+%       since normally we change things ... - I think this in cases
+%       where we are editing deeper code, not the top level code
+%       and we might have copy pasted things
+%      - we would need to register/save the last command - techincally
+%       it is already saved in the file
+%
+%
+%   See Also
+%   --------
+%   z_runc_exec_file
 
 
 %{
@@ -94,11 +103,26 @@ end
 if in.is_raw
     uncommented_str = str;
 else
-    n_newlines = length(strfind(str,sprintf('\n'))); %#ok<SPRINTFN>
-    n_newlines_with_comments = length(regexp(str,'^\s*%','lineanchors'));
-
-    if n_newlines == n_newlines_with_comments
-     	%This fails when we strip multiple lines
+%     n_newlines = length(strfind(str,sprintf('\n'))); %#ok<SPRINTFN>
+%     lines_with_comments = length(regexp(str,'^\s*%','lineanchors'));
+    n_lines_without_comments = length(regexp(str,'^\s*[^%\s]+','lineanchors'));
+    
+    %Tests - copy below and type runc 
+    %-----------------
+    
+    %   Test 1 => n_lines_without_comments = 0
+    %   this line has a comment
+    
+    % Test 2 - include next (empty) line => n_lines_without_comments = 0
+    
+    %{
+        Test 3 - This will fail, we don't support block comments
+        => n_lines_without_comments = 2
+    %}
+    
+    if n_lines_without_comments == 0
+        %   %%uncommented_str = regexprep(str,'^\s*%\s*','','lineanchors');%
+     	%Above fails when we strip multiple lines
         %   e.g.:
         %
         %     %  %Good Comment
@@ -108,8 +132,8 @@ else
         %
         %   The n = 1 doesn't get uncommented because we consume the leading
         %   whitespace since the previous line doesn't have any text
-        %   %%uncommented_str = regexprep(str,'^\s*%\s*','','lineanchors');
-    
+        
+        %Better approach:
         %https://stackoverflow.com/questions/3469080/match-whitespace-but-not-newlines
         uncommented_str = regexprep(str,'^\s*%[^\S\n]*','','lineanchors');
     else
