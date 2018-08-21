@@ -21,7 +21,7 @@ classdef subplotter < sl.obj.display_class
     %   plot(111:120,111:120)
     %   title('2,2');
     
-  
+    
     %
     %   Both of the below methods require
     %   TODO: We could allow passing in columns with which to work
@@ -67,24 +67,24 @@ classdef subplotter < sl.obj.display_class
     %-----------------------------------------------
     methods (Static)
         function subplot_index = linearToSubplotIndex(id,n_rows,n_cols)
-           %
-           %    TODO: Document the point of the function ...
-           %
-           %    subplot_index = sl.plot.subplotter.linearToSubplotIndex(id,n_rows,n_cols)
-           %
-           %    Also works for a vector ...
-           
-           
-           %    TODO: We might want to shadow this in a sl.hg.subplot class
-           
-           %    1  4     =>    1  2
-           %    2  5           3  4
-           %    3  6           5  6 
-           
-           col = floor((id-1)./n_rows) + 1;
-           row = id - n_rows.*(col-1);
-           
-           subplot_index = (row - 1).*n_cols + col;
+            %
+            %    TODO: Document the point of the function ...
+            %
+            %    subplot_index = sl.plot.subplotter.linearToSubplotIndex(id,n_rows,n_cols)
+            %
+            %    Also works for a vector ...
+            
+            
+            %    TODO: We might want to shadow this in a sl.hg.subplot class
+            
+            %    1  4     =>    1  2
+            %    2  5           3  4
+            %    3  6           5  6
+            
+            col = floor((id-1)./n_rows) + 1;
+            row = id - n_rows.*(col-1);
+            
+            subplot_index = (row - 1).*n_cols + col;
         end
     end
     
@@ -101,7 +101,7 @@ classdef subplotter < sl.obj.display_class
             %   shape : 2 element vector [n_rows, n_columns]
             %
             
-            %Push this to getSubplotAxesHandles?? 
+            %Push this to getSubplotAxesHandles??
             if exist('shape','var')
                 handles = findobj(gcf,'Type','axes');
                 grid_handles = reshape(flip(handles),shape(1),shape(2));
@@ -162,48 +162,48 @@ classdef subplotter < sl.obj.display_class
                 varargout{1} = ax;
             end
         end
-%         function axes(obj,row,column)
-%             %x NYI - this is supposed to activate a particular axes
-%             %
-%             %    Calling Forms:
-%             %    --------------
-%             %    1) Specify the index to make active
-%             %    axes(obj,index)
-%             %
-%             %    2) Specify the location to make active by row & column
-%             %    axes(obj,row,column)
-%             %
-%             %    3) Make the next axes active (increment index by 1)
-%             %    axes(obj)
-%             %
-%             %    The goals is to have this be equivalent
-%             %    to calling subplot()
-%             %
-%             %    1) call subplot
-%             %
-%             %    Improvement:
-%             %    ------------
-%             %    1) Implement row_first_indexing
-%             %    2)
-%             %
-%             %    sp = sl.plot.subplotter
-%             
-%             error('Not yet implemented')
-%             
-%             %
-%             keyboard
-%             if nargin == 0
-%                 %Use last index
-%             elseif nargin == 1
-%                 sp_index = row;
-%             else
-%                 %1 2
-%                 %3 4
-%                 %NOTE: This is currently for row_first_indexing = true
-%                 sp_index = column + (row-1)*obj.dims(2);
-%             end
-%             obj.last_index = sp_index;
-%         end
+        function axes(obj,row,column)
+            %x NYI - this is supposed to activate a particular axes
+            %
+            %    Calling Forms:
+            %    --------------
+            %    1) Specify the index to make active
+            %    axes(obj,index)
+            %
+            %    2) Specify the location to make active by row & column
+            %    axes(obj,row,column)
+            %
+            %    3) Make the next axes active (increment index by 1)
+            %    axes(obj)
+            %
+            %    The goals is to have this be equivalent
+            %    to calling subplot()
+            %
+            %    1) call subplot
+            %
+            %    Improvement:
+            %    ------------
+            %    1) Implement row_first_indexing
+            %    2)
+            %
+            %    sp = sl.plot.subplotter
+            
+            error('Not yet implemented')
+            
+            %
+            keyboard
+            if nargin == 0
+                %Use last index
+            elseif nargin == 1
+                sp_index = row;
+            else
+                %1 2
+                %3 4
+                %NOTE: This is currently for row_first_indexing = true
+                sp_index = column + (row-1)*obj.dims(2);
+            end
+            obj.last_index = sp_index;
+        end
         function setRowYLim(obj,row_I,ylim)
             ax = [obj.handles{row_I,:}];
             set(ax,'ylim',ylim);
@@ -219,7 +219,7 @@ classdef subplotter < sl.obj.display_class
             %   latter column would be made to take up 2/3 of the available
             %   width.
             %
-            %   This can change the xlim, so the xlim neeeds to be manual 
+            %   This can change the xlim, so the xlim neeeds to be manual
             %   before this ...
             %
             %   Yikes, I wonder if this is going to change my xlim
@@ -283,26 +283,68 @@ classdef subplotter < sl.obj.display_class
             end
         end
         function setHeightByPct(obj,pct)
+            %X Scale all subplot heights by specified pct
             %
-            %   JAH: At this point ...
-            all_positions = get([obj.handles{1,:}],'position');
+            %   setHeightByPct(obj,pct)
+            %
+            %   Inputs
+            %   ------
+            %   pct : array
+            %       Same # of elements as rows, scales each row by
+            %       specified percentage. Note the final heights are
+            %       normalized to 1
+            %
+            %   Example
+            %   -------
+            %   sp = sl.plot.subplotter(3,1);
+            %   for i = 1:3
+            %       sp.subplot(i,1);
+            %       plot(1:1000)
+            %   end
+            %   sp.setHeightByPct([0.1 0.2 0.3])
+            
+            n_columns_l = obj.dims(2); %l => local
+            n_rows_l = obj.dims(1);
+            
+            %Normalize
+            pct = pct./sum(pct);
+            
+            if length(pct) ~= n_rows_l
+                error('PCT input must have same length as # of rows')
+            end
+            
+            all_positions = get([obj.handles{:,1}],'position');
             
             all_bottoms = cellfun(@(x) x(2),all_positions);
             all_tops = cellfun(@(x) x(2)+x(4),all_positions);
             
-            bottom_extent  = all_bottoms(1);
-            top_extent = all_tops(end);
+            top_extent = all_tops(1);
             
             all_heights = all_tops - all_bottoms;
-            all_time_durations = cellfun(@(x) x(2)-x(1),all_xlims);
+            total_height = sum(all_heights);
             
-            total_width = sum(all_heights);
+            new_heights = pct.*total_height;
             
-            pct_durations = all_time_durations/sum(all_time_durations);
-            new_widths = pct_durations*total_width;
+            gap_heights = all_bottoms(1:end-1) - all_tops(2:end);
             
-            gap_widths = all_bottoms(2:end) - all_tops(1:end-1);
-           keyboard 
+            next_top = top_extent;
+            
+            for iRow = 1:n_rows_l
+                cur_height = new_heights(iRow);
+                for iColumn = 1:n_columns_l
+                    
+                    cur_axes = obj.handles{iRow,iColumn};
+                    cur_position = get(cur_axes,'position');
+                    cur_position(2) = next_top - cur_height;
+                    cur_position(4) = cur_height;
+                    set(cur_axes,'position',cur_position)
+                    
+                    %axis(cur_axes,in.axis)
+                end
+                if iRow ~= n_rows_l
+                    next_top = next_top - cur_height - gap_heights(iRow);
+                end
+            end
         end
         function removeVerticalGap(obj,rows,columns,varargin)
             %x Removes vertical gaps from subplots
@@ -426,21 +468,149 @@ classdef subplotter < sl.obj.display_class
                     %height between these two calls, so we need one that
                     %sets these at the same time
                     a.position.setTopAndBottom(cur_new_top,cur_new_bottom);
-%                     a.position.top = cur_new_top;
-%                     a.position.bottom = cur_new_bottom;
+                    %                     a.position.top = cur_new_top;
+                    %                     a.position.bottom = cur_new_bottom;
                 end
             end
             %TODO: Verify continuity of rows
             %TODO: Verify same axes if removing x labels ...
         end
+        function removeHorizontalGap(obj,varargin)
+            %X removes horizontal gap
+            %
+            %   Optional Inputs
+            %   ---------------
+            %   remove_ticks : default false
+            %       If true the y-ticks are removed, otherwise
+            %       just the numbers are removed (if we remove the labels)
+            %   no_gap_width : default 0.005
+            %       This assumes normalized units. To make things look
+            %       better we keep a very small gap between figures ...
+            %   gap_width : default 0.02
+            %       Gap to use when keeping labels
+            %   remove_labels : default []
+            %       - [] , remove labels if all the same
+            %       - true, forces removal but errors on different 
+            %         y-labels
+            %       - false, don't remove labels
+            %       
+            %
+            %   Improvements
+            %   ------------
+            %   1) Allow optionally y-syncing first
+            %   2) Optional # removal - currently forced with labels
+            %   3) check y-lim
+            
+            in.remove_ticks = false;
+            in.no_gap_width = 0.005;
+            in.gap_width = 0.02;
+            in.remove_labels = []; %empty means do it if you can
+            in = sl.in.processVarargin(in,varargin);
+            
+            n_columns_l = obj.n_columns;
+            n_rows_l = obj.n_rows;
+            
+            remove_y_labels = true;
+            if isempty(in.remove_labels) || in.remove_labels
+                y_labels = cellfun(@(x) x.YLabel.String,obj.handles,'un',0);
+                for i = 1:n_rows_l
+                    if ~all(strcmp(y_labels(i,:),y_labels{i,1}))
+                        if isempty(in.remove_labels)
+                            remove_y_labels = false;
+                            break
+                        else
+                            error('Currently can''t remove ylabels when not the same')
+                            %Requested
+                        end
+                    end
+                end
+            else
+                remove_y_labels = false;
+            end
+            
+            if remove_y_labels
+                for r = 1:n_rows_l
+                    for c = 2:n_columns_l
+                        cur_axis = obj.handles{r,c};
+                        if in.remove_ticks
+                            cur_axis.YTick = [];
+                        else
+                            cur_axis.YTickLabel = [];
+                        end
+                        %TODO: Have option to keep ticks but to remove #s
+                        cur_axis.YLabel = [];
+                    end
+                end
+            end
+            
+            %--------------------------------------------------------------
+            all_positions = get([obj.handles{1,:}],'position');
+            
+            all_lefts = cellfun(@(x) x(1),all_positions);
+            all_rights = cellfun(@(x) x(1)+x(3),all_positions);
+            
+            left_extent  = all_lefts(1);
+            
+            gap_widths = all_lefts(2:end) - all_rights(1:end-1);
+            
+            total_gap_width = sum(gap_widths);
+            
+            if remove_y_labels
+                gap_widths(:) = in.no_gap_width;
+            else
+                gap_widths(:) = in.gap_width;
+            end
+            
+            extra_space = total_gap_width - sum(gap_widths);
+            
+            all_widths = all_rights - all_lefts;
+            
+            pct_widths = all_widths./sum(all_widths);
+            total_width = sum(all_widths) + extra_space;
+            
+            new_widths = pct_widths.*total_width;
+            
+            %Resizing
+            %--------------------------------------------------------------
+            
+            next_left = left_extent;
+            n_columns_l = obj.dims(2); %l => local
+            n_rows_l = obj.dims(1);
+            for iColumn = 1:n_columns_l
+                cur_width = new_widths(iColumn);
+                for iRow = 1:n_rows_l
+                    cur_axes = obj.handles{iRow,iColumn};
+                    cur_position = get(cur_axes,'position');
+                    cur_position(1) = next_left;
+                    cur_position(3) = cur_width;
+                    set(cur_axes,'position',cur_position)
+                    
+                end
+                if iColumn ~= n_columns_l
+                    next_left = next_left + cur_width + gap_widths(iColumn);
+                end
+            end
+            
+        end
         function linkXAxes(obj,varargin)
+            %X Keep same x-limits for all axes
             %
+            %   linkXAxes(obj,varargin)
             %
+            %   Optional Inputs
+            %   ---------------
+            %   by_column : default false
+            %       - true, columns are linked
+            %       - false, all axes are linked, even across columns
+            %
+            %   See Also
+            %   --------
+            %   linkaxes
             
             in.clear_previous_links = false; %NYI
             in.by_column = false;
             in = sl.in.processVarargin(in,varargin);
-                
+            
             h = obj.handles;
             if in.by_column
                 for i = 1:obj.n_columns
@@ -453,28 +623,41 @@ classdef subplotter < sl.obj.display_class
                 all_handles = [h{:}];
                 linkaxes(all_handles,'x');
                 %syncLimits(all_handles,'XLim');
-             	%linkprop(ax,'XLim');
+                %linkprop(ax,'XLim');
             end
         end
         function linkYAxes(obj,varargin)
-                        
-            in.clear_previous_links = false; %NYI  
+            %X Keep same y-limits for all axes
+            %
+            %   linkYAxes(obj,varargin)
+            %
+            %   Currently I've only implemented linking each row
+            %   independently, eventually we could link all rows ...
+            %
+            %   See Also
+            %   --------
+            %   linkaxes
+            
+            in.clear_previous_links = false; %NYI
+            in.by_row = true; %NYI
             in = sl.in.processVarargin(in,varargin);
-
+            
             for i = 1:obj.n_rows
                 %TODO: Do we need to expand first
                 %I think this sometimes shrinks rather than expanding :/
                 ax = [obj.handles{i,:}];
                 linkaxes(ax,'y')
                 %syncLimits(ax,'YLim');
-             	%linkprop(ax,'YLim');
+                %linkprop(ax,'YLim');
             end
         end
         function changeWidths(obj,new_width)
+            %X NYI
             %TODO: Not sure how we want to organize this ...
+            error('Not yet implemented')
         end
     end
-
+    
     
 end
 
