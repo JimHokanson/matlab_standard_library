@@ -30,11 +30,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 
     //   Usage
     //   -----
-    //   output_data = compressStream(uint8_data);
+    //   output_data = compressStream(uint8_data,level);
 
-    if (nrhs != 1){
+    if (!(nrhs == 1 || nrhs == 2)){
         mexErrMsgIdAndTxt("SL:compressStream:call_error","Invalid # of inputs, 2 expected");
     }else if (!mxIsClass(prhs[0],"uint8")){
+        mexErrMsgIdAndTxt("SL:compressStream:call_error","The 1st input must be of type uint8");
+    }
+    
+    if (nrhs == 2 && !mxIsClass(prhs[1],"double")){
         mexErrMsgIdAndTxt("SL:compressStream:call_error","The 1st input must be of type uint8");
     }
     
@@ -57,6 +61,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     
     //---------------------------------------------------------------------
     
+    int level = 6;
+    if (nrhs == 2){
+        level = (int)mxGetScalar(prhs[1]);
+        if (level < 0){
+            mexErrMsgIdAndTxt("SL:compressStream:call_error","Level invalid range, observed value below 0");
+        }else if (level > 9){
+            mexErrMsgIdAndTxt("SL:compressStream:call_error","Level invalid range, observed value above 9");
+        }   
+    }
+    
     int ret;
     mwSize total_out;
     
@@ -68,7 +82,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     strm.opaque = Z_NULL;
     
     //TODO: Pass in the level optionally
-    ret = deflateInit(&strm, 6);
+    //Second input is the level => 1
+    ret = deflateInit(&strm, level);
     
     if (ret != Z_OK){
         mexPrintf("Return: %d",ret);
