@@ -55,6 +55,7 @@ function varargout = plot(objs,varargin)
 
 % in.slow = false;
 %in.use_absolute_time = true;   NYI
+in.time_offset = [];
 in.epoch = '';
 in.zero_time = false;
 in.quick_plot = true;
@@ -63,8 +64,11 @@ in.time_shift = true;
 in.time_spacing = [];
 in.axes = {};
 in.channels = 'all';
-[local_options,plotting_options] = sl.in.removeOptions(varargin,fieldnames(in),'force_cell',true);
-in = sl.in.processVarargin(in,local_options);
+
+[in,plotting_options] = sl.in.processVararginWithRemainder(in,varargin);
+
+% [local_options,plotting_options] = sl.in.removeOptions(varargin,fieldnames(in),'force_cell',true);
+% in = sl.in.processVarargin(in,local_options);
 
 
 if ~isempty(in.epoch)
@@ -91,9 +95,12 @@ if ~isempty(in.time_spacing)
             last_time_obj.end_time + in.time_spacing;
         last_time_obj = cur_time_obj;
     end
-    
+elseif ~isempty(in.time_offset)
+    for iObj = 1:length(time_objs_for_plot)
+        cur_time_obj = time_objs_for_plot(iObj);
+        cur_time_obj.start_offset = cur_time_obj.start_offset + in.time_offset;
+    end    
 elseif in.zero_time
-    
     for iObj = 1:length(time_objs_for_plot)
         cur_time_obj = time_objs_for_plot(iObj);
         cur_time_obj.start_offset = 0;

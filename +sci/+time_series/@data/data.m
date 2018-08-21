@@ -677,6 +677,8 @@ classdef data < sl.obj.handle_light
             %   times = 10000:200:10600
             %   data.plotMarkers(times,'k*','MarkerSize',10)
             
+            in.time_offset = [];
+            in.zero_time = false;
             in.is_time = true;
             [in,varargin] = sl.in.processVararginWithRemainder(in,varargin);
             
@@ -691,7 +693,12 @@ classdef data < sl.obj.handle_light
                 I = times;
                 times = obj.ftime.getTimesFromIndices(I);
             end
-            plot(times,obj.d(I),varargin{:})
+            if ~isempty(in.time_offset)
+                times = times + in.time_offset;
+            elseif in.zero_time
+                times = times - obj.time.start_time;
+            end
+         	plot(times,obj.d(I),varargin{:})
         end
     end
     
@@ -1329,9 +1336,13 @@ classdef data < sl.obj.handle_light
             
             out_objs = copy(A);
             for iObj = 1:length(A)
-                out_objs(iObj).d = diff(A(iObj).d,N,1);
-                out_objs(iObj).addHistoryElements(history_string);
                 temp_time = out_objs(iObj).time;
+                
+                %Scaling by time so units of per seconds ....
+                %TODO: Ideally we would support renaming y label
+                out_objs(iObj).d = diff(A(iObj).d,N,1)./(temp_time.dt*N);
+                out_objs(iObj).addHistoryElements(history_string);
+                
                 temp_time.n_samples = size(out_objs(iObj).d,1);
                 time_shift = temp_time.dt*0.5*N;
                 temp_time.start_offset = temp_time.start_offset + time_shift;
