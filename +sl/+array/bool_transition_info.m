@@ -296,6 +296,7 @@ classdef bool_transition_info < sl.obj.display_class
             
             %These could all be made dependent
             
+            %We should write this in mex and use SIMD ...
             obj.true_start_indices  = find(~temp_logic(1:end-1) & temp_logic(2:end));
             obj.false_start_indices = find(temp_logic(1:end-1) & ~temp_logic(2:end));
             
