@@ -55,6 +55,7 @@ function varargout = plot(objs,varargin)
 
 % in.slow = false;
 %in.use_absolute_time = true;   NYI
+in.epoch = '';
 in.zero_time = false;
 in.quick_plot = true;
 in.time_units = 's';
@@ -64,6 +65,15 @@ in.axes = {};
 in.channels = 'all';
 [local_options,plotting_options] = sl.in.removeOptions(varargin,fieldnames(in),'force_cell',true);
 in = sl.in.processVarargin(in,local_options);
+
+
+if ~isempty(in.epoch)
+   temp = cell(1,length(objs));
+   for i = 1:length(objs)
+      temp{i} =  objs(i).subset.fromEpoch(in.epoch);
+   end
+   objs = [temp{:}];
+end
 
 time_objs = [objs.time];
 
