@@ -9,6 +9,7 @@ classdef linear_regression_result < sci.time_series.calculators.regression.resul
     
     properties
         training_data
+        coeffs
         slope
         intercept
     end

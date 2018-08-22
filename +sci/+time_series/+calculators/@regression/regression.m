@@ -25,6 +25,7 @@ classdef regression < sl.obj.display_class
             %Result population
             %---------------------------------------
             result = sci.time_series.calculators.regression.linear_regression_result();
+            result.coeffs = b;
             result.slope = b(2);
             result.intercept = b(1);
             result.training_data = data;
