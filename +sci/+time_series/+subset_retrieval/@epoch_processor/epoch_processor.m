@@ -28,8 +28,9 @@ classdef epoch_processor < sci.time_series.subset_retrieval.processor
         un = true;
         align_time_to_start = false;
         
+        %TODO: d1 info is confusing, which calling form???
         d1 = '---------   Specific to calling form ------'
-        percent
+        percent %2 elements for 
         time_offsets
         sample_offsets
     end

@@ -32,7 +32,7 @@ classdef linear_regression_result < sci.time_series.calculators.regression.resul
             clf
             plot(obj.training_data)
             hold on
-            time = obj.orig_time;
+            [~, time] = obj.training_data.getRawDataAndTime();
             plot(time, obj.y_hat, 'LineWidth', 4)
             
         end

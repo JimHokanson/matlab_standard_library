@@ -76,19 +76,24 @@ s = sl.hg.figure.getSubplotAxesHandles(gcf)
     
     %left bottom heigh width
     
-    unique_col_positions = unique(positions(:,1)); %lefts
-    unique_row_positions = unique(positions(:,2)); %bottoms
+    TOLERANCE = 0.0001;
+    
+    unique_col_positions = uniquetol(positions(:,1),TOLERANCE); %lefts
+    unique_row_positions = uniquetol(positions(:,2),TOLERANCE); %bottoms
     
     n_rows = length(unique_row_positions);
     n_cols = length(unique_col_positions);
+    
+    [~,r_I] = ismembertol(positions(:,2),unique_row_positions,TOLERANCE);
+    [~,c_I] = ismembertol(positions(:,1),unique_col_positions,TOLERANCE);
     
     temp = cell(n_rows,n_cols);
     
     for i = 1:length(handles)
         cur_h = handles(i);
-        r_I = find(positions(i,2) == unique_row_positions);
-        c_I = find(positions(i,1) == unique_col_positions);
-        temp{r_I,c_I} = cur_h;
+%         r_I = find(positions(i,2) == unique_row_positions);
+%         c_I = find(positions(i,1) == unique_col_positions);
+        temp{r_I(i),c_I(i)} = cur_h;
     end
     
     temp1 = [temp{:}];

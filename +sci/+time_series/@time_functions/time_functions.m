@@ -205,8 +205,15 @@ classdef time_functions < sl.obj.display_class
             
             %TODO: Use h__getNewTimeObject
             
-            start_index_1 = h__timeToSamples(dobj,start_times(1)+new_time_range(1));
-            end_index_1   = h__timeToSamples(dobj,start_times(1)+new_time_range(2));
+            %Lazy fix for when first event is too close to start of data
+            %...
+%             try
+                start_index_1 = h__timeToSamples(dobj,start_times(1)+new_time_range(1));
+                end_index_1   = h__timeToSamples(dobj,start_times(1)+new_time_range(2));
+%             catch
+%                 start_index_1 = h__timeToSamples(dobj,start_times(2)+new_time_range(1));
+%                 end_index_1   = h__timeToSamples(dobj,start_times(2)+new_time_range(2));    
+%             end
             
             dStart_index = indices(1) - start_index_1;
             dEnd_index   = end_index_1 - indices(1);

@@ -205,6 +205,14 @@ classdef subplotter < sl.obj.display_class
             obj.last_index = sp_index;
         end
         function setRowYLim(obj,row_I,ylim)
+            %X Set ylim of all axes in a row
+            %
+            %   setRowYLim(obj,row_I,ylim)
+            %   
+            %   Examples
+            %   --------
+            %   sp.setRowYLim(3,[-0.2 0.2])
+            
             ax = [obj.handles{row_I,:}];
             set(ax,'ylim',ylim);
         end
