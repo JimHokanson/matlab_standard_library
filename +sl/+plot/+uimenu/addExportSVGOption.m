@@ -21,7 +21,11 @@ is_menu_class = arrayfun(@(x) isa(x,'matlab.ui.container.Menu'),c);
 
 c_menu = c(is_menu_class);
 
-I = find(strcmp({c_menu.Text},'Custom'),1);
+if isempty(c_menu)
+    I = [];
+else
+    I = find(strcmp({c_menu.Text},'Custom'),1);
+end
 
 add_menu = true;
 if ~isempty(I)

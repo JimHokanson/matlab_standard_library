@@ -199,13 +199,16 @@ else
     all_names  = cell(1,n_lines);
     all_values = cell(1,n_lines);
     
+%     try
     for iProp = 1:n_lines
         cur_set  = temp{iProp};
         if isempty(cur_set)
             %Add on value to previous entry
             is_valid(iProp)  = false;
+            if last_valid_line > 0
             last_valid_value = all_values{last_valid_line};
             all_values{last_valid_line} = sprintf('%s\n%s',last_valid_value,lines{iProp});
+            end
         else
             all_spaces{iProp} = cur_set{1};
             all_names{iProp}  = cur_set{2};
@@ -214,6 +217,9 @@ else
             last_valid_line   = iProp;
         end
     end
+%     catch ME
+%         keyboard
+%     end
     
     all_spaces(~is_valid) = [];
     all_names(~is_valid)  = [];

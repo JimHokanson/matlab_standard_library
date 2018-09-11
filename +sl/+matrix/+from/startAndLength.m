@@ -1,16 +1,29 @@
 function output = startAndLength(data,start_Is,n_samples,varargin)
+%X Create a matrix from an array by specifying start points
 %
 %   output = sl.matrix.from.startAndLength(data,start_Is,n_samples)
 %
+%   Inputs
+%   ------
+%   start_Is : 
+%       Start indices of where to grab.
+%   n_samples :
+%       # of samples to grab. This must be a scalar
+%   
 %   Optional Inputs
 %   ---------------
-%   by_row: true
+%   by_row: (default true)
 %       - true, samples from each start occupies a single row
 %       - false, samples from each start occupies a single column
 %
 %   Example
 %   -------
 %   wtf = sl.matrix.from.startAndLength(d1,I-5,15)
+%
+%   Improvements
+%   ------------
+%   1) We could allow a variable # of samples per grab, with some default
+%   padding.
 
 in.by_row = true;
 in = sl.in.processVarargin(in,varargin);

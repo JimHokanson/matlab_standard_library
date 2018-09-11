@@ -23,7 +23,10 @@ function out = MatrixFromStartsAndLength(data_in,starts,n_samples_per_grab)
 %   I also wrote:
 %   sl.matrix.from.startAndLength
 %
-%   I'm not sure which approach is better ...
+%   I'm not sure which approach is better ... (I think we should
+%   prefer output based methods ...) - with optional shadowing
+
+%TODO: Remove this and call sl.matrix.from.startAndLength
 
 n_grabs = length(starts);
 

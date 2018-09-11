@@ -290,6 +290,52 @@ classdef subplotter < sl.obj.display_class
                 end
             end
         end
+        function setWidthByPct(obj,pct)
+            n_columns_l = obj.dims(2); %l => local
+            n_rows_l = obj.dims(1);
+            
+            %Normalize
+            pct = pct./sum(pct);
+            
+            if length(pct) ~= n_columns_l
+                error('PCT input must have same length as # of rows')
+            elseif n_columns_l == 1
+                error('Function not defined for a single column')
+            end
+            
+            all_positions = get([obj.handles{1,:}],'position');
+            
+            all_lefts = cellfun(@(x) x(1),all_positions);
+            all_rights = cellfun(@(x) x(1)+x(3),all_positions);
+            
+            left_extent = all_lefts(1);
+            
+            all_widths = all_rights - all_lefts;
+            total_width = sum(all_widths);
+            
+            new_widths = pct.*total_width;
+            
+            gap_widths = all_lefts(2:end) - all_rights(1:end-1);
+            
+            next_left = left_extent;
+            
+            for iCol = 1:n_columns_l
+                cur_width = new_widths(iCol);
+                for iRow = 1:n_rows_l
+                    
+                    cur_axes = obj.handles{iRow,iCol};
+                    cur_position = get(cur_axes,'position');
+                    cur_position(1) = next_left;
+                    cur_position(3) = cur_width;
+                    set(cur_axes,'position',cur_position)
+                    
+                    %axis(cur_axes,in.axis)
+                end
+                if iCol ~= n_columns_l
+                    next_left = next_left + cur_width + gap_widths(iCol);
+                end
+            end
+        end
         function setHeightByPct(obj,pct)
             %X Scale all subplot heights by specified pct
             %
@@ -319,6 +365,8 @@ classdef subplotter < sl.obj.display_class
             
             if length(pct) ~= n_rows_l
                 error('PCT input must have same length as # of rows')
+            elseif n_rows_l == 1
+                error('Function not defined for a single row')    
             end
             
             all_positions = get([obj.handles{:,1}],'position');

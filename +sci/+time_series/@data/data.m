@@ -278,6 +278,13 @@ classdef data < sl.obj.handle_light
             obj.channel_labels = in.channel_labels;
             obj.history = in.history;
         end
+        function sr = getSubsetRetriever(objs)
+           sr = sci.time_series.subset_retrieval(objs);
+        end
+        function dispSubsetRetrievalHelp(objs)
+           %TODO: Provide links here ... 
+           
+        end
         function new_objs = copy(old_objs,varargin)
             %x Creates a deep copy of the object
             %
@@ -966,6 +973,32 @@ classdef data < sl.obj.handle_light
     
     %Data changing --------------------------------------------------------
     methods
+        function [output,time] = getReps(obj,start_times,window)
+           %
+           %
+           %    [output,time] = data.getReps(start_times,window)
+           %
+           %    For now this has been written to only suppport a single
+           %    channel with raw data output ...
+           
+           if length(obj) > 1
+              error('Code only supports a single object')
+           end
+           
+           if length(window) ~= 2
+              error('Window must have a size of 2') 
+           end
+           
+           raw_data = obj.d;
+           fs = obj.time.fs;
+           samples = round(window.*fs);
+           n_samples_l = samples(2)-samples(1)+1; %l => local
+           start_I = obj.ftime.getNearestIndices(start_times);
+           
+           output = sl.matrix.from.startAndLength(raw_data,start_I+samples(1),n_samples_l,'by_row',false);
+           time = linspace(window(1),window(2),n_samples_l);
+           
+        end
         function new_objs = lowpass(objs,f_low,varargin)
             ORDER = 1;
             filter_design = sci.time_series.filter.butter(ORDER,f_low,'low');

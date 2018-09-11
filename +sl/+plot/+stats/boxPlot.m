@@ -7,7 +7,9 @@ function result = boxPlot(x_data,varargin)
 %   
 %   Data formats
 %   ------------
-%   
+%   x_matrix : [observations x types]   
+%
+%
 %
 %   Optional Inputs
 %   ---------------
@@ -33,11 +35,11 @@ else
         temp{i} = sl.plot.stats.results.box_plot_entry(gca,h(:,i),x_data(:,i));
     end
     entries = [temp{:}];
-    result = sl.plot.stats.results.box_plot_result(entries);
+    result = sl.plot.stats.results.box_plot_result(gca,entries);
 end
 
-
-
+%Add on option to save as SVG
+sl.plot.uimenu.addExportSVGOption(gcf)
 
 
 end
