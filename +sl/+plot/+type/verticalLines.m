@@ -1,4 +1,5 @@
 function varargout = verticalLines(x_positions,varargin)
+%x Plots vertical lines on a graph ...
 %
 %   line_handles = sl.plot.type.verticalLines(x_positions,varargin)
 %
@@ -9,9 +10,8 @@ function varargout = verticalLines(x_positions,varargin)
 %
 %   Optional Inputs, all line properties as well as:
 %   ------------------------------------------------
-%   x_as_pct : false
-%       If true the x values should be related to the
-%
+%   x_as_pct : false (NYI)
+%       If true the x values should be related to the axis size.
 %   y_values: [n 2] numeric array
 %       Column 1: y starts
 %       Column 2: y stops
@@ -19,11 +19,12 @@ function varargout = verticalLines(x_positions,varargin)
 %       For when the values are meant to specified in terms of the viewing
 %       limits. 
 %       NOT YET IMPLEMENTED: 
-%
 %   parent: 
 %       Can be used to specify which axes to plot into ...
 %
-%   TODO: Finish documentation
+%   Examples
+%   --------
+%   
 
 %A potentially useful reference
 %Check this out: http://www.mathworks.com/matlabcentral/fileexchange/1039-hline-and-vline
@@ -45,7 +46,7 @@ if n_lines > length(x_positions)
         %scaler passed in, replicated based on x specification
         x_positions = repmat(x_positions,[n_lines 1]);
     else
-        error('WTFasdfasdfasdf: TODO: Make me clearer')
+        error('Mismatch in the # of lines based on # of x_positions and # of y_values')
     end
 end
 

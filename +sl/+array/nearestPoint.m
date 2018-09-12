@@ -16,12 +16,16 @@ function result = nearestPoint(x,y,mode,varargin)
 %
 %       TODO: Implement 'n' and 'n1'
 %
+%       p - previous (backwards)
+%       n - next (forwards)
+%
 %
 %   Outputs
 %   -------
 %   result : Type depends on mode
-%       'p' - array, indices correspond to x, values are indices of y
-%             that just preceeded the given x index
+%       'p' - array of length x 
+%               - indices correspond to x
+%               - values are indices of y that just preceeded the given x index
 %       'p1' - sl.array.nearestPoint.previous_single_result
 %       'n'  - NYI
 %       'n1' - NYI
@@ -39,6 +43,10 @@ function result = nearestPoint(x,y,mode,varargin)
 %   y = [4 5 6 10];
 %   result = sl.array.nearestPoint(x,y,'p','verify',true)
 %   => [0 3 3 4 4 4]
+%   % 2  - Had no values in y preceeding, thus takes on 0 value
+%   % 8  - Had y(3) just before it
+%   % 9  - Had y(3) just before it
+%   % 10 - Had y(4) just before it
 %   
 %   x = [2,8,9,11,13,15];
 %   y = [4 5 6 13];
