@@ -252,6 +252,10 @@ classdef subplotter < sl.obj.display_class
             in.axis = 'normal';
             in = sl.in.processVarargin(in,varargin);
             
+            if obj.n_columns == 1
+                return
+            end
+            
             all_positions = get([obj.handles{1,:}],'position');
             all_xlims     = get([obj.handles{1,:}],'xlim');
             
@@ -402,6 +406,27 @@ classdef subplotter < sl.obj.display_class
                 end
             end
         end
+        function transferRowData(obj,source_row,dest_row,y_range)
+            %NYI
+            %
+            %   Goal, transfer data from one row of plots to another
+            %   then delete the source row. Data should be scaled to
+            %   the specified range on the new plot. If the new range
+            %   is not within the plotted range, expand the plot
+            %   accordingly.
+        end
+        function stackColumns(obj)
+            %NYI
+            %
+            %   Take all columns and plot as one row.
+           keyboard 
+        end
+        function clearColumn(obj,column)
+            for i = 1:obj.n_rows
+                cur_axes = obj.handles{i,column};
+                delete(cur_axes)
+            end
+        end
         function removeVerticalGap(obj,rows,columns,varargin)
             %x Removes vertical gaps from subplots
             %
@@ -424,7 +449,9 @@ classdef subplotter < sl.obj.display_class
             %        between figures.
             %    remove_x_labels : logical (default true)
             %
-            %
+            %   Improvements
+            %   ------------
+            %   1) Doesn't work if first column is not yet plotted ...
             
             if nargin == 1
                 rows = 1:obj.n_rows;
@@ -564,6 +591,11 @@ classdef subplotter < sl.obj.display_class
             in = sl.in.processVarargin(in,varargin);
             
             n_columns_l = obj.n_columns;
+            
+            if n_columns_l == 1
+                return
+            end
+            
             n_rows_l = obj.n_rows;
             
             remove_y_labels = true;
@@ -677,6 +709,13 @@ classdef subplotter < sl.obj.display_class
                 end
             else
                 all_handles = [h{:}];
+                %TODO: Warning: Excluding ColorBars, Legends and non-axes 
+                %Can we disable this ????
+                %'MATLAB:linkaxes:RequireDataAxes'
+                %
+                %- gets thrown for deleted axes
+                
+                all_handles = all_handles(isvalid(all_handles));
                 linkaxes(all_handles,'x');
                 %syncLimits(all_handles,'XLim');
                 %linkprop(ax,'XLim');
