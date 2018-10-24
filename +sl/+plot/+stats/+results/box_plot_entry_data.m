@@ -1,4 +1,4 @@
-classdef box_plot_entry_data < handle
+classdef box_plot_entry_data < sl.obj.display_class
     %
     %   Class:
     %   sl.plot.stats.results.box_plot_entry_data
@@ -38,11 +38,24 @@ classdef box_plot_entry_data < handle
             obj.box_width = box_width;
         end
         function renderScatterData(obj,varargin)
+            %X Renders raw data as scatter plot over the boxplot
             %
-            %
+            %   Optional Inputs
+            %   ---------------
+            %   marker : default 'o'
+            %       Shape of the marker.
+            %   color : default 'k'
+            %       Inner color. No outer color is currently supported
+            %   alpha : default 0.6
+            %   rng_seed : default 9
+            %       This is done to allow reproducability of the random
+            %       scatter.
+            %   marker_size : default 100
+            %   pct_width : default 0.5
             %   
             
-            %TODO: We could allow different sizes as well ...
+            %TODO: We could allow different sizes as well ... i.e. pass
+            %   in a size vector?
             
             in.marker = 'o';
             in.color = 'k';
@@ -55,10 +68,12 @@ classdef box_plot_entry_data < handle
             obj.rng_seed = in.rng_seed;
             obj.pct_box_width_scatter = in.pct_width;
             
+            %Update seed for random number generator, hold onto previous
+            %one (r1)
             r1 = rng(in.rng_seed);
             x1 = rand(1,length(obj.non_outlier_data));
             x1 = x1./max(x1);
-            rng(r1);
+            rng(r1); %restore previous rng seed
             
             x_min = obj.x_center - in.pct_width*obj.box_width/2;
             total_width = obj.box_width*in.pct_width;
@@ -76,7 +91,13 @@ classdef box_plot_entry_data < handle
             hold off
             
         end
-        function moveX(obj,new_x_value)
+        function setXCenter(obj,new_x_value)
+            old_x = obj.x_center;
+            dx = new_x_value - old_x;
+            obj.x_center = new_x_value;
+            if ~isempty(obj.h_scatter)
+                obj.h_scatter.XData = obj.h_scatter.XData + dx;
+            end
             
         end
         function changeWidth(obj,new_width)
