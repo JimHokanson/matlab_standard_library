@@ -1,4 +1,5 @@
 function [data,extras] = mergeFromCells(cell_data)
+%x Create a vector of data from cells which contain vectors
 %
 %   [data,extras] = sl.array.mergeFromCells(cell_data)
 %
