@@ -420,7 +420,25 @@ classdef subset_retrieval < sl.obj.display_class
             output = h__executeGeneric(obj,ep,p_only);
         end
         function output = fromStartAndStopTimes(obj,start_times,stop_times,varargin)
+            %
+            %   TODO: Document these functions ...
+            %   
+            %
+            %   See Also
+            %   --------
+            %   ep = sci.time_series.subset_retrieval.generic_processor;
+            
+            if nargin == 1 || isempty(stop_times)
+                if length(start_times) == 2
+                    stop_times = start_times(2);
+                    start_times = start_times(1);
+                else
+                    stop_times = start_times(:,2);
+                    start_times = start_times(:,1);
+                end
+            end
             [ep,p_only] = h__initGeneric(varargin);
+            %ep : sci.time_series.subset_retrieval.generic_processor;
             ep.start_times = start_times;
             ep.stop_times = stop_times;
             output = h__executeGeneric(obj,ep,p_only);

@@ -16,6 +16,7 @@ classdef time < sl.obj.display_class
     %
     %   See Also:
     %   sci.time_series.data
+    %   sci.time_series.time_functions
     
     properties
         start_datetime %
@@ -374,19 +375,24 @@ classdef time < sl.obj.display_class
             times = obj.start_offset + (indices-1)*obj.dt;
             times = h__getTimeScaled(obj,times);
         end
-        function [indices,result] = getNearestIndices(obj,times)
+        function [indices,result] = getNearestIndices(obj,times,varargin)
             %x Given a set of times, return the closest indices
             %
             %   [indices,result] = getNearestIndices(obj,times)
             %
-            %   Inputs:
-            %   -------
-            %   times:
+            %   Inputs
+            %   ------
+            %   times : vector
             %
-            %   Outputs:
-            %   --------
-            %   indices :
+            %   Optional Inputs
+            %   ----------------
+            %
+            %   Outputs
+            %   -------
+            %   indices : Closest indices
             %   result : sci.time_series.time.nearest_indices_result
+            %
+            %   
             %
             %   Improvements:
             %   -------------
@@ -396,6 +402,9 @@ classdef time < sl.obj.display_class
             %   that samples that were almost out of bounds should be
             %   rounded to the edges i.e. index of 0.3 could go to 1
             %   instead of 0 - I also might have meant floor and ceiling)
+            
+            in.relative_time = false;
+            in = sl.in.processVarargin(in,varargin);
             
             if isempty(times)
                indices = [];
@@ -410,7 +419,11 @@ classdef time < sl.obj.display_class
             
             times = h__unscaleTime(obj,times);
             
-            raw_indices = (times - obj.start_offset)./obj.dt;
+            if in.relative_time
+                raw_indices = times./obj.dt;
+            else
+                raw_indices = (times - obj.start_offset)./obj.dt;
+            end
             indices = round(raw_indices)+1;
             
             %Error check on indices being in bounds

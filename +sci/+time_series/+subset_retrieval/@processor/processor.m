@@ -39,6 +39,10 @@ classdef processor < handle
     methods
         function data_subset_objs = getSubset(obj,objs)
             
+            
+            %Note this is an abstract implementation ...
+            %See:
+            %   sci.time_series.subset_retrieval.generic_processor>getStartAndStopSamples
             [start_samples,stop_samples] = obj.getStartAndStopSamples(objs);
             %start_samples & stop_samples : {1 x n_objects}[1 x n_times]
             
@@ -150,20 +154,26 @@ classdef processor < handle
     end
     
     methods (Static)
-        function samples = timesToSamples(data_objs,times)
+        function samples = timesToSamples(data_objs,times,varargin)
             %
             %   Inputs
             %   ------
-            %   data_objs
+            %   data_objs : sci.time_series.data
             %   times: cell array, 1 for each object
             %   
+            
+            in.relative_time = false;
+            in = sl.in.processVarargin(in,varargin);
             
             n_objs = length(data_objs);
             samples = cell(1,n_objs);
             for iObj = 1:n_objs
                 cur_obj = data_objs(iObj);
                 cur_times = times{iObj};
-                samples{iObj} = cur_obj.ftime.getNearestIndices(cur_times);
+                %sci.time_series.time
+                %ftime : sci.time_series.time_functions
+                samples{iObj} = cur_obj.ftime.getNearestIndices(cur_times,...
+                    'relative_time',in.relative_time);
             end
         end
     end

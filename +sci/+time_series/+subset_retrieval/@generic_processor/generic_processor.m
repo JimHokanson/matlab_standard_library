@@ -20,6 +20,10 @@ classdef generic_processor < sci.time_series.subset_retrieval.processor
     %   1) Support broadcasting the samples or times to each object
     %
     %
+    %   See Also
+    %   --------
+    %   sci.time_series.subset_retrieval.processor
+    %
     %   Ignore
     %   ------
     %#ok<*PROPLC>  - using variable the same as object property name
@@ -37,7 +41,11 @@ classdef generic_processor < sci.time_series.subset_retrieval.processor
         subset_pct %[start stop] values should be between 0 and 1
         
       	un = true;
+        
+        %This doesn't look like it is used ...
         align_time_to_start = false;
+        
+        relative_time = false
     end
     
     methods
@@ -60,7 +68,8 @@ classdef generic_processor < sci.time_series.subset_retrieval.processor
             if ~isempty(obj.start_times)
                 start_times = cell(1,n_objects);
                 start_times(:) = {obj.start_times};
-                start_samples = obj.timesToSamples(data_objects,start_times);
+                start_samples = obj.timesToSamples(data_objects,start_times,...
+                    'relative_time',obj.relative_time);
             elseif ~isempty(obj.start_samples)
                 start_samples = cell(1,n_objects);
                 start_samples(:) = {obj.start_samples};
@@ -88,7 +97,8 @@ classdef generic_processor < sci.time_series.subset_retrieval.processor
                 elseif ~isempty(obj.stop_times)
                     stop_times = cell(1,n_objects);
                     stop_times(:) = {obj.stop_times};
-                    stop_samples = obj.timesToSamples(data_objects,stop_times);
+                    stop_samples = obj.timesToSamples(data_objects,stop_times,...
+                        'relative_time',obj.relative_time);
                 elseif ~isempty(obj.time_duration)
                     stop_samples = cellfun(@(x,y) x + y.ftime.durationToNSamples(obj.time_duration),...
                         start_samples,num2cell(data_objects),'un',0);
