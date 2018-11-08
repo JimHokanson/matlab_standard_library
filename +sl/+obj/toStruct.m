@@ -23,7 +23,7 @@ function s_objs = toStruct(objs,varargin)
 %   
 %   Optional Inputs:
 %   ----------------
-%   fields_to_remove : (default '')
+%   fields_to_remove : char or cellstr (default '')
 %   
 %   See Also:
 %   sl.struct.toObject
