@@ -1600,7 +1600,38 @@ classdef data < sl.obj.handle_light
                 output = [temp{:}];
             end
         end
+        function output = var(objs,varargin)
+            %
+            %
+            %   
+            
+           	in.dim = 1;
+            in.un = true;
+            in = sl.in.processVarargin(in,varargin);
+            
+            if in.dim ~= 1
+                error('Only dim=1 is currently supported')
+            end
+            
+            n_objs = length(objs);
+            temp = cell(1,n_objs);
+            for iObj = 1:n_objs
+                temp{iObj} = var(objs(iObj).d,0,in.dim);
+            end
+            
+            if ~in.un
+                output = temp;
+            else
+                if any(cellfun(@numel,temp) ~= 1)
+                    error('One of the objects has more than 1 channel or rep, "''un'',0" required for the input')
+                end
+                output = [temp{:}];
+            end
+        end
         function output = sum(objs,varargin)
+            %
+            %
+            %   
             
             in.dim = 1;
             in.un = true;
