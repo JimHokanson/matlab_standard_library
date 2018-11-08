@@ -1,9 +1,10 @@
 function initialize()
 %x Initializes the standard library
+%
+%   sl.initialize()
 %   
 %   Add to this anything that needs to be run on initialization of the
 %   standard library.
-%   
 
 repo_root = sl.stack.getPackageRoot;
 
@@ -22,7 +23,9 @@ cd(fileparts(repo_root));
 %Adding other directories
 %---------------------------------------------
 gnf_dir = fullfile(repo_root,'global_namespace_functions');
+temp_fcns_dir = fullfile(gnf_dir,'temp__dynamic_functions');
 addpath(gnf_dir)
+addpath(temp_fcns_dir)
 
 fex_dir = fullfile(repo_root,'fex');
 addpath(fex_dir)

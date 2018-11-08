@@ -3,6 +3,11 @@ function s = initialize(field_names,size)
 %
 %   s = sl.struct.initialize(field_names,size)
 %
+%   Inputs
+%   ------
+%   field_names : 
+%   size : 
+%
 %   Examples
 %   --------
 %   s = sl.struct.initialize({'cheese','top'},[1 4]);
@@ -13,6 +18,9 @@ function s = initialize(field_names,size)
 %       cheese
 %       top
 
+if length(size) == 1
+    size = [1 size];
+end
 
 if isempty(field_names)
     last_index = num2cell(size);

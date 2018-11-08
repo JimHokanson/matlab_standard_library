@@ -21,6 +21,12 @@ function lines = getLines(str,varargin)
 %       disp(a)
 %       disp(b)
 %
+%   
+%   Improvements
+%   ------------
+%   1) Create new function that only returns first line
+%   2) Support returning an object that gets the 'next' line
+%
 %
 %   See Also:
 %   sl.io.readDelimitedFile
