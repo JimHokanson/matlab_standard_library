@@ -129,6 +129,9 @@ classdef subset_retrieval < sl.obj.display_class
             %   %Grab from 20% to 80%
             %   subset = my_data.subset.fromEpochAndPct('fill',0.2,0.8)
             
+            %TODO: Coudl allow start,stop from single input
+            %Check nargin first ...
+            
             [~,p_only,varargin] = sl.in.getOptionalParameter(varargin,'p_only','default',false,'remove',true);
             ep = sci.time_series.subset_retrieval.epoch_processor;
             ep = sl.in.processVarargin(ep,varargin);
