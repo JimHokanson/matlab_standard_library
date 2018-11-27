@@ -679,6 +679,9 @@ classdef data < sl.obj.handle_light
             %   function. It also looks up indices based on the input
             %   times.
             %
+            %   Note that by default no style is associated with the
+            %   marker (see example for usage)
+            %
             %   Example
             %   -------
             %   times = 10000:200:10600
@@ -947,23 +950,222 @@ classdef data < sl.obj.handle_light
             data = obj.d;
             time = obj.time.getTimeArray();
         end
-        function varargout = dif2Loop(objs)
+%         function varargout = dif2Loop(objs)
+%             if nargout
+%                 temp = copy(objs);
+%             else
+%                 temp = objs;
+%             end
+%             temp.runFunctionsOnData({@h__dif2Loop});
+%             if nargout
+%                 varargout{1} = temp;
+%             end
+%         end
+        function varargout = diff(objs,N,varargin)
+            %x Computes Matlab diff with options ...
+            %   
+            %   Implements standard Matlab diff with some processing
+            %   options ...
+            %
+            %   Optional Inputs
+            %   ---------------
+            %   alignment : default 'start'
+            %       - 'start' 
+            %       - 'end'
+            %   pad_approach : default 'none' for 'start' and
+            %                          0 for 'end'
+            %       - 'hold'
+            %       - numeric value
+            %       - 'none' - This only works for 'start'. For 
+            %           'end' a value must be used so that the diffs
+            %           align with the end sample ...
+            %
+            %   Improvements
+            %   -------------
+            %   1) Move into a calculator or generic function
+            %   2) Make a time shift optional
+            %
+            %   Examples
+            %   --------
+            %   x = [5  8  1  9  2  3  7  6];
+            %   data = sci.time_series.data(x',0.1);
+            %   d2 = diff(data,1,'alignment','start','pad_approach','hold')
+            %   d2.d => 3 -7  8 -7  1  4 -1 -1
+            %   
+            %
+            %   ----------------------------------------------------------
+            %   x = 5  8  1  9  2  3  7  6
+            %   
+            %   
+            %   'start'   'hold'
+            %       3 -7  8 -7  1  4 -1 -1
+            %   'start'   'none'
+            %       3 -7  8 -7  1  4 -1
+            %   'start'   value (0)
+            %       3 -7  8 -7  1  4 -1  0
+            %   'end'     'hold'
+            %       3  3 -7  8 -7  1  4 -1
+            %   'end'     'none'
+            %          3 -7  8 -7  1  4 -1   => just do a time shift?
+            %   'end'     value  (0)
+            %       0  3 -7  8 -7  1  4 -1
+            
+            in.scale_time = false;
+            in.pad_approach = '';
+            in.alignment = 'start';
+            in = sl.in.processVarargin(in,varargin);
+            
+            if isempty(in.pad_approach)
+                if strcmp(in.alignment,'start')
+                    in.pad_approach = 'none';
+                else
+                    in.pad_approach = 0;
+                end
+            end
+            
+            %Old code ...
+            %{
+                            temp_time.n_samples = size(out_objs(iObj).d,1);
+                time_shift = temp_time.dt*0.5*N;
+                temp_time.start_offset = temp_time.start_offset + time_shift;
+            
+            %}
+            
+            %TODO: Error check ...
+            %Check not none for 'end'
+            if strcmp(in.alignment,'end') && strcmp(in.pad_approach,'none')
+                %TODO: do a time shift in this case ...
+                error('case not yet supported')
+            end
+            
+            if nargin < 2
+                N = 1;
+            end
+            
             if nargout
                 temp = copy(objs);
             else
                 temp = objs;
             end
-            temp.runFunctionsOnData({@h__dif2Loop});
+               
+            %TODO: Add parameters
+            history_string = sprintf('Computed %d sample diff using diff()',N);
+            
+            %Actual calculations
+            %--------------------------------------------------------------
+            for i = 1:length(temp)
+               cur_obj = temp(i);
+               
+               %Time Shifts - no time shift ...
+
+               time_scale = 1./(cur_obj.time.dt*N);
+               
+               %Truncation
+               %----------------------------------------------
+               %start, none
+               
+               n_samples_in = cur_obj.n_samples;
+               
+               if n_samples_in <= N
+                   %populate with NaN or empty?
+                   error('Unhandled code case, not enough samples')
+               end
+               
+               if strcmp(in.pad_approach,'none')
+                   n_samples_out = n_samples_in - N;
+               else
+                   n_samples_out = n_samples_in;
+               end
+               
+               n_loop = n_samples_in - N;
+               
+               d1 = cur_obj.d;
+               d2 = zeros(n_samples_out,1,'like',d1);
+               
+               %TODO: Redo in terms of start index and end index ...
+               %-----------------------------------------------------------
+               switch lower(in.alignment)
+                   case 'start'
+                       %TODO: Not sure if a different approach would
+                       %be faster ...
+                       if in.scale_time 
+                           for j = 1:n_loop
+                              d2(j) = (d1(j+N)-d1(j))*time_scale;
+                           end
+                       else
+                           for j = 1:n_loop
+                              d2(j) = d1(j+N)-d1(j);
+                           end
+                       end
+                   case 'end'
+                       %NOTE: This code will not work if we have 
+                       %'none' for the pad approach
+                       if in.scale_time 
+                           for j = N+1:n_samples_in
+                              d2(j) = (d1(j)-d1(j-N))*time_scale; 
+                           end
+                       else
+                           for j = N+1:n_samples_in
+                              d2(j) = (d1(j)-d1(j-N)); 
+                           end
+                       end
+                   otherwise
+                       error('Unrecognized alignmenet option')
+               end
+               %-----------------------------------------------------------
+               
+               %Add extra values ...
+               %-----------------------------------------------------------
+               switch lower(in.alignment)
+                   case 'start'
+                       switch lower(in.pad_approach)
+                           case 'none'
+                               %all done
+                           case 'hold'
+                               d2(n_loop+1:end) = d2(n_loop);
+                           otherwise
+                               d2(n_loop+1:end) = in.pad_approach;
+                       end
+                   case 'end'
+                       switch lower(in.pad_approach)
+                           case 'none'
+                               %make sure time is shifted ...
+                           case 'hold'
+                               d2(1:N) = d2(N+1);
+                           otherwise
+                               d2(1:N) = in.pad_approach;
+                       end
+                   otherwise
+                       error('Unrecognized alignmenet option')
+               end
+               
+               cur_obj.d = d2;
+               cur_obj.addHistoryElements(history_string);
+            end
+            
             if nargout
                 varargout{1} = temp;
             end
+            
         end
         function varargout = dif2(objs)
+            %
+            %   dif2 - slope is the average of slopes from previous
+            %   and subsequent points. Maintains the same number of points
+            %
+            %        3
+            %             2
+            %   1
+            %
+            %   Slope at 3 is 0.5(3-1) + 0.5*(2-3)
+            
             if nargout
                 temp = copy(objs);
             else
                 temp = objs;
             end
+            %TODO: If of a certain size, use dif2_loop
+            %instead of the original dif2
             temp.runFunctionsOnData({@h__dif2});
             if nargout
                 varargout{1} = temp;
@@ -999,14 +1201,23 @@ classdef data < sl.obj.handle_light
            time = linspace(window(1),window(2),n_samples_l);
            
         end
-        function new_objs = lowpass(objs,f_low,varargin)
-            ORDER = 1;
-            filter_design = sci.time_series.filter.butter(ORDER,f_low,'low');
+        function new_objs = lowpass(objs,f_low,order,varargin)
+            %
+            %   new_objs = lowpass(objs,f_low,*order,varargin)
+            if nargin < 3
+                order = 1;
+            end
+            filter_design = sci.time_series.filter.butter(order,f_low,'low');
             new_objs = objs.filter(filter_design);
         end
-        function new_objs = highpass(objs,f_low,varargin)
-            ORDER = 1;
-            filter_design = sci.time_series.filter.butter(ORDER,f_low,'high');
+        function new_objs = highpass(objs,f_low,order,varargin)
+            %
+            %   new_objs = highpass(objs,f_low,*order,varargin)
+            
+            if nargin < 3
+                order = 1;
+            end
+            filter_design = sci.time_series.filter.butter(order,f_low,'high');
             new_objs = objs.filter(filter_design);
         end
         function varargout = minSubtract(objs,varargin)
@@ -1357,30 +1568,30 @@ classdef data < sl.obj.handle_light
         function out_objs = plus(A,B)
             out_objs = add(A,B);
         end
-        function out_objs = diff(A,N)
-            
-            %NOTE: no support for non-sample based diff
-            %i.e. can't diff across samples (yet ...)
-            if nargin < 2
-                N = 1;
-            end
-            
-            history_string = sprintf('Computed %d sample diff using diff()',N);
-            
-            out_objs = copy(A);
-            for iObj = 1:length(A)
-                temp_time = out_objs(iObj).time;
-                
-                %Scaling by time so units of per seconds ....
-                %TODO: Ideally we would support renaming y label
-                out_objs(iObj).d = diff(A(iObj).d,N,1)./(temp_time.dt*N);
-                out_objs(iObj).addHistoryElements(history_string);
-                
-                temp_time.n_samples = size(out_objs(iObj).d,1);
-                time_shift = temp_time.dt*0.5*N;
-                temp_time.start_offset = temp_time.start_offset + time_shift;
-            end
-        end
+%         function out_objs = diff(A,N)
+%             
+%             %NOTE: no support for non-sample based diff
+%             %i.e. can't diff across samples (yet ...)
+%             if nargin < 2
+%                 N = 1;
+%             end
+%             
+%             history_string = sprintf('Computed %d sample diff using diff()',N);
+%             
+%             out_objs = copy(A);
+%             for iObj = 1:length(A)
+%                 temp_time = out_objs(iObj).time;
+%                 
+%                 %Scaling by time so units of per seconds ....
+%                 %TODO: Ideally we would support renaming y label
+%                 out_objs(iObj).d = diff(A(iObj).d,N,1)./(temp_time.dt*N);
+%                 out_objs(iObj).addHistoryElements(history_string);
+%                 
+%                 temp_time.n_samples = size(out_objs(iObj).d,1);
+%                 time_shift = temp_time.dt*0.5*N;
+%                 temp_time.start_offset = temp_time.start_offset + time_shift;
+%             end
+%         end
         function out_objs = add(A,B)
             %x Performs the addition operation
             %
@@ -1520,6 +1731,17 @@ classdef data < sl.obj.handle_light
                 varargout{1} = temp;
             end
         end
+      	function varargout = rdivide(objs,B)
+            if nargout
+                temp = copy(objs);
+            else
+                temp = objs;
+            end
+            temp.runFunctionsOnData({@(x)rdivide(x,B)});
+            if nargout
+                varargout{1} = temp;
+            end
+        end
         function varargout = power(objs,B)
             %x Raises the input to a given power
             %
@@ -1547,6 +1769,16 @@ classdef data < sl.obj.handle_light
         %
         %
         %   The design of these methods might change ...
+%         function output = corr(obj1,obj2,varargin)
+%             
+%             if nargin < 2
+%                 error('Unhandled code case')
+%             end
+%             
+%             %TODO: Need to ensure matched times ...
+%             keyboard
+%             
+%         end
         function output = max(objs,varargin)
             %
             %   TODO: Support I as an output ...
