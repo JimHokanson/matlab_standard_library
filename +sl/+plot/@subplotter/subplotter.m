@@ -52,6 +52,12 @@ classdef subplotter < sl.obj.display_class
     properties (Dependent)
         n_rows
         n_columns
+        y_extents
+        x_extents
+        y_gaps
+        x_gaps
+        widths
+        heights
     end
     
     methods
@@ -60,6 +66,60 @@ classdef subplotter < sl.obj.display_class
         end
         function value = get.n_columns(obj)
             value = obj.dims(2);
+        end
+        function value = get.y_extents(obj)
+            y1 = obj.handles{end,1}.Position(2);
+            y2 = obj.handles{1,1}.Position(2) + obj.handles{1,1}.Position(4);
+            value = [y1 y2];
+        end
+        function value = get.x_extents(obj)
+            x1 = obj.handles{1,1}.Position(1);
+            x2 = obj.handles{1,end}.Position(1) + obj.handles{1,end}.Position(3);
+            value = [x1 x2];
+        end
+        function value = get.y_gaps(obj)
+            if obj.n_rows == 1
+               value = []; 
+            else
+                all_positions = get([obj.handles{:,1}],'position');
+                if ~iscell(all_positions)
+                    all_positions = {all_positions};
+                end
+                all_bottoms = cellfun(@(x) x(2),all_positions);
+                all_tops = cellfun(@(x) x(2)+x(4),all_positions);
+                value = all_bottoms(1:end-1)-all_tops(2:end);
+            end
+        end
+        function value = get.x_gaps(obj)
+            if obj.n_columns == 1
+                value = [];
+            else
+                all_positions = get([obj.handles{1,:}],'position');
+                if ~iscell(all_positions)
+                    all_positions = {all_positions};
+                end
+                all_lefts = cellfun(@(x) x(1),all_positions);
+                all_rights = cellfun(@(x) x(1)+x(3),all_positions);
+                value = all_rights(1:end-1)-all_lefts(2:end);
+            end
+        end
+        function value = get.heights(obj)
+            all_positions = get([obj.handles{:,1}],'position');
+            if ~iscell(all_positions)
+                all_positions = {all_positions};
+            end
+            all_bottoms = cellfun(@(x) x(2),all_positions);
+            all_tops = cellfun(@(x) x(2)+x(4),all_positions);
+            value = all_tops - all_bottoms;
+        end
+        function value = get.widths(obj)
+            all_positions = get([obj.handles{1,:}],'position');
+            if ~iscell(all_positions)
+                all_positions = {all_positions};
+            end
+            all_lefts = cellfun(@(x) x(1),all_positions);
+            all_rights = cellfun(@(x) x(1)+x(3),all_positions);
+            value = all_rights-all_lefts;
         end
     end
     
@@ -92,9 +152,12 @@ classdef subplotter < sl.obj.display_class
     %-----------------------------------------------
     methods (Static)
         function obj = fromFigure(fig_handle,shape)
-            %
+            %x Construct object from figure handle
             %
             %   sp = sl.plot.subplotter.fromFigure(fig_handle,*shape)
+            %
+            %   Attempts to create object from figure handle. Requires
+            %   trying to get subplot shape (unless shape is specified)
             %
             %   Inputs
             %   ------
@@ -144,7 +207,7 @@ classdef subplotter < sl.obj.display_class
             obj.handles = cell(n_rows,n_columns);
         end
         function varargout = subplot(obj,row,column)
-            % Create the actual subplot axis
+            %x Create the actual subplot axis
             %
             %   ax = subplot(obj,row,column);
             %
@@ -152,8 +215,7 @@ classdef subplotter < sl.obj.display_class
             %   -------
             %   Plot to the 2nd row, 3rd column
             %   ax = sp.subplot(2,3);
-            %
-            %   Return regular or special axes?
+            
             I = (row-1)*obj.n_columns + column;
             ax = subplot(obj.n_rows,obj.n_columns,I);
             obj.handles{row,column} = ax;
@@ -161,6 +223,21 @@ classdef subplotter < sl.obj.display_class
             if nargout
                 varargout{1} = ax;
             end
+        end
+        function setAxesProps(obj,varargin)
+            %x Sets properties of all axes
+            %
+            %   setAxesProps(obj,varargin)
+            %   
+            %   Example
+            %   -------
+            %   sp.setAxesProps('FontSize',16,'FontName','Arial')
+            
+           for i = 1:obj.n_rows
+               for j = 1:obj.n_columns
+                   set(obj.handles{i,j},varargin{:})
+               end
+           end
         end
         function axes(obj,row,column)
             %x NYI - this is supposed to activate a particular axes
@@ -203,6 +280,139 @@ classdef subplotter < sl.obj.display_class
                 sp_index = column + (row-1)*obj.dims(2);
             end
             obj.last_index = sp_index;
+        end
+        function setYExtents(obj,y_min,y_max)
+            %x Set y extents (min and max) of plots
+            %
+            %   setYExtents(obj,y_min,y_max)
+            %   
+            %   setYExtents(obj,[y_min,y_max])
+            %   
+            %   setYExtents(obj,y_gap)
+            %
+            %   Inputs
+            %   ------------------------
+            %
+            %   ---------- <= top of figure
+            %   y_max  or (1-y_gap)
+            %   P1 - plot 1
+            %   G1 - gap 1
+            %   P2
+            %   G2
+            %   P3
+            %   y_min or y_gap   
+            %   ---------- <= bottom of figure
+            %
+            %   Improvements
+            %   ------------
+            %   
+            %   Examples
+            %   ---------
+            %   sp.setYExtents(0.03,0.96)
+            %
+            %   sp.setYExtents([0.03,0.96])
+            %
+            %   sp.setYExtents(0.05)
+            
+            
+            
+            if nargin == 2
+                if length(y_min) == 1
+                   y_max = 1 - y_min;
+                elseif length(y_min) == 2
+                   y_max = y_min(2);
+                   y_min(2) = [];
+                else
+                   error('Unpected input') 
+                end
+            end
+            
+            y1 = obj.y_extents;
+            old_range = y1(2)-y1(1);
+            new_range = y_max - y_min;
+            scale = new_range/old_range;
+            
+            cur_top = y_max;
+            
+            all_heights = obj.heights;
+            all_gaps = obj.y_gaps;
+            
+            new_heights = all_heights*scale;
+            new_gaps = all_gaps*scale;
+            
+            for r = 1:obj.n_rows
+                cur_bottom = cur_top - new_heights(r);
+                for c = 1:obj.n_columns
+                    cur_axes = obj.handles{r,c};
+                    cur_axes.Position(4) = new_heights(r);
+                    cur_axes.Position(2) = cur_bottom;
+                end
+                if r ~= obj.n_rows
+                    cur_top = cur_bottom - new_gaps(r);
+                end
+            end
+        end
+     	function setXExtents(obj,x_min,x_max)
+            %x Set x extents (min and max) of plots
+            %
+            %   setXExtents(obj,x_min,x_max)
+            %   
+            %   setXExtents(obj,[x_min,x_max])
+            %   
+            %   setXExtents(obj,x_min)
+            %
+            %   Inputs
+            %   ------------------------
+            %
+            %
+            %   Improvements
+            %   ------------
+            %   
+            %   Examples
+            %   ---------
+            %   sp.setXExtents(0.03,0.96)
+            %
+            %   sp.setXExtents([0.03,0.96])
+            %
+            %   sp.setXExtents(0.05)
+            
+            
+            
+            if nargin == 2
+                if length(x_min) == 1
+                   x_max = 1 - x_min;
+                elseif length(x_min) == 2
+                   x_max = x_min(2);
+                   x_min(2) = [];
+                else
+                   error('Unpected input') 
+                end
+            end
+            
+            x1 = obj.x_extents;
+            old_range = x1(2)-x1(1);
+            new_range = x_max - x_min;
+            scale = new_range/old_range;
+            
+            cur_left = x_min;
+            
+            all_widths = obj.widths;
+            all_gaps = obj.x_gaps;
+            
+            new_widths = all_widths*scale;
+            new_gaps = all_gaps*scale;
+            
+            for c = 1:obj.n_columns
+                cur_right = cur_left - new_widths(c);
+                for r = 1:obj.n_rows
+                    cur_axes = obj.handles{r,c};
+                    cur_axes.Position(3) = new_widths(c);
+                    cur_axes.Position(1) = cur_left;
+                end
+                if r ~= obj.n_rows
+                    cur_left = cur_right - new_gaps(c);
+                end
+            end
         end
         function setRowYLim(obj,row_I,ylim)
             %X Set ylim of all axes in a row
@@ -394,10 +604,15 @@ classdef subplotter < sl.obj.display_class
                 for iColumn = 1:n_columns_l
                     
                     cur_axes = obj.handles{iRow,iColumn};
-                    cur_position = get(cur_axes,'position');
-                    cur_position(2) = next_top - cur_height;
-                    cur_position(4) = cur_height;
-                    set(cur_axes,'position',cur_position)
+                    cur_axes.Position(2) = next_top - cur_height;
+                    cur_axes.Position(4) = cur_height;
+%                     
+% % % %                     cur_position = get(cur_axes,'position');
+% % % %                     cur_position(2) = next_top - cur_height;
+% % % %                     cur_position(4) = cur_height;
+% % % %                     %???? Why is this not redrawing ...
+% % % %                     cur_axes.Position = cur_position;
+% % % % %                     set(cur_axes,'position',cur_position)
                     
                     %axis(cur_axes,in.axis)
                 end
