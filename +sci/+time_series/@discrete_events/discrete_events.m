@@ -168,7 +168,11 @@ classdef discrete_events < sl.obj.display_class
             %       command.
             %   events_in_extents_only : logical (default true)
             %       Events that are outside the extents of the axes will
-            %       not be plotted
+            %       not be plotted. Caution should be used with this since
+            %       a scaling of the axes can cause events to be hidden
+            %       (e.g. plot only from 2 - 5 seconds but then expand
+            %       to 0 to 10 seconds, anything outside [2 5] will not
+            %       be plotted.
             %   
             %
             %   Improvements:
@@ -240,11 +244,18 @@ classdef discrete_events < sl.obj.display_class
             
             
             for iAxes = 1:length(in.axes)
-                cur_axes = in.axes(iAxes);
+                if iscell(in.axes)
+                    cur_axes = in.axes{iAxes};
+                else
+                    cur_axes = in.axes(iAxes);
+                end
                 
                 times_for_plotting = obj.times(in.I);
                 
                 %This is not-obvious ...
+                %I think this is exposed via a different mechanism
+                %than this
+                %big_plot.(something)
                 app_data_axes = getappdata(cur_axes);
                 if isfield(app_data_axes,'time_series_time')
                    time_obj = app_data_axes.time_series_time;
@@ -256,7 +267,9 @@ classdef discrete_events < sl.obj.display_class
                    xlim = get(cur_axes,'xlim');
                    mask = times_for_plotting < xlim(1) | times_for_plotting > xlim(2);
                    times_for_plotting(mask) = [];
-                   display_strings(mask) = [];
+                   if ~isempty(display_strings)
+                      display_strings(mask) = [];
+                   end
                 end
                 
                 if isempty(times_for_plotting)

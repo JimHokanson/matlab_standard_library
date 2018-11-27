@@ -183,7 +183,7 @@ end
 values = d(peak_I);
 
 result = sci.time_series.calculators.event_calculators.find_local_peaks_result(...
-    peak_I,times,values,is_max);
+    data,peak_I,times,values,is_max);
 
 
 end

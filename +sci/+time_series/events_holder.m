@@ -11,6 +11,11 @@ classdef events_holder < dynamicprops
     %   As a dynamicprops class, the event objects are added dynamically as
     %   properties to the class instances.
     %
+    %   This class holds:
+    %   sci.time_series.discrete_events
+    %   sci.time_series.epochs
+    %
+    %
     %   See Also:
     %   ---------
     %   sci.time_series.data
@@ -29,6 +34,15 @@ classdef events_holder < dynamicprops
             %
             %   Calling Forms:
             %   --------------
+            %   addEvents(obj,event_holder)
+            %
+            %   addEvents(obj,events_cell)
+            %
+            %   Inputs
+            %   -------
+            %   events_holder : sci.time_series.events_holder
+            %   events_cell : {sci.time_series.discrete_events}
+            %   
             %   TODO: Finish documentation
             
             if isa(event_elements,'sci.time_series.events_holder')
@@ -40,7 +54,6 @@ classdef events_holder < dynamicprops
                     event_elements = cellfun(@(x) old_obj.(x),event_names,'un',0);
                 end
             elseif ~iscell(event_elements)
-                %TODO: This might not be valid if the types are different
                 event_elements = num2cell(event_elements);
             end
             
