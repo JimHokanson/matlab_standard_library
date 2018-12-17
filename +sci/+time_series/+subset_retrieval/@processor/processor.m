@@ -3,6 +3,8 @@ classdef processor < handle
     %   Class:
     %   sci.time_series.subset_retrieval.processor
     %
+    %   Abstract class which has shared code for more specific processors.
+    %
     %   See Also
     %   --------
     %   sci.time_series.subset_retrieval
