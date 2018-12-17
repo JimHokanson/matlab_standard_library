@@ -130,6 +130,9 @@ classdef box_plot_result < sl.obj.display_class
             if in.add_n
                 d = [obj.entries.data];
                 n_points = [d.n_data_points];
+                if length(labels) ~= length(n_points)
+                    error('Mismatch in # of labels: %d vs # of bars %d',length(labels),length(n_points))
+                end
                 labels = cellfun(@(x,y) sprintf('%s (n=%d)',x,y),labels,num2cell(n_points),'un',0);
             end
             
