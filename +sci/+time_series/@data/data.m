@@ -979,10 +979,15 @@ classdef data < sl.obj.handle_light
             %       - 'none' - This only works for 'start'. For 
             %           'end' a value must be used so that the diffs
             %           align with the end sample ...
+            %   scale_by_time : default 'false'
+            %       If true then the result is scaled by the sampling
+            %       rate so that the units make sense. Otherwise the
+            %       output is just the value of the differences.
             %
             %   Improvements
             %   -------------
-            %   1) Move into a calculator or generic function
+            %   1) Move into a calculator or generic function that 
+            %      we call into
             %   2) Make a time shift optional
             %
             %   Examples
@@ -1010,7 +1015,7 @@ classdef data < sl.obj.handle_light
             %   'end'     value  (0)
             %       0  3 -7  8 -7  1  4 -1
             
-            in.scale_time = false;
+            in.scale_by_time = false;
             in.pad_approach = '';
             in.alignment = 'start';
             in = sl.in.processVarargin(in,varargin);
@@ -1049,7 +1054,11 @@ classdef data < sl.obj.handle_light
             end
                
             %TODO: Add parameters
-            history_string = sprintf('Computed %d sample diff using diff()',N);
+            %  in.scale_time = false;
+%             in.pad_approach = '';
+%             in.alignment = 'start';
+            history_string = sprintf('Computed %d sample diff using diff() with params scale_by_time: %d, pad_approach: %s, alignment: %s',...
+                N,in.scale_by_time,in.pad_approach,in.alignment);
             
             %Actual calculations
             %--------------------------------------------------------------
@@ -1088,7 +1097,7 @@ classdef data < sl.obj.handle_light
                    case 'start'
                        %TODO: Not sure if a different approach would
                        %be faster ...
-                       if in.scale_time 
+                       if in.scale_by_time 
                            for j = 1:n_loop
                               d2(j) = (d1(j+N)-d1(j))*time_scale;
                            end
@@ -1100,7 +1109,7 @@ classdef data < sl.obj.handle_light
                    case 'end'
                        %NOTE: This code will not work if we have 
                        %'none' for the pad approach
-                       if in.scale_time 
+                       if in.scale_by_time 
                            for j = N+1:n_samples_in
                               d2(j) = (d1(j)-d1(j-N))*time_scale; 
                            end
@@ -1139,6 +1148,7 @@ classdef data < sl.obj.handle_light
                        error('Unrecognized alignmenet option')
                end
                
+               cur_obj.time.n_samples = size(d2,1);
                cur_obj.d = d2;
                cur_obj.addHistoryElements(history_string);
             end
@@ -1673,6 +1683,16 @@ classdef data < sl.obj.handle_light
             end
         end
         
+        function out = median(objs)
+           if length(objs) > 1
+               error('Multiple objects not yet handled') 
+           end
+           obj = objs(1);
+           if obj.n_channels > 1
+               error('Multiple channels not yet handled')
+           end
+           out = median(obj.d);
+        end
         function out_objs = mean(objs,dim,varargin)
             %
             %
