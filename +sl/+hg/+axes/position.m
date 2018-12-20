@@ -56,6 +56,7 @@ classdef (Hidden) position < handle
     end
     
     methods
+        %TODO: These should be wrapped with try/catch ...
         function value = get.center_x(obj)
             value = obj.left + 0.5*(obj.right - obj.left);
         end
