@@ -2,12 +2,16 @@
 
 This package helps with processing of input arguments.
 
-Public Functions
+**Public Functions**
 - [processVarargin](#processvarargin) - The standard input processor
-- [splitAndProcessVarargin](#splitandprocessvarargin)
+- [splitAndProcessVarargin](#splitandprocessvarargin) - Handles inputs that are going to multiple functions
 
-Helper Functions
+**Helper Functions**
 - [NULL](#null)
+
+
+
+
 
 ## processVarargin ##
 
@@ -15,33 +19,31 @@ This function is meant to handle parsing of property/value pairs. It doesn't sup
 
 ```matlab
 function myFunction(name,varargin)
-
 in.a = 1;
 in.b = 2;
-in = sl.in.processVarargin(in,varargin)
-end
+%Replaces defaults with inputs from user
+in = sl.in.processVarargin(in,varargin);
 
-disp(sprintf('%s,a:%d,b:%d',name,in.a,in.b))
+fprintf('%s, a=%d, b=%d\n',name,in.a,in.b)
 end
 
 function test_code()
+%Example 1
+myFunction('Bill','a',3,'b',10) %Bill, a=3, b=10
 
-myFunction('Bill','a',3)
+%Example 2
+myFunction('Jim','b',1) %Jim, a=1, b=1
 
-myFunction('Jim','b',1)
-
+%Example 3 - structs are ok too
 s = struct;
 s.a = 5;
 s.b = 10;
-
-myFunction('Steve',s)
-
-
+myFunction('Steve',s) %Steve, a=5, b=10
 end
-
 ```
 
-TODO: Show example
+
+
 
 ## splitAndProcessVarargin ##
 
