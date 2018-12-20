@@ -40,6 +40,9 @@ classdef processor < handle
     
     methods
         function data_subset_objs = getSubset(obj,objs)
+            %
+            %   This is the final method that retrieves the actual data
+            %   subset.
             
             
             %Note this is an abstract implementation ...
@@ -80,6 +83,8 @@ classdef processor < handle
                 
                 cur_start_samples = start_samples{iObj};
                 cur_stop_samples = stop_samples{iObj};
+                
+                %We might have multiple subsets for a single object ...
                 n_spans = length(cur_start_samples);
                 
                 new_time_objs = cell(1,n_spans);
@@ -89,6 +94,8 @@ classdef processor < handle
                     stop_I   = cur_stop_samples(iSpan);
                     
                     %TODO: Decide if this is what we want to do ...
+                    %
+                    %   Behavior needs to be documented ...
                     if stop_I > cur_obj.n_samples
                         stop_I = cur_obj.n_samples;
                     end
@@ -190,9 +197,10 @@ classdef processor < handle
             %       The actual data from the new object.
             %   new_time_object : sci.time_series.time
             
-            new_data_obj   = copy(old_obj);
-            new_data_obj.d = new_data;
-            new_data_obj.time = new_time_object;
+            %This should be a method of data ...
+            new_data_obj   = copy(old_obj,'raw_data',new_data,'time',new_time_object);
+            %new_data_obj.d = new_data;
+            %new_data_obj.time = new_time_object;
             %new_data_obj.event_info.shiftTimes(new_data_obj.time.start_offset - old_obj.time.start_offset)
         end
         

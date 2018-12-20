@@ -3,17 +3,17 @@ classdef subset_retrieval < sl.obj.display_class
     %   Class:
     %   sci.time_series.subset_retrieval
     %
-    %   This class was designed to be accessed via the subset property of
-    %   sci.time_series.data
+    %   This class returns either a subset processor OR a subset of data.
     %
-    %   e.g. my_data.subset.fromEpoch
-    %       - this calls the fromEpoch method below
+    %   This class is a wrapper for calling the various processors.
     %
-    %   See Also
-    %   --------
-    %   sci.time_series.subset_retrieval.processor
-    %   sci.time_series.subset_retrieval.epoch_processor
-    %   sci.time_series.subset_retrieval.event_processor
+    %
+    %
+    %
+    %   This class can be accessed via the 'subset' property of a
+    %   time-series data class.
+    %       e.g. my_data.subset.fromEpoch
+    %           - this calls the fromEpoch method below
     %
     %   Optional Inputs (to functions)
     %   --------------------------------
@@ -34,7 +34,6 @@ classdef subset_retrieval < sl.obj.display_class
     %   subset_processor = my_data.subset.fromEpoch('my_epoch','p_only',true);
     %   data_subset = my_data.subset.fromProcessor(subset_processor)
     %   other_subset = other_data.subset.fromProcessor(subset_processor)
-    %
     %
     %   2) Technically processors can be called directly. The functions
     %   in this class are meant to provide clearer access to the underlying
@@ -60,15 +59,30 @@ classdef subset_retrieval < sl.obj.display_class
     %   1) Clarify output rules with respect to cell arrays and arrays of
     %   objects
     %   2) Add testing code ...
-    
+    %
+    %   See Also
+    %   --------
+    %   sci.time_series.subset_retrieval.processor
+    %   sci.time_series.subset_retrieval.epoch_processor
+    %   sci.time_series.subset_retrieval.event_processor
     
     properties
-        data %sci.time_series.data
+        data %[sci.time_series.data] OR []
     end
     
+    %Constructor -----------------------------------
     methods
         function obj = subset_retrieval(data)
-            obj.data = data;
+            %
+            %   obj = subset_retrieval(*data)
+            %
+            %   If no inputs are given then we will only get a processor
+            %   from the methods.
+            %
+            %   
+            if nargin > 0
+                obj.data = data;
+            end
         end
     end
     
@@ -99,11 +113,7 @@ classdef subset_retrieval < sl.obj.display_class
             ep = sci.time_series.subset_retrieval.epoch_processor;
             ep = sl.in.processVarargin(ep,varargin);
             ep.epoch_name = epoch_name;
-            if p_only
-                output = ep;
-            else
-                output = ep.getSubset(obj.data);
-            end
+            output = h__executeGeneric(obj,ep,p_only);
         end
         function output = fromEpochAndPct(obj,epoch_name,start_pct_offset,stop_pct_offset,varargin)
             %
@@ -137,11 +147,7 @@ classdef subset_retrieval < sl.obj.display_class
             ep = sl.in.processVarargin(ep,varargin);
             ep.epoch_name = epoch_name;
             ep.percent = [start_pct_offset stop_pct_offset];
-            if p_only
-                output = ep;
-            else
-                output = ep.getSubset(obj.data);
-            end
+            output = h__executeGeneric(obj,ep,p_only);
         end
         function output = fromEpochAndSampleWindow(obj,epoch_name,start_sample_offset,stop_sample_offset,varargin)
             %
@@ -170,12 +176,7 @@ classdef subset_retrieval < sl.obj.display_class
             ep = sl.in.processVarargin(ep,varargin);
             ep.epoch_name = epoch_name;
             ep.sample_offsets = [start_sample_offset stop_sample_offset];
-            if p_only
-                output = ep;
-            else
-                output = ep.getSubset(obj.data);
-            end
-            
+            output = h__executeGeneric(obj,ep,p_only);
         end
         function output = fromEpochAndTimeWindow(obj,epoch_name,start_time_offset,stop_time_offset,varargin)
             %
@@ -207,11 +208,7 @@ classdef subset_retrieval < sl.obj.display_class
             ep = sl.in.processVarargin(ep,varargin);
             ep.epoch_name = epoch_name;
             ep.time_offsets = [start_time_offset stop_time_offset];
-            if p_only
-                output = ep;
-            else
-                output = ep.getSubset(obj.data);
-            end
+            output = h__executeGeneric(obj,ep,p_only);
         end
     end
     
@@ -219,17 +216,18 @@ classdef subset_retrieval < sl.obj.display_class
     methods
         function output = fromStartAndStopEvent(obj,start_name,stop_name,varargin)
             %
-            %   output = fromStartAndStopEvent(obj,epoch_name,start_time_offset,stop_time_offset,varargin)
+            %   output = fromStartAndStopEvent(obj,start_name,stop_name,varargin)
             %
             %                   start event      stop event
             %    ---------------+----------------+------------------
+            %
             %   start_time = start_event
             %   stop_time  = stop_event
             %
             %   Inputs
             %   ------
-            %   start_name:
-            %   stop_name:
+            %   start_name :
+            %   stop_name :
             %
             %   Optional Inputs
             %   ---------------
@@ -239,17 +237,20 @@ classdef subset_retrieval < sl.obj.display_class
             %   -------
             %   %Grab from the start of the pump to the 1st bladder contraction
             %   subset = my_data.subset.fromStartAndStopEvent('start_pump','bladder_contraction_starts')
+            %
+            %   %2) Retrieve from 20 seconds before stopping the pump to 60
+            %   %   seconds before the end of the trial
+            %   sr = sci.time_series.subset_retrieval();
+            %   p = sr.fromStartAndStopEvent('stop_pump','trial_end',...
+            %       'time_offsets',[-20 -60]); %p => subset processor
+            %   eus2 = p.getSubset(eus_data);
             
             [~,p_only,varargin] = sl.in.getOptionalParameter(varargin,'p_only','default',false,'remove',true);
             ep = sci.time_series.subset_retrieval.event_processor;
             ep = sl.in.processVarargin(ep,varargin);
             ep.start_name = start_name;
             ep.stop_name = stop_name;
-            if p_only
-                output = ep;
-            else
-                output = ep.getSubset(obj.data);
-            end
+            output = h__executeGeneric(obj,ep,p_only);
         end
         function output = fromEventAndTimeWindow(obj,event_name,start_time_offset,stop_time_offset,varargin)
             %
@@ -280,11 +281,7 @@ classdef subset_retrieval < sl.obj.display_class
             ep = sl.in.processVarargin(ep,varargin);
             ep.start_name = event_name;
             ep.time_offsets = [start_time_offset stop_time_offset];
-            if p_only
-                output = ep;
-            else
-                output = ep.getSubset(obj.data);
-            end
+            output = h__executeGeneric(obj,ep,p_only);
         end
         function output = fromEventAndSampleWindow(obj,event_name,start_sample_offset,stop_sample_offset,varargin)
             %
@@ -315,11 +312,7 @@ classdef subset_retrieval < sl.obj.display_class
             ep = sl.in.processVarargin(ep,varargin);
             ep.start_name = event_name;
             ep.sample_offsets = [start_sample_offset,stop_sample_offset];
-            if p_only
-                output = ep;
-            else
-                output = ep.getSubset(obj.data);
-            end
+            output = h__executeGeneric(obj,ep,p_only);
         end
         function output = fromEventAndTimeDuration(obj,event_name,time_duration,varargin)
             %
@@ -349,11 +342,7 @@ classdef subset_retrieval < sl.obj.display_class
             ep = sl.in.processVarargin(ep,varargin);
             ep.start_name = event_name;
             ep.time_duration = time_duration;
-            if p_only
-                output = ep;
-            else
-                output = ep.getSubset(obj.data);
-            end
+            output = h__executeGeneric(obj,ep,p_only);
         end
         function output = fromEventAndSampleDuration(obj,event_name,sample_duration,varargin)
             %
@@ -383,11 +372,7 @@ classdef subset_retrieval < sl.obj.display_class
             ep = sl.in.processVarargin(ep,varargin);
             ep.start_name = event_name;
             ep.sample_duration = sample_duration;
-            if p_only
-                output = ep;
-            else
-                output = ep.getSubset(obj.data);
-            end
+            output = h__executeGeneric(obj,ep,p_only);
         end
     end
     
@@ -404,7 +389,7 @@ classdef subset_retrieval < sl.obj.display_class
     %Generic ---------------------------------------
     methods
         %TODO: These need to be documented ...
-        function output =  fromStartAndStopSamples(obj,start_samples,stop_samples,varargin)
+        function output = fromStartAndStopSamples(obj,start_samples,stop_samples,varargin)
             [ep,p_only] = h__initGeneric(varargin);
             ep.start_samples = start_samples;
             ep.stop_samples = stop_samples;
@@ -490,7 +475,7 @@ ep = sl.in.processVarargin(ep,varargin);
 end
 
 function output = h__executeGeneric(obj,ep,p_only)
-if p_only
+if p_only || isempty(obj.data)
     output = ep;
 else
     output = ep.getSubset(obj.data);

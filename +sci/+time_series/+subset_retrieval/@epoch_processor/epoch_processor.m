@@ -38,6 +38,8 @@ classdef epoch_processor < sci.time_series.subset_retrieval.processor
     methods
         function [start_samples,stop_samples] = getStartAndStopSamples(obj,data_objects)
             %
+            %   Method that specifies the first and last indices of the
+            %   original data to use when grabbing a subset of data.
             %
             %   Inputs
             %   ------
