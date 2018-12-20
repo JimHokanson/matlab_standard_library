@@ -174,12 +174,11 @@ classdef subplotter < sl.obj.display_class
             end
             sz = size(grid_handles);
             
-            obj = sl.plot.subplotter(sz(1),sz(2));
+            obj = sl.plot.subplotter(sz(1),sz(2),'clf',false);
             obj.handles = num2cell(grid_handles);
             
         end
     end
-    
     
     methods
         function obj = subplotter(n_rows,n_columns,varargin)
@@ -190,10 +189,13 @@ classdef subplotter < sl.obj.display_class
             %
             %   Optional Inputs
             %   ---------------
+            %   clf : default true
+            %       Whether to clear the figure or not.
             %   row_first_indexing : logical (default true)
             %       NOT YET IMPLEMENTED
             %
             
+            in.clf = true;
             in.row_first_indexing = true;
             in = sl.in.processVarargin(in,varargin);
             
@@ -205,7 +207,16 @@ classdef subplotter < sl.obj.display_class
             
             obj.row_first_indexing = in.row_first_indexing;
             obj.handles = cell(n_rows,n_columns);
+            
+            if in.clf
+                clf
+            end
         end
+    end
+    
+    %Methods
+    %----------------------------------------------------------------------
+    methods
         function varargout = subplot(obj,row,column)
             %x Create the actual subplot axis
             %
@@ -721,6 +732,8 @@ classdef subplotter < sl.obj.display_class
             %   ------------
             %   1) Doesn't work if first column is not yet plotted ...
             
+            h__matlabBugFixes(obj)
+            
             if nargin == 1
                 rows = 1:obj.n_rows;
                 columns = 1:obj.n_columns;
@@ -852,6 +865,8 @@ classdef subplotter < sl.obj.display_class
             %   2) Optional # removal - currently forced with labels
             %   3) check y-lim
             
+            h__matlabBugFixes(obj)
+            
             in.remove_ticks = false;
             in.no_gap_width = 0.005;
             in.gap_width = 0.02;
@@ -959,6 +974,11 @@ classdef subplotter < sl.obj.display_class
             %       - true, columns are linked
             %       - false, all axes are linked, even across columns
             %
+            %
+            %   Improvements
+            %   ---------------
+            %   https://undocumentedmatlab.com/blog/using-linkaxes-vs-linkprop
+            %
             %   See Also
             %   --------
             %   linkaxes
@@ -1023,29 +1043,18 @@ classdef subplotter < sl.obj.display_class
     
     
 end
-
-% function h__linkAxes(ax,
-function syncLimits(ax,prop)
-bestlim = [inf -inf];
-nonNumericLims = false(size(ax));
-classes = cell(size(ax));
-for k=1:length(ax)
-    axlim = get(ax(k),prop);
-    if isnumeric(axlim)
-        bestlim = [min(axlim(1),bestlim(1)) max(axlim(2),bestlim(2))];
-    else
-        nonNumericLims(k) = true;
-        classes{k} = class(axlim);
+function h__matlabBugFixes(obj)
+    for i = 1:obj.n_rows
+        for j = 1:obj.n_columns
+            ax = obj.handles{i,j};
+        	if isappdata(ax, 'SubplotDeleteListenersManager')
+                temp = getappdata(ax, 'SubplotDeleteListenersManager');
+                try
+                    delete(temp.SubplotDeleteListener);
+                end
+                rmappdata(ax, 'SubplotDeleteListenersManager');
+            end
+        end
     end
-end
-if any(nonNumericLims)
-    if ~all(nonNumericLims) || ~all(strcmp(classes{1},classes))
-        error(message('MATLAB:linkaxes:CompatibleData'))
-    end
-end
-set(ax,[prop 'Mode'],'manual')
-if bestlim(1) < bestlim(2)
-    set(ax, prop, bestlim)
-end
 end
 

@@ -268,7 +268,7 @@ classdef data < sl.obj.handle_light
                 obj.time = sci.time_series.time(time_object_or_dt,obj.n_samples);
             end
             
-            obj.event_info = sci.time_series.events_holder;
+            obj.event_info = sci.time_series.events_holder(obj.time);
             if ~isempty(in.events)
                 obj.addEventElements(in.events);
             end
@@ -295,9 +295,12 @@ classdef data < sl.obj.handle_light
             %
             %   Optional Inputs
             %   ---------------
+            %   time : sci.time_series.time
+            %       New time objects.
             %   raw_data : array or cell array of arrays
             %       NOTE, currently changing the # of channels is not
-            %       supported with this approach.
+            %       supported with this approach or requires specifying
+            %       a new time object as well.
             %   dt : scalar or array
             %       Inverse of the sampling rate
             %   new_start_offset : scalar or array
@@ -308,6 +311,7 @@ classdef data < sl.obj.handle_light
             %   sci.time_series.events_holder
             %   sci.time_series.time
             
+            in.time = [];
             in.units = {};
             in.raw_data = [];
             in.dt = [];
@@ -337,20 +341,26 @@ classdef data < sl.obj.handle_light
             end
             
             old_time_objs = [old_objs.time];
-            new_time_objs = copy([old_objs.time],...
+            if ~isempty(in.time)
+                new_time_objs = in.time;
+            else
+                new_time_objs = copy([old_objs.time],...
                 'new_start_offset',in.new_start_offset,...
                 'dt',in.dt,'n_samples',local_n_samples);
+            end
             
             for iObj = 1:n_objs
                 time_shift = old_time_objs(iObj).start_offset-new_time_objs(iObj).start_offset;
                 cur_obj = old_objs(iObj);
+                new_event_obj = copy(cur_obj.event_info,new_time_objs(iObj),...
+                    'time_shift',time_shift);
                 temp_objs{iObj} = sci.time_series.data(...
                     raw_data{iObj},...
                     new_time_objs(iObj),...
                     'history',      cur_obj.history,...
                     'units',        local_units{iObj},...
                     'channel_labels',cur_obj.channel_labels,...
-                    'events',       copy(cur_obj.event_info,'time_shift',time_shift),...
+                    'events',       new_event_obj,...
                     'y_label',      cur_obj.y_label);
             end
             

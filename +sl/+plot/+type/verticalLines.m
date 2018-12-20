@@ -23,9 +23,12 @@ function varargout = verticalLines(x_positions,varargin)
 %   y_values: [n 2] numeric array
 %       Column 1: y starts
 %       Column 2: y stops
+%   y_pct_vary_with_zoom : default true
+%       If 'y_pct' is used and this value is true, then the vertical lines
+%       are updated every time the ylim changes.
 %   y_pct : [n 2] numeric array
 %       For when the values are meant to specified in terms of the viewing
-%       limits.
+%       limits. Values should generally be from 0 to 1 ...
 %   parent : axes handle
 %       Which axes to put the lines in.
 %
@@ -55,6 +58,9 @@ function varargout = verticalLines(x_positions,varargin)
 %   -------------
 %   1) Allow single line plotting using NaN
 %   2) Allow adding text as well for the lines ...
+%   3) The vertical lines callback always changes the ylimits because
+%   we don't hold onto the previous ylimits with a handle object. This
+%   could be improved (performance improvement).
 %
 %   See Also
 %   --------
@@ -123,7 +129,9 @@ end
 
 if in.y_pct_vary_with_zoom && ~isempty(in.y_pct)
     %https://www.mathworks.com/matlabcentral/answers/369377-xlim-listener-for-zoom-reset-and-linkaxes-strange-behavior
-	addlistener(ax.YRuler,'MarkedClean',@(src, evt)h__yZoom(line_handles,ax,in));
+    pv = sl.obj.persistant_value;
+    pv.value = ax.YLim;
+	addlistener(ax.YRuler,'MarkedClean',@(src, evt)h__yZoom(line_handles,ax,in,pv));
     %This misses things ...
     %addlistener(ax, 'YLim', 'PostSet', @(src, evt)h__yZoom(line_handles,ax,in))
 end
@@ -156,15 +164,21 @@ else
 end
 end
 
-function h__yZoom(h_lines,ax,in)
+function h__yZoom(h_lines,ax,in,pv)
 %
 %   Update percentages ...
-disp('I ran')
-temp = get(ax,'ylim');
-y_range = temp(2)-temp(1);
+% disp('I ran')
+
+ylim = ax.YLim;
+%ylim hasn't really change, don't do anything
+if isequal(pv.value,pv)
+    return
+end
+
+y_range = ylim(2)-ylim(1);
 ys = in.y_pct;
-ys(:,1) = temp(1)+ ys(:,1)*y_range;
-ys(:,2) = temp(1)+ ys(:,2)*y_range;
+ys(:,1) = ylim(1)+ ys(:,1)*y_range;
+ys(:,2) = ylim(1)+ ys(:,2)*y_range;
 n_lines = length(h_lines);
 if size(ys,1) < n_lines
     ys = repmat(ys,[n_lines 1]);
@@ -173,5 +187,9 @@ for i = 1:length(h_lines)
     h = h_lines(i);
     h.YData = ys(i,:);
 end
+
+%Store latest used value ...
+pv.value = ylim;
+
 end
 

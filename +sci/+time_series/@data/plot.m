@@ -10,7 +10,7 @@ function varargout = plot(objs,varargin)
 %   Optional Inputs:
 %   ----------------
 %   axes
-%       -pass in axes to plot on
+%       - pass in axes to plot on
 %   time_units : {'s','min','ms','h'} (default 's')
 %       - s , seconds
 %       - h , hours

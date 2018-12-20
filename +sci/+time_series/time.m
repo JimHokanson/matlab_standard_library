@@ -19,6 +19,11 @@ classdef time < sl.obj.display_class
     %   sci.time_series.time_functions
     
     properties
+        n_samples
+        
+        output_units = 's'
+        
+        d0 = '---------- units insensitive properties --------'
         start_datetime %
         %This can be used for real dates to identify the
         %actual time of the first sample. No support for time zones is in
@@ -28,9 +33,7 @@ classdef time < sl.obj.display_class
         start_offset = 0 %(s)
         dt %seconds
         
-        n_samples
-        
-        output_units = 's'
+
         %This requires A LOT of work still
         %Options:
         %-   s: seconds
@@ -44,7 +47,7 @@ classdef time < sl.obj.display_class
     
     properties (Dependent)
         fs
-        
+        d1 = '-------- units sensitive properties ----------'
         %These values are relative, they don't include the 'start_datetime'
         %property. They DO however take into account the 'output_units'
         %property.
