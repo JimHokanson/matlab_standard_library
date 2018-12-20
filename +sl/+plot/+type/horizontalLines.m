@@ -29,7 +29,7 @@ in.y_pct_vary_with_zoom = false; %NYI - on zoom, change values
 in.x_pct_vary_with_zoom = false; %NYI - on zoom, change values
 in.y_as_pct = false; 
 in.x_values = [];
-in.x_pct = [];
+in.x_pct = []; %NYI
 
 [in,line_options] = sl.in.processVararginWithRemainder(in,varargin);
 
