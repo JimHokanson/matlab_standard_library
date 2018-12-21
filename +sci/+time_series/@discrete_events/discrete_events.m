@@ -388,7 +388,7 @@ function h__moveText(h_text,ax,in,pv)
 
 ylim = ax.YLim;
 %ylim hasn't really change, don't do anything
-if isequal(pv.value,pv)
+if isequal(pv.value,ylim)
     return
 end
 

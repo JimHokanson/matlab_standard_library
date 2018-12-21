@@ -167,11 +167,17 @@ end
 function h__yZoom(h_lines,ax,in,pv)
 %
 %   Update percentages ...
-% disp('I ran')
+%
+%   Inputs
+%   ------
+%   pv : sl.obj.persistant_value
+%   ax : axes handle
+%   h_lines : line handles
+%   in : struct - optional input arguements
 
 ylim = ax.YLim;
 %ylim hasn't really change, don't do anything
-if isequal(pv.value,pv)
+if isequal(pv.value,ylim)
     return
 end
 
