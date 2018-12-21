@@ -6,14 +6,19 @@ classdef subset_retrieval < sl.obj.display_class
     %   This class returns either a subset processor OR a subset of data.
     %
     %   This class is a wrapper for calling the various processors.
+    %   Processsing is done in 2 steps:
     %
-    %
-    %
+    %       1) A processor is defined, with relevant options. Creation
+    %          of the processor is facilitated via methods of this class.
+    %       2) The processor is executed on the specified data. This can
+    %          either be done on data passed into the constructor, or by
+    %          calling getSubset with data => processor.getSubset(my_data)
     %
     %   This class can be accessed via the 'subset' property of a
     %   time-series data class.
     %       e.g. my_data.subset.fromEpoch
-    %           - this calls the fromEpoch method below
+    %           - this calls the fromEpoch method below with my_data as
+    %             an input to the processor
     %
     %   Optional Inputs (to functions)
     %   --------------------------------
@@ -29,27 +34,27 @@ classdef subset_retrieval < sl.obj.display_class
     %
     %   Examples
     %   ----------------------------------
-    %   1) In this approach we save a processor for later use.
+    %   %  1) Typical usage examples
+    %   data_subset = my_data.subset.fromEpoch('fill')
+    %   data_subset = my_data.subset.fromEpoch('bladder_contraction','un',0)
     %
+    %   %  2) Calling this class directly - useful for passing subset
+    %   %     instructions to a data loading function
+    %   subset_processor = sci.time_series.subset_retrieval.fromEpoch('fill')
+    %   data_subset = subset_processor.getSubset(eus_data)
+    %
+    %   %  3) Save processor for later use
     %   subset_processor = my_data.subset.fromEpoch('my_epoch','p_only',true);
     %   data_subset = my_data.subset.fromProcessor(subset_processor)
     %   other_subset = other_data.subset.fromProcessor(subset_processor)
     %
-    %   2) Technically processors can be called directly. The functions
-    %   in this class are meant to provide clearer access to the underlying
-    %   processors.
-    %
+    %   %  4) Calling a processor directly
     %   subset_processor = sci.time_series.subset_retrieval.event_processor();
     %   subset_processor.start_name = 'my_event'
     %   subset_processor.time_duration = 10
     %   data_subset = my_data.subset.fromProcessor(subset_processor)
     %
-    %   3) Typical usage examples
-    %
-    %   data_subset = my_data.subset.fromEpoch('fill')
-    %   data_subset = my_data.subset.fromEpoch('bladder_contraction','un',0)
-    %
-    %   4) For multiple data objects
+    %   %  5) Multiple subsets on same data
     %   sr = sci.time_series.subset_retrieval(my_data_objects);
     %   data_subsets = sr.fromProcessor(subset_processor)
     %   data_subsets = sr.fromEpoch('fill')
