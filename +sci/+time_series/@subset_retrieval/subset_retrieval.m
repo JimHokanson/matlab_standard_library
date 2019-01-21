@@ -93,9 +93,11 @@ classdef subset_retrieval < sl.obj.display_class
     
     %Epoch -----------------------------------------
     methods
-        function output = fromEpoch(obj,epoch_name,varargin)
+        function output = fromEpoch(obj,epoch_name_or_obj,varargin)
             %
             %   output = fromEpoch(obj,epoch_name,varargin)
+            %
+            %   output = fromEpoch(obj,epoch_object,varargin)
             %
             %                       epoch
             %    ---------------++++++++++++-------------------
@@ -105,6 +107,8 @@ classdef subset_retrieval < sl.obj.display_class
             %   Inputs
             %   ------
             %   epoch_name
+            %   epoch_object
+            %   
             %
             %   Optional Inputs
             %   ---------------
@@ -117,7 +121,11 @@ classdef subset_retrieval < sl.obj.display_class
             [~,p_only,varargin] = sl.in.getOptionalParameter(varargin,'p_only','default',false,'remove',true);
             ep = sci.time_series.subset_retrieval.epoch_processor;
             ep = sl.in.processVarargin(ep,varargin);
-            ep.epoch_name = epoch_name;
+            if ischar(epoch_name_or_obj)
+                ep.epoch_name = epoch_name_or_obj;
+            else
+                ep.epoch_object = epoch_name_or_obj;
+            end
             output = h__executeGeneric(obj,ep,p_only);
         end
         function output = fromEpochAndPct(obj,epoch_name,start_pct_offset,stop_pct_offset,varargin)

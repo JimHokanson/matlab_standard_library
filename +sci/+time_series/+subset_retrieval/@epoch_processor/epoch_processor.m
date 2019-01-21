@@ -21,7 +21,8 @@ classdef epoch_processor < sci.time_series.subset_retrieval.processor
     
     properties
         d0 = '---------  Must have values -----------'
-        epoch_name
+        epoch_name   %OR
+        epoch_object
         
         indices = 'all'
         
@@ -56,7 +57,14 @@ classdef epoch_processor < sci.time_series.subset_retrieval.processor
             stop_times = cell(1,n_objects);
             
             %Note, that we have 1 event for each
-            events = data_objects.getEvent(obj.epoch_name);
+            if isempty(obj.epoch_name)
+                if isempty(obj.epoch_object)
+                    error('Epoch name and object properties are empty, one must be set')
+                end
+                events = obj.epoch_object;
+            else
+                events = data_objects.getEvent(obj.epoch_name);
+            end
             
             %1) Retrieval of times ...
             %--------------------------------------------------------------
