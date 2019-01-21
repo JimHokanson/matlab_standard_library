@@ -217,15 +217,23 @@ classdef subplotter < sl.obj.display_class
     %Methods
     %----------------------------------------------------------------------
     methods
-        function varargout = subplot(obj,row,column)
+        function varargout = subplot(obj,row_or_index,column)
             %x Create the actual subplot axis
             %
-            %   ax = subplot(obj,row,column);
+            %   ax = subplot(obj,row,column)
+            %
+            %   ax = subplot(obj,index)
             %
             %   Example
             %   -------
             %   Plot to the 2nd row, 3rd column
             %   ax = sp.subplot(2,3);
+            
+            if nargin == 2
+                [row,column] = ind2sub([obj.n_rows,obj.n_columns],row_or_index);
+            else
+                row = row_or_index;
+            end
             
             I = (row-1)*obj.n_columns + column;
             ax = subplot(obj.n_rows,obj.n_columns,I);
