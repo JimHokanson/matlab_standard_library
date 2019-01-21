@@ -529,12 +529,17 @@ classdef data < sl.obj.handle_light
         end
         
         function result_object = plotStacked(objs,varargin)
+            %x Plot traces stacked
             %
-            %
-            %   result_object = plotStacked(objs,local_options,plotting_options)
+            %   result_object = plotStacked(objs,varargin)
             %
             %   We could have variability between objects OR between
             %   channels, but not both
+            %
+            %   Optional Inputs
+            %   ---------------
+            %   y_tick_labels : default {}
+            %       If empty than an id is provided ...
             %
             %   ====================================
             %   TODO: Update documentation!
@@ -588,6 +593,7 @@ classdef data < sl.obj.handle_light
             result_object = struct;
             
             in.y_tick_labels = {};
+            in.remove_time_offset = false;
             in.zero_by_event = '';
             in.loop_props = {'Color'};
             in.shift    = []; %1 value or multiple values
@@ -658,7 +664,7 @@ classdef data < sl.obj.handle_light
                 plotting_options = loop_options.getNext();
                 temp = big_plot(local_time(iPlot),local_data{iPlot}+all_shifts(iPlot),plotting_options{:});
                 temp.renderData();
-                line_handles(iPlot) = temp.h_and_l.h_plot(1);
+                line_handles(iPlot) = temp.h_and_l.h_line(1);
             end
             hold off
             
