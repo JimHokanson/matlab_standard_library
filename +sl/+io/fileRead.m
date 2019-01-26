@@ -26,10 +26,10 @@ function out = fileRead(file_path,type,varargin)
 %   Examples:
 %   ---------
 %   1) Read and return as uint8
-%   out = sl.io.fileRead(file_path,'*uint8')
+%   out = sl.io.fileRead(file_path,'*uint8');
 %
 %   2) Read and return as characters
-%   out = sl.io.fileRead(file_path,'*char')
+%   out = sl.io.fileRead(file_path,'*char');
 %
 %   See Also:
 %   ---------
