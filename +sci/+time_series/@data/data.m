@@ -527,14 +527,14 @@ classdef data < sl.obj.handle_light
             
             %TODO: Build in cleanup code ...
         end
-        
         function result_object = plotStacked(objs,varargin)
-            %x Plot traces stacked
+            %x Plot traces on a single axes - stacked
             %
             %   result_object = plotStacked(objs,varargin)
             %
             %   We could have variability between objects OR between
-            %   channels, but not both
+            %   channels, but not both i.e. n_objects > 1 or n_channels > 1
+            %
             %
             %   Optional Inputs
             %   ---------------
@@ -592,6 +592,9 @@ classdef data < sl.obj.handle_light
             
             result_object = struct;
             
+            in.ids = [];
+            in.zero_offset = true;
+            in.add_index_id = true;
             in.y_tick_labels = {};
             in.remove_time_offset = false;
             in.zero_by_event = '';
@@ -635,13 +638,25 @@ classdef data < sl.obj.handle_light
                 end
             end
             
+            n_plots = length(local_data);
+            
+            if isempty(in.ids)
+                in.ids = 1:n_plots;
+            elseif length(in.ids) ~= n_plots
+                error('mismatch in length of ids %d and the # of plots %d',length(in.ids),n_plots)
+            end
+                
+            %Time manipulation
+            %----------------------------------------------
             local_time = [local_time{:}];
             local_time.changeOutputUnits(in.time_units);
             
-            %Step 2: Determine shift amount
-            %----------------------------------------------------------
-            n_plots = length(local_data);
+            if in.zero_offset
+               local_time.zeroStartOffset(); 
+            end
             
+            %Determine shift amount
+            %----------------------------------------------------------
             if isempty(in.shift)
                 error('Currently a shift specification is required :/')
             elseif length(in.shift) == 1
@@ -672,6 +687,18 @@ classdef data < sl.obj.handle_light
             
             if ~isempty(in.y_tick_labels)
                 set(gca,'YTick',all_shifts,'YTickLabel',in.y_tick_labels)
+            elseif in.add_index_id
+                %in.ids is defined by this point either from user or by
+                %default
+                id_width = sl.numbers.getPrintedIntegerWidth(max(in.ids));
+                format_string = sprintf('%%%dd, %%g',id_width);
+                %Handling the shifts is hard because we don't know the
+                %precision ...
+                %TODO: Can we extract the precision and format
+                %accordingly???
+                strings = sl.cellstr.sprintf(format_string,1:length(all_shifts),all_shifts);
+                new_strings = sl.cellstr.padToMaxLength(strings);
+                set(gca,'YTick',all_shifts,'YTickLabel',new_strings)
             end
             
             if ~isempty(in.zero_by_event)
