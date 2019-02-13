@@ -7,6 +7,24 @@ function output = concatenate(varargin)
 %   The output from this function is a result which can yield a structure
 %   array or table.
 %
+%
+%   Example
+%   --------
+%   s1.a = 1;
+%   s1.b = 2;
+%   s1.c = 'test';
+%     
+%   s2.a = 3;
+%   s2.b = 5;
+%     
+%   s3.c = 'hi';
+%   s3.b = 10;
+%     
+%   s4.d = 'wtf man';
+%     
+%   s_obj = sl.struct.concatenate(s1,s2,s3,s4);
+%   s_merged = s_obj.getRawStructureArray();
+%   
 
 %Optional inputs not yet handled
 %Need to look for first non-structure entry
