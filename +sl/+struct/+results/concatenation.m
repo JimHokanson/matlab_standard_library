@@ -118,19 +118,50 @@ classdef concatenation
             temp = obj.getRawStructureArray;
             output = struct2table(temp);
         end
-        function output = getProcessedTable(obj,varargin)
+        function output = getProcessedStructureArray(obj,varargin)
+            %x Retrieve concatenated structure array with defaults support
             %
+            %   output = getProcessedStructureArray(obj,varargin)
             %
             %   Optional Inputs
             %   ---------------
             %   defaults : cell of prop/value pairs
-            %       Any fields which have missing 
+            %       Any fields which may have missing values
             %       Example {'a',1,'b',2}
+            %   add_missing : default false
+            %       If a default field does not exist, this adds it to
+            %       all entries with the default value.
+            %   throw_missing_error : default false
+            %       If a default field does not exist, this throws an error
+            %       indicating which field is missing.
             %       
+            %   Missing Field Conditions
+            %   ------------------------
+            %   1) missing field, add with default value => 'add_missing'
+            %   2) missing field, don't add 
+            %   3) missing field, throw error => 'throw_missing_error'
             %
+            %   Example
+            %   -------
+            %   s1 = struct;
+            %   s1.a = 1;
+            %   s1.b = 2;
+            % 
+            %   s2 = struct;
+            %   s2.a = 3;
+            % 
+            %   temp = sl.struct.concatenate(s1,s2);
+            %   s3 = temp.getProcessedStructureArray('defaults',{'c',4},'add_missing',true);
+            % 
+            %   s3(2) =>
+            %       a: 3
+            %       b: []
+            %       c: 4
+
             
             in.defaults = [];
-            in.add_completely_missing_default = true;
+            in.add_missing = false;
+            in.throw_missing_error = false;
             in = sl.in.processVarargin(in,varargin);
             
             output_cell = obj.raw_cell;
@@ -140,25 +171,31 @@ classdef concatenation
             if ~isempty(in.defaults)
                 props = in.defaults(1:2:end);
                 values = in.defaults(2:2:end);
-                %TODO: error check on length and type for props
+                if length(props) ~= length(values)
+                    error('mismatch in # of default properties and # of default values')
+                end
                 for i = 1:length(props)
                     cur_name = props{i};
                     cur_value = values(i); %leave as a cell for assignment
-                    I = find(strcmp(cur_name,obj.unique_field_names)); 
+                    I = find(strcmp(cur_name,obj.unique_field_names));                    
                     if isempty(I)
-                        if in.add_completely_missing_default
-                            error('Not yet implemented')
+                        if in.add_missing
                             %This can be challenging to do cleanly
                             %We should allow growing a dimension
                             %cleanly
                             %
                             %   Interesting solution ...
                             %   https://www.mathworks.com/matlabcentral/answers/57610-extending-columns-and-rows-of-matrix
-                        else
+                            
+                            output_cell(end+1,:,:) = cur_value; %#ok<AGROW>
+                            field_names_local = [field_names_local; {cur_name}]; %#ok<AGROW>
+                            
+                            %This needs to keep the same shape for possible
+                            %later use in another loop iteration
+                            is_missing_local(end+1,:,:) = false; %#ok<AGROW>
 
-                           %TODO: We might want to allow having completely
-                           %missing defaults ... 
-                           error('Missing field ...') 
+                        elseif in.throw_missing_error
+                           error('Missing fieldname: %s, for adding default values',cur_name) 
                         end
                     else
                         prop_mask = false(size(output_cell));
@@ -169,16 +206,47 @@ classdef concatenation
                 end
             end
         	output = cell2struct(output_cell,field_names_local,1);
-
-            
         end
-        %TODO: 
-        %---------------------
-        %Support filling in missing based on default values
-        
-%         function getFinalValue(obj)
-%             
-%         end
+        function output = getProcessedTable(obj,varargin)
+            %x Retrieve concatenated structure as a table with defaults support
+            %
+            %   output = getProcessedTable(obj,varargin)
+            %
+            %   Optional Inputs
+            %   ---------------
+            %   defaults : cell of prop/value pairs
+            %       Any fields which may have missing values
+            %       Example {'a',1,'b',2}
+            %   add_missing : default false
+            %       If a default field does not exist, this adds it to
+            %       all entries with the default value.
+            %   throw_missing_error : default false
+            %       If a default field does not exist, this throws an error
+            %       indicating which field is missing.
+            %
+            %   Example
+            %   -------
+            %   s1 = struct;
+            %   s1.a = 1;
+            %   s1.b = 2;
+            % 
+            %   s2 = struct;
+            %   s2.a = 3;
+            % 
+            %   temp = sl.struct.concatenate(s1,s2);
+            %   s3 = temp.getProcessedTable('defaults',{'c',4},'add_missing',true);
+            % 
+            %   s3 =
+            % 
+            %   2×3 table
+            %     a     b     c
+            %     _    ___    _
+            %     1    [2]    4
+            %     3    []     4
+          
+          	temp = obj.getProcessedStructureArray(varargin{:});
+            output = struct2table(temp);
+        end
     end
     
 end
