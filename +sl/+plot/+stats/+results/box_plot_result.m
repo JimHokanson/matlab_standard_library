@@ -16,6 +16,10 @@ classdef box_plot_result < sl.obj.display_class
     properties
         h_axes  % Axes
         entries % [sl.plot.stats.results.box_plot_entry]
+        
+        design  %sl.plot.stats.results.box_plot_designs
+        %Can be called to create standard visualizations ...
+        %   r.design.jim_std();
     end
     
     methods
@@ -28,6 +32,7 @@ classdef box_plot_result < sl.obj.display_class
             %   sl.plot.stats.results.box_plot_entry;
             obj.h_axes = h_axes;
             obj.entries = entries;
+            obj.design = sl.plot.stats.results.box_plot_designs(obj);
         end
         function addData(obj,new_data,varargin)
             %x Add more boxes to the plot
@@ -112,16 +117,36 @@ classdef box_plot_result < sl.obj.display_class
             %   -------
             %   r1.setLabels({'10 Hz, 1T'},'add_n',true);
             
+            in.other_result = [];
             in.rotate = 0;
             in.add_n = false;
             in = sl.in.processVarargin(in,varargin);
             
+            %Why aren't we calling the entris function???
+            
             x_ticks = [obj.entries.x_center];
+            
             
             if in.add_n
                 d = [obj.entries.data];
                 n_points = [d.n_data_points];
+                if length(labels) ~= length(n_points)
+                    error('Mismatch in # of labels: %d vs # of bars %d',length(labels),length(n_points))
+                end
                 labels = cellfun(@(x,y) sprintf('%s (n=%d)',x,y),labels,num2cell(n_points),'un',0);
+            end
+            
+            for i = 1:length(labels)
+               obj.entries(i).x_label = labels{i}; 
+            end
+            
+            if ~isempty(in.other_result)
+                obj2 = in.other_result;
+            	x_ticks2 = [obj2.entries.x_center];
+                labels2 = {obj2.entries.x_label};
+                merged_labels = [labels labels2];
+                [x_ticks,I] = sort([x_ticks x_ticks2]);
+                labels = merged_labels(I);
             end
             
             set(obj.h_axes,'XTick',x_ticks,'XTickLabel',labels,'XTickLabelRotation',in.rotate);

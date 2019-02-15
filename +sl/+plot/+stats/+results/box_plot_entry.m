@@ -31,6 +31,9 @@ classdef box_plot_entry < handle
     end
     
     methods
+        function set.x_label(obj,value)
+            obj.h__x_label = value;
+        end
         function value = get.x_label(obj)
             value = obj.h__x_label;
             
@@ -151,6 +154,9 @@ classdef box_plot_entry < handle
             
         end
         function readdLabels(objs)
+            %
+            %   Sometimes functions clear the labels. This readds
+            %   the labels ...
             for i = 1:length(objs)
                objs(i).setLabel(objs(i).x_label,false); 
             end
@@ -410,7 +416,11 @@ classdef box_plot_entry < handle
                     cur_name = fn{j};
                     p = obj.(cur_name);
                     if ~isempty(p) && isvalid(p)
-                        p.XData = p.XData + dx;
+                        if isprop(p,'XData')
+                            p.XData = p.XData + dx;
+                        else
+                            p.Position(1) = p.Position(1)+dx;
+                        end
                     end
                 end
                 
@@ -467,18 +477,23 @@ classdef box_plot_entry < handle
                         %[x y w h]
                         
                         %If we are previously filled this is invalid ...
+                        %??? Is that a TODO?
                         half_width = obj.box_width/2;
-                        
                         
                         pos = [obj.x_center - half_width,...
                             obj.box_bottom, ...
                             obj.box_width,...
                             obj.box_top - obj.box_bottom];
-                        %position =
-                        h_rect = rectangle(obj.h_axes,'Position',pos);
+                        
+                        
+                        
                         delete(obj.h_box)
-                        obj.h_box = h_rect;
-                        uistack(obj.h_box,'bottom')
+                        c = obj.h_axes.Children;
+                        
+                        obj.h_box = rectangle(obj.h_axes,'Position',pos);
+                        obj.h_axes.Children = [c; obj.h_box];
+                        
+                        %uistack(obj.h_box,'bottom')
                         %Doesn't work ...
                         %uistack(obj.h_median,'top')
                     otherwise
