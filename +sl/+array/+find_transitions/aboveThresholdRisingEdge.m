@@ -1,8 +1,27 @@
 function I = aboveThresholdRisingEdge(data,threshold)
 %
-%   sl.array.find_transitions.aboveThresholdRisingEdge(data,threshold)
+%   I = sl.array.find_transitions.aboveThresholdRisingEdge(data,threshold)
 %
 %   
+
+%Compiling:
+%   mex findThresholdTransitions.c
+
+%{
+%Test code
+%-----------------
+data = zeros(1,1e7);
+data(5:1000:end) = 1;
+I1 = sl.array.find_transitions.aboveThresholdRisingEdge(data,0.5);
+
+
+%}
+
+%Options
+%-------
+%0 - 
+
+I = findThresholdTransitions(data,threshold,0);
 
 %{
 data = zeros(1,1e7);

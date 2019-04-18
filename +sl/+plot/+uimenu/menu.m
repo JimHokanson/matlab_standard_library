@@ -7,6 +7,7 @@ classdef menu < handle
     %   redundant entries
     
     properties
+        text_field_name
         parent %handle to parent
         h %handle to Matlab menu
     end
@@ -16,8 +17,13 @@ classdef menu < handle
             %
             %   obj = sl.plot.uimenu.menu.fromHandle(h)
             
-           %error('Not yet implemented') 
-           obj = sl.plot.uimenu.menu(h.Text,h.Parent);
+            if sl.ml.verLessThan('2017b')
+                TEXT = 'Label';
+            else
+                TEXT = 'Text';
+            end
+           
+           obj = sl.plot.uimenu.menu(h.(TEXT),h.Parent);
         end
     end
     
@@ -33,6 +39,17 @@ classdef menu < handle
             if nargin == 0
                 parent = gcf;
             end
+            
+            %In 2017b uimenu's switched from 'Label' to 'Text' fields for the display
+            %string :/
+            if sl.ml.verLessThan('2017b')
+                obj.text_field_name = 'Label';
+            else
+                obj.text_field_name = 'Text';
+            end
+            
+            TEXT = obj.text_field_name;
+
             c = get(parent,'Children');
             is_menu_class = arrayfun(@(x) isa(x,'matlab.ui.container.Menu'),c);
 
@@ -41,11 +58,12 @@ classdef menu < handle
             if isempty(c_menu)
                 I = [];
             else
-                I = find(strcmp({c_menu.Text},menu_text),1);
+                
+                I = find(strcmp({c_menu.(TEXT)},menu_text),1);
             end
             
             if isempty(I)
-                obj.h = uimenu(parent,'Text',menu_text);
+                obj.h = uimenu(parent,TEXT,menu_text);
             else
                 obj.h = c_menu(I);
             end
@@ -60,9 +78,11 @@ classdef menu < handle
             %   2) allow adding line to seperate into sections ...
             %   3) Second output to indicate if added or not
             
+            TEXT = obj.text_field_name;
+            
         	c2 = get(obj.h,'Children');
             if ~isempty(c2)
-                I = find(strcmp({c2.Text},child_text),1);
+                I = find(strcmp({c2.(TEXT)},child_text),1);
                 add_menu = isempty(I);
                 if ~isempty(I)
                    h = c2(I); 
@@ -72,7 +92,7 @@ classdef menu < handle
             end
             
             if add_menu
-                h = uimenu(obj.h,'Text',child_text,varargin{:});
+                h = uimenu(obj.h,TEXT,child_text,varargin{:});
             end
             
             h2 = sl.plot.uimenu.menu.fromHandle(h);
