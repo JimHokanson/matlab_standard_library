@@ -7,6 +7,7 @@ function s_objs = toStruct(objs,varargin)
 %   converting an object to a structure. This function avoids this
 %   warning and provides other processing options.
 %
+%   The warning this function avoids is:
 %   "Warning: Calling STRUCT on an object prevents the object from hiding
 %   its implementation details and should thus be avoided. Use DISP or
 %   DISPLAY to see the visible public details of an object. See 'help

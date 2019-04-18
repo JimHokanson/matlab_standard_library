@@ -164,6 +164,10 @@ classdef subplotter < sl.obj.display_class
             %   shape : 2 element vector [n_rows, n_columns]
             %
             
+            if ~isvalid(fig_handle)
+                error('Invalid figure handle, figure likely closed')
+            end
+            
             %Push this to getSubplotAxesHandles??
             if exist('shape','var')
                 handles = findobj(gcf,'Type','axes');
@@ -184,8 +188,6 @@ classdef subplotter < sl.obj.display_class
         function obj = subplotter(n_rows,n_columns,varargin)
             %
             %   obj = sl.plot.subplotter(n_rows,n_columns)
-            %
-            %   Note, as much as I would like to be able to support
             %
             %   Optional Inputs
             %   ---------------
