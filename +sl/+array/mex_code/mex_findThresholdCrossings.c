@@ -3,6 +3,12 @@
 #include "float.h"
 #include <immintrin.h>
 
+//single 2 stage simd 7.2
+//single 2 stage openmp 6.2
+//sinlge 2 stage plain 3.8
+//single 1 pass plain
+
+
 #ifdef _MSC_VER
 #define PRAGMA __pragma
 #else
@@ -33,7 +39,7 @@
 #define GET_EVENT_COUNT(f1,index1,f2,index2) \
     /* For example GET_EVENT_COUNT(>=,i+1,<,i)  rising edge event  */ \
     mwSize count = 0; \
-    PRAGMA("omp parallel for reduction(+ : count)") \
+    /*PRAGMA("omp parallel for reduction(+ : count)") */\
     for (mwIndex i = 0; i < n_data_samples-1; i++){ \
        /*Note, order here matters for speed*/ \
        if (data[index1] f1 threshold && data[index2] f2 threshold){ \
@@ -137,9 +143,27 @@ void get_rising_gt_threshold_events_single(STD_INPUT_DEFINE(float)){
     //faster than just openmp (when openmp is disabled)
     //I wonder if we would get better performance if we split parts of the loop
     //up like we do for 
-    GET_EVENT_COUNT2(>=,i+1,<,i,8,_mm256_loadu_ps,_mm256_cmp_ps,
-            _mm256_and_ps,_mm256_movemask_ps,17,19,__m256,_mm256_set1_ps);
-    POPULATE_EVENTS(>=,i+1,<,i,1);
+    //GET_EVENT_COUNT2(>=,i+1,<,i,8,_mm256_loadu_ps,_mm256_cmp_ps,
+    //        _mm256_and_ps,_mm256_movemask_ps,17,19,__m256,_mm256_set1_ps);
+    //POPULATE_EVENTS(>=,i+1,<,i,1);
+    
+    mwSize sz = 100;
+    double *pout = mxCalloc(sz,sizeof(double));
+    mwSize count = 0; 
+    for (mwIndex i = 0; i < n_data_samples-1; i++){
+       if (data[i+1] >= threshold && data[i] < threshold){
+          if (count == sz){
+              sz = sz*2;
+              pout = mxRealloc(pout,sz*sizeof(double));
+          }
+          pout[count] = i + 1;
+          count = count + 1;
+       }
+    }
+    
+    
+  	mxSetData(indices,pout);
+    mxSetN(indices,count);
 }
 
 void get_falling_gt_threshold_events_single(STD_INPUT_DEFINE(float)){
