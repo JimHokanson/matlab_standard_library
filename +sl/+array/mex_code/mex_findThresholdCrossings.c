@@ -116,6 +116,22 @@
     GET_EVENT_COUNT(f1,index1,f2,index2); \
     POPULATE_EVENTS(f1,index1,f2,index2,offset); 
     
+#define RUN_STD_CODE2(f1,index1,f2,index2,offset) \
+    mwSize sz = 10000;    /*TODO: make this based on data*/ \
+    double *pout = mxCalloc(sz,sizeof(double)); \
+    mwSize count = 0; \
+    for (mwIndex i = 0; i < n_data_samples-1; i++){ \
+       if (data[index1] f1 threshold && data[index2] f2 threshold){ \
+          if (count == sz){ \
+              sz = sz*2; \
+              pout = mxRealloc(pout,sz*sizeof(double)); \
+          } \
+          pout[count] = i + offset; \
+          count = count + 1; \
+       } \
+    } \
+  	mxSetData(indices,pout); \
+    mxSetN(indices,count);
     
 #define STD_INPUT_CALL indices, threshold, data, n_data_samples
 #define STD_INPUT_DEFINE(type) mxArray *indices, type threshold, type *data, mwSize n_data_samples    
@@ -124,19 +140,19 @@
 //TODO: Work out index of event (at start or end, vary based on rise or fall
     
 void get_rising_gt_threshold_events_double(STD_INPUT_DEFINE(double)){
-    RUN_STD_CODE(>=,i+1,<,i,1); 
+    RUN_STD_CODE2(>=,i+1,<,i,1); 
 }
 
 void get_falling_gt_threshold_events_double(STD_INPUT_DEFINE(double)){
-    RUN_STD_CODE(>=,i,<,i+1,1); 
+    RUN_STD_CODE2(>=,i,<,i+1,1); 
 }
 
 void get_falling_lt_threshold_events_double(STD_INPUT_DEFINE(double)){
-    RUN_STD_CODE(<=,i+1,>,i,1); 
+    RUN_STD_CODE2(<=,i+1,>,i,1); 
 }
 
 void get_rising_lt_threshold_events_double(STD_INPUT_DEFINE(double)){
-    RUN_STD_CODE(<=,i,>,i+1,1); 
+    RUN_STD_CODE2(<=,i,>,i+1,1); 
 }
 
 void get_rising_gt_threshold_events_single(STD_INPUT_DEFINE(float)){
@@ -150,122 +166,19 @@ void get_rising_gt_threshold_events_single(STD_INPUT_DEFINE(float)){
     //        _mm256_and_ps,_mm256_movemask_ps,17,19,__m256,_mm256_set1_ps);
     //POPULATE_EVENTS(>=,i+1,<,i,1);
     
-    //One solution
-    //-------------------------------------------------------------
-    mwSize sz = 5000;    //TODO: make this based on data
-    double *pout = mxCalloc(sz,sizeof(double));
-    mwSize count = 0; 
-    for (mwIndex i = 0; i < n_data_samples-1; i++){
-       if (data[i+1] >= threshold && data[i] < threshold){
-          if (count == sz){
-              sz = sz*2;
-              pout = mxRealloc(pout,sz*sizeof(double));
-          }
-          pout[count] = i + 1;
-          count = count + 1;
-       }
-    }
-    
-  	mxSetData(indices,pout);
-    mxSetN(indices,count);
-    
-    if (0){
-    //Other solution - assume spareness, maybe toggle with above ...
-    //Ideally we could specify which is sparse - exceeding threshold or not
-    //  from the input
-    //---------------------------------------------------------------------
-    __m256 m0 = _mm256_set1_ps(threshold);
-    __m256 m1;
-    __m256 m2;
-    __m256 r1;
-    __m256 r2;
-    __m256 r3;
-    int r4;
-    int n_matches = 0;
-    mwSize sz = 5000;    //TODO: make this more reasonable
-    double *pout = mxCalloc(sz,sizeof(double));
-    mwSize count = 0; 
-    for (mwIndex i = 0; i < n_data_samples-1-8; i+=8){
-        m1 = _mm256_loadu_ps(data+i); 
-        m2 = _mm256_loadu_ps(data+i+1); 
-        
-        r1 = _mm256_cmp_ps(m1, m0, 17);
-        r2 = _mm256_cmp_ps(m2, m0, 29);
-        r3 = _mm256_and_ps(r1,r2); 
-        r4 = _mm256_movemask_ps(r1);
-        if (r4){
-            //12.88 before testing for 1  9.97 ms
-            
-            
-            
-            //Sub 1 - very slow due to bmi codes
-//             n_matches = _mm_popcnt_u32(r4);
-//             if (count+n_matches >= sz){
-//                 sz = sz*2;
-//                 pout = mxRealloc(pout,sz*sizeof(double));
-//             }
-            
-            
-            //This is really slow ...
-//             for (int j = 0; j < n_matches; j++){
-//                 pout[count] = i + 1 + _blsi_u32(r4);
-//                 r4 = _blsr_u32(r4);
-//                 count += 1;  
-//             }
-            
-            
-            //Sub 2 - 
-            n_matches = _mm_popcnt_u32(r4);
-            
-            //Note, if we are already at the limit, we'll need more
-            //since we know we have at least 1 ...
-            if (count == sz){
-                sz = sz*2;
-                pout = mxRealloc(pout,sz*sizeof(double));
-            }
-
-                for (mwIndex j = i; j < i+8; j++){
-                   if (data[j+1] >= threshold && data[j] < threshold){
-                      pout[count] = j + 1;
-                      count = count + 1;
-                   }
-                } 
-            
-            //Sub 3 - close to 2 ...
-            
-//                 for (mwIndex j = i; j < i+8; j++){
-//                    if (data[j+1] >= threshold && data[j] < threshold){
-//                        if (count == sz){
-//                             sz = sz*2;
-//                             pout = mxRealloc(pout,sz*sizeof(double));
-//                         }
-//                       pout[count] = j + 1;
-//                       count = count + 1;
-//                    }
-//                 }  
-            
-            
-            
-        }
-    }
-    
-    mxSetData(indices,pout);
-    mxSetN(indices,count);
-    
-    
-    }
+    RUN_STD_CODE2(>=,i+1,<,i,1); 
 }
 
 void get_falling_gt_threshold_events_single(STD_INPUT_DEFINE(float)){
-    RUN_STD_CODE(>=,i,<,i+1,1); 
+    RUN_STD_CODE2(>=,i,<,i+1,1); 
 }
 
 void get_falling_lt_threshold_events_single(STD_INPUT_DEFINE(float)){
-    RUN_STD_CODE(<=,i+1,>,i,1); 
+    RUN_STD_CODE2(<=,i+1,>,i,1); 
 }
 
 void get_rising_lt_threshold_events_single(STD_INPUT_DEFINE(float)){
-    RUN_STD_CODE(<=,i,>,i+1,1); 
+    RUN_STD_CODE2(<=,i,>,i+1,1); 
 }
 
 
