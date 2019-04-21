@@ -16,7 +16,7 @@
 
 %Jim GitHub mex maker code
 c = mex.compilers.gcc('mex_findThresholdCrossings.c','verbose',true);
-c.addCompileFlags('-mavx2');
+c.addCompileFlags({'-mavx','-mabm','-mbmi'});
 
 %from big_plot.compile - is this for openmp?
 if strcmp(c.gcc_type,'mingw64')
