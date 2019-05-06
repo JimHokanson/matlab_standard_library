@@ -88,7 +88,7 @@ else
     P(2,:) = {sprintf(in.d)} ;  %Added on printing to handle things like \t and \n
     
     if in.keep_rows
-       P(2,n_columns:n_columns:end) = {sprintf('\n')};
+       P(2,n_columns:n_columns:end) = {sprintf('\n')}; %#ok<SPRINTFN>
     end
     
     if ~in.keep_last_d

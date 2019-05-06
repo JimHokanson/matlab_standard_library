@@ -1,4 +1,4 @@
-function [Y, Z] = FilterM(b, a, X, Z, Dim, Reverse)
+function [Y, Z] = mex_filter(b, a, X, Z, Dim, Reverse)
 % FilterM - Fast C-Mex filter
 % [Y, Z] = FilterM(b, a, X, Z, Dim, Reverse)
 % INPUT:
@@ -181,9 +181,9 @@ end
 
 % Call the calculator: ---------------------------------------------------------
 if replyZ
-   [Y, Z] = filterX(b, a, X, Z, Reverse);
+   [Y, Z] = FilterX(b, a, X, Z, Reverse);
 else
-   Y = filterX(b, a, X, Z, Reverse);
+   Y = FilterX(b, a, X, Z, Reverse);
 end
 
 % Reconstruct original array dimension: ----------------------------------------

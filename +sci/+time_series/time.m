@@ -16,8 +16,14 @@ classdef time < sl.obj.display_class
     %
     %   See Also:
     %   sci.time_series.data
+    %   sci.time_series.time_functions
     
     properties
+        n_samples
+        
+        output_units = 's'
+        
+        d0 = '---------- units insensitive properties --------'
         start_datetime %
         %This can be used for real dates to identify the
         %actual time of the first sample. No support for time zones is in
@@ -27,9 +33,7 @@ classdef time < sl.obj.display_class
         start_offset = 0 %(s)
         dt %seconds
         
-        n_samples
         
-        output_units = 's'
         %This requires A LOT of work still
         %Options:
         %-   s: seconds
@@ -43,7 +47,7 @@ classdef time < sl.obj.display_class
     
     properties (Dependent)
         fs
-        
+        d1 = '-------- units sensitive properties ----------'
         %These values are relative, they don't include the 'start_datetime'
         %property. They DO however take into account the 'output_units'
         %property.
@@ -77,7 +81,7 @@ classdef time < sl.obj.display_class
             value = obj.end_time - obj.start_time;
         end
         function value = get.start_end_times(obj)
-            value = [obj.start_time obj.end_time]; 
+            value = [obj.start_time obj.end_time];
         end
     end
     
@@ -157,19 +161,19 @@ classdef time < sl.obj.display_class
             if isempty(in.new_start_offset)
                 start_offsets = [objs.start_offset];
             else
-               start_offsets = h__repIfNecessary(in.new_start_offset,n_objects); 
+                start_offsets = h__repIfNecessary(in.new_start_offset,n_objects);
             end
-
+            
             if isempty(in.dt)
                 local_dt = [objs.dt];
             else
-                local_dt = h__repIfNecessary(in.dt,n_objects); 
+                local_dt = h__repIfNecessary(in.dt,n_objects);
             end
             
             if isempty(in.n_samples)
                 local_n_samples = [objs.n_samples];
             else
-                local_n_samples = h__repIfNecessary(in.n_samples,n_objects); 
+                local_n_samples = h__repIfNecessary(in.n_samples,n_objects);
             end
             
             %Creates the deep copy
@@ -235,6 +239,11 @@ classdef time < sl.obj.display_class
                 'start_offset',start_offset,...     %#ok<PROPLC>
                 'start_datetime',start_datetime);   %#ok<PROPLC>
             new_time_object.output_units = obj.output_units;
+        end
+        function zeroStartOffset(objs)
+            for i = 1:length(objs)
+                objs(i).start_offset = 0;
+            end
         end
         function s_objs = export(objs)
             s_objs = sl.obj.toStruct(objs);
@@ -340,8 +349,8 @@ classdef time < sl.obj.display_class
             %JAH: Added this for compatibility with streaming data
             %
             %We need to handle having both this and getNearestIndices
-                raw_indices = (times - obj.start_offset)./obj.dt;
-                indices = round(raw_indices)+1;
+            raw_indices = (times - obj.start_offset)./obj.dt;
+            indices = round(raw_indices)+1;
         end
         function times = getTimesFromIndices(obj,indices)
             %x Given sample indices return times of these indices (in seconds)
@@ -374,19 +383,24 @@ classdef time < sl.obj.display_class
             times = obj.start_offset + (indices-1)*obj.dt;
             times = h__getTimeScaled(obj,times);
         end
-        function [indices,result] = getNearestIndices(obj,times)
+        function [indices,result] = getNearestIndices(obj,times,varargin)
             %x Given a set of times, return the closest indices
             %
             %   [indices,result] = getNearestIndices(obj,times)
             %
-            %   Inputs:
-            %   -------
-            %   times:
+            %   Inputs
+            %   ------
+            %   times : vector
             %
-            %   Outputs:
-            %   --------
-            %   indices :
+            %   Optional Inputs
+            %   ----------------
+            %
+            %   Outputs
+            %   -------
+            %   indices : Closest indices
             %   result : sci.time_series.time.nearest_indices_result
+            %
+            %
             %
             %   Improvements:
             %   -------------
@@ -397,20 +411,27 @@ classdef time < sl.obj.display_class
             %   rounded to the edges i.e. index of 0.3 could go to 1
             %   instead of 0 - I also might have meant floor and ceiling)
             
+            in.relative_time = false;
+            in = sl.in.processVarargin(in,varargin);
+            
             if isempty(times)
-               indices = [];
-               if nargout == 2
-                   result = sci.time_series.time.nearest_indices_result;
-               else
-                   result = [];
-               end
-               return
+                indices = [];
+                if nargout == 2
+                    result = sci.time_series.time.nearest_indices_result;
+                else
+                    result = [];
+                end
+                return
             end
             
             
             times = h__unscaleTime(obj,times);
             
-            raw_indices = (times - obj.start_offset)./obj.dt;
+            if in.relative_time
+                raw_indices = times./obj.dt;
+            else
+                raw_indices = (times - obj.start_offset)./obj.dt;
+            end
             indices = round(raw_indices)+1;
             
             %Error check on indices being in bounds
@@ -481,11 +502,11 @@ end
 end
 
 function output = h__repIfNecessary(value,n_objects)
-    %Written for the copy method
-    if length(value) == n_objects
-        output = repmat(value,1,n_objects);
-    else
-        output = value;
-    end
+%Written for the copy method
+if length(value) == n_objects
+    output = repmat(value,1,n_objects);
+else
+    output = value;
+end
 end
 

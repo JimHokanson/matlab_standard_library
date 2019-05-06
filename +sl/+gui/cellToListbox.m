@@ -47,6 +47,7 @@ in.show_line_numbers = true;
 in.post_pad_length = 1;
 in.pre_pad_length = 1;
 in.headers = {};
+in.merge_header = false;
 % in.logical %Thinking about allowing different styles of logical ...
 %   => could also allow function handles ...
 in = sl.in.processVarargin(in,varargin);
@@ -142,7 +143,11 @@ end
 
 %Output
 %-------------------------------------------------------
-s.row_data = row_data;
+if in.merge_header
+s.row_data = vertcat(header_string,row_data);
+else
+s.row_data = row_data;    
+end
 s.header_string = header_string;
 output = s;
 

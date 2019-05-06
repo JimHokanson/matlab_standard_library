@@ -6,9 +6,7 @@ classdef event_processor < sci.time_series.subset_retrieval.processor
     %   The main access point is meant to be in:
     %       sci.time_series.subset_retrieval
     %
-    %   See Also
-    %   --------
-    %   sci.time_series.subset_retrieval
+
     %
     %   Global Optional Inputs
     %   ----------------------
@@ -34,6 +32,14 @@ classdef event_processor < sci.time_series.subset_retrieval.processor
     %   3) start_event, sample_offsets          fromEventAndSampleWindow      
     %   4) start_event, time_duration           fromEventAndTimeDuration
     %   5) start_event, sample_duration         fromEventAndSampleDuration
+    %
+    %   Examples
+    %   --------
+    %   1) 
+    %   
+    %   See Also
+    %   --------
+    %   sci.time_series.subset_retrieval
     
     
     properties
@@ -48,12 +54,24 @@ classdef event_processor < sci.time_series.subset_retrieval.processor
         stop_indices = 'all';
         time_duration
         sample_duration
-        time_offsets
+        time_offsets  %This is either:
+        %1) No stop_name defined
+        %start_time + time_offsets(1) to start_time + time_offsets(2) OR
+        %2) stop_name is defined
+        %start_time + time_offsets(1) to stop_time + time_offsets(2)
         sample_offsets
     end
     
     methods
         function [start_samples,stop_samples] = getStartAndStopSamples(obj,data_objects)
+            %
+            %   This is required method for data subset retrieval
+            %
+            %   [start_samples,stop_samples] = getStartAndStopSamples(obj,data_objects)
+            %
+            %   See Also
+            %   --------
+            %   sci.time_series.subset_retrieval.processor>getSubset
             
             n_objects = length(data_objects);
             
@@ -70,7 +88,13 @@ classdef event_processor < sci.time_series.subset_retrieval.processor
             if ~isempty(obj.time_duration)
                 stop_times = cellfun(@(x) x + obj.time_duration,start_times,'un',0);
             elseif ~isempty(obj.time_offsets)
-                stop_times = cellfun(@(x) x + obj.time_offsets(2),start_times','un',0);
+                if ~isempty(obj.stop_name)
+                  	stop_events = data_objects.getEvent(obj.stop_name);
+                    stop_times = h__process_indices(obj,obj.stop_indices,n_objects,stop_events);
+                    stop_times = cellfun(@(x) x + obj.time_offsets(2),stop_times','un',0);
+                else
+                    stop_times = cellfun(@(x) x + obj.time_offsets(2),start_times','un',0);
+                end
                 start_times = cellfun(@(x) x + obj.time_offsets(1),start_times','un',0);
             else
                 if isempty(obj.sample_duration) && isempty(obj.sample_offsets)
@@ -91,6 +115,10 @@ classdef event_processor < sci.time_series.subset_retrieval.processor
             %Implement sample based window
             %-----------------------------
             if ~isempty(obj.sample_offsets)
+                %TODO: This needs to respect the stop name
+                if ~isempty(obj.stop_name)
+                   error('Unhandled code case') 
+                end
                 stop_samples  = cellfun(@(x) x + obj.sample_offsets(2),start_samples,'un',0);
                 start_samples = cellfun(@(x) x + obj.sample_offsets(1),start_samples,'un',0);
             elseif ~isempty(obj.sample_duration)

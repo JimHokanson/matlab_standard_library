@@ -5,7 +5,7 @@ function saveAsSVG(h_fig)
 %
 %   Improvements
 %   ------------
-%   1) Allow file specification ...
+%   1) Allow file specification as an input
 
 if nargin == 0
    h_fig = gcf; 

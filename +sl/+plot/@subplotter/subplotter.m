@@ -52,6 +52,12 @@ classdef subplotter < sl.obj.display_class
     properties (Dependent)
         n_rows
         n_columns
+        y_extents
+        x_extents
+        y_gaps
+        x_gaps
+        widths
+        heights
     end
     
     methods
@@ -60,6 +66,60 @@ classdef subplotter < sl.obj.display_class
         end
         function value = get.n_columns(obj)
             value = obj.dims(2);
+        end
+        function value = get.y_extents(obj)
+            y1 = obj.handles{end,1}.Position(2);
+            y2 = obj.handles{1,1}.Position(2) + obj.handles{1,1}.Position(4);
+            value = [y1 y2];
+        end
+        function value = get.x_extents(obj)
+            x1 = obj.handles{1,1}.Position(1);
+            x2 = obj.handles{1,end}.Position(1) + obj.handles{1,end}.Position(3);
+            value = [x1 x2];
+        end
+        function value = get.y_gaps(obj)
+            if obj.n_rows == 1
+                value = [];
+            else
+                all_positions = get([obj.handles{:,1}],'position');
+                if ~iscell(all_positions)
+                    all_positions = {all_positions};
+                end
+                all_bottoms = cellfun(@(x) x(2),all_positions);
+                all_tops = cellfun(@(x) x(2)+x(4),all_positions);
+                value = all_bottoms(1:end-1)-all_tops(2:end);
+            end
+        end
+        function value = get.x_gaps(obj)
+            if obj.n_columns == 1
+                value = [];
+            else
+                all_positions = get([obj.handles{1,:}],'position');
+                if ~iscell(all_positions)
+                    all_positions = {all_positions};
+                end
+                all_lefts = cellfun(@(x) x(1),all_positions);
+                all_rights = cellfun(@(x) x(1)+x(3),all_positions);
+                value = all_lefts(2:end)-all_rights(1:end-1);
+            end
+        end
+        function value = get.heights(obj)
+            all_positions = get([obj.handles{:,1}],'position');
+            if ~iscell(all_positions)
+                all_positions = {all_positions};
+            end
+            all_bottoms = cellfun(@(x) x(2),all_positions);
+            all_tops = cellfun(@(x) x(2)+x(4),all_positions);
+            value = all_tops - all_bottoms;
+        end
+        function value = get.widths(obj)
+            all_positions = get([obj.handles{1,:}],'position');
+            if ~iscell(all_positions)
+                all_positions = {all_positions};
+            end
+            all_lefts = cellfun(@(x) x(1),all_positions);
+            all_rights = cellfun(@(x) x(1)+x(3),all_positions);
+            value = all_rights-all_lefts;
         end
     end
     
@@ -92,14 +152,21 @@ classdef subplotter < sl.obj.display_class
     %-----------------------------------------------
     methods (Static)
         function obj = fromFigure(fig_handle,shape)
-            %
+            %x Construct object from figure handle
             %
             %   sp = sl.plot.subplotter.fromFigure(fig_handle,*shape)
+            %
+            %   Attempts to create object from figure handle. Requires
+            %   trying to get subplot shape (unless shape is specified)
             %
             %   Inputs
             %   ------
             %   shape : 2 element vector [n_rows, n_columns]
             %
+            
+            if ~isvalid(fig_handle)
+                error('Invalid figure handle, figure likely closed')
+            end
             
             %Push this to getSubplotAxesHandles??
             if exist('shape','var')
@@ -111,26 +178,26 @@ classdef subplotter < sl.obj.display_class
             end
             sz = size(grid_handles);
             
-            obj = sl.plot.subplotter(sz(1),sz(2));
+            obj = sl.plot.subplotter(sz(1),sz(2),'clf',false);
             obj.handles = num2cell(grid_handles);
             
         end
     end
-    
     
     methods
         function obj = subplotter(n_rows,n_columns,varargin)
             %
             %   obj = sl.plot.subplotter(n_rows,n_columns)
             %
-            %   Note, as much as I would like to be able to support
-            %
             %   Optional Inputs
             %   ---------------
+            %   clf : default true
+            %       Whether to clear the figure or not.
             %   row_first_indexing : logical (default true)
             %       NOT YET IMPLEMENTED
             %
             
+            in.clf = true;
             in.row_first_indexing = true;
             in = sl.in.processVarargin(in,varargin);
             
@@ -142,24 +209,110 @@ classdef subplotter < sl.obj.display_class
             
             obj.row_first_indexing = in.row_first_indexing;
             obj.handles = cell(n_rows,n_columns);
+            
+            if in.clf
+                clf
+            end
         end
-        function varargout = subplot(obj,row,column)
-            % Create the actual subplot axis
+    end
+    
+    %Methods
+    %----------------------------------------------------------------------
+    methods
+        function varargout = subplot(obj,row_or_index,column)
+            %x Create the actual subplot axis
             %
-            %   ax = subplot(obj,row,column);
+            %   ax = subplot(obj,row,column)
+            %
+            %   ax = subplot(obj,index)
             %
             %   Example
             %   -------
             %   Plot to the 2nd row, 3rd column
             %   ax = sp.subplot(2,3);
-            %
-            %   Return regular or special axes?
+            
+            if nargin == 2
+                [row,column] = ind2sub([obj.n_rows,obj.n_columns],row_or_index);
+            else
+                row = row_or_index;
+            end
+            
             I = (row-1)*obj.n_columns + column;
             ax = subplot(obj.n_rows,obj.n_columns,I);
             obj.handles{row,column} = ax;
             
             if nargout
                 varargout{1} = ax;
+            end
+        end
+        function setLineProps(obj,varargin)
+            %x Sets properties of all lines in the axes
+            %
+            %   setLineProps(obj,varargin)
+            %
+            %   Example
+            %   -------
+            %   sp.setLineProps('LineWidth',3)
+            %
+            %   %Only apply to lines with 10 or more points
+            %   sp.setLineProps(10,'LineWidth',3)
+            %
+            %   %Only apply to lines with 3 or fewer points
+            %   sp.setLineProps(-3,'LineWidth',2,'Color','k')
+            
+            use_lt = false;
+            if isnumeric(varargin{1})
+               limit = varargin{1};
+               varargin(1) = [];
+               if limit < 0
+                   limit = abs(limit);
+                   use_lt = true;
+               end
+            else
+                limit = 0;
+            end
+            
+            if use_lt
+                for i = 1:obj.n_rows
+                    for j = 1:obj.n_columns
+                        ax = obj.handles{i,j};
+                        c = ax.Children;
+                        for k = 1:length(c)
+                            cur_c = c(k);
+                            if strcmp(cur_c.Type,'line') && length(cur_c.XData) <= limit
+                               set(cur_c,varargin{:}) 
+                            end
+                        end
+                    end
+                end
+            else
+                for i = 1:obj.n_rows
+                    for j = 1:obj.n_columns
+                        ax = obj.handles{i,j};
+                        c = ax.Children;
+                        for k = 1:length(c)
+                            cur_c = c(k);
+                            if strcmp(cur_c.Type,'line') && length(cur_c.XData) >= limit
+                               set(cur_c,varargin{:}) 
+                            end
+                        end
+                    end
+                end   
+            end
+        end
+        function setAxesProps(obj,varargin)
+            %x Sets properties of all axes
+            %
+            %   setAxesProps(obj,varargin)
+            %
+            %   Example
+            %   -------
+            %   sp.setAxesProps('FontSize',16,'FontName','Arial')
+            
+            for i = 1:obj.n_rows
+                for j = 1:obj.n_columns
+                    set(obj.handles{i,j},varargin{:})
+                end
             end
         end
         function axes(obj,row,column)
@@ -204,11 +357,142 @@ classdef subplotter < sl.obj.display_class
             end
             obj.last_index = sp_index;
         end
+        function setYExtents(obj,y_min,y_max)
+            %x Set y extents (min and max) of plots
+            %
+            %   setYExtents(obj,y_min,y_max)
+            %
+            %   setYExtents(obj,[y_min,y_max])
+            %
+            %   setYExtents(obj,y_gap)
+            %
+            %   Inputs
+            %   ------------------------
+            %
+            %   ---------- <= top of figure
+            %   y_max  or (1-y_gap)
+            %   P1 - plot 1
+            %   G1 - gap 1
+            %   P2
+            %   G2
+            %   P3
+            %   y_min or y_gap
+            %   ---------- <= bottom of figure
+            %
+            %   Improvements
+            %   ------------
+            %
+            %   Examples
+            %   ---------
+            %   sp.setYExtents(0.03,0.96)
+            %
+            %   sp.setYExtents([0.03,0.96])
+            %
+            %   sp.setYExtents(0.05)
+            
+            
+            
+            if nargin == 2
+                if length(y_min) == 1
+                    y_max = 1 - y_min;
+                elseif length(y_min) == 2
+                    y_max = y_min(2);
+                    y_min(2) = [];
+                else
+                    error('Unpected input')
+                end
+            end
+            
+            y1 = obj.y_extents;
+            old_range = y1(2)-y1(1);
+            new_range = y_max - y_min;
+            scale = new_range/old_range;
+            
+            cur_top = y_max;
+            
+            all_heights = obj.heights;
+            all_gaps = obj.y_gaps;
+            
+            new_heights = all_heights*scale;
+            new_gaps = all_gaps*scale;
+            
+            for r = 1:obj.n_rows
+                cur_bottom = cur_top - new_heights(r);
+                for c = 1:obj.n_columns
+                    cur_axes = obj.handles{r,c};
+                    cur_axes.Position(4) = new_heights(r);
+                    cur_axes.Position(2) = cur_bottom;
+                end
+                if r ~= obj.n_rows
+                    cur_top = cur_bottom - new_gaps(r);
+                end
+            end
+        end
+        function setXExtents(obj,x_min,x_max)
+            %x Set x extents (min and max) of plots
+            %
+            %   setXExtents(obj,x_min,x_max)
+            %
+            %   setXExtents(obj,[x_min,x_max])
+            %
+            %   setXExtents(obj,x_min)
+            %
+            %   Inputs
+            %   ------------------------
+            %
+            %
+            %   Improvements
+            %   ------------
+            %
+            %   Examples
+            %   ---------
+            %   sp.setXExtents(0.03,0.96)
+            %
+            %   sp.setXExtents([0.03,0.96])
+            %
+            %   sp.setXExtents(0.05)
+            
+            if nargin == 2
+                if length(x_min) == 1
+                    x_max = 1 - x_min;
+                elseif length(x_min) == 2
+                    x_max = x_min(2);
+                    x_min(2) = [];
+                else
+                    error('Unpected input')
+                end
+            end
+            
+            x1 = obj.x_extents;
+            old_range = x1(2)-x1(1);
+            new_range = x_max - x_min;
+            scale = new_range/old_range;
+            
+            cur_left = x_min;
+            
+            all_widths = obj.widths;
+            all_gaps = obj.x_gaps;
+            
+            new_widths = all_widths*scale;
+            new_gaps = all_gaps*scale;
+            
+            for c = 1:obj.n_columns
+                cur_right = cur_left + new_widths(c);
+                for r = 1:obj.n_rows
+                    cur_axes = obj.handles{r,c};
+                    cur_axes.Position(3) = new_widths(c);
+                    cur_axes.Position(1) = cur_left;
+                end
+                if c ~= obj.n_columns
+                    cur_left = cur_right + new_gaps(c);
+                end
+            end
+        end
         function setRowYLim(obj,row_I,ylim)
             %X Set ylim of all axes in a row
             %
             %   setRowYLim(obj,row_I,ylim)
-            %   
+            %
             %   Examples
             %   --------
             %   sp.setRowYLim(3,[-0.2 0.2])
@@ -251,6 +535,10 @@ classdef subplotter < sl.obj.display_class
             
             in.axis = 'normal';
             in = sl.in.processVarargin(in,varargin);
+            
+            if obj.n_columns == 1
+                return
+            end
             
             all_positions = get([obj.handles{1,:}],'position');
             all_xlims     = get([obj.handles{1,:}],'xlim');
@@ -366,7 +654,7 @@ classdef subplotter < sl.obj.display_class
             if length(pct) ~= n_rows_l
                 error('PCT input must have same length as # of rows')
             elseif n_rows_l == 1
-                error('Function not defined for a single row')    
+                error('Function not defined for a single row')
             end
             
             all_positions = get([obj.handles{:,1}],'position');
@@ -390,16 +678,42 @@ classdef subplotter < sl.obj.display_class
                 for iColumn = 1:n_columns_l
                     
                     cur_axes = obj.handles{iRow,iColumn};
-                    cur_position = get(cur_axes,'position');
-                    cur_position(2) = next_top - cur_height;
-                    cur_position(4) = cur_height;
-                    set(cur_axes,'position',cur_position)
+                    cur_axes.Position(2) = next_top - cur_height;
+                    cur_axes.Position(4) = cur_height;
+                    %
+                    % % % %                     cur_position = get(cur_axes,'position');
+                    % % % %                     cur_position(2) = next_top - cur_height;
+                    % % % %                     cur_position(4) = cur_height;
+                    % % % %                     %???? Why is this not redrawing ...
+                    % % % %                     cur_axes.Position = cur_position;
+                    % % % % %                     set(cur_axes,'position',cur_position)
                     
                     %axis(cur_axes,in.axis)
                 end
                 if iRow ~= n_rows_l
                     next_top = next_top - cur_height - gap_heights(iRow);
                 end
+            end
+        end
+        function transferRowData(obj,source_row,dest_row,y_range)
+            %NYI
+            %
+            %   Goal, transfer data from one row of plots to another
+            %   then delete the source row. Data should be scaled to
+            %   the specified range on the new plot. If the new range
+            %   is not within the plotted range, expand the plot
+            %   accordingly.
+        end
+        function stackColumns(obj)
+            %NYI
+            %
+            %   Take all columns and plot as one row.
+            keyboard
+        end
+        function clearColumn(obj,column)
+            for i = 1:obj.n_rows
+                cur_axes = obj.handles{i,column};
+                delete(cur_axes)
             end
         end
         function removeVerticalGap(obj,rows,columns,varargin)
@@ -424,7 +738,11 @@ classdef subplotter < sl.obj.display_class
             %        between figures.
             %    remove_x_labels : logical (default true)
             %
-            %
+            %   Improvements
+            %   ------------
+            %   1) Doesn't work if first column is not yet plotted ...
+            
+            h__matlabBugFixes(obj)
             
             if nargin == 1
                 rows = 1:obj.n_rows;
@@ -546,16 +864,18 @@ classdef subplotter < sl.obj.display_class
             %       Gap to use when keeping labels
             %   remove_labels : default []
             %       - [] , remove labels if all the same
-            %       - true, forces removal but errors on different 
+            %       - true, forces removal but errors on different
             %         y-labels
             %       - false, don't remove labels
-            %       
+            %
             %
             %   Improvements
             %   ------------
             %   1) Allow optionally y-syncing first
             %   2) Optional # removal - currently forced with labels
             %   3) check y-lim
+            
+            h__matlabBugFixes(obj)
             
             in.remove_ticks = false;
             in.no_gap_width = 0.005;
@@ -564,6 +884,11 @@ classdef subplotter < sl.obj.display_class
             in = sl.in.processVarargin(in,varargin);
             
             n_columns_l = obj.n_columns;
+            
+            if n_columns_l == 1
+                return
+            end
+            
             n_rows_l = obj.n_rows;
             
             remove_y_labels = true;
@@ -659,6 +984,11 @@ classdef subplotter < sl.obj.display_class
             %       - true, columns are linked
             %       - false, all axes are linked, even across columns
             %
+            %
+            %   Improvements
+            %   ---------------
+            %   https://undocumentedmatlab.com/blog/using-linkaxes-vs-linkprop
+            %
             %   See Also
             %   --------
             %   linkaxes
@@ -677,6 +1007,13 @@ classdef subplotter < sl.obj.display_class
                 end
             else
                 all_handles = [h{:}];
+                %TODO: Warning: Excluding ColorBars, Legends and non-axes
+                %Can we disable this ????
+                %'MATLAB:linkaxes:RequireDataAxes'
+                %
+                %- gets thrown for deleted axes
+                
+                all_handles = all_handles(isvalid(all_handles));
                 linkaxes(all_handles,'x');
                 %syncLimits(all_handles,'XLim');
                 %linkprop(ax,'XLim');
@@ -716,29 +1053,18 @@ classdef subplotter < sl.obj.display_class
     
     
 end
-
-% function h__linkAxes(ax,
-function syncLimits(ax,prop)
-bestlim = [inf -inf];
-nonNumericLims = false(size(ax));
-classes = cell(size(ax));
-for k=1:length(ax)
-    axlim = get(ax(k),prop);
-    if isnumeric(axlim)
-        bestlim = [min(axlim(1),bestlim(1)) max(axlim(2),bestlim(2))];
-    else
-        nonNumericLims(k) = true;
-        classes{k} = class(axlim);
+function h__matlabBugFixes(obj)
+    for i = 1:obj.n_rows
+        for j = 1:obj.n_columns
+            ax = obj.handles{i,j};
+        	if isappdata(ax, 'SubplotDeleteListenersManager')
+                temp = getappdata(ax, 'SubplotDeleteListenersManager');
+                try
+                    delete(temp.SubplotDeleteListener);
+                end
+                rmappdata(ax, 'SubplotDeleteListenersManager');
+            end
+        end
     end
-end
-if any(nonNumericLims)
-    if ~all(nonNumericLims) || ~all(strcmp(classes{1},classes))
-        error(message('MATLAB:linkaxes:CompatibleData'))
-    end
-end
-set(ax,[prop 'Mode'],'manual')
-if bestlim(1) < bestlim(2)
-    set(ax, prop, bestlim)
-end
 end
 

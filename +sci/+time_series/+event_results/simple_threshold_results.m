@@ -39,6 +39,8 @@ classdef simple_threshold_results < sl.obj.display_class
         durations
         epoch_averages
         rectified_epoch_averages
+        epoch_duration_avg_product
+        epoch_duration_rect_avg_product
         epoch_averages_original_data
         rectified_epoch_averages_original_data
         min_epoch_values %mininum value during each epoch
@@ -91,6 +93,12 @@ classdef simple_threshold_results < sl.obj.display_class
             for i = 1:obj.n_epochs
                 value(i) = mean(raw_data(start_I(i):end_I(i)));
             end
+        end
+      	function value = get.epoch_duration_avg_product(obj)
+            value = obj.durations.*obj.epoch_averages;
+        end
+        function value = get.epoch_duration_rect_avg_product(obj)
+            value = obj.durations.*obj.rectified_epoch_averages;
         end
         function value = get.epoch_averages_original_data(obj)
             value = zeros(1,obj.n_epochs);
@@ -159,7 +167,7 @@ classdef simple_threshold_results < sl.obj.display_class
         end
         function plotEpochs(obj,varargin)
             
-            in.zero_time = true;
+            in.zero_time = false;
             in.face_alpha = 0.2;
             in.color = 'b';
             in = sl.in.processVarargin(in,varargin);
@@ -169,7 +177,7 @@ classdef simple_threshold_results < sl.obj.display_class
             
             %Trying to prevent the ylim from changing because of this
             %plotting
-            SC = 0.05;
+            SC = 0.01;
             y1 = ylim(1)+SC*y_range;
             y2 = ylim(2)-SC*y_range;
             for i = 1:length(obj.threshold_start_times)

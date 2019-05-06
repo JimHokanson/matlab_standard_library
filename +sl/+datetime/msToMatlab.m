@@ -1,11 +1,23 @@
 function matlab_time = msToMatlab(ms_time,varargin)
+%x Convert MS time to Matlab time (datenum)
 %
 %   matlab_time = sl.datetime.msToMatlab(ms_time)
+%
+%   Outputs
+%   -------
+%   matlab_time : datenum
 %
 %   Inputs
 %   ------
 %   ms_time : [int64] 
 %       This is the # of 100 ns increments since January 1, 0 AD
+%
+%   Example
+%   -------
+%   %1) Calls .NET 
+%   ms_time = System.DateTime.Now
+%   matlab_time = sl.datetime.msToMatlab(ms_time.Ticks);
+%   datestr(matlab_time)
 
 %These options are not yet implemented ...
 in.is_utc = false;
