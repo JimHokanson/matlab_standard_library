@@ -1,0 +1,24 @@
+{
+  "sl.io.fileWrite":
+  {
+     "inputs":
+     [
+        {"name":"file_path",  "kind":"required", "type":["char"]},
+        {"name":"data",   "kind":"required"},
+        {"name":"mode",   "kind":"namevalue", "type":["char", "choices={'w','a'}"]},
+        {"name":"endian", "kind":"namevalue", "type":["char", "choices={'n','l','b','a','s'}"]},
+        {"name":"encoding", "kind":"namevalue", "type":["char"]}
+     ]
+  },
+  "temp_unit_conversion":
+  {
+     "inputs":
+     [
+        {"name":"file_path",  "kind":"required", "type":["char"]},
+        {"name":"data",   "kind":"required"},
+        {"name":"mode",   "kind":"namevalue", "type":["char", "choices={'w','a'}"]},
+        {"name":"endian", "kind":"namevalue", "type":["char", "choices={'n','l','b','a','s'}"]},
+        {"name":"encoding", "kind":"namevalue", "type":["char"]}
+     ]
+  }
+}

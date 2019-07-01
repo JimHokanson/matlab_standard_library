@@ -24,8 +24,10 @@ classdef box_plot_entry_data < sl.obj.display_class
             %
             %   obj = sl.plot.stats.results.box_plot_entry_data(raw,box_width,x_center)
                         
-            %I think == is ok because of how the data are generated ...
-            outlier_mask = outlier_y_data == raw; 
+            %I think equality testing with fp is ok because of how data
+            %were generated ....
+            %outlier_mask = outlier_y_data == raw; 
+            outlier_mask = ismember(raw,outlier_y_data);
             
             obj.raw = raw;
             obj.non_outlier_data = raw(~outlier_mask);

@@ -127,6 +127,7 @@ end
 
 %Add on option to save as SVG
 sl.plot.uimenu.addExportSVGOption(gcf)
+sl.plot.uimenu.addScreenshotOption(gcf)
 
 
 end

@@ -46,7 +46,7 @@ function varargout = splitAndProcessVarargin(in,varargin_data,names,varargin)
 %
 %   See Also:
 %   ---------
-%   sl.in.NULLs 
+%   sl.in.NULL
 
 
 

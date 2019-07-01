@@ -157,6 +157,7 @@ classdef simple_threshold_results < sl.obj.display_class
             if ~isempty(obj.original_data)
                 plot(obj.original_data,'zero_time',in.zero_time)
             end
+            
             %TODO: If this is the same as the original data then
             %we shouldn't plot it ...
             hold on
@@ -165,22 +166,33 @@ classdef simple_threshold_results < sl.obj.display_class
             plotEpochs(obj,'zero_time',in.zero_time)
             hold off
         end
-        function plotEpochs(obj,varargin)
+        function varargout = plotEpochs(obj,varargin)
+            %
+            %
+            %   Optional Inputs
+            %   ---------------
+            %   zero_time : default false
+            %   face_alpha : 0.2
+            %   color : 0.2
+            %   y_min_pct : 0.01
+            %   y_max_pct : 0.99
             
             in.zero_time = false;
             in.face_alpha = 0.2;
             in.color = 'b';
+            in.y_min_pct = 0.01;
+            in.y_max_pct = 0.99;
             in = sl.in.processVarargin(in,varargin);
             
             ylim = get(gca,'ylim');
             y_range = ylim(2)-ylim(1);
             
-            %Trying to prevent the ylim from changing because of this
-            %plotting
-            SC = 0.01;
-            y1 = ylim(1)+SC*y_range;
-            y2 = ylim(2)-SC*y_range;
-            for i = 1:length(obj.threshold_start_times)
+            s = struct;
+            p_cell = cell(1,obj.n_epochs);
+            
+            y1 = ylim(1)+in.y_min_pct*y_range;
+            y2 = ylim(1)+in.y_max_pct*y_range;
+            for i = 1:obj.n_epochs
                 cur_start = obj.threshold_start_times(i);
                 cur_end   = obj.threshold_end_times(i);
                 if in.zero_time
@@ -188,7 +200,12 @@ classdef simple_threshold_results < sl.obj.display_class
                     cur_end = cur_end - obj.start_time;
                 end
                 p = patch([cur_start cur_start cur_end cur_end],[y1 y2 y2 y1],in.color);
+                p_cell{i} = p;
                 set(p,'FaceAlpha',in.face_alpha);
+            end
+            s.h_patch = [p_cell{:}];
+            if nargout
+                varargout{1} = s;
             end
         end
         function epoch_data = getEpochData(obj,index)
@@ -212,6 +229,59 @@ classdef simple_threshold_results < sl.obj.display_class
             for i = 1:obj.n_epochs
                 value(i) = mean(raw_data(start_I(i):end_I(i)));
             end
+        end
+        function expand(obj,threshold,varargin)
+            %
+            %   This could have a lot of options ...
+            %
+            %
+            %   This function needs A LOT OF WORK
+            %
+            %   The current function takes our epochs and expands
+            %   until we get below our threshold.
+            
+            %TODO: This needs to update the bti
+                        
+            %This assumes we want greater
+            bad_mask = obj.data.d < threshold;
+            
+            %UGLY CODE, LOOK AWAY :/
+            
+            %This is where it would help to have logical searches starting
+            %at a specific point
+            for i = 1:obj.n_epochs
+               I1 = obj.threshold_start_I(i);
+               I2 = obj.threshold_end_I(i);
+               bad_mask2 = bad_mask;
+               bad_mask2(I1+1:end) = false;
+               I3 = find(bad_mask2,1,'last');
+               bad_mask3 = bad_mask;
+               bad_mask3(1:I2-1) = false;
+               I4 = find(bad_mask3,1);
+
+               %TODO: If empty then we leave where we are at ...
+               if i > 1 && I3 <= obj.threshold_end_I(i-1)
+                   I_prev = obj.threshold_end_I(i-1);
+                   [~,I5] = min(obj.data.d(I_prev:I1-1));
+                   I3 = I_prev + I5 - 1;
+               end
+               if i ~= obj.n_epochs && I4 >= obj.threshold_start_I(i+1)
+                   %We've run into the next one ...
+                   %Split at min
+                   I_next = obj.threshold_start_I(i+1);
+                   [~,I5] = min(obj.data.d(I2+1:I_next-1));
+                   I4 = I2 + I5;
+
+                  %obj.threshold_end_I(i) = I4;
+               end
+               obj.threshold_start_I(i) = I3;
+               obj.threshold_end_I(i) = I4;
+
+            end
+            
+            obj.threshold_start_times = obj.data.ftime.getTimesFromIndices(obj.threshold_start_I);
+            obj.threshold_end_times = obj.data.ftime.getTimesFromIndices(obj.threshold_end_I);
+            
         end
         function deleteEntries(obj,delete_indices_or_mask,reason,extras)
             %x Delete entries based on indices or mask

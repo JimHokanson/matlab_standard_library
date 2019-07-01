@@ -31,6 +31,8 @@ function varargout = verticalLines(x_positions,varargin)
 %       limits. Values should generally be from 0 to 1 ...
 %   parent : axes handle
 %       Which axes to put the lines in.
+%   strings : cellstr default {}
+%       One string for each line
 %
 %   Optional Line Inputs
 %   --------------------
@@ -54,13 +56,16 @@ function varargout = verticalLines(x_positions,varargin)
 %   y_pcts = [0.4 0.6; 0.3 0.7; 0.2 0.8];
 %   line_handles = sl.plot.type.verticalLines([2,4,6],'y_pct',y_pcts,'y_pct_vary_with_zoom',true)
 %
+%   %4) Plot lines with comments
+%   plot(1:10)
+%   [line_handles,s] = sl.plot.type.verticalLines([2,4,6],'strings',{'2','4444','66'})
+%
 %   Improvements
 %   -------------
-%   1) Allow single line plotting using NaN
-%   2) Allow adding text as well for the lines ...
-%   3) The vertical lines callback always changes the ylimits because
-%   we don't hold onto the previous ylimits with a handle object. This
-%   could be improved (performance improvement).
+%   0) TODO: I think the documentation is out of date
+%   1) Allow single line plotting using NaN - this gets tricky
+%       when hiding lines that are off the axes
+%   2) If empty, return gracefully (I think this currently has a bug)
 %
 %   See Also
 %   --------
@@ -81,10 +86,14 @@ in.hide_from_legend = true;
 in.y_pct_vary_with_zoom = true;
 in.y_values = [];
 in.y_pct = [];
+
+in.y_move_strings = true; %If true, on y-zoom move the strings
 in.strings = {};
+in.text_options = {}; %ex. {'FontSize',18}
+
 in.parent = [];
-[local_options,line_options] = sl.in.removeOptions(varargin,fieldnames(in),'force_cell',true);
-in = sl.in.processVarargin(in,local_options);
+[local_options,line_options] = laborie.sl.in.removeOptions(varargin,fieldnames(in),'force_cell',true);
+in = laborie.sl.in.processVarargin(in,local_options);
 
 n_lines = max([length(x_positions), size(in.y_values,1), size(in.y_pct,1)]);
 
@@ -121,17 +130,46 @@ end
 
 inputs = {ax,xs',ys'};
 
+%Line rendering
+%----------------------------------
 if ~in.ylim_include
     line_handles = line(inputs{:},'YLimInclude','off',line_options{:});
 else
     line_handles = line(inputs{:},line_options{:});
 end
 
-if in.y_pct_vary_with_zoom && ~isempty(in.y_pct)
+%Add Strings
+%---------------------------------
+h_text = [];
+if ~isempty(in.strings)
+    strings = in.strings;
+    if ischar(strings)
+        strings = {in.strings};
+    end
+    temp_h_text = cell(1,length(strings));
+    for i = 1:length(strings)
+        cur_line = line_handles(i);
+      	temp_x = get(cur_line,'XData');
+        temp_y = get(cur_line,'YData');
+        temp_h_text{i} = text(temp_x(1),temp_y(1),strings{i},...
+        'rotation',90,'HorizontalAlignment','left',...
+        'VerticalAlignment','bottom',in.text_options{:},...
+        'parent',ax);
+    end
+    h_text = [temp_h_text{:}];
+end
+
+flag1 = in.y_pct_vary_with_zoom && ~isempty(in.y_pct);
+flag2 = ~isempty(in.strings) && in.y_move_strings;
+
+if flag1 || flag2
     %https://www.mathworks.com/matlabcentral/answers/369377-xlim-listener-for-zoom-reset-and-linkaxes-strange-behavior
-    pv = sl.obj.persistant_value;
-    pv.value = ax.YLim;
-	addlistener(ax.YRuler,'MarkedClean',@(src, evt)h__yZoom(line_handles,ax,in,pv));
+    pv = laborie.sl.obj.persistent_value;
+    pv.value = struct;
+    pv.value.ylim = ax.YLim;
+    pv.value.xlim = ax.XLim;
+    pv.aux_value = [flag1 flag2];
+	addlistener(ax.YRuler,'MarkedClean',@(src, evt)h__cleanCallback(line_handles,h_text,ax,in,pv));
     %This misses things ...
     %addlistener(ax, 'YLim', 'PostSet', @(src, evt)h__yZoom(line_handles,ax,in))
 end
@@ -152,6 +190,12 @@ end
 
 if nargout
     varargout{1} = line_handles;
+    if nargout == 2
+        s = struct;
+        s.h_text = h_text;
+        s.h_line = line_handles;
+        varargout{2} = s;
+    end
 end
 
 end
@@ -164,7 +208,90 @@ else
 end
 end
 
-function h__yZoom(h_lines,ax,in,pv)
+function h__cleanCallback(h_lines,h_text,ax,in,pv)
+    ylim = ax.YLim;
+    xlim = ax.XLim;
+    %ylim hasn't really change, don't do anything
+    if isequal(pv.value.ylim,ylim)
+        %do nothing
+    else
+        pv.value.ylim = ylim;
+        try
+        if pv.aux_value(1)
+            h__yZoom(h_lines,ax,in)
+        end
+        if pv.aux_value(2)
+            h__moveText(h_text,ax)
+        end
+        catch ME
+           %TODO: Should really do on both
+           %and if all are invalid, delete the callback ...
+           if strcmp(ME.identifier,'MATLAB:class:InvalidHandle')
+              %ok
+           else
+               rethrow(ME);
+           end
+        end
+    end
+  	if isequal(pv.value.xlim,xlim)
+        %do nothing
+    else
+        pv.value.xlim = xlim;
+      	try
+            if pv.aux_value(2)
+                h__hideText(h_text,ax)
+            end
+        catch ME
+           %TODO: Should really do on both
+           %and if all are invalid, delete the callback ...
+           if strcmp(ME.identifier,'MATLAB:class:InvalidHandle')
+              %ok
+           else
+               rethrow(ME);
+           end
+        end
+    end
+end
+
+function h__hideText(h_text,ax)
+%
+%   called by h__cleanCallback
+%
+%   For some reason Matlab renders text boxes that are outside of the
+%   xlimits. We'll turn them off here. We could potentially save the state
+%   of the on_off from previously to only set those that have changed ...
+xlim = ax.XLim;
+
+x_positions = arrayfun(@(x) x.Position(1),h_text);
+is_off = x_positions < xlim(1) | x_positions > xlim(2);
+
+set(h_text(is_off),'Visible','off');
+set(h_text(~is_off),'Visible','on');
+
+
+end
+
+function h__moveText(h_text,ax)
+%
+%   called by h__cleanCallback
+%
+%   Move text to the bottom of the visible axes
+%   If this is not enabled, zooming will often hide the text boxes
+
+ylim = ax.YLim;
+y_min = ylim(1);
+
+for i = 1:length(h_text)
+   h = h_text(i);
+    %Position is [x,y,z]
+   h.Position(2) = y_min(1);
+end
+
+end
+
+function h__yZoom(h_lines,ax,in)
+%
+%   %   called by h__cleanCallback
 %
 %   Update percentages ...
 %
@@ -175,12 +302,8 @@ function h__yZoom(h_lines,ax,in,pv)
 %   h_lines : line handles
 %   in : struct - optional input arguements
 
-ylim = ax.YLim;
-%ylim hasn't really change, don't do anything
-if isequal(pv.value,ylim)
-    return
-end
 
+ylim = ax.YLim;
 y_range = ylim(2)-ylim(1);
 ys = in.y_pct;
 ys(:,1) = ylim(1)+ ys(:,1)*y_range;
@@ -193,9 +316,6 @@ for i = 1:length(h_lines)
     h = h_lines(i);
     h.YData = ys(i,:);
 end
-
-%Store latest used value ...
-pv.value = ylim;
 
 end
 

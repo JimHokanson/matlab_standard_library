@@ -201,6 +201,7 @@ classdef discrete_events < sl.obj.display_class
             %   text()
             %   sl.plot.annotation.addLineLabel
             %   sl.plot.type.verticalLines
+            %   sci.time_series.events_holder.plotEvent
             
             %These two work better with the events_holder plot method
             in.zero_time_value = 0;
@@ -313,48 +314,16 @@ classdef discrete_events < sl.obj.display_class
                     continue
                 end
                 
+                %TODO: We should expose the text handles as well ...
                 h{iAxes} = sl.plot.type.verticalLines(times_for_plotting,...
-                    'parent',cur_axes,'y_pct',[0 1],line_inputs{:});
+                    'parent',cur_axes,'y_pct',[0 1],line_inputs{:},...
+                    'strings',display_strings);
                 
-                %Ideally we could pass this into verticalLines ...
-                %Or its own function that takes the handles of the vertical
-                %lines ...
-                if ~isempty(display_strings)
-                    cur_h_set = h{iAxes};
-                    temp_h_text = cell(1,length(cur_h_set));
-                    for iH = 1:length(cur_h_set)
-                        cur_h = cur_h_set(iH);
-                        
-                        temp_x = get(cur_h,'XData');
-                        temp_y = get(cur_h,'YData');
-                        
-                        temp_h_text{iH} = text(temp_x(1),temp_y(1),display_strings{iH},...
-                            'rotation',90,'HorizontalAlignment','left',...
-                            'VerticalAlignment','bottom',in.text_options{:},...
-                            'parent',cur_axes);
-                        
-                        
-                        
-                    end
-                    
-                    h_text = [temp_h_text{:}];
-                    
-                    if in.y_move_text
-                        %https://www.mathworks.com/matlabcentral/answers/369377-xlim-listener-for-zoom-reset-and-linkaxes-strange-behavior
-                        pv = sl.obj.persistant_value;
-                        pv.value = cur_axes.YLim;
-                        addlistener(cur_axes.YRuler,'MarkedClean',@(src, evt)h__moveText(h_text,cur_axes,in,pv));
-                    end
-                    
-                    
-%                     if in.y_move_text
-%                         addlistener(cur_axes, 'YLim', 'PostSet', @(src, evt)Callbackfcn(src, evt))
-%                     end
-                    
+
                     %TODO: I'd like to know why this didn't work with
                     %the pelvic nerve for 140416_C
                     %sl.plot.annotation.addLineLabel(h{iAxes},display_strings,'follow_slope',true,in.text_options{:});
-                end
+
                 
                 if nargout
                     varargout{1} = h;
@@ -382,29 +351,6 @@ classdef discrete_events < sl.obj.display_class
     end
     
 end
-
-function h__moveText(h_text,ax,in,pv)
-%
-
-ylim = ax.YLim;
-%ylim hasn't really change, don't do anything
-if isequal(pv.value,ylim)
-    return
-end
-
-y_min = ylim(1);
-
-for i = 1:length(h_text)
-   h = h_text(i);
-    %Position is [x,y,z]
-   h.Position(2) = y_min(1);
-end
-
-%Store latest used value ...
-pv.value = ylim;
-
-end
-
 
 function values_as_strings = h__valueToString(values)
 %NOTE: This assumes a numerical value. Eventually we should
