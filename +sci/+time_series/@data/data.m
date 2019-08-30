@@ -1244,6 +1244,10 @@ classdef data < sl.obj.handle_light
               error('Window must have a size of 2') 
            end
            
+           if window(2) < window(1)
+               error('The 1st value in the window must be less than the 2nd value in the window')
+           end
+           
            raw_data = obj.d;
            fs = obj.time.fs;
            samples = round(window.*fs);
