@@ -48,6 +48,7 @@ classdef processor < handle
             %Note this is an abstract implementation ...
             %See:
             %   sci.time_series.subset_retrieval.generic_processor>getStartAndStopSamples
+            %   sci.time_series.subset_retrieval.epoch_processor>getStartAndStopSamples
             [start_samples,stop_samples] = obj.getStartAndStopSamples(objs);
             %start_samples & stop_samples : {1 x n_objects}[1 x n_times]
             
