@@ -2,13 +2,21 @@ function processes = getProcessesByName(name)
     %
     %   processes = sl.os.dotnet.getProcessesByName(name)
     %
+    %   Output
+    %   ------
+    %   processes : cell array of 'System.Diagnostics.Process'
+    %       
+    %
     %   Example:
     %   --------
     %   processes = sl.os.dotnet.getProcessesByName('chrome')
+    %
+    %   See Also
+    %   --------
+    %   sl.os.dotnet.getRunningProcessNames
     
     %{
-    processes = sl.os.dotnet.getProcessesByName('chrome')
-    
+        processes = sl.os.dotnet.getProcessesByName('chrome')
     %}
     
     %p is a process array
