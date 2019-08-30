@@ -96,6 +96,7 @@ classdef epoch_processor < sci.time_series.subset_retrieval.processor
             
             %Change times to samples
             %-----------------------
+            %sci.time_series.subset_retrieval.processor>timesToSamples
             start_samples = obj.timesToSamples(data_objects,start_times);
             stop_samples  = obj.timesToSamples(data_objects,stop_times);
             
