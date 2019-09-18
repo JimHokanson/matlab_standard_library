@@ -1,6 +1,6 @@
 classdef main
     %
-    %   Class
+    %   Class:
     %   sl.hud.main
     %
     %   This may eventually not launch a main GUI, but rather multiple GUIs
@@ -23,19 +23,19 @@ classdef main
     
     %{
     desktop=com.mathworks.mde.desk.MLDesktop.getInstance;
-container=desktop.getGroupContainer(‘Figures’).getTopLevelAncestor;
-container.setSize(width,height); % e.g., (500,300)
-You can also do the following useful actions:
-container.setAlwaysOnTop(1); % or 0 to return to normal
-container.setMaximized(1); % or 0 to return to normal
-container.setMinimized(1); % or 0 to return to normal
-container.setVisible(1); % or 0 to hide – ignore the java error…
-container.methodsview; % show full list of possible actions
+    container=desktop.getGroupContainer(‘Figures’).getTopLevelAncestor;
+    container.setSize(width,height); % e.g., (500,300)
+    You can also do the following useful actions:
+    container.setAlwaysOnTop(1); % or 0 to return to normal
+    container.setMaximized(1); % or 0 to return to normal
+    container.setMinimized(1); % or 0 to return to normal
+    container.setVisible(1); % or 0 to hide – ignore the java error…
+    container.methodsview; % show full list of possible actions
     
     %}
     
     properties
-    	fig_handle
+    	h_fig
         h
     end
     
@@ -43,16 +43,16 @@ container.methodsview; % show full list of possible actions
         function obj = main()
             gui_path = fullfile(sl.stack.getMyBasePath,'hud_main.fig');
             
-            obj.fig_handle = openfig(gui_path);
+            obj.h_fig = openfig(gui_path);
             
-            obj.h = guihandles(obj.fig_handle);
+            obj.h = guihandles(obj.h_fig);
             
-            setappdata(obj.fig_handle,'obj',obj); 
+            setappdata(obj.h_fig,'obj',obj); 
             
             set(obj.h.button_currentFcnName,'Callback',@(~,~)getCurrentFunctionName('clipboard',true));
-            
-            %FEX
-            setFigDockGroup(obj.fig_handle,'HUD')
+            obj.h.button_expandToFile.Callback = @(~,~)h__expandToFile();
+            %call to function downloaded from FEX
+            setFigDockGroup(obj.h_fig,'HUD')
             
             %sl.hg.figure.makeFigureAlwaysOnTop(obj.fig_handle);
         end
@@ -60,6 +60,8 @@ container.methodsview; % show full list of possible actions
     
     methods (Static)
         function edit()
+            %
+            %   sl.hud.main.edit()
            guide(fullfile(sl.stack.getMyBasePath,'hud_main.fig'));
         end
     end
@@ -67,5 +69,13 @@ container.methodsview; % show full list of possible actions
     methods
     end
     
+end
+function h__expandToFile
+wtf = sl.ml.editor.getInstance;
+target_path = wtf.active_filename;
+v = sl.ml.current_folder_viewer;
+t = v.table;
+t.collapseFirstLevel();
+v.expandTo(target_path);
 end
 

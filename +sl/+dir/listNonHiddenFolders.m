@@ -1,16 +1,29 @@
-function dir_names = listNonHiddenFolders(rootPath)
+function dir_names = listNonHiddenFolders(rootPath,varargin)
 %listNonHiddenFolders  Lists not hidden folders and omits .. & .
 %
 %   This function returns subfolders which are not hidden. It also omits
 %   the . and .. directories.
 %
 %   dir_names = sl.dir.listNonHiddenFolders(rootPath)
+%
+%   TODO: document optional inputs
+%
+%   TODO: This only respects the hidden attribute and not whether or
+%   not we are showing hidden files
 %   
 %   See Also:
 %   fileattrib
 
+in.keep_files = false;
+in = sl.in.processVarargin(in,varargin);
+
 d         = dir(rootPath);
-keep_mask = [d.isdir];
+if in.keep_files
+    keep_mask = true(1,length(d));
+else
+    keep_mask = [d.isdir];
+end
+
 dir_names = {d.name};
 
 if ispc 
