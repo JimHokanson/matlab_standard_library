@@ -63,6 +63,9 @@ classdef generic_processor < sci.time_series.subset_retrieval.processor
             
             stop_samples = [];
             
+            %TODO: If we specifiy subset_pct this doesn't work
+            %with start and stop samples ...
+            
             %Start samples
             %-------------------------------------------
             if ~isempty(obj.start_times)

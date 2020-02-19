@@ -105,6 +105,16 @@ else
     %This removes any labels ...
     h = boxplot(x_data,varargin{:});
     n_boxes = size(h,2);
+    
+    %This was for a vector passed in as 1xM
+    %but we only had one box plot
+    if n_boxes ~= size(x_data,2)
+        x_data = x_data';
+        if n_boxes ~= size(x_data,2)
+           error('Unexpected code case') 
+        end
+    end
+    
     temp = cell(1,n_boxes);
     for i = 1:n_boxes
         if isempty(in.labels)

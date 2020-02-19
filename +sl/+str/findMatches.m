@@ -26,6 +26,7 @@ function output = findMatches(input_string,strings_to_match,varargin)
 %       Whether or not the search should be case sensitive.
 %   partial_match : (default false)
 %       If true the input only needs to be a part of the matching string.
+%       This must be false in order for regex to work ...
 %   regex : (default false)
 %       If true, the input is a regexp pattern that should be matched.
 %   multi_result_rule: string (default 'error')
@@ -50,7 +51,13 @@ function output = findMatches(input_string,strings_to_match,varargin)
 %
 %   Improvements
 %   ------------
-%   Supply custom error messages
+%   1) Supply custom error messages
+%   2) Allow chaining of input strings
+%       - we would need to figure out how to do AND vs OR linking
+%   e.g.
+%       {'start pump' AND NOT '#ignore'}
+%       Note this is tricky because ideally we could switch between 
+%       regex and no regex ..., although NOT would help
 %
 %   Examples
 %   --------

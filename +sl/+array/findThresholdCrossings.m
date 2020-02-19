@@ -47,6 +47,16 @@ function I = findThresholdCrossings(data,command,threshold,direction,varargin)
 %   I2 = sl.array.findThresholdCrossings(data,'>',threshold,'falling');
 %   I2(1:3) => 1, 1001, 2001
 %
+%   t = 0:0.01:100;
+%   y = sin(2*pi*0.5.*t);
+%   I1 = sl.array.findThresholdCrossings(y,'>=',0.6,'rising');
+%   I2 = sl.array.findThresholdCrossings(y,'>',0.6,'falling');
+%   plot(t,y,'-o')
+%   hold on
+%   plot(t(I1),y(I1),'+')
+%   plot(t(I2),y(I2),'o')
+%   hold off
+%
 %   Improvements
 %   ------------
 %   1) Allow specifying where the index should occur, currently points to
