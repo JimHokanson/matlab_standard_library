@@ -30,10 +30,12 @@ classdef theil_sen_result < sci.time_series.calculators.regression.result
         function plot(obj)
             subplot(2,1,1)
             plot(obj.training_data)
-            hold all
+            hold on
             plot(obj.t_training,obj.y_hat,'linewidth',2)
+            hold off
             subplot(2,1,2)
             plot(obj.t_training,obj.residuals)
+            ylabel(sprintf('Residuals (%s)',obj.training_data.units))
         end
     end
     
