@@ -93,6 +93,10 @@ classdef subset_retrieval < sl.obj.display_class
     
     %Epoch -----------------------------------------
     methods
+        function help(obj) %#ok<MANU>
+           disp(sl.str.create_clickable_cmd.editFile('sci.time_series.subset_retrieval',...
+           'Click here to view subset retrieval functions'))
+        end
         function output = fromEpoch(obj,epoch_name_or_obj,varargin)
             %
             %   output = fromEpoch(obj,epoch_name,varargin)
@@ -423,7 +427,18 @@ classdef subset_retrieval < sl.obj.display_class
         function output = fromStartAndStopTimes(obj,start_times,stop_times,varargin)
             %
             %   TODO: Document these functions ...
+            %
+            %   output = fromStartAndStopTimes(obj,start_times,stop_times,varargin)
             %   
+            %   Optional Inputs
+            %   ---------------
+            %   Any property in:
+            %       sci.time_series.subset_retrieval.generic_processor
+            %
+            %   Example
+            %   -------
+            %   fill_pct = pres_data.subset.fromStartAndStopTimes(10,100,
+            %
             %
             %   See Also
             %   --------

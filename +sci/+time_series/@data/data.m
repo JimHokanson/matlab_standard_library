@@ -1228,13 +1228,39 @@ classdef data < sl.obj.handle_light
     
     %Data changing --------------------------------------------------------
     methods
-        function [output,time] = getReps(obj,start_times,window)
+        function [output,time,s] = getReps(obj,start_times,window,varargin)
            %
            %
            %    [output,time] = data.getReps(start_times,window)
            %
            %    For now this has been written to only suppport a single
            %    channel with raw data output ...
+           %
+           %    Inputs
+           %    ------
+           %    start_times :
+           %    window : 
+           %
+           %    Optional Inputs
+           %    ---------------
+           %    invalid_rule
+           %        See documentation in sl.matrix.from.startAndLength
+           %
+           %    Outputs
+           %    -------
+           %    output : 
+           %    time :
+           %
+           %    Examples
+           %    --------
+           %
+           %    See Also
+           %    --------
+           %    sl.matrix.from.startAndLength
+           %    
+           
+           in.invalid_rule = 0;
+           in = sl.in.processVarargin(in,varargin);
            
            if length(obj) > 1
               error('Code only supports a single object')
@@ -1254,7 +1280,8 @@ classdef data < sl.obj.handle_light
            n_samples_l = samples(2)-samples(1)+1; %l => local
            start_I = obj.ftime.getNearestIndices(start_times);
            
-           output = sl.matrix.from.startAndLength(raw_data,start_I+samples(1),n_samples_l,'by_row',false);
+           [output,s] = sl.matrix.from.startAndLength(raw_data,start_I+samples(1),...
+               n_samples_l,'by_row',false,'invalid_rule',in.invalid_rule);
            time = linspace(window(1),window(2),n_samples_l);
            
         end
@@ -1522,20 +1549,25 @@ classdef data < sl.obj.handle_light
             decimated_data = [decimated_data{:}];
             
         end
-        function changeUnits(objs,new_units)
+        function changeUnits(objs,new_units,varargin)
             %x Given the new units, scales/converts the data accordingly
             %
             %
-            %   I am planning on remo
             %
             %   HIGHLY EXPERIMENTAL
             %   Relies on sci.units.getConversionFunction which is woefully
             %   incomplete and is basically only hardcoded for the values
             %   I'm using.
             %
-            %   Inputs:
-            %   -------
+            %   Inputs
+            %   ------
             %   new_units : string
+            %
+            %   Optional Inputs
+            %   ---------------
+            %   rename_only : default false
+            %       If true no scaling is done, the units are simply
+            %       renamed.
             %
             %   Example:
             %   --------
@@ -1551,25 +1583,39 @@ classdef data < sl.obj.handle_light
             %   See Also:
             %   sci.units.getConversionFunction
             
+            in.rename_only = false;
+            in = sl.in.processVarargin(in,varargin);
+            
             %TODO: We could allow new_units to be a cellstr as well
-            
-            if ~all(strcmp({objs.units},objs(1).units))
-                error('Not all units are the same as the first object')
-            end
-            
-            cur_units = objs(1).units;
-            
-            if ~strcmp(cur_units,new_units)
-                fh = sci.units.getConversionFunction(cur_units,new_units);
-                
-                for iObj = 1:length(objs)
+            if in.rename_only
+                 for iObj = 1:length(objs)
                     cur_obj = objs(iObj);
-                    
-                    cur_obj.d     = fh(cur_obj.d);
+
+                    cur_units = cur_obj.units;
                     cur_obj.units = new_units;
-                    
-                    history_str   = sprintf('Units changed from %s to %s, data scaled appropriately',cur_units,new_units);
+
+                    history_str   = sprintf('Units changed from %s to %s, data not scaled',cur_units,new_units);
                     cur_obj.addHistoryElements({history_str})
+                end
+            else
+                if ~all(strcmp({objs.units},objs(1).units))
+                    error('Not all units are the same as the first object')
+                end
+
+                cur_units = objs(1).units;
+
+                if ~strcmp(cur_units,new_units)
+                    fh = sci.units.getConversionFunction(cur_units,new_units);
+
+                    for iObj = 1:length(objs)
+                        cur_obj = objs(iObj);
+
+                        cur_obj.d     = fh(cur_obj.d);
+                        cur_obj.units = new_units;
+
+                        history_str   = sprintf('Units changed from %s to %s, data scaled appropriately',cur_units,new_units);
+                        cur_obj.addHistoryElements({history_str})
+                    end
                 end
             end
         end
@@ -1981,19 +2027,21 @@ classdef data < sl.obj.handle_light
         end
     end
     
-    %Deep methods
-    %These methods are meant to provide access to functions that
-    %work with this object. Rather than providing an exhaustive list, we
-    %return an object that can be used to
-    methods
-        function event_calc_obj = getEventCalculatorMethods(objs)
-            event_calc_obj = sci.time_series.event_calculators;
-        end
-        function spect_calc = getSpectrogramCalculatorMethods(objs)
-            %sci.time_series.spectrogram_calculators
-            spect_calc = sci.time_series.spectrogram_calculators;
-        end
-    end
+    %This 
+% % %     %Deep methods
+% % %     %These methods are meant to provide access to functions that
+% % %     %work with this data object. Rather than providing an exhaustive list,
+% % %     %we return an object that can be used to further explore related
+% % %     %methods
+% % %     methods
+% % %         function event_calc_obj = getEventCalculatorMethods(objs)
+% % %             event_calc_obj = sci.time_series.event_calculators;
+% % %         end
+% % %         function spect_calc = getSpectrogramCalculatorMethods(objs)
+% % %             %sci.time_series.spectrogram_calculators
+% % %             spect_calc = sci.time_series.spectrogram_calculators;
+% % %         end
+% % %     end
 end
 
 %Helper functions ---------------------------------------------------------

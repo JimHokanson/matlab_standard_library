@@ -112,6 +112,9 @@ classdef box_plot_result < sl.obj.display_class
             %   add_n : default false
             %       If true, adds to the label how many points contributed
             %       to the specified box plot.
+            %   other_result : 
+            %       This can be used when you have multiple objects
+            %       such as when working with yyaxis
             %
             %   Example
             %   -------
