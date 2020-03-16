@@ -83,7 +83,9 @@ classdef generic_processor < sci.time_series.subset_retrieval.processor
                 for iObject = 1:n_objects
                     cur_obj = data_objects(iObject);
                     cur_n_samples = cur_obj.n_samples;
-                    start_samples{iObject} = ceil(pct_local(1)*cur_n_samples);
+                    %JAH 2/2020 - Bug Fix
+                    %0 should map to sample 1
+                    start_samples{iObject} = ceil(pct_local(1)*cur_n_samples)+1;
                     stop_samples{iObject} = ceil(pct_local(2)*cur_n_samples);
                 end
             else
