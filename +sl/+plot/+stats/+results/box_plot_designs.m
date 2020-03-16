@@ -18,7 +18,10 @@ classdef box_plot_designs < handle
             
             obj.r_internal = r;
         end
-        function jim_std(obj)
+        function jim_std(obj,varargin)
+            
+            in.pct_scatter_width = 0.5;
+            in = sl.in.processVarargin(in,varargin);
             
             r = obj.r_internal;
             
@@ -30,7 +33,7 @@ classdef box_plot_designs < handle
 
 
             r.setWidth(0.7);
-            r.renderScatterData();
+            r.renderScatterData('pct_width',in.pct_scatter_width);
 
             h_axes = r.h_axes;
             set(h_axes,'FontSize',16,'FontName','Arial')

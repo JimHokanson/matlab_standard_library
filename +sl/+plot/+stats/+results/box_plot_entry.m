@@ -221,7 +221,7 @@ classdef box_plot_entry < handle
             for i = 1:length(objs)
                 obj = objs(i);
                 %data : sl.plot.stats.results.box_plot_entry_data
-                obj.data.renderScatterData(varargin);
+                obj.data.renderScatterData(varargin{:});
             end
         end
         function setHandlePropValue(objs,prop,varargin)

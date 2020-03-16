@@ -151,6 +151,9 @@ classdef box_plot_result < sl.obj.display_class
                 merged_labels = [labels labels2];
                 [x_ticks,I] = sort([x_ticks x_ticks2]);
                 labels = merged_labels(I);
+            else
+                [x_ticks,I] = sort(x_ticks);
+                labels = labels(I);
             end
             
             set(obj.h_axes,'XTick',x_ticks,'XTickLabel',labels,'XTickLabelRotation',in.rotate);
@@ -182,6 +185,23 @@ classdef box_plot_result < sl.obj.display_class
             obj.entries.setWidth(varargin{:});
         end
         function renderScatterData(obj,varargin)
+            %
+            %   sl.plot.stats.results.box_plot_entry.renderScatterData
+            %
+            %   Optional Inputs
+            %   ---------------
+            %   marker : default 'o'
+            %       Shape of the marker.
+            %   color : default 'k'
+            %       Inner color. No outer color is currently supported
+            %   alpha : default 0.6
+            %   rng_seed : default 9
+            %       This is done to allow reproducability of the random
+            %       scatter.
+            %   marker_size : default 100
+            %   pct_width : default 0.5
+            %
+            
             %TODO: Add documentation
             obj.entries.renderScatterData(varargin{:});
         end
