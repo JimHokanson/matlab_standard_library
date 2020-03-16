@@ -1,5 +1,5 @@
 function str_out = padText(input_str,total_len,varargin)
-%x Pads a sting with a character to a given length
+%x Pads a string with a character to a given length
 %
 %   str_out = sl.str.padText(input_str,total_len,varargin)
 %
