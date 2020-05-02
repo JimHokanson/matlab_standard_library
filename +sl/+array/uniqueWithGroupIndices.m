@@ -1,7 +1,7 @@
-function [u,uI] = uniqueWithGroupIndices(A,varargin)
+function [u,uI,counts] = uniqueWithGroupIndices(A,varargin)
 %uniqueWithGroupIndices Returns groupings for each unique element
 %
-%   [u,uI] = sl.array.uniqueWithGroupIndices(A)
+%   [u,uI,counts] = sl.array.uniqueWithGroupIndices(A)
 %
 %   This function is a quicker way of getting the indices which 
 %   match a particular unique value.
@@ -22,8 +22,10 @@ function [u,uI] = uniqueWithGroupIndices(A,varargin)
 %   Outputs:
 %   --------
 %   u  : unique values
-%   uI : (cell array)
+%   uI : cell array
 %       Each entry holds the indices of A which match u.
+%   counts : array
+%       
 %
 %   Example:
 %   --------
@@ -71,10 +73,12 @@ in = sl.in.processVarargin(in,varargin);
 if isempty(A)
    u = [];
    uI = {};
+   counts = [];
    return
 elseif (in.rows && size(A,1) == 1) || length(A) == 1
    u = A;
    uI = {1};
+   counts = [];
    return
 end
 
@@ -149,5 +153,8 @@ if in.stable
     uI = uI(remapped_indices(keep_mask));
 end
 
+if nargout > 2
+    counts = cellfun('length',uI);
+end
 
 
