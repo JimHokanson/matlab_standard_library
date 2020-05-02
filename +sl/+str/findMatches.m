@@ -1,7 +1,9 @@
 function output = findMatches(input_string,strings_to_match,varargin)
 %x  Tries to find a match for one string in a set of strings based on rules
 %
-%   mask_or_indices = sl.str.findMatches(input_string_or_pattern,string_options,varargin)
+%   indices = sl.str.findMatches(input_string_or_pattern,string_options,varargin)
+%
+%   mask = sl.str.findMatches(input_string_or_pattern,string_options,'as_mask',true,varargin)
 %
 %   Inputs:
 %   -------
@@ -49,6 +51,12 @@ function output = findMatches(input_string,strings_to_match,varargin)
 %           {'past','last','last','past'} 
 %                   <= error if unique_multi_match is true
 %
+%   Outputs
+%   -------
+%   mask : logical array
+%       indicates match or not for each element
+%   indices : 
+%
 %   Improvements
 %   ------------
 %   1) Supply custom error messages
@@ -62,18 +70,18 @@ function output = findMatches(input_string,strings_to_match,varargin)
 %   Examples
 %   --------
 %   1) Find the pressure signal
-%   mask_or_indices = sl.str.findMatches('pres',{'Bladder Pressure','EUS EMG'},'partial_match',true);
+%   indices = sl.str.findMatches('pres',{'Bladder Pressure','EUS EMG'},'partial_match',true);
 %   
 %   2) Find the pressure signal - spelling error, not found
 %   THROWS AN ERROR
 %   %Options: 'n_rule',1 => must find 1 match
-%   mask_or_indices = sl.str.findMatches('pres',{'Bladder ressure','EUS EMG'},'partial_match',true,'n_rule',1);
+%   indices = sl.str.findMatches('pres',{'Bladder ressure','EUS EMG'},'partial_match',true,'n_rule',1);
 %
 %
 %   3) Find the pressure signal - multiple pressures
 %   %Options: 'multi_result_rule','first' => return the first match (in
 %   %           this case the bladdre pressure)
-%   mask_or_indices = sl.str.findMatches('pres',{'Bladder pressure','Urethral Pressure','EUS EMG'},...
+%   indices = sl.str.findMatches('pres',{'Bladder pressure','Urethral Pressure','EUS EMG'},...
 %           'partial_match',true,'n_rule',1,'multi_result_rule','first');
 
 %{
