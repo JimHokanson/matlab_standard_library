@@ -14,6 +14,15 @@ function output = getRecursiveFilesOfType(start_path,file_extension,varargin)
 %       - names  : return only the names
 %       - paths   : return only the paths
 %       - dir    : return only the dir structures
+%
+%   waitbar_string : string, default not used
+%       If specified a waitbar may show up 
+%
+%
+%   Examples
+%   --------
+%   %Get all files of type '.adicht'
+%   file_paths = sl.dir.list.getRecursiveFilesOfType(root_folder,'adicht');
 
 in.waitbar_string = '';
 in.output_type = 'paths';
