@@ -1,21 +1,25 @@
 function examples()
+%
+%   sl.plot.colormaps.examples
+%
 % Demonstrate all the nifty colormaps available
 
-cmaps = {'colormaps.lingray'
-         'colormaps.rainbow'
-         'colormaps.linhot'
-         'colormaps.magenta'
-         'colormaps.optimal'
-         'colormaps.blue2cyan'
-         'colormaps.blue2yellow'};
+cmaps = {'sl.plot.colormaps.lingray'
+         'sl.plot.colormaps.rainbow'
+         'sl.plot.colormaps.linhot'
+         'sl.plot.colormaps.magenta'
+         'sl.plot.colormaps.optimal'
+         'sl.plot.colormaps.blue2cyan'
+         'sl.plot.colormaps.blue2yellow'};
 
-load flujet
+%load flujet
+h = load('flujet');
 for i = 1:numel(cmaps)
     figure;
     ax = gca;
     cmap = feval(cmaps{i});
+    imagesc(h.X,'Parent',ax)
     colormap(ax,cmap);
-    imagesc(X,'Parent',ax)
     colorbar('Peer',ax);
     title(ax,cmaps{i});
 end
