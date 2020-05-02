@@ -1,7 +1,7 @@
 function str = navigateToFileInOS(file_or_folder_path,display_text,varargin)
 %x Creates clickable link to path via opening OS windows (e.g. finder/explorer) 
 %
-%   str = sl.str.create_clickable_cmd.navigateToFileInOS(file_or_folder_path,*display_text)
+%   str = sl.str.create_clickable_cmd.navigateToFileInOS(file_or_folder_path,*display_text,varargin)
 %   
 %   Inputs:
 %   -------
@@ -11,6 +11,11 @@ function str = navigateToFileInOS(file_or_folder_path,display_text,varargin)
 %   Optional Inputs:
 %   ----------------
 %   display_text : default (uses 'file_or_folder_path' value)
+%       Note '' or [] will result in the default value being used.
+%   open_folder : default false
+%       false - for folders, navigates to parent folder and highlights folder
+%       true - for folders, navigates inside the folder
+%
 %
 %   Examples:
 %   ---------
