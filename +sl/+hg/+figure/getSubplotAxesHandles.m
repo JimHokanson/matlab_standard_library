@@ -70,7 +70,7 @@ s = sl.hg.figure.getSubplotAxesHandles(gcf)
     %TODO: This will fail if we have extra axes ...
     %Can we make it more robust????
     
-    handles=findobj(figure_handle,'Type','axes');
+    handles=findobj(figure_handle,'Type','axes','Visible','on');
     
     positions = vertcat(handles.Position);
     
