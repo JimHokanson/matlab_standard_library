@@ -15,6 +15,8 @@ function p = getPosition(h_axes,varargin)
 %       'outer' 'o'
 %       'inner' 'p'
 %   as_struct : default false
+%       TODO: I think true would be preferable, where is this being used in
+%       the code base????
 %       
 %   Outputs
 %   -------
@@ -99,8 +101,9 @@ if in.add_legend
 end
 
 if in.as_struct
+    %The -1 assumes pixel position
     s = struct('left',p(1),'bottom',p(2),'width',p(3),'height',p(4),...
-        'right',p(1)+p(3),'top',p(2)+p(4));
+        'right',p(1)+p(3)-1,'top',p(2)+p(4)-1);
     p = s;
 end
 
