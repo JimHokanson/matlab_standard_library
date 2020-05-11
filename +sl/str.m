@@ -19,7 +19,8 @@ classdef str
             %       being too long. This was added for command window
             %       display where I would rather an error not be thrown
             %       simply because the command window is too narrow
-            %   short_indicator : 
+            %   short_indicator : default '...'
+            %       
             
             in.too_short_is_ok = false;
             in.short_indicator = '...'; %Text to display at end of string
