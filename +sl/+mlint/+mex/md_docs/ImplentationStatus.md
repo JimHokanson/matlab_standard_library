@@ -44,8 +44,7 @@ See also: [mlintmex](mlintmex.md)
 		% *** [1] linttype <2> '<'   '<', ''
 		% *** [1] linttype <3> extracellular_stim     ClassDef (1)   extracellular_stim, ''
 		% *** [1] linttype <4> NEURON.simulation     ClassRef (2)   NEURON.simulation, ''
-+ edit - exposed as editc due to Matlab naming restrictions ... I'm not actually sure of
-		 what information this class provides.
++ edit - exposed as editc due to Matlab naming restrictions ... I'm not actually sure what information this class provides.
 - id MLINT
 - ja NOT VALID
 + lex : Gives position of all operators as well as certain (all?) reserved words

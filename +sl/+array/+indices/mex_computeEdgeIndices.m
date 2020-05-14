@@ -1,4 +1,5 @@
 %mex_computeEdgeIndices Mex implementation of computeEdgeIndices
+%
 %   [I1,I2] = computeEdgeIndices(TS,T1,T2) computes the edge indices 
 %   for every T1 & T2 pair where T1 <= TS < T2.  I1 is the first value
 %   where this is true, and I2 is the last, and is equivalent to
@@ -30,13 +31,13 @@
 %   searching over all Ts, it can do search in sliding windows, starting
 %   the search wherever the last index left off.
 %
-%   EXAMPLE:
-%   ====================================
+%   Examples
+%   --------
 %   TS = [1 3 5 10];
 %   T1 = [0 2 8];
 %   T2 = [2 9 10];
 %
-%   [I1,I2] = mex_computeEdgeIndices(TS,T1,T2);
+%   [I1,I2] = sl.array.indices.mex_computeEdgeIndices(TS,T1,T2);
 %   
 %   I1 => [1 2 4];
 %   I2 => [1 3 4];
