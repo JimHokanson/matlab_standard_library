@@ -15,6 +15,15 @@ classdef events_holder < dynamicprops
     %   sci.time_series.discrete_events
     %   sci.time_series.epochs
     %
+    %   Example
+    %   -------
+    %   prop_name = 'my_event';
+    %   times = 1:10;
+    %   ev = sci.time_series.discrete_events(prop_name,times,varargin)
+    %   data.event_info.addEvents(ev);
+    %
+    %   %TODO: Add epoch example
+    %
     %
     %   See Also:
     %   ---------

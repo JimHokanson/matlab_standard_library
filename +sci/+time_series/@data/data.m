@@ -145,7 +145,7 @@ classdef data < sl.obj.handle_light
         n_samples
         calculators %sci.time_series.calculators
         subset
-        ftime
+        ftime %sci.time_series.time_functions
     end
     
     %     methods

@@ -25,7 +25,7 @@ classdef fig_merger < handle
             %   ------------------
             %   
             
-            if ~isempty(data)
+            if nargin == 1 && ~isempty(data)
                 instr = obj.instrFromCellstr(data);
                 obj.move(instr);
             else

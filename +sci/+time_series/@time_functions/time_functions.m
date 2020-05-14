@@ -179,6 +179,7 @@ classdef time_functions < sl.obj.display_class
             
             %TODO: Build in multiple object support ...
             
+            in.add_start_event = false;
             in.allow_overlap = true;
             in = sl.in.processVarargin(in,varargin);
             
@@ -232,7 +233,7 @@ classdef time_functions < sl.obj.display_class
             new_data = zeros(n_samples_new,dobj.n_channels,n_events,'like',dobj.d);
             cur_data = dobj.d;
             
-            %TODO: Is this is rate limiting step, should we mex it ????
+            %TODO: Is this is a rate limiting step, should we mex it ????
             for iEvent = 1:n_events
                 cur_start = data_start_indices(iEvent);
                 cur_end   = data_end_indices(iEvent);
@@ -247,6 +248,13 @@ classdef time_functions < sl.obj.display_class
             
             event_aligned_data = sci.time_series.data(new_data,new_time_object,...
                 'units',dobj.units,'y_label',dobj.y_label);
+            
+            prop_name = 'rep_start_times';
+            %If we ever do filtering above we should filter here ...
+            times = start_times;
+            ev = sci.time_series.discrete_events(prop_name,times);
+            event_aligned_data.event_info.addEvents(ev);
+            
         end
         function removeOffset(obj)
             %TODO
