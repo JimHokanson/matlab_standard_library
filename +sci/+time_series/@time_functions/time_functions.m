@@ -2,6 +2,9 @@ classdef time_functions < sl.obj.display_class
     %
     %   Class:
     %   sci.time_series.time_functions
+    %
+    %   This class was created as a place to have code that works based on 
+    %   manipulating some aspect of data timing.
     
     %TODO: We're going to
     
@@ -264,8 +267,12 @@ classdef time_functions < sl.obj.display_class
                 cur_d.time.start_offset = 0;
             end
         end
-        function setOffset(obj)
-            error('Not yet implemented') 
+        function setOffset(obj,value)
+            d = obj.data_objects;
+            for i = 1:length(d)
+                cur_d = d(i);
+                cur_d.time.start_offset = value;
+            end 
         end
         function zeroTimeByEvent(obj)
             error('Not yet implemented')
