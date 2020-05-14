@@ -15,7 +15,7 @@ classdef lex < sl.mlint
     Observed types
     --------------
     '<Cmd Arg>' => e.g. 'filename' in load filename
-    '<Name>' %Name of function or variable
+    '<Name>' %Name of function or variable or property name ...
     '('
     '<LEX_ERR>'
     '<EOL>'
@@ -35,13 +35,13 @@ classdef lex < sl.mlint
     - '.'
     - ':'
     - ';'
-    - '&lt;'
-    - '&lt;='
-    - '&lt;DOUBLE&gt;'
-    - '&lt;EOL&gt;' - end of line character. NOTE, for lines with '...' the EOL character is not present. This points to the \n character.
-    - '&lt;INT&gt;'
-    - '&lt;NAME&gt;'
-    - '&lt;STRING&gt;'
+    - '<'
+    - '<='
+    - '<DOUBLE>'
+    - '<EOL>' - end of line character. NOTE, for lines with '...' the EOL character is not present. This points to the \n character.
+    - '<INT>;'
+    - '<NAME>'
+    - '<STRING>'
     - '='
     - '=='
     - '&gt;'
@@ -301,10 +301,9 @@ classdef lex < sl.mlint
            %
            %
 
-           u_obj = sl.cellstr.unique(obj.types);
-           unique_types = u_obj.s_unique;
-           unique_types__indices_ca = u_obj.s_group_indices;
-           
+           [unique_types,unique_types__indices_ca] = ...
+               sl.cellstr.uniqueWithGroupIndices(obj.types);
+
            obj.unique_types_map = containers.Map(unique_types,unique_types__indices_ca);
 
         end
