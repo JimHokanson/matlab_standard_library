@@ -83,8 +83,7 @@ switch lower(in.type(1))
 end
 
 if in.add_colorbar
-    %Not sure if this will always work
-    h_color = h_axes.Colorbar;
+    h_color = sl.hg.axes.getColorbarHandle(h_axes);
     if ~isempty(h_color)
       	if ~strcmp(h_axes.Units,h_color.Units)
             error('Code doesn''t currently support different units') 
