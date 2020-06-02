@@ -131,7 +131,11 @@ switch in.n_rule
                input_string,temp); 
         end
     case 1 %match 1, but follow rule
-        if n_matches ~= 1
+        if n_matches == 0
+            %TODO: clean up, mult_result_rule error is clear
+            %and also now no longer ever going to hit ...
+            error('Match rule needs 1 match but no matches found'); 
+        elseif n_matches ~= 1
             switch in.multi_result_rule
                 case 'error'
                     if n_matches == 0
