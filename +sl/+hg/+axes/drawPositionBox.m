@@ -16,7 +16,7 @@ if ~strcmp(h_axes.Units,'normalized')
     error('Unhandled case')
 end
 
-p = sl.hg.axes.getPosition(h_axes,'type',in.type);
+p = sl.hg.axes.getPosition(h_axes,'type',in.type,'as_struct',false);
 h = annotation(h_fig,'rectangle',p,'Color','r');
 
 if nargout

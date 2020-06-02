@@ -1,19 +1,36 @@
-function s = screencapture(h,varargin)
-%
+function varargout = screenCapture(h,varargin)
+%X 
 %   
-%   sl.os.screencapture(h,varargin)
+%   s = sl.os.screenCapture(h,varargin)
 %
-%   Interactive - NYI
+%   Interactive - NYI - i.e. select ROI
 %   sl.os.screencapture([],varargin)    
+%
+%   Outputs
+%   -------
+%   s : 
 %
 %   Inputs
 %   ------
 %   h : Figure or others
-%       Only Figure is implemented
+%       Only Figure is implemented. Eventually we could support other types
+%       of screen-grab requests.
+%
+%   Optional Inputs
+%   ---------------
+%   fig_crop : NYI
 %
 %   Examples
 %   --------
-%   sl.os.screencapture(gcf)
+%   1) Captures to clipboard
+%   sl.os.screenCapture(gcf)
+%
+%   2) Capture to memory
+%   s = sl.os.screenCapture(gcf)
+%
+%   Improvements
+%   ------------
+%   1) Support interactive
 
 in.fig_crop = false; %NYI - if true, eat
 %into the figure in all directions when all the same color ...
@@ -24,7 +41,7 @@ in.save_path = '';
 in.crop_toolbar = true;
 in = sl.in.processVarargin(in,varargin);
 
-in.use_clipboard = isempty(in.save_path);
+in.use_clipboard = isempty(in.save_path) && nargout == 0;
 
 if ~isempty(in.save_path)
     %mwrite(imgData,'out.png')
@@ -44,10 +61,14 @@ end
 
 %TODO: Need to ensure figure is visible and up to date
 image_data = h__getImageData(s.p);
+s.image_data = image_data;
 if in.use_clipboard
     h__imageToClipboard(image_data);
 end
 
+if nargout
+    varargout{1} = s;
+end
 
 end
 function h__imageToClipboard(image_data)
@@ -124,6 +145,20 @@ RGB = cat(3, transpose(reshape(pixel(3, :, :), w, h)), ...
 end
 
 function s = h__getFigurePosition(h_fig,crop_toolbar,s)
+%
+%   s = h__getFigurePosition(h_fig,crop_toolbar,s)
+%
+%   Outputs
+%   -------
+%   s : struct
+%       .fig_position - 4 element vector [left, bottom, width, height]
+%       .p - also of p
+%
+%   Inputs
+%   ------
+%   h_fig
+%   crop_toolbar : boolean
+%       Whether or not to remove toolbar when calculating 
 
     keep_toolbar = ~crop_toolbar;
 

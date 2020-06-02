@@ -15,7 +15,7 @@ m = sl.plot.uimenu.menu('Custom',h_fig);
 
 m2 = m.addChild('screenshot');
 
-m3 = m2.addChild('clipboard','Callback',@(~,~)sl.os.screencapture(h_fig));
+m3 = m2.addChild('clipboard','Callback',@(~,~)sl.os.screenCapture(h_fig));
 
 % mitem = m.addChild('screenshot','Callback',@(~,~)sl.os.screencapture(h_fig));
 
