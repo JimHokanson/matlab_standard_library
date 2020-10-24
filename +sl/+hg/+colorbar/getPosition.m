@@ -1,4 +1,4 @@
-function pos = getPosition(cb,varargin)
+function p = getPosition(cb,varargin)
 %   
 %   pos = sl.hg.colorbar.getPosition(cb,varargin)
 %
@@ -20,6 +20,7 @@ function pos = getPosition(cb,varargin)
 
     %TODO: Requires units comparison
     %in.constrain = true;
+    in.as_struct = true;
     in.type = 'tight';
     in = sl.in.processVarargin(in,varargin);
 
@@ -45,14 +46,21 @@ function pos = getPosition(cb,varargin)
 
     switch lower(in.type(1))
         case {'p' 'i'}
-            pos = get(h_axes, 'Position');
+            p = get(h_axes, 'Position');
         case 't'
-            pos = sl.hg.axes.getPosition(h_axes,'type','t',...
-                'add_legend',false,'add_colorbar',false);
+            p = sl.hg.axes.getPosition(h_axes,'type','t',...
+                'add_legend',false,'add_colorbar',false,'as_struct',false);
         case 'o'
-            pos = get(h_axes, 'OuterPosition');
+            p = get(h_axes, 'OuterPosition');
         otherwise
             error('Unrecognized position type')
+    end
+    
+    if in.as_struct
+        s = struct('left',p(1),'bottom',p(2),'width',p(3),'height',p(4),...
+            'right',p(1)+p(3),'top',p(2)+p(4));
+
+        p = s;
     end
 
     delete(h_axes);

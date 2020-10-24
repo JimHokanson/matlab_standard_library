@@ -130,7 +130,7 @@ if in.add_colorbar
       	if ~strcmp(h_axes.Units,h_color.Units)
             error('Code doesn''t currently support different units') 
         end
-        p_color = sl.hg.colorbar.getPosition(h_color,'type',in.type(1));
+        p_color = sl.hg.colorbar.getPosition(h_color,'type',in.type(1),'as_struct',false);
         p = h__mergeP(p,p_color);
     end
 end
@@ -140,10 +140,17 @@ if in.add_legend
 end
 
 if in.as_struct
-    %The -1 assumes pixel position
-    %TODO: Remove this assumption ...
     s = struct('left',p(1),'bottom',p(2),'width',p(3),'height',p(4),...
-        'right',p(1)+p(3)-1,'top',p(2)+p(4)-1);
+        'right',p(1)+p(3),'top',p(2)+p(4));
+    
+    for i = 1:length(s)
+        cur_units = h_axes(i).Units;
+        if strcmp(cur_units,'pixels')
+            s(i).right = s(i).right - 1;
+            s(i).top = s(i).top - 1;
+        end
+    end
+    
     p = s;
 end
 
