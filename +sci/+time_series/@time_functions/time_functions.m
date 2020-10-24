@@ -247,7 +247,10 @@ classdef time_functions < sl.obj.display_class
             %Ideally we could call a copy object method ...
             %add some history as well
             
-            new_time_object = dobj.time.getNewTimeObjectForDataSubset(new_time_range(1),n_samples_new,'first_sample_time',new_time_range(1));
+            %Creation of the new data object
+            %-------------------------------
+            new_time_object = dobj.time.getNewTimeObjectForDataSubset(...
+                new_time_range(1),n_samples_new,'first_sample_time',new_time_range(1));
             
             event_aligned_data = sci.time_series.data(new_data,new_time_object,...
                 'units',dobj.units,'y_label',dobj.y_label);
@@ -257,6 +260,10 @@ classdef time_functions < sl.obj.display_class
             times = start_times;
             ev = sci.time_series.discrete_events(prop_name,times);
             event_aligned_data.event_info.addEvents(ev);
+            
+            old_history = dobj.history;
+            
+            event_aligned_data.addHistoryElements([old_history; {'new object with reps created from old object'}]);
             
         end
         function removeOffset(obj)
