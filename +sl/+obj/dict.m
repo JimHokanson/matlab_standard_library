@@ -113,7 +113,8 @@ classdef dict < handle
             try
                 obj.props.(name) = value;
             catch
-                obj.props = json.setField(obj.props,name,value);
+                %mex call ...
+                obj.props = sl.struct.setField(obj.props,name,value);
             end
         end
     end
