@@ -15,9 +15,9 @@ classdef box_plot_result < sl.obj.display_class
     
     properties
         h_axes  % Axes
-        entries % [sl.plot.stats.results.box_plot_entry]
+        entries sl.plot.stats.results.box_plot_entry
         
-        design  %sl.plot.stats.results.box_plot_designs
+        design  sl.plot.stats.results.box_plot_designs
         %Can be called to create standard visualizations ...
         %   r.design.jim_std();
     end
