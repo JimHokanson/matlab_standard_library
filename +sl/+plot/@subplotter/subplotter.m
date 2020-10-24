@@ -1027,7 +1027,8 @@ classdef subplotter < sl.obj.display_class
             
             
             ps = sl.hg.axes.getPosition(row_1_handles,...
-                'type','position','as_struct',true,'flatten_struct',true);
+                'type','position','as_struct',true,'add_colorbar',true,...
+                'flatten_struct',true);
             
             %TODO: Rearranging needs to take into account
             %the text
@@ -1076,6 +1077,10 @@ classdef subplotter < sl.obj.display_class
                     %want the y lim to change because we've just put in a
                     %bunch of effort to scale graphs based on x ...
                     %axis(cur_axes,in.axis)
+                    %
+                    % i.e. we don't want the xlim values to change after 
+                    % we've gone ahead and adjusted widths based on the old
+                    % xlims ...
                 end
                 if iColumn ~= n_columns_l
                     next_left = next_left + cur_width + gap_widths(iColumn);
@@ -1189,6 +1194,39 @@ classdef subplotter < sl.obj.display_class
                     end
                 end   
             end
+        end
+        function output = getYRange(obj,varargin)
+            in.type = 'by_row';
+            %-all
+            %
+            in.rows = [];
+            in.columns = [];
+            in = sl.in.processVarargin(in,varargin);
+            
+            if isempty(in.rows)
+                in.rows = 1:obj.n_rows;
+            end
+            
+            if isempty(in.columns)
+                in.columns = 1:obj.n_columns;
+            end
+            
+            y_min = zeros(1,length(in.rows));
+            y_max = zeros(1,length(in.rows));
+                        
+            for i = 1:length(in.rows)
+                cur_row = in.rows(i);
+                y_temp = zeros(2,length(in.columns));
+                for j = 1:length(in.columns)
+                    cur_col = in.columns(j);
+                    y_temp(:,j) = get(obj.handles{cur_row,cur_col},'YLim');
+                end
+                y_min(i) = min(y_temp(1,:));
+                y_max(i) = max(y_temp(2,:));
+            end
+            
+            output = [y_min(:) y_max(:)];
+            
         end
         function setAxesProps(obj,varargin)
             %x Sets properties of all axes
@@ -1377,14 +1415,19 @@ classdef subplotter < sl.obj.display_class
             %   --------
             %   linkaxes
             
+            in.columns = [];
             in.clear_previous_links = false; %NYI
             in.by_row = true; %NYI
             in = sl.in.processVarargin(in,varargin);
             
+            if isempty(in.columns)
+               in.columns = 1:obj.n_columns; 
+            end
+            
             for i = 1:obj.n_rows
                 %TODO: Do we need to expand first
                 %I think this sometimes shrinks rather than expanding :/
-                ax = [obj.handles{i,:}];
+                ax = [obj.handles{i,in.columns}];
                 linkaxes(ax,'y')
                 %syncLimits(ax,'YLim');
                 %linkprop(ax,'YLim');
