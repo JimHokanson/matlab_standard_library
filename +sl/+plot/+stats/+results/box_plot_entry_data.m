@@ -70,6 +70,11 @@ classdef box_plot_entry_data < sl.obj.display_class
             obj.rng_seed = in.rng_seed;
             obj.pct_box_width_scatter = in.pct_width;
             
+            
+            if ~isempty(obj.h_scatter)
+                delete(obj.h_scatter)
+            end
+            
             %Update seed for random number generator, hold onto previous
             %one (r1)
             r1 = rng(in.rng_seed);
