@@ -117,7 +117,7 @@ classdef data < sl.obj.handle_light
         
         time     %sci.time_series.time
         units    %string
-        channel_labels %cellstr (or string?)
+        channel_labels %cellstr (or string? - yes unfortunately, needs to be fixed)
         y_label %Must be a string
     end
     
