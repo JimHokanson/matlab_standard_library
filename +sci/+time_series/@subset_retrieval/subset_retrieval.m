@@ -444,7 +444,7 @@ classdef subset_retrieval < sl.obj.display_class
             %   --------
             %   ep = sci.time_series.subset_retrieval.generic_processor;
             
-            if nargin == 1 || isempty(stop_times)
+            if nargin == 2 || isempty(stop_times)
                 if length(start_times) == 2
                     stop_times = start_times(2);
                     start_times = start_times(1);
