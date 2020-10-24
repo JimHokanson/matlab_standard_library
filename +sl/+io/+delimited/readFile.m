@@ -28,12 +28,20 @@ function [output,extras] = readFile(file_path,delimiter,varargin)
 %   ----------------
 %   return_type : {'cell','object'} (default 'cell')
 %       - 'cell' => cell array
+%               - cellstr matrix {'a' 'b'; 'c' 'd'}
+%               - cell array of cellstr {{'a' 'b'} {'c' 'd'}}
+%               See 'merge_lines' input
 %       - 'object' => sl.io.delimited_file
 %       - 'table' => Matlab table
 %   merge_lines  : (default true), if true returns a cell array matrix
 %                  if false, returns a cell array of cell arrays
 %   header_lines : (default 0), if non-zero then the lines should be
 %           rerned without processing
+%               Note, if you just have column names use:
+%                   ...,'has_column_labels',true    instead
+%
+%               Note, the names will be removed from the data when this is
+%               true.
 %   default_ca   : (default ''), the default empty entry for a cell array
 %                   This is used when creating a matrix with rows that
 %                   don't have the same number of columns
@@ -55,10 +63,8 @@ function [output,extras] = readFile(file_path,delimiter,varargin)
 %
 %   Outputs:
 %   --------
-%   output : either a 
-%               - cellstr matrix {'a' 'b'; 'c' 'd'}
-%               - cell array of cellstr {{'a' 'b'} {'c' 'd'}}
-%               See 'merge_lines' input
+%   output : 
+%       See 'return_type' for specifics on output type.
 %   extras : (structure)
 %       .raw           - raw text from file
 %       .header_lines  - first n lines, see "header_lines" optional input
@@ -68,6 +74,8 @@ function [output,extras] = readFile(file_path,delimiter,varargin)
 %   1) The last line if empty is always removed ...
 %   2) Removal of empty lines is done before delimiter parsing, not
 %   aftewards, i.e. a row with only delimiters will not be removed ...
+%   3) This code does not provide escape support (e.g. using "," to
+%   indicate a value of a comma, rather than a comma delimiter)
 %
 %   See Also:
 %   ---------
@@ -100,7 +108,11 @@ in.return_type = 'cell'; %object
 in = sl.in.processVarargin(in,varargin);
 
 %Currently this association needs to hold
-in.has_column_labels = strcmpi(in.return_type,'object');
+if strcmp(in.return_type,'object')
+    in.has_column_labels = true;
+end
+%JAH: 10/16/2020
+%in.has_column_labels = strcmpi(in.return_type,'object');
 
 %Obtaining the text data - change to using an optional input ...
 %--------------------------------------------------------------------
