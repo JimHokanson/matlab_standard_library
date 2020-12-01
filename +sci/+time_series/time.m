@@ -441,9 +441,9 @@ classdef time < sl.obj.display_class
                 error('Unhandled case, unsorted times input')
             else
                 if indices(1) < 1
-                    error('The first sample (and possibly others) is out of range, less than 1')
+                    error('The first sample (and possibly others) is out of range, less than 1, I(1)=%d',indices(1))
                 elseif indices(end) > obj.n_samples
-                    error('The last sample (and possibly others) is out of range, greater than the # of samples')
+                    error('The last sample (and possibly others) is out of range, greater than the # of samples, n_samples: %d, target: %d',obj.n_samples,indices(end))
                 end
             end
             
