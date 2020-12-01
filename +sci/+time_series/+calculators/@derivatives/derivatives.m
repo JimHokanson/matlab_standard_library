@@ -1,4 +1,4 @@
-classdef derivatives
+classdef derivatives < sl.obj.display_class
     %
     %   Class:
     %   sci.time_series.calculators.derivatives
@@ -20,7 +20,7 @@ classdef derivatives
             %
             %   value = x(I + half_width) - X(I-half_width);
             %
-            %   The resulting value is scalled appropriately for both the
+            %   The resulting value is scaled appropriately for both the
             %   width over which it is caculated as well as the sampling
             %   rate.
             %
@@ -51,7 +51,10 @@ classdef derivatives
             % 	new_data = c.derivatives.first_derivative(obj.raw_data,...
             %                               'time_width',1,'filt_freq',0.5);
             
-            
+            %scale
+            %   - slope
+            %   - sample
+            in.scale = 'slope';
             in.null_value = NaN;
             in.sample_width = [];
             in.time_width = [];
@@ -103,7 +106,12 @@ classdef derivatives
             
             %TODO: Ideally this would be done without temporarily variables
             %but I don't know if it is ...
-            scale = data.time.fs/(2*half_sample_width);
+            switch in.scale
+                case 'slope'  
+                    scale = data.time.fs/(2*half_sample_width);
+                case 'sample'
+                    scale = 1;
+            end
             d2(start_I:end_I,1) = scale*(...
                 d(start_I+half_sample_width:end) - ...
                 d(1:end_I-half_sample_width));
@@ -117,8 +125,7 @@ classdef derivatives
             new_data.addHistoryElements('Calculated first derivative using calculators.derivatives.first_derivative');
             
             result.result_data = new_data;
-            
-            
+            result.orig_data = data;
         end
     end
 end
