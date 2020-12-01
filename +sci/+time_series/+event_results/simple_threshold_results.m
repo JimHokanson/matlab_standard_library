@@ -156,6 +156,7 @@ classdef simple_threshold_results < sl.obj.display_class
             
             if ~isempty(obj.original_data)
                 plot(obj.original_data,'zero_time',in.zero_time)
+                yyaxis right
             end
             
             %TODO: If this is the same as the original data then
