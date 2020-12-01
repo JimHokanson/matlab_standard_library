@@ -44,7 +44,10 @@ function result = findLocalPeaks(data, search_type, varargin)
 %       Can be used rather than 'max_threshold' or 'min_threshold' with
 %       the sign interpretation depending upon 'search_type'
 %
-%
+%   Examples
+%   --------
+%   first_difference = diff(raw_data)
+%   result = c.eventz.findLocalPeaks(first_difference,
 
 %{
 data = 1:1e6;
@@ -139,6 +142,7 @@ if any(strcmp(search_type,{'max','both'}))
     else
         threshold = in.threshold;
     end
+    %This can be really slow ...
     mask = islocalmax(d,options2{:});
     peak_I_max = find(mask);
     if ~isnan(threshold)
@@ -170,7 +174,11 @@ switch search_type
         peak_I = peak_I_min;
         is_max = false(1,length(peak_I));
     case 'both'
-        [peak_I,I_sort] = sort([peak_I_max peak_I_min]);
+        try
+            [peak_I,I_sort] = sort([peak_I_max; peak_I_min]);
+        catch
+            [peak_I,I_sort] = sort([peak_I_max peak_I_min]);
+        end
         is_max = I_sort <= length(peak_I_max);
 end
 
