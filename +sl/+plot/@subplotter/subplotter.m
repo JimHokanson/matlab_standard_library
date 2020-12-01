@@ -288,7 +288,7 @@ classdef subplotter < sl.obj.display_class
             
             in.h_fig = [];
             in.clf = true;
-            in.row_first_indexing = true;
+            in.row_first_indexing = false;
             in = sl.in.processVarargin(in,varargin);
             
             if isempty(n_rows)
@@ -525,7 +525,7 @@ classdef subplotter < sl.obj.display_class
             end
         end
         function setXExtents(obj,x_min,x_max)
-            %x Set x-extents (min and max) of all plots
+            %x Set x-extents (min and max position, not x-limits) of all plots
             %
             %   setXExtents(obj,x_min,x_max)
             %
@@ -1092,15 +1092,14 @@ classdef subplotter < sl.obj.display_class
     
     
     methods
-        function varargout = subplot(obj,row_or_index,column)
+        function varargout = subplot(obj,row_or_index,column,varargin)
             %x Create the actual subplot axis
             %
             %   ax = subplot(obj,row,column)
             %
             %   ax = subplot(obj,index)
             %
-            %   %Plots in the next location
-            %   %TODO: Support subplot or matlab next indexing
+            %   Plots in the next location
             %   ax = subplot(obj)
             %
             %   Example
@@ -1108,20 +1107,36 @@ classdef subplotter < sl.obj.display_class
             %   Plot to the 2nd row, 3rd column
             %   ax = sp.subplot(2,3);
             
-            if nargin == 1
-                %TODO: Support row_first_indexing
-                %This was originally addded to support a row vector
-                %so it didn't matter ...
-                row_or_index = obj.last_index + 1;
-                [row,column] = ind2sub([obj.n_rows,obj.n_columns],row_or_index);
-                obj.last_index = row_or_index;
-            elseif nargin == 2
-                [row,column] = ind2sub([obj.n_rows,obj.n_columns],row_or_index);
+            if obj.row_first_indexing
+                in.index = 'row_first';
             else
-                row = row_or_index;
+                in.index = 'col_first';
+            end
+            in = sl.in.processVarargin(in,varargin);
+            
+            %index - row_first
+            %index - col_first
+            %row-column
+            
+            
+            if nargin == 1
+                row_or_index = obj.last_index + 1;
             end
             
-            I = (row-1)*obj.n_columns + column;
+            if nargin < 3
+                obj.last_index = row_or_index;
+                if in.index(1) == 'c'
+                    %Note, ind2sub is ML indexing, so col first
+                    [row,column] = ind2sub([obj.n_rows,obj.n_columns],row_or_index);
+                    I = (row-1)*obj.n_columns + column;
+                else
+                    I = row_or_index;
+                    [column,row] = ind2sub([obj.n_columns,obj.n_rows],row_or_index);
+                end
+            else
+                row = row_or_index;
+                I = (row-1)*obj.n_columns + column;
+            end
             
             %I'm not aware of any way of forcing h_fig to subplot
             if ~isempty(obj.h_fig)
