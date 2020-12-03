@@ -6,6 +6,9 @@ function mask = contains(data,strings_or_patterns,varargin)
 %   Note the current behavior is to 'or' the responses such that a match to
 %   any pattern will return true. 
 %
+%   Determine for each 'data' whether the 'strings_or_patterns' is 
+%   contained in it.
+%
 %   Inputs:
 %   -------
 %   data : cellstr
@@ -57,6 +60,17 @@ function mask = contains(data,strings_or_patterns,varargin)
 %   ---------
 %   sl.str.contains
 
+%The idea with flag is to return indices of matches for many to many 
+%searches. Essentially, this would be like ismember() but with support
+%for partial matches. I think instead of implementing this I just did the 
+%index search on my output ...
+%
+%   data = {'test' 'cheese' 'nope'}
+%   strings = {'asdf' 'school' 'bib 'testing' 'cheddar cheese'}
+%
+%   Instead pf 
+%
+% in.return_match_index = false; NYI
 in.use_or = []; 
 in.use_and = [];
 in.case_sensitive = false;
@@ -95,6 +109,10 @@ else
 	mask = true(1,length(data));
 end
 
+% if in.return_match_index
+%     output_I = zeros(1,length(data)); 
+% end
+
 for iPattern = 1:length(strings_or_patterns)
     cur_str_or_pattern = strings_or_patterns{iPattern};
     
@@ -117,5 +135,9 @@ for iPattern = 1:length(strings_or_patterns)
     match_I = fh(data_to_test,cur_str_or_pattern,'once');
     mask(process_mask) = ~cellfun('isempty',match_I);
 end
+
+% if output_I
+%     
+% end
 
 end
