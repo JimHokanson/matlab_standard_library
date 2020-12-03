@@ -293,6 +293,11 @@ classdef subset_retrieval < sl.obj.display_class
             %   %Grab from 1 second before the 'start_pump' to 2 seconds after
             %   subset = my_data.subset.fromEventAndTimeWindow('start_pump',-1,2)
             
+            if nargin == 3 && length(start_time_offset) == 2
+                stop_time_offset = start_time_offset(2);
+                start_time_offset = start_time_offset(1);
+            end
+            
             [~,p_only,varargin] = sl.in.getOptionalParameter(varargin,'p_only','default',false,'remove',true);
             ep = sci.time_series.subset_retrieval.event_processor;
             ep = sl.in.processVarargin(ep,varargin);
