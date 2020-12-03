@@ -14,6 +14,7 @@ classdef bool_transition_info < sl.obj.display_class
     
     
     properties
+        is_row
         first_sample %logical
         %
         %   This is the value of the first sample
@@ -284,8 +285,8 @@ classdef bool_transition_info < sl.obj.display_class
             obj.first_sample = logical_data(1);
             obj.n_samples    = length(logical_data);
             
-            %TODO: We don't even need the temp logic, we would just need to
-            %a
+            %TODO: We don't even need the temp logic, we could
+            %build it in downstream
             if isrow(logical_data)
                 temp_logic = [~logical_data(1) logical_data];
             else
@@ -306,7 +307,8 @@ classdef bool_transition_info < sl.obj.display_class
             % if start_is_1 and end_is_1
             % elseif start_is_1 and end_is_0
             % etc.
-            %
+            
+            %true_end_indices ---------------
             obj.true_end_indices = obj.false_start_indices - 1;
             if ~isempty(obj.true_end_indices) && obj.true_end_indices(1) == 0
                 obj.true_end_indices(1) = [];
@@ -315,12 +317,28 @@ classdef bool_transition_info < sl.obj.display_class
                 obj.true_end_indices(end+1) = length(logical_data);
             end
             
+            %false_end_indices ---------------
             obj.false_end_indices = obj.true_start_indices - 1;
             if ~isempty(obj.false_end_indices) && obj.false_end_indices(1) == 0
                 obj.false_end_indices(1) = [];
             end
             if ~logical_data(end)
                 obj.false_end_indices(end+1) = length(logical_data);
+            end
+            
+            %JAH EDIT 11/2020
+            %We get issues where our output shape can vary depending upon
+            %our input but this gets messy to track so I'm going to force
+            %all results to be row vectors.
+            %
+            %I considered just flipping the input but I had concerns
+            %about data copying (memory management) for a large input
+            %vector
+            if iscolumn(obj.true_start_indices)
+                obj.true_start_indices = obj.true_start_indices';
+                obj.false_start_indices = obj.false_start_indices';
+                obj.true_end_indices = obj.true_end_indices';
+                obj.false_end_indices = obj.false_end_indices';
             end
         end
     end
