@@ -80,6 +80,10 @@ classdef discrete_events < sl.obj.display_class
             obj.name  = in.name;
             obj.times = times;
             
+            if ischar(in.msgs)
+                in.msgs = {in.msgs};
+            end
+            
             obj.values = in.values;
             obj.msgs   = in.msgs;
         end
@@ -224,12 +228,17 @@ classdef discrete_events < sl.obj.display_class
                 in.show_msgs = false;
             end
             
-            if isempty(obj.values)
-                in.show_values = false;
-            end
-            if isempty(obj.msgs)
-                in.show_msgs = false;
-            end
+            
+            %JAH Edit: 10/30/2020
+%             if isempty(obj.values)
+%                 in.show_values = false;
+%             end
+% 
+%             
+%             
+%             if isempty(obj.msgs) && in.show_msgs
+%                 in.show_msgs = false;
+%             end
             
             line_inputs = sl.in.mergeInputs({'Color','k','LineStyle',':'},line_inputs);
             %TODO: If parent is specified in line_inputs we should throw an
@@ -258,12 +267,31 @@ classdef discrete_events < sl.obj.display_class
             %----------------
             
             if in.show_msgs && in.show_values
-                values_as_strings = h__valueToString(obj.values(in.I));
-                display_strings   = cellfun(@(x,y) [x ' : ' y],values_as_strings,obj.msgs(in.I),'un',0);
+                if isempty(obj.msgs) && isempty(obj.values)
+                    display_strings = sl.cellstr.sprintf([obj.name ': %d'],num2cell(in.I));
+%                   display_strings   = cellfun(@(x,y) [x ' : ' y],values_as_strings,obj.msgs(in.I),'un',0);
+                elseif isempty(obj.msgs)
+                    values_as_strings = h__valueToString(obj.values(in.I));
+                    display_strings = sl.cellstr.sprintf([obj.name ': %s'],values_as_strings);
+                elseif isempty(obj.values)
+                    display_strings = obj.msgs(in.I);
+                else
+                    values_as_strings = h__valueToString(obj.values(in.I));
+                    display_strings   = cellfun(@(x,y) [x ' : ' y],values_as_strings,obj.msgs(in.I),'un',0);
+                end
             elseif in.show_msgs
-                display_strings = obj.msgs(in.I);
+                if isempty(obj.msgs)
+                    display_strings = cell(1,length(in.I));
+                    display_strings(:) = {obj.name};
+                else
+                    display_strings = obj.msgs(in.I);
+                end
             elseif in.show_values
-                display_strings = h__valueToString(obj.values(in.I));
+                if isempty(obj.values)
+                    display_strings = {};
+                else
+                    display_strings = h__valueToString(obj.values(in.I));
+                end
             else
                 display_strings = {};
             end
@@ -317,7 +345,8 @@ classdef discrete_events < sl.obj.display_class
                 %TODO: We should expose the text handles as well ...
                 h{iAxes} = sl.plot.type.verticalLines(times_for_plotting,...
                     'parent',cur_axes,'y_pct',[0 1],line_inputs{:},...
-                    'strings',display_strings);
+                    'strings',display_strings,'text_options',{'Interpreter','none'});
+                    %TODO: Expose interpreter to higher level
                 
 
                     %TODO: I'd like to know why this didn't work with
