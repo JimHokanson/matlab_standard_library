@@ -115,7 +115,7 @@ classdef data < sl.obj.handle_light
         %
         %       obj.getRawDataAndTime()
         
-        time     %sci.time_series.time
+        time     sci.time_series.time
         units    %string
         channel_labels %cellstr (or string? - yes unfortunately, needs to be fixed)
         y_label %Must be a string
@@ -143,9 +143,9 @@ classdef data < sl.obj.handle_light
         n_channels
         n_reps
         n_samples
-        calculators %sci.time_series.calculators
+        calculators sci.time_series.calculators
         subset
-        ftime %sci.time_series.time_functions
+        ftime  sci.time_series.time_functions
     end
     
     %     methods
