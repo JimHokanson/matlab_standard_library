@@ -23,7 +23,7 @@ classdef box_plot_entry < handle
         %- filled (fat line)
         %- box - via this code ...
     end
-    
+        
     properties (Dependent)
         x_center
         box_width
@@ -143,7 +143,7 @@ classdef box_plot_entry < handle
             
             outlier_y_data = obj.h_outliers.YData;
             
-            obj.data = sl.plot.stats.results.box_plot_entry_data(data,...
+            obj.data = sl.plot.stats.results.box_plot_entry_data(h_axes,data,...
                 outlier_y_data,obj.box_width,obj.x_center);
             
             if ~isempty(in.label)
@@ -196,6 +196,13 @@ classdef box_plot_entry < handle
                 ax.XTickLabel = x_labels_sorted;
             end
             
+        end
+        function hideScatterData(objs)
+          	for i = 1:length(objs)
+                obj = objs(i);
+                %data : sl.plot.stats.results.box_plot_entry_data
+                obj.data.hideScatterData();
+            end
         end
         function renderScatterData(objs,varargin)
             %x Renders raw data as scatter plot over box plot
