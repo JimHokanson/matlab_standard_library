@@ -94,9 +94,12 @@ classdef keyboard_logger < handle
             obj = sl.os.keyboard_logger.getInstance();
             
             %t = timer;
-            obj.t.TimerFcn = @(~,~)obj.keyboardEventTimerFunction(obj,input_string);
-            start(obj.t)
-            
+            try
+                obj.t.TimerFcn = @(~,~)obj.keyboardEventTimerFunction(obj,input_string);
+                start(obj.t)
+            catch
+                delete(obj.t)
+            end
         end
         function keyboardEventTimerFunction(obj,input_string)
             
