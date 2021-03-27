@@ -143,7 +143,7 @@ else
         %
         %It also factors in if we plot a bunch of axes, then more later
         %
-        %This code is a bit rough and needs to be cleaned up
+        %******* This code is a bit rough and needs to be cleaned up
          h_axes = in.axes;
         if isempty(h_axes)
             h_axes = gca;

@@ -18,7 +18,14 @@ function hideIcons(h_fig,varargin)
 %   Optional Inputs
 %   ---------------
 %   set : string
+%       Note, here set means a specific 'set' to keep rather than
+%       enumerating them in 'keep', and opposed to 'setting' them
 %       - 'jim_2d' - keeps only zoom in/out, pan, and data cursor
+%
+%   Improvements
+%   ------------
+%   1. Including a 'set' doesn't turn them on, it just prevents
+%       them from turning off if they are currently on
 
 in.set = '';
 in.hide = {};
