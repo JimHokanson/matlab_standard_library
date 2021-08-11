@@ -69,12 +69,11 @@ classdef git
                     user_path = char(System.Environment.GetEnvironmentVariable("USERPROFILE"));
                     github_root = fullfile(user_path,'AppData','Local','GitHubDesktop');
                     
-                    
-                    
+                    github_exe_path = '';
                     if exist(github_root,'dir')
                         s = dir(fullfile(github_root,'app-*'));
                         
-                        if length(s) > 1
+                        if ~isempty(s)
                             last_date = s(1).datenum;
                             %Technically we would be better off sorting names
                             %using natural sort ...
@@ -87,7 +86,7 @@ classdef git
                             end
                             best_path = fullfile(github_root,s(cur_I).name);
                             s = dir(fullfile(best_path,'**/git.exe'));
-                            if length(s) > 1
+                            if ~isempty(s)
                                 exe_size = s(1).bytes;
                                 cur_I = 1;
                                 for i = 2:length(s)
