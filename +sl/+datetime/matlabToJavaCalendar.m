@@ -5,6 +5,13 @@ function java_cal = matlabToJavaCalendar(matlab_time)
 %   Output
 %   -------
 %   java_cal: [java.util.GregorianCalendar]
+%
+%   Note, this sets time zone based on local time.
+%
+%
+%   Improvements
+%   ------------
+%   1) Improve time zone handling
 %       
 
 %{
