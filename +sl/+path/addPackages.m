@@ -1,29 +1,25 @@
 function addPackages(package_folders,varargin)
 %x Adds folders with code to the path
 %
-%   sl.path.addPackages(package_folders,varargin)
+%   sl.path.addPackages(package_parent_folders_or_full_paths,varargin)
 %
 %   This function is meant to facilitate adding code to the path on
 %   startup.
 %
-%   Inputs:
-%   -------
-%   package_folders: string or cellstr
-%
+%   Initialization Scripts
+%   ----------------------
+%   Note, if the folder contains an initialization script, "initialize.m"
+%   this is run rather than adding the folder to the path. If a package
+%   (i.e., folder with leading '+' character) is added to the path, the
+%   code also looks for a .initialize
 %
 %   Inputs
 %   ------
-%   package_folders : string or cellstr
-%       These are the names of packages to add OR the paths. Paths are
-%       useful for initialization handling. Packages should be in folders 
-%       that are at the same level as the standard library (when using
-%       names)
-%
-%               e.g.,
-%               /matlab_standard_library
-%               /labchart_server_matlab/+labchart
-%               /turtle_json/initialize.m
-%
+%   package_parent_folders_or_full_paths : string or cellstr
+%           
+%       - package_parent_folder : path is relative to the standard library root
+%                          and is the NAME of the parent folder
+%       - full_path : full path to add to MATLAB path
 %
 %   Optional Inputs
 %   ---------------
@@ -41,7 +37,6 @@ function addPackages(package_folders,varargin)
 %   Improvements
 %   -------------------------------------------
 %   1) Support loose name matching
-%   2) Support relative paths to standard library
 
 in.root_path = fileparts(sl.stack.getPackageRoot);
 in = sl.in.processVarargin(in,varargin);
@@ -63,14 +58,22 @@ for iPackage = 1:length(package_folders)
     if exist(init_path,'file')
         run(init_path)
     else        
-        addpath(cur_package_path);
-        path_to_test = fullfile(cur_package_path,'+*');
-        d = dir(path_to_test);
-      	for i = 1:length(d)
-            package_name = d(i).name(2:end);
-            init_cmd = [package_name '.initialize'];
-            if ~isempty(which(init_cmd))
-               feval(init_cmd); 
+        if ~exist(cur_package_path,'dir')
+            sl.warning.formatted('package folder missing, not added to path:\n%s',cur_package_path)
+        else
+            addpath(cur_package_path);
+            %Note, this is non-recursive, just the name of the folder
+            %may not match the name of the package so we put the wildcard
+            %in ...
+            path_to_test = fullfile(cur_package_path,'+*');
+            %We support multiple packages in this folder
+            d = dir(path_to_test);
+            for i = 1:length(d)
+                package_name = d(i).name(2:end);
+                init_cmd = [package_name '.initialize'];
+                if ~isempty(which(init_cmd))
+                   feval(init_cmd); 
+                end
             end
         end
     end
