@@ -27,6 +27,9 @@ function result = boxPlot(x_data,varargin)
 %       - 'separate' - NYI each cell in its own group x x x  y y y  z z z
 %       - 'interleaved' - indices of each group together x1 y1 z1  x2 y2 z2
 %
+%
+%   TODO: Expose those options here
+%
 %   See Also
 %   ---------
 %   boxplot
