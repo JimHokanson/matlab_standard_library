@@ -958,7 +958,11 @@ classdef subplotter < sl.obj.display_class
             %   sp.setRowYLim(3,[-0.2 0.2])
             
             ax = [obj.handles{row_I,:}];
-            set(ax,'ylim',ylim);
+            for i = 1:length(ax)
+                %2019a - seems
+                set(ax(i),'YLim',ylim);
+                %set(ax,'ylim',ylim);
+            end
         end
         function setColWidthByTime(obj,varargin)
             %x Adjust column widths so that they are proportional to time
