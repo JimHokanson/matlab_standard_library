@@ -1,6 +1,9 @@
 function [IND, D] = nearestPoint2(x,y,m) 
 % NEARESTPOINT - find the nearest value in another vector
 %
+%
+%   [ind,d] = sl.array.nearestPoint2(x,y) 
+%
 %   IND = NEARESTPOINT(X,Y) finds the value in Y which is the closest to 
 %   each value in X, so that abs(Xi-Yk) => abs(Xi-Yj) when k is not equal to j.
 %   IND contains the indices of each of these points.

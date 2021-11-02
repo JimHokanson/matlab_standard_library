@@ -18,6 +18,16 @@ function hideMenus(h_fig,varargin)
 %   Optional Inputs
 %   ---------------
 %   Not yet implemented ...
+%
+%   Example
+%   -------
+%   plot(1:10)
+%   %Hides everythingk only option implemented currently!!
+%   sl.hg.figure.hideMenus(gcf);
+%
+%   See Also
+%   --------
+%   sl.hg.figure.hideIcons
 
 
 in.hide = {};

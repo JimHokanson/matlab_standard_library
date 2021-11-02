@@ -22,10 +22,24 @@ function hideIcons(h_fig,varargin)
 %       enumerating them in 'keep', and opposed to 'setting' them
 %       - 'jim_2d' - keeps only zoom in/out, pan, and data cursor
 %
+%
+%   Example
+%   -------
+%   plot(1:10)
+%   %Hides all but the interaction icons
+%   sl.hg.figure.hideIcons(gcf,'set','jim_2d')
+%
+%   %Hides all
+%   sl.hg.figure.hideIcons(gcf)
+%
 %   Improvements
 %   ------------
 %   1. Including a 'set' doesn't turn them on, it just prevents
 %       them from turning off if they are currently on
+%
+%   See Also
+%   --------
+%   sl.hg.figure.hideMenus
 
 in.set = '';
 in.hide = {};
