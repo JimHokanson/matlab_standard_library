@@ -222,6 +222,10 @@ classdef subplotter < sl.obj.display_class
             %       If true, we may only have a single plot and not
             %       really a subplot ...
             %           Apparently this may not be needed ....
+            %
+            %   Improvements
+            %   ------------
+            %   1) Support partial subplots
             
             %Changed the calling form from:
             %1) fig_handle, *shape
@@ -259,6 +263,8 @@ classdef subplotter < sl.obj.display_class
                 sz = size(grid_handles);
             catch ME
                 %I saw this for a figure that was empty ...
+                %Also a partial figure ...
+                %
                 if in.may_be_single
                     error('Case not yet handled')
                    keyboard 
@@ -1041,6 +1047,9 @@ classdef subplotter < sl.obj.display_class
 %                 'add_colorbar',true);
             
             all_xlims = get(row_1_handles,'xlim');
+            if ~iscell(all_xlims)
+                all_xlims = {all_xlims};
+            end
             
             all_widths = ps.width;
             total_width = sum(all_widths);
