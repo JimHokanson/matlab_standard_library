@@ -55,6 +55,9 @@ classdef delimited_file < sl.obj.display_class
             %
             %   obj = sl.io.delimited_file(cell_data, extras, specs)
             %
+            %   Don't call this directly. Instead access via:
+            %   sl.io.delimited.readFile
+            %
             %   Inputs
             %   ------
             %   cell_data
@@ -167,6 +170,19 @@ classdef delimited_file < sl.obj.display_class
             end
         end
         function set_as_array(obj,names,varargin)
+            %x Set columns as array type
+            %
+            %   set_as_array(obj,names,varargin)
+            %
+            %   Inputs
+            %   ------
+            %   names
+            %
+            %   Optional Inputs
+            %   ---------------
+            %   delimiter : default ','
+            %   type : default 'numeric'
+            
             in.delimiter = ',';
             in.type = 'numeric';
             in = sl.in.processVarargin(in,varargin);
@@ -192,8 +208,22 @@ classdef delimited_file < sl.obj.display_class
             %TODO: Call generic with function handle
             h__changeType(obj,names,@str2double,'numeric')
         end
+        function varargout = get_as_numeric(obj,names)
+            if ischar(names)
+                names = {names};
+            end
+            
+            n_names = length(names);
+            
+            set_as_numeric(obj,names)
+            varargout = cell(1,n_names);
+            
+            for i = 1:n_names
+               varargout{i} = obj.c(names{i});
+            end
+        end
         function column_data = c(obj, requested_column_names, varargin)
-            %
+            %x 
             %
             %   Input/output mapping
             %
