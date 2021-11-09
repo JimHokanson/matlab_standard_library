@@ -106,6 +106,19 @@ classdef (Abstract) mlint < sl.obj.display_class
         end
     end
     
+    methods
+        function value = head(obj,n_lines)
+           if nargin == 1
+               n_lines = 10;
+           end
+           temp = obj.raw_mex_lines;
+           if length(temp) < n_lines
+               n_lines = length(temp);
+           end
+           value = temp(1:n_lines)';
+        end
+    end
+    
     %Shared Methods =======================================================
     methods (Hidden)
         function I = getAbsIndicesFromLineAndColumn(obj,line_numbers,column_numbers)

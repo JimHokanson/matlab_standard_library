@@ -5,8 +5,11 @@ classdef tree < sl.mlint
     %
     %   Parse tree
     %
-    %   Tells us:
-    %   - which lines property definitions are on
+    %   Status: May 15, 2020
+    %   The basic framework is done. Needs to be wrapped by classes that
+    %   use this information to do things.
+    %
+    %   
     
 
     %Function definition

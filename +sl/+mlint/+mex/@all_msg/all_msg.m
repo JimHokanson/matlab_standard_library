@@ -134,7 +134,7 @@ classdef all_msg < sl.obj.handle_light
             obj.section_indices = sl.array.genFromCounts(entry_lengths,1:n_types);
             
             n_ids = length(obj.ids);
-            obj.type_group_indices = sl.array.toCellArrayByCounts(1:n_ids,entry_lengths);
+            obj.type_group_indices = sl.array.to.CellArrayByCounts(1:n_ids,entry_lengths);
         end
     end
     
@@ -144,7 +144,7 @@ classdef all_msg < sl.obj.handle_light
             persistent class_instance
             
             if isempty(class_instance)
-                class_instance = sl.mlint.all_msg;
+                class_instance = sl.mlint.mex.all_msg;
             end
             output = class_instance;
         end
@@ -153,7 +153,7 @@ classdef all_msg < sl.obj.handle_light
             %   Returns the value of the .levels property for each
             %   input id.
             
-            obj = sl.mlint.all_msg.getInstance;
+            obj = sl.mlint.mex.all_msg.getInstance;
             [mask,loc] = ismember(input_ids,obj.ids);
             if ~all(mask)
                 error('Not all input_ids matched')
