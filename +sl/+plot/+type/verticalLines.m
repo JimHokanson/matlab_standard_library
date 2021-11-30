@@ -1,7 +1,7 @@
 function varargout = verticalLines(x_positions,varargin)
 %x Plots vertical lines on a graph ...
 %
-%   line_handles = sl.plot.type.verticalLines(x_positions,varargin)
+%   [line_handles,s] = sl.plot.type.verticalLines(x_positions,varargin)
 %
 %   Plots vertical lines on an axes. Requires HG2 graphics (Matlab > 2014B)
 %
@@ -38,6 +38,13 @@ function varargout = verticalLines(x_positions,varargin)
 %   --------------------
 %   You can also specify line properties as optional inputs (see examples)
 %
+%   Outputs
+%   -------
+%   line_handles
+%   s : struct
+%       .h_text
+%       .h_line
+%   
 %   Examples
 %   --------
 %   %1) plot vertical lines at 2,4,6
@@ -92,8 +99,8 @@ in.strings = {};
 in.text_options = {}; %ex. {'FontSize',18}
 
 in.parent = [];
-[local_options,line_options] = laborie.sl.in.removeOptions(varargin,fieldnames(in),'force_cell',true);
-in = laborie.sl.in.processVarargin(in,local_options);
+[local_options,line_options] = sl.in.removeOptions(varargin,fieldnames(in),'force_cell',true);
+in = sl.in.processVarargin(in,local_options);
 
 n_lines = max([length(x_positions), size(in.y_values,1), size(in.y_pct,1)]);
 
@@ -164,7 +171,7 @@ flag2 = ~isempty(in.strings) && in.y_move_strings;
 
 if flag1 || flag2
     %https://www.mathworks.com/matlabcentral/answers/369377-xlim-listener-for-zoom-reset-and-linkaxes-strange-behavior
-    pv = laborie.sl.obj.persistent_value;
+    pv = sl.obj.persistent_value;
     pv.value = struct;
     pv.value.ylim = ax.YLim;
     pv.value.xlim = ax.XLim;

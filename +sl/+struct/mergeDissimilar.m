@@ -1,5 +1,11 @@
 function sc = mergeDissimilar(sa,sb)
 %
+%
+%   ************* THIS IS OUTDATED *****************
+%   
+%   NEW CODE : sl.struct.concatenate
+%
+%
 %   sc = sl.struct.mergeDissimilar(sa,sb)
 %
 %   Allow the following:

@@ -62,6 +62,7 @@ classdef data < sl.obj.handle_light
     %       d1 = sci.time_series.data(rand(1e8,1),0.01);
     %
     %   2)
+    %       n_samples = 1e8;
     %       dt = 0.001;
     %       time_object = sci.time_series.time(dt,n_samples,'sample_offset',100)
     %       d2 = sci.time_series.data(rand(n_samples,1),time_object);

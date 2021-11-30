@@ -9,7 +9,7 @@ function addModifiyColumns(file_path,data,varargin)
 %       desired, otherwise the following will be used ...
 %       
 
-
+error('This is not finished. Not even sure what I was trying to do here')
 %{
 file_path = dba.files.trial.getSavePath('171211_J');
 sl.io.delimited.addModifiyColumns(file_path,{})

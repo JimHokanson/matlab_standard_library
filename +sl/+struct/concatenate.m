@@ -7,6 +7,8 @@ function output = concatenate(varargin)
 %   The output from this function is a result which can yield a structure
 %   array or table.
 %
+%   Default values are empty
+%
 %
 %   Example
 %   --------

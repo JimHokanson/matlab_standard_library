@@ -25,6 +25,7 @@ function varargout = horizontalLines(y_positions,varargin)
 %   sl.plot.type.horizontalLines(0.05,'y_as_pct',true,'x_values',x,'color','k');
 
 
+in.hide_from_legend = true;
 in.y_pct_vary_with_zoom = false; %NYI - on zoom, change values
 in.x_pct_vary_with_zoom = false; %NYI - on zoom, change values
 in.y_as_pct = false; 
@@ -67,6 +68,24 @@ end
 
 
 line_handles = line(xs',ys',line_options{:});
+
+%TODO: Make this an option
+ax = gca;
+
+if in.hide_from_legend
+    for i = 1:length(line_handles)
+        h = line_handles(i);
+        h.Annotation.LegendInformation.IconDisplayStyle = 'off';
+    end
+    %Now, if the legend is visible, it won't necessarily update
+    %-------------------------------------------------------------------
+    if ~isempty(ax.Legend)
+        legend(ax,'hide');
+        legend(ax,'show');
+    end
+end
+
+
 if nargout
     varargout{1} = line_handles;
 end

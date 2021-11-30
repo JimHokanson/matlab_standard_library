@@ -14,7 +14,8 @@ classdef (Hidden) unique_super < sl.obj.handle_light
     %   3) Implement test cases!
     %   4) Floating point unique ...
     %
-    %   See Also:
+    %   See Also
+    %   --------
     %   sl.array.unique
     %   sl.array.unique_rows
     %   sl.cellstr.unique
