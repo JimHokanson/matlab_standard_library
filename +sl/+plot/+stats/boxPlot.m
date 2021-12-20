@@ -56,13 +56,48 @@ in.dx = 1;
 in.dx_group = 1.5;
 in.group_id = 1;
 in.group_type = 'merge';
+%   - merge
+%   - separate
+%   - interleaved
 [in,varargin] = sl.in.processVararginWithRemainder(in,varargin);
 
 if iscell(x_data)
     
     if ~isempty(in.labels)
-        if length(in.labels) ~= length(x_data)
-            error('Size of labels must equal the # of cells in the input')
+        %Or for interleaved it is OK to equal the # of columns
+        %in cells ...
+        
+        if strcmp(in.group_type,'interleaved')
+            %TODO: We should also support
+            if length(in.labels) == length(x_data) && isequal(cellfun('length',in.labels),cellfun('length',x_data))
+                %
+                %   In this case we have something like:
+                %   {{'a' 'b' 'c'},{'a','b','c'}}
+                %
+                %   We had old code that looked like this
+                %Do nothing
+            else
+                %Here we will assign the same column to each group
+                %   {'a' 'b' 'c'} 
+                %
+                %   -> for 3 groups this becomes
+                %   {{'a' 'b' 'c'},{'a' 'b' 'c'},{'a' 'b' 'c'}}
+                %   
+                %   Note when interleaving we will essentially have:
+                %       a,a,a    b,b,b    c,c,c
+                
+                n_columns = size(x_data{1},2);
+                if length(in.labels) ~= n_columns
+                    error('Size of labels must equal the # of columns in the input')
+                end
+                in.labels = repmat({in.labels},1,length(x_data));
+            end
+        else        
+            %I'm not sure this is correct if we are doing merge with multiple
+            %columns per cell entry
+            if length(in.labels) ~= length(x_data)
+                error('Size of labels must equal the # of cells in the input')
+            end
         end
     end
     
