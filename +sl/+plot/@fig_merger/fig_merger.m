@@ -6,6 +6,14 @@ classdef fig_merger < handle
     %   The goal of this code is to merge axes from various figures into
     %   one figure where you specify which subplot you want each axes to
     %   end up in.
+    %
+    %   See Also
+    %   --------
+    %   sl.plot.fig_merger.cell_instructions
+    %
+%     %               %1,1 - fig 1, id 1
+%             %1,1,1 - fig 1, row 1, col 1
+%             %3, 2, 1 - fig 3, row 2, col 1
     
     properties
         h_fig
