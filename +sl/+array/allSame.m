@@ -2,14 +2,24 @@ function same = allSame(data)
 %
 %   same = sl.array.allSame(data)
 %
-%   Inputs:
-%   -------
+%   Returns whether all elements in the array are the same as each other.
+%
+%   Inputs
+%   ------
 %   data :
 %       
-%   Outputs:
-%   --------
+%   Outputs
+%   -------
 %   same : logical
 %       Whether or not all elements are the same
+%
+%   Example
+%   -------
+%   data = {'test' 'test' 'test'};
+%   same = sl.array.similiarity.allExactSame(data)
+%
+%   data = {'test' 'testing' 'test'};
+%   same = sl.array.similiarity.allExactSame(data)
 %
 %   Possible improvements:
 %   ----------------------
