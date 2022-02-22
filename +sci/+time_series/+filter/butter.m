@@ -149,6 +149,24 @@ classdef butter < handle
             
             str = sprintf('Butterworth Filter: type: %s,  frequency: %s,  order: %d,  method: %s',filter_type,freq_str,obj.order,filter_method);
         end
+        function flag = isequal(o1,o2)
+            %
+            %
+            %   Example
+            %   -------
+            %   o1 = sci.time_series.filter.butter(2,5,'low');
+            %   o2 = sci.time_series.filter.butter(2,5,'low');
+            %   o3 = sci.time_series.filter.butter(2,5,'high');
+            %   disp(isequal(o1,o2))
+            %   disp(isequal(o1,o3))
+            
+            flag = strcmp(class(o1),class(o2)) && ...
+                    isequal(o1.order,o2.order) && ...
+                    isequal(o1.cutoff_or_cutoffs,o2.cutoff_or_cutoffs) && ...
+                    isequal(o1.type,o2.type) && ...
+                    isequal(o1.zero_phase,o2.zero_phase);
+
+        end
         function disp(obj)
             %            fprintf('xxxxxxx\n')
             %            fprintf(inputname(1))
