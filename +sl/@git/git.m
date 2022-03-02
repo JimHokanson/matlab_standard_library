@@ -66,6 +66,11 @@ classdef git
                     %    start here:
                     %    C:\Users\RNEL\AppData\Local\GitHubDesktop
                     
+                    %TODO: Rewrite this to look for git.exe and filter
+                    %based on that
+                    %
+                    %   This is a big mess and needs to be cleaned up
+                    
                     user_path = char(System.Environment.GetEnvironmentVariable("USERPROFILE"));
                     github_root = fullfile(user_path,'AppData','Local','GitHubDesktop');
                     
@@ -74,14 +79,23 @@ classdef git
                         s = dir(fullfile(github_root,'app-*'));
                         
                         if ~isempty(s)
+                            best_path = fullfile(github_root,s(1).name);
+                            s2 = dir(fullfile(best_path,'**/git.exe'));
+                            
                             last_date = s(1).datenum;
                             %Technically we would be better off sorting names
                             %using natural sort ...
                             cur_I = 1;
                             for i = 2:length(s)
-                                if s(i).datenum > last_date
-                                    cur_I = i;
+                                if s(i).datenum > last_date || isempty(s2)
+                                    
                                     last_date = s(i).datenum;
+                                    best_path = fullfile(github_root,s(i).name);
+                                    s3 = dir(fullfile(best_path,'**/git.exe'));
+                                    if ~isempty(s3)
+                                       cur_I = i; 
+                                       s2 = s3;
+                                    end
                                 end
                             end
                             best_path = fullfile(github_root,s(cur_I).name);
