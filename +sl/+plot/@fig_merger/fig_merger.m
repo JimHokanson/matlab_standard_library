@@ -22,8 +22,10 @@ classdef fig_merger < handle
     end
     
     methods
-        function obj = fig_merger(data)
+        function obj = fig_merger(data,varargin)
             %
+            %   Calling Forms
+            %   -------------
             %   sl.plot.fig_merger(data)
             %
             %   %Launches GUI
@@ -31,19 +33,47 @@ classdef fig_merger < handle
             %
             %   Input data
             %   ------------------
-            %   
+            %   data : optional
+            %       
+            %   Example
+            %   -------
+            %   figure(1)
+            %   subplot(2,1,1)
+            %   plot(1:10,'r')
+            %   subplot(2,1,2)
+            %   plot(11:20,'g')
+            %
+            %   figure(2)
+            %   subplot(2,1,1)
+            %   plot(21:30,'b')
+            %   subplot(2,1,2)
+            %   plot(31:40,'k')
+            %
+            %   s1 = '1,2'    %(fig 1, id 1)
+            %   s2 = '2,1,1'  %(fig 2, row 1, cell 1) % OR '2,1'
+            %   s3 = '1,1'
+            %   s4 = '2,2'
+            %   layout = {s1 s2;...
+            %             s3 s4}
+            %   sl.plot.fig_merger(layout)
+            %   See figure 3
             
-            if nargin == 1 && ~isempty(data)
+            in.h_fig = [];
+            in = sl.in.processVarargin(in,varargin);
+            
+            if nargin > 0 && ~isempty(data)
                 instr = obj.instrFromCellstr(data);
-                obj.move(instr);
+                obj.move(instr,'h_fig',in.h_fig);
             else
                 obj.launchGUI();
             end
         end
-        function move(obj,instr)
+        function move(obj,instr,varargin)
             %
             %   instr : [sl.plot.fig_merger.cell_instructions]
             
+            in.h_fig = [];
+            in = sl.in.processVarargin(in,varargin);
             
             fig_ids = unique([instr.source_fig_id]);
             
@@ -57,7 +87,12 @@ classdef fig_merger < handle
             n_target_rows = max([instr.target_row]);
             n_target_cols = max([instr.target_col]);
             
-            h_target_fig = figure();
+            if isempty(in.h_fig)
+                h_target_fig = figure();
+            else
+                h_target_fig = figure(in.h_fig);
+            end
+            
             sp = sl.plot.subplotter(n_target_rows,n_target_cols);
             obj.subplotter_result = sp;
             
@@ -94,20 +129,31 @@ classdef fig_merger < handle
                     axes = [h_legend.Axes];
                     h_legend = h_legend(axes == source_axes);
                 end
-
+                
+                h_color = findobj(figure(source_fig_id), 'Type', 'ColorBar');
+                if ~isempty(h_color)
+                    %https://www.mathworks.com/matlabcentral/answers/277007-determine-axes-handle-to-which-a-legend-belongs
+                    axes = [h_color.Axes];
+                    h_color = h_color(axes == source_axes);
+                end
                 
                 %Object Copy of Axes with
 % multiple coordinate systems
 % is not supported.
 %TODO: Support this ...
 %https://www.mathworks.com/matlabcentral/answers/157055-how-to-workaround-the-plotyy-copyobj-error
-                if ~isempty(h_legend)
-                    %Needs to be moved together ...
-                    h_temp = copyobj([h_legend source_axes],h_target_fig);
-                    h_axes3 = h_temp(2);
-                else
-                    h_axes3 = copyobj(source_axes,h_target_fig);
-                end
+                
+                h_temp = copyobj([h_legend h_color source_axes],h_target_fig);
+                h_axes3 = h_temp(end);
+                
+                
+%                 if ~isempty(h_legend)
+%                     %Needs to be moved together ...
+%                     h_temp = copyobj([h_legend source_axes],h_target_fig);
+%                     h_axes3 = h_temp(2);
+%                 else
+%                     h_axes3 = copyobj(source_axes,h_target_fig);
+%                 end
                 drawnow()
                 h_axes3.Units = u;
                 h_axes3.Position = p;                
