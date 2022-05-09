@@ -8,7 +8,7 @@ classdef box_plot_designs < handle
     %   sl.plot.stats.results.box_plot_result
     
     properties
-        r_internal % sl.plot.stats.results.box_plot_result
+        r_internal sl.plot.stats.results.box_plot_result
     end
     
     methods

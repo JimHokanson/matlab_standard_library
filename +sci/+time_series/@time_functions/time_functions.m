@@ -5,6 +5,10 @@ classdef time_functions < sl.obj.display_class
     %
     %   This class was created as a place to have code that works based on 
     %   manipulating some aspect of data timing.
+    %
+    %   See Also
+    %   --------
+    %   sci.time_series.time
     
     %TODO: We're going to
     
@@ -56,6 +60,23 @@ classdef time_functions < sl.obj.display_class
             else
                 value = [temp{:}];
             end
+        end
+        function values = getValuesAtTimes(obj,times)
+            I1 = obj.getNearestIndices(times,'round_operator',@floor);
+            I2 = obj.getNearestIndices(times,'round_operator',@ceil);
+            
+            t1 = obj.getTimesFromIndices(I1);
+            t2 = obj.getTimesFromIndices(I2);
+            
+            d1 = times - t1;
+            d2 = times - t2;
+            
+            v1 = obj.data_objects.d(I1);
+            v2 = obj.data_objects.d(I2);
+            
+            values = v1 + (times-t1)*(v2-v1)/(t2-t1);
+            mask = t1 == t2;
+            values(mask) = v1(mask); 
         end
         function varargout = getNearestIndices(obj,times,varargin)
             %x Given a set of times, return the closest indices

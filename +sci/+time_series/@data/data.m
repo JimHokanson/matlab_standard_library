@@ -1893,10 +1893,15 @@ classdef data < sl.obj.handle_light
 %             keyboard
 %             
 %         end
-        function output = max(objs,varargin)
+        function [output,I] = max(objs,varargin)
             %
-            %   TODO: Support I as an output ...
+            %   Optional Inputs
+            %   ---------------
+            %   when:
+            %       - time
+            %       - index
             
+            in.when = 'time';
             in.dim = 1;
             in.un = true;
             in = sl.in.processVarargin(in,varargin);
@@ -1907,17 +1912,23 @@ classdef data < sl.obj.handle_light
             
             n_objs = length(objs);
             temp = cell(1,n_objs);
+            temp2 = cell(1,n_objs);
             for iObj = 1:n_objs
-                temp{iObj} = max(objs(iObj).d,[],in.dim);
+                [temp{iObj},temp2{iObj}] = max(objs(iObj).d,[],in.dim);
+                if strcmp(in.when,'time')
+                    temp2{iObj} = objs(iObj).ftime.getTimesFromIndices(temp2{iObj});
+                end
             end
             
             if ~in.un
                 output = temp;
+                I = temp2;
             else
                 if any(cellfun(@numel,temp) ~= 1)
                     error('One of the objects has more than 1 channel or rep, "''un'',0" required for the input')
                 end
                 output = [temp{:}];
+                I = [temp2{:}];
             end
             
         end

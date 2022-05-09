@@ -394,6 +394,7 @@ classdef time < sl.obj.display_class
             %
             %   Optional Inputs
             %   ----------------
+            %   relative_time : default false
             %
             %   Outputs
             %   -------
@@ -411,6 +412,7 @@ classdef time < sl.obj.display_class
             %   rounded to the edges i.e. index of 0.3 could go to 1
             %   instead of 0 - I also might have meant floor and ceiling)
             
+            in.round_operator = @round;
             in.relative_time = false;
             in = sl.in.processVarargin(in,varargin);
             
@@ -432,7 +434,10 @@ classdef time < sl.obj.display_class
             else
                 raw_indices = (times - obj.start_offset)./obj.dt;
             end
-            indices = round(raw_indices)+1;
+            
+            fh = in.round_operator;
+            
+            indices = fh(raw_indices)+1;
             
             %Error check on indices being in bounds
             %--------------------------------------
