@@ -62,6 +62,12 @@ classdef time_functions < sl.obj.display_class
             end
         end
         function values = getValuesAtTimes(obj,times)
+            
+            transpose_out = size(times,2) > 1;
+            if transpose_out
+                times = times';
+            end
+            
             I1 = obj.getNearestIndices(times,'round_operator',@floor);
             I2 = obj.getNearestIndices(times,'round_operator',@ceil);
             
@@ -74,9 +80,12 @@ classdef time_functions < sl.obj.display_class
             v1 = obj.data_objects.d(I1);
             v2 = obj.data_objects.d(I2);
             
-            values = v1 + (times-t1)*(v2-v1)/(t2-t1);
+            values = v1 + (times-t1).*(v2-v1)./(t2-t1);
             mask = t1 == t2;
             values(mask) = v1(mask); 
+            if transpose_out
+               values = values'; 
+            end
         end
         function varargout = getNearestIndices(obj,times,varargin)
             %x Given a set of times, return the closest indices
