@@ -1,4 +1,4 @@
-function [output,s] = toComboMatrix(data,target,dimension_fields,varargin)
+function [output,s] = toComboMatrix(data,target,dimension_fields,norm_rates,varargin)
 %
 %   Inputs
 %   ------
@@ -12,7 +12,7 @@ function [output,s] = toComboMatrix(data,target,dimension_fields,varargin)
 %   ---------------
 %   merge_function : function_handle
 %   dims : struct
-%   
+%
 %
 %
 %   Output
@@ -43,18 +43,18 @@ function [output,s] = toComboMatrix(data,target,dimension_fields,varargin)
 %   output = sl.table.toComboMatrix(data,'C',{'A','B'},'merge_function','keep_first');
 %   output = sl.table.toComboMatrix(data,'C',{'A','B'},'merge_function',@max);
 %
-%        B  2 3 
+%        B  2 3
 %        B  2 3
 %   A    ---
 %  0.5   3 4
-%   1    8 5 
+%   1    8 5
 %   1    8 5
 %
 %   s = struct;
 %   s.A = [1,0.5];
 %   output = sl.table.toComboMatrix(data,'C',{'A','B'},'merge_function',@max,'dims',s);
 %
-%     B  2 3 
+%     B  2 3
 %     B  2 3
 %   A    ---
 %   1    8 5   %Note we've forced order of A to be 1 then 0.5, not sorted
@@ -63,15 +63,15 @@ function [output,s] = toComboMatrix(data,target,dimension_fields,varargin)
 %   s = struct;
 %   s.A = [1];
 %   output = sl.table.toComboMatrix(data,'C',{'A','B'},'merge_function',@max,'dims',s);
-%   
-%     B  2 3 
+%
+%     B  2 3
 %
 %     B  2 3
 %   A    ---
 %   1    8 5   %Note we've ignored A=0.5
 %
 %
-%   
+%
 %
 %   bc_mat = sl.table.toComboMatrix(data,'bladder_capacity',{'set','fill_rate','expt_id'});
 
@@ -80,37 +80,30 @@ function [output,s] = toComboMatrix(data,target,dimension_fields,varargin)
 %   fieldnames() - name of fields in structure
 %   default value
 
+      temp = data(data.set~=0,:);
+ G= findgroups(temp.expt_id);
+    temp.position=temp.fill_rate./temp.base_fill_rate;
+    for k= 1: length(temp.fill_rate)
+        try
+            temp.position(k) = find(norm_rates == temp.position(k));
+        catch ME
+            difference = abs(norm_rates-temp.position(k));
+            temp.position(k) =  find(difference == min(difference));
+        end
+    end
 
-% target = 'bladder_capacity';
-% dimension_fields = {'set','fill_rate','expt_id','base_fill_rate'};
-
-
-% norm_rates = [1/6 1/3 1 2 4 8 16];
-target = 'bladder_capacity';
-dimension_fields = {'set','fill_rate','expt_id','base_fill_rate'};
-G= findgroups(data.expt_id);
-% s=NaN(max(data.set),length(norm_rates),max(G));
-for i=1:max(G)
-    temp = data(G==i,:);
-    temp = temp(temp.set~=0,:);
-%     base_rate = unique(temp.base_fill_rate);
-%    [U,IA,IC] = unique(temp)
-   s=struct;
-   for j =1:length(dimension_fields)
-   s.(dimension_fields{j}) = temp.(dimension_fields{j});
-   end
-   s.(target) = temp.(target);
-table_temp = struct2table(s);
-[U,IA,IC] = unique(table_temp);
-% output = accumarray(table_temp.fill_rate,table_temp.set);
-     index=   table_temp.fill_rate==table_temp.base_fill_rate;
-bc_norm = table_temp.bladder_capacity./table_temp.bladder_capacity(index);
+% [U,IA,IC] = unique(temp)
+s=struct;
+for j = 1:length(dimension_fields)
+s.(dimension_fields{j}) = temp.(dimension_fields{j});
 end
-
-v= ones(3,3,3);
-
-
-
+s.(target) = temp.(target);
+% table= struct2table(s);
+output_temp= accumarray([temp.set temp.position G],temp.(target));
+output_temp(output_temp==0) =NaN;
+for i =1 :max(G)
+output(i,:) = mean(output_temp(:,:,i),1,'omitnan');
+end
 
 
 in.merge_function = @mean;
@@ -119,46 +112,18 @@ in.dims = struct(); %empty, no fields overridden
 in = sl.in.processVarargin(in,varargin);
 
 if ischar(in.merge_function)
-%    if strcmp(in.merge_function,'keep_first')
-%        in.merge_function = @keep_first;
-%    else
-in.merge_function = str2func(in.merge_function);
-%    end    
+    %    if strcmp(in.merge_function,'keep_first')
+    %        in.merge_function = @keep_first;
+    %    else
+    in.merge_function = str2func(in.merge_function);
+    %    end
 end
 
-keyboard
+% keyboard
 
 end
 
 function output = keep_first(array)
-    output = array(1);
+output = array(1);
 end
 
-
-
-
-
-
-
-% 
-% 
-% in.merge_function = @mean;
-% in.default_value = NaN;
-% in.dims = struct(); %empty, no fields overridden
-% in = sl.in.processVarargin(in,varargin);
-% 
-% if ischar(in.merge_function)
-%     %    if strcmp(in.merge_function,'keep_first')
-%     %        in.merge_function = @keep_first;
-%     %    else
-%     in.merge_function = str2func(in.merge_function);
-%     %    end
-% end
-% 
-% keyboard
-% 
-% end
-% 
-% function output = keep_first(array)
-% output = array(1);
-% end
