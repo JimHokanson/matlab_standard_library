@@ -1,4 +1,4 @@
-function [output,s] = toComboMatrix(data,target,dimension_fields,norm_rates,varargin)
+function [output,s] = toComboMatrix(data,target,dimension_fields,varargin)
 %
 %   Inputs
 %   ------
@@ -80,60 +80,84 @@ function [output,s] = toComboMatrix(data,target,dimension_fields,norm_rates,vara
 %   fieldnames() - name of fields in structure
 %   default value
 
-temp = data(data.set~=0,:);
-G_ei= findgroups(temp.expt_id);
-G_bfr=findgroups(temp.base_fill_rate);
-temp.position=temp.fill_rate./temp.base_fill_rate;
-for k= 1: length(temp.fill_rate)
-    try
-        temp.position(k) = find(norm_rates == temp.position(k));
-    catch ME
-        difference = abs(norm_rates-temp.position(k));
-        temp.position(k) =  find(difference == min(difference));
-    end
-end
-temp.base_fill_rate = G_bfr;
-temp.fill_rate = temp.position;
-temp.expt_id = G_ei;
-% [U,IA,IC] = unique(temp)
-s=struct;
-for j = 1:length(dimension_fields)
-    s.(dimension_fields{j}) = temp.(dimension_fields{j});
 
-end
-s.(target) = temp.(target);
-% table= struct2table(s);
-switch  length(dimension_fields)
-    case  1
-        output_temp= accumarray(temp.(dimension_fields{1}),temp.(target));
-    case 2
-        output_temp= accumarray([temp.(dimension_fields{1}) temp.(dimension_fields{2})],temp.(target));
-    case 3
-        output_temp= accumarray([temp.(dimension_fields{1}) temp.(dimension_fields{2}) temp.(dimension_fields{3})],temp.(target));
-    case 4
-        output_temp= accumarray([temp.(dimension_fields{1}) temp.(dimension_fields{2}) temp.(dimension_fields{3}) temp.(dimension_fields{4})],temp.(target));
+keyboard
+
+%data,target,dimension_fields,norm_rates,varargin
+
+n_rows = length(data.(target));
+n_cols = length(dimension_fields);
+
+subs = zeros(n_rows,n_cols);
+
+for i = 1:n_cols
+   col_data = data.(dimension_fields{i});
+   [~,~,ic] = unique(col_data);
+   subs(:,i) = ic;
 end
 
-output_temp(output_temp==0) =NaN;
-output = output_temp;
+s = struct;
 
-% for i =1 :max(G)
-% output(i,:) = mean(output_temp(:,:,i),1,'omitnan');
-% end
+%Fix this
+output = accumarray(subs, 101:105, [2 4], @max, NaN);
 
-
-in.merge_function = @mean;
-in.default_value = NaN;
-in.dims = struct(); %empty, no fields overridden
-in = sl.in.processVarargin(in,varargin);
-
-if ischar(in.merge_function)
-    %    if strcmp(in.merge_function,'keep_first')
-    %        in.merge_function = @keep_first;
-    %    else
-    in.merge_function = str2func(in.merge_function);
-    %    end
-end
+% % % % % 
+% % % % % 
+% % % % % 
+% % % % % temp = data(data.set~=0,:);
+% % % % % G_ei= findgroups(temp.expt_id);
+% % % % % G_bfr=findgroups(temp.base_fill_rate);
+% % % % % temp.position=temp.fill_rate./temp.base_fill_rate;
+% % % % % for k= 1: length(temp.fill_rate)
+% % % % %     try
+% % % % %         temp.position(k) = find(norm_rates == temp.position(k));
+% % % % %     catch ME
+% % % % %         difference = abs(norm_rates-temp.position(k));
+% % % % %         temp.position(k) =  find(difference == min(difference));
+% % % % %     end
+% % % % % end
+% % % % % temp.base_fill_rate = G_bfr;
+% % % % % temp.fill_rate = temp.position;
+% % % % % temp.expt_id = G_ei;
+% % % % % % [U,IA,IC] = unique(temp)
+% % % % % s=struct;
+% % % % % for j = 1:length(dimension_fields)
+% % % % %     s.(dimension_fields{j}) = temp.(dimension_fields{j});
+% % % % % 
+% % % % % end
+% % % % % s.(target) = temp.(target);
+% % % % % % table= struct2table(s);
+% % % % % switch  length(dimension_fields)
+% % % % %     case  1
+% % % % %         output_temp= accumarray(temp.(dimension_fields{1}),temp.(target));
+% % % % %     case 2
+% % % % %         output_temp= accumarray([temp.(dimension_fields{1}) temp.(dimension_fields{2})],temp.(target));
+% % % % %     case 3
+% % % % %         output_temp= accumarray([temp.(dimension_fields{1}) temp.(dimension_fields{2}) temp.(dimension_fields{3})],temp.(target));
+% % % % %     case 4
+% % % % %         output_temp= accumarray([temp.(dimension_fields{1}) temp.(dimension_fields{2}) temp.(dimension_fields{3}) temp.(dimension_fields{4})],temp.(target));
+% % % % % end
+% % % % % 
+% % % % % output_temp(output_temp==0) =NaN;
+% % % % % output = output_temp;
+% % % % % 
+% % % % % % for i =1 :max(G)
+% % % % % % output(i,:) = mean(output_temp(:,:,i),1,'omitnan');
+% % % % % % end
+% % % % % 
+% % % % % 
+% % % % % in.merge_function = @mean;
+% % % % % in.default_value = NaN;
+% % % % % in.dims = struct(); %empty, no fields overridden
+% % % % % in = sl.in.processVarargin(in,varargin);
+% % % % % 
+% % % % % if ischar(in.merge_function)
+% % % % %     %    if strcmp(in.merge_function,'keep_first')
+% % % % %     %        in.merge_function = @keep_first;
+% % % % %     %    else
+% % % % %     in.merge_function = str2func(in.merge_function);
+% % % % %     %    end
+% % % % % end
 
 % keyboard
 
