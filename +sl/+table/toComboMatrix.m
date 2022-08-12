@@ -81,7 +81,7 @@ function [output,s] = toComboMatrix(data,target,dimension_fields,varargin)
 %   default value
 
 
-keyboard
+% keyboard
 
 %data,target,dimension_fields,norm_rates,varargin
 
@@ -97,10 +97,14 @@ for i = 1:n_cols
 end
 
 s = struct;
-
+for j = 1:length(dimension_fields)
+    s.(dimension_fields{j}) = data.(dimension_fields{j});
+end
+s.(target) = data.(target);
 %Fix this
-output = accumarray(subs, 101:105, [2 4], @max, NaN);
 
+output = accumarray(subs, data.(target),[],@max,NaN);
+% output = accumarray(subs, data.(target));
 % % % % % 
 % % % % % 
 % % % % % 
