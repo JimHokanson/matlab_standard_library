@@ -52,6 +52,10 @@ classdef events_holder < dynamicprops
         function obj = events_holder(time)
             obj.p__time_obj = time;
         end
+        function filterEvents(obj)
+           %TODO: go through all events and make sure all times are within
+           %the range of the data obj
+        end
         function addEvents(obj,event_elements)
             %x Add multiple events to the class
             %
