@@ -16,7 +16,9 @@ function help_str = getH1Line(method_name)
 
 %This line is really really slow ...
 %https://github.com/JimHokanson/matlab_standard_library/issues/44
+s = warning('OFF','MATLAB:Python:PythonUnavailable');
 help_raw = help(method_name);
+warning(s);
 
 help_str = regexp(help_raw,'^\s*\w+\s+(.+)','tokens','dotexceptnewline','once');
 
