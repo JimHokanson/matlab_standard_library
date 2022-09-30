@@ -28,8 +28,8 @@ classdef linear_regression_result < sci.time_series.calculators.regression.resul
     % ---------- Methods ---------------
     methods 
         function plot(obj)
-            figure(1)
-            clf
+%             figure(1)
+%             clf
             plot(obj.training_data)
             hold on
             [~, time] = obj.training_data.getRawDataAndTime();
