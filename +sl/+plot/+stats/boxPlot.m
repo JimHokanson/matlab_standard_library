@@ -9,13 +9,11 @@ function result = boxPlot(x_data,varargin)
 %   -------
 %   result : sl.plot.stats.results.box_plot_result
 %
-%
-%
 %   Inputs
 %   ---------
 %   x_matrix : [observations x types]
 %
-%   x_cells : NYI
+%   x_cells : 
 %       See 'group_type' parameter
 %
 %
@@ -23,9 +21,6 @@ function result = boxPlot(x_data,varargin)
 %   Optional Inputs - Any options from boxplot and:
 %   ------------------------------------------------
 %   labels :
-%
-%
-%
 %          merged:
 %               {'g1_1','g1_2','g2_1','g2_2'}
 %               {{'g1_1','g1_2'},{'g2_1','g2_2'}}
@@ -33,8 +28,6 @@ function result = boxPlot(x_data,varargin)
 %               TODO: This one is a bit odd, hard to interpret.
 %               ?? Have option to add prefix or suffix per group?
 %               {'_1','_2'} => {{'_1','_2'},{'_1','_2'}}
-%
-%
 %   add_n : default true
 %   dx : default 1
 %   dx_group : default 1.5
@@ -96,7 +89,7 @@ ax.XTickLabel = {'2'   ['\newline' '\newline' 'wtf'] '4_4'     '6'    ['\newline
 xlabel('Best plot ever!!!!!!!!!!!!!!!')
 %}
 
-
+in.g = [];
 in.x = []; %Only for regular box plot
 
 in.labels = [];
@@ -104,23 +97,28 @@ in.add_n = true;
 in.dx = 1;
 in.dx_group = 1.5;
 in.group_id = 1; %This might be for internal use only ...
+%Note, this function is recursive ...
 in.group_type = 'merge';
 %   - merge
 %   - separate
 %   - interleaved
 [in,varargin] = sl.in.processVararginWithRemainder(in,varargin);
 
+if isvector(x_data)
+   if isempty(in.g)
+       %do nothing
+   else
+       [~,ic] = sl.array.uniqueWithGroupIndices(in.g);
+       x_data = cellfun(@(x) x_data(x),ic,'un',0);
+   end
+end
+
 if iscell(x_data)
     
     n_cells = length(x_data);
     n_columns_per_cell = cellfun(@(x) size(x,2),x_data);
     n_columns_total = sum(n_columns_per_cell);
-    
-    
-    
-    
-    
-    
+
     if ~isempty(in.labels)
         
         n_top_labels = length(in.labels);
