@@ -3,9 +3,12 @@ classdef smoothing < handle
     %   Class:
     %   sci.time_series.filter.smoothing
     %
-    %   This might be better as "kernal" filtering ...
+    %   This might be better as "kernel" filtering ...
     %
     %   Filters data with either a triangular or rectangular window.
+	%
+	%
+	%	OLD: Use kernel instead
     %
     %
     
