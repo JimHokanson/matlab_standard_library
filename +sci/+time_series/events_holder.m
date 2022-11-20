@@ -65,10 +65,13 @@ classdef events_holder < dynamicprops
             %
             %   addEvents(obj,events_cell)
             %
+            %   addEvents(obj,cell_of_structs)
+            %
             %   Inputs
             %   ------
             %   events_holder : sci.time_series.events_holder
             %   events_cell : {sci.time_series.discrete_events}
+            %   
             %
             %   TODO: Finish documentation
             
@@ -80,12 +83,23 @@ classdef events_holder < dynamicprops
                 else
                     event_elements = cellfun(@(x) old_obj.(x),event_names,'un',0);
                 end
+            elseif isstruct(event_elements)
+                event_elements = struct2cell(event_elements);
             elseif ~iscell(event_elements)
                 event_elements = num2cell(event_elements);
             end
             
             for iElement = 1:length(event_elements)
                 cur_element = event_elements{iElement};
+                if isstruct(cur_element)
+                    if isfield(cur_element,'durations')
+                        temp = sci.time_series.epochs.fromStruct(cur_element);
+                        cur_element = temp;
+                    else
+                        temp = sci.time_series.discrete_events.fromStruct(cur_element);
+                        cur_element = temp;
+                    end
+                end
                 h__addSingleEvent(obj,cur_element);
             end
         end

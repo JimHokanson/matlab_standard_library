@@ -264,7 +264,7 @@ classdef time < sl.obj.display_class
             
             for iObj = 1:n_objs
                 obj = sci.time_series.time;
-                sl.struct.toObject(obj,s_objs(iObj));
+                sl.struct.toObject(s_objs(iObj),obj);
                 temp_ca{iObj} = obj;
             end
             objs = [temp_ca{:}];

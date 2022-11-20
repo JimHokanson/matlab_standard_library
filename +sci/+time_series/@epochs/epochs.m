@@ -19,6 +19,13 @@ classdef epochs < sl.obj.display_class
         values
     end
     
+    methods (Static)
+      	function obj = fromStruct(s)
+            obj = sci.time_series.epochs(s.prop_name,s.start_times,...
+                s.stop_times,'name',s.name,'values',s.values);
+        end 
+    end
+    
     methods
         function obj = epochs(prop_name,start_times,stop_times,varargin)
             %
@@ -46,6 +53,10 @@ classdef epochs < sl.obj.display_class
             
             obj.durations = stop_times - start_times;
             obj.values = in.values;
+        end
+
+        function s_obj = export(objs)
+            s_obj = sl.obj.toStruct(objs);
         end
         function shiftStartTime(objs,time_to_subtract)
             for iObj = 1:length(objs)

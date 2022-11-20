@@ -42,6 +42,13 @@ classdef discrete_events < sl.obj.display_class
         %         end
     end
     
+    methods (Static)
+      	function obj = fromStruct(s)
+            obj = sci.time_series.discrete_events(s.prop_name,s.times,...
+                'name',s.name,'values',s.values,'msgs',s.msgs);
+        end 
+    end
+    
     methods
         function obj = discrete_events(prop_name,times,varargin)
             %
