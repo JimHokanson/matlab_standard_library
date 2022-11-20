@@ -136,41 +136,37 @@ if iscell(x_data)
         %Or for interleaved it is OK to equal the # of columns
         %in cells ...
         
-%         if strcmp(in.group_type,'interleaved')
-%             %TODO: We should also support
-%             
-%             
-%             if n_top_labels == n_cells && ...
-%                     isequal(n_labels_per_cell,n_columns_per_cell)
-%                 %
-%                 %   In this case we have something like:
-%                 %   {{'a' 'b' 'c'},{'a','b','c'}}
-%                 %
-%                 %   For data like:
-%                 %   {[m x 3],[n x 3]} (2 cells, each with 3 columns)
-%                 %
-%                 %   We had old code that looked like this
-%                 %Do nothing
-%             else
-%                 %Here we will assign the same column to each group
-%                 %   {'a' 'b' 'c'}
-%                 %
-%                 %   -> for 3 groups this becomes
-%                 %   {{'a' 'b' 'c'},{'a' 'b' 'c'},{'a' 'b' 'c'}}
-%                 %
-%                 %   Note when interleaving we will essentially have:
-%                 %       a,a,a    b,b,b    c,c,c
-%                 
-%                 if ~all(n_columns_per_cell == n_columns_per_cell(1))
-%                     error('All cells must have same # of columns')
-%                 elseif n_columns_per_cell(1) ~= n_top_labels
-%                     error('# of labels must equal the # of columns in the input')
-%                 end
-%                 
-%                 in.labels = repmat({in.labels},1,n_cells);
-%             end
-%         elseif strcmp(in.group_type,'merge')
-            
+        if strcmp(in.group_type,'interleaved')
+            if n_top_labels == n_cells && isequal(n_labels_per_cell,n_columns_per_cell)
+                %
+                %   In this case we have something like:
+                %   {{'a' 'b' 'c'},{'a','b','c'}}
+                %
+                %   For data like:
+                %   {[m x 3],[n x 3]} (2 cells, each with 3 columns)
+                %
+                %   We had old code that looked like this
+                %Do nothing
+            else
+                %Here we will assign the same column to each group
+                %   {'a' 'b' 'c'}
+                %
+                %   -> for 3 groups this becomes
+                %   {{'a' 'b' 'c'},{'a' 'b' 'c'},{'a' 'b' 'c'}}
+                %
+                %   Note when interleaving we will essentially have:
+                %       a,a,a    b,b,b    c,c,c
+                
+                if ~all(n_columns_per_cell == n_columns_per_cell(1))
+                    error('All cells must have same # of columns')
+                elseif n_columns_per_cell(1) ~= n_top_labels
+                    error('# of labels must equal the # of columns in the input')
+                end
+                
+                in.labels = repmat({in.labels},1,n_cells);
+            end
+        %elseif strcmp(in.group_type,'merge')
+        else  
             if n_top_labels == n_columns_total
                 %1 for 1
                 new_labels = cell(1,n_cells);
@@ -212,7 +208,7 @@ if iscell(x_data)
 %             if length(in.labels) ~= length(x_data)
 %                 error('Size of labels must equal the # of cells in the input')
 %             end
-%         end
+        end
     end
     
     cur_data = x_data{1};
