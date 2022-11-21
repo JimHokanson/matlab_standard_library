@@ -31,9 +31,9 @@ classdef kernel < handle
     end
     
     methods
-        function obj = smoothing(width,varargin)
+        function obj = kernel(width,varargin)
             %
-            %   obj = sci.time_series.filter.smoothing(width,varargin)
+            %   obj = sci.time_series.filter.kernel(width,varargin)
             %
             %   Inputs:
             %   -------
@@ -48,6 +48,7 @@ classdef kernel < handle
             %       The shape to use for smoothing ...
             %       'tri' - triangular window
             %       'rect' - rectangular window
+            %       'gaussian' - Gaussian
             %   width_type : {'seconds','samples'} (default 'seconds')
             %       Units of the width
             %   zero_phase : logical (default true)
@@ -71,6 +72,7 @@ classdef kernel < handle
             obj.width_type  = in.width_type;
             obj.width_value = width;
             obj.zero_phase  = in.zero_phase;
+            obj.gauss_alpha = in.gauss_alpha;
             
         end
         function width = getWidthInSamples(obj,fs)
@@ -106,10 +108,7 @@ classdef kernel < handle
                     end
                     B = B./sum(B);
                 case 'gaussian'
-                    
-                    
-                    
-                    N = absolute_data.ftime.durationToNSamples(in.convolve_width);
+                    N = samples_width;
 
                     %gausswin
                     alpha = obj.gauss_alpha;
@@ -126,10 +125,6 @@ classdef kernel < handle
                     filter_kernel = exp(c*x^2);
                     B = filter_kernel./sum(filter_kernel);
                     %}
-
-                    
-                    
-                    
             end
         end
         function data = filter(obj,data,fs)
@@ -184,6 +179,8 @@ classdef kernel < handle
                     window_name = 'triangular';
                 case 'rect'
                     window_name = 'rectangular';
+                case 'gaussian'
+                    window_name = 'gaussian';
                 otherwise
                     error('Unexpected window type')
             end
