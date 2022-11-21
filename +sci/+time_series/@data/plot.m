@@ -176,23 +176,32 @@ for iObj = 1:length(objs)
     end
     cur_obj = objs(iObj);
     
-    %TODO: Consider using plotBig instead of big_plot
-    %- has more functionality
-    if ischar(in.channels)
-        temp = big_plot(time_objs_for_plot(iObj),...
-            objs(iObj).d,plotting_options{:});
-    else
-        temp = big_plot(time_objs_for_plot(iObj),...
-            objs(iObj).d(:,in.channels),plotting_options{:});
-    end
+    is_apple_silicon = sl.os.is_apple_silicon();
     
-    %TODO: Why isn't this specified with plotting?
-    if ~isempty(in.axes)
-        temp.h_and_l.h_axes = in.axes;
+    if is_apple_silicon
+        %TODO: Ideally we would fix our mex code ...
+        time = time_objs_for_plot(iObj).getTimeArray;
+        d = objs(iObj).d;
+        plot(time,d,plotting_options{:});
+    else 
+        %TODO: Consider using plotBig instead of big_plot
+        %- has more functionality
+        if ischar(in.channels)
+            temp = big_plot(time_objs_for_plot(iObj),...
+                objs(iObj).d,plotting_options{:});
+        else
+            temp = big_plot(time_objs_for_plot(iObj),...
+                objs(iObj).d(:,in.channels),plotting_options{:});
+        end
+
+        %TODO: Why isn't this specified with plotting?
+        if ~isempty(in.axes)
+            temp.h_and_l.h_axes = in.axes;
+        end
+        temp.renderData();
+
+        render_objs{iObj} = temp;
     end
-    temp.renderData();
-    
-    render_objs{iObj} = temp;
 end
 
 %We want to know start time and units ...
