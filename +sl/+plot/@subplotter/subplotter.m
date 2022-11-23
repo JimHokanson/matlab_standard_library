@@ -170,7 +170,7 @@ classdef subplotter < sl.obj.display_class
         end
         function [row,col] = linearToRowCol(id,n_rows_or_obj)
             %
-            %   [row,col] = linearToRowCol(id,n_rows)
+            %   [row,col] = sl.plot.subplotter.linearToRowCol(id,n_rows)
             %
             %   [row,col] = linearToRowCol(id,obj)
             
@@ -189,10 +189,10 @@ classdef subplotter < sl.obj.display_class
             %    subplot_index = sl.plot.subplotter.linearToSubplotIndex(id,n_rows,n_cols)
             %
             %    Also works for a vector ...
-            
-            
+            %   
+            %
             %    TODO: We might want to shadow this in a sl.hg.subplot class
-            
+            %
             %    1  4     =>    1  2
             %    2  5           3  4
             %    3  6           5  6
@@ -1408,6 +1408,13 @@ classdef subplotter < sl.obj.display_class
             %   Currently I've only implemented linking each row
             %   independently, eventually we could link all rows ...
             %
+            %   Optional Inputs
+            %   ---------------
+            %   columns : default all
+            %   clear_previous_links : NYI
+            %   by_row : default true
+            %       If false all rows are linked together
+            %
             %   See Also
             %   --------
             %   linkaxes
@@ -1421,17 +1428,34 @@ classdef subplotter < sl.obj.display_class
                 in.columns = 1:obj.n_columns;
             end
             
-            for i = 1:obj.n_rows
-                %TODO: Do we need to expand first
-                %I think this sometimes shrinks rather than expanding :/
-                ax = [obj.handles{i,in.columns}];
+            if in.by_row
+                for i = 1:obj.n_rows
+                    %TODO: Do we need to expand first
+                    %I think this sometimes shrinks rather than expanding :/
+                    ax = [obj.handles{i,in.columns}];
+                    linkaxes(ax,'y')
+                    %syncLimits(ax,'YLim');
+                    %linkprop(ax,'YLim');
+                end
+            else
+                ax = [obj.handles{:,in.columns}];
                 linkaxes(ax,'y')
-                %syncLimits(ax,'YLim');
-                %linkprop(ax,'YLim');
             end
         end
         function h_axes = getAxesAtIndex(obj,index)
+            %
+            %   h_axes = getAxesAtIndex(obj,index)
+            %
+            %   Inputs
+            %   ------
+            %   index : 
+            %       I believe this is for MATLAB style subplot indexing
+            %       ...???
+            
+            %Note this is a static method so we pass in the object as the
+            %second input :/
             [row,col] = obj.linearToRowCol(index,obj);
+            
             h_axes = obj.handles{row,col};
         end
         function ylabel_to_title(obj)
