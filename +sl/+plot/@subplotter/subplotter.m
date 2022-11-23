@@ -29,7 +29,7 @@ classdef subplotter < sl.obj.display_class
     %   title('2,2');
     %
     %
-        
+    
     properties
         h_fig
         dims
@@ -85,7 +85,7 @@ classdef subplotter < sl.obj.display_class
         end
         function value = get.x_extents(obj)
             %
-            %   x_extents of all axes, i.e. the left border of column 1 
+            %   x_extents of all axes, i.e. the left border of column 1
             %   and the right border of the right-most column
             %
             
@@ -389,7 +389,7 @@ classdef subplotter < sl.obj.display_class
                 end
             end
         end
-    	function setYExtents(obj,y_min,y_max)
+        function setYExtents(obj,y_min,y_max)
             %x Set y-extents (min and max) of plots
             %
             %   setYExtents(obj,y_min,y_max)
@@ -410,7 +410,7 @@ classdef subplotter < sl.obj.display_class
             %       Range is from 0 to 1 where 0 corrsponds to the
             %       bottom-most border of the figure and 1 to the top-most
             %       border.
-            %   y_max : 
+            %   y_max :
             %   y_pad :
             %       In this format y_min == y_pad and y_max = 1-y_pad
             %
@@ -482,7 +482,7 @@ classdef subplotter < sl.obj.display_class
             %       Range is from 0 to 1 where 0 corrsponds to the
             %       left-most border of the figure and 1 to the right-most
             %       border.
-            %   x_max : 
+            %   x_max :
             %   x_pad :
             %       In this format x_min == x_pad and x_max = 1-x_pad
             %
@@ -534,7 +534,7 @@ classdef subplotter < sl.obj.display_class
                 end
             end
         end
-     	function removeVerticalGap(obj,rows,columns,varargin)
+        function removeVerticalGap(obj,rows,columns,varargin)
             %x Removes vertical gaps from subplots
             %
             %    removeVerticalGap(obj,rows,columns,varargin)
@@ -744,10 +744,20 @@ classdef subplotter < sl.obj.display_class
             n_rows_l = obj.n_rows;
             
             remove_y_labels = true;
+            
+            %TODO: L
             if isempty(in.remove_labels) || in.remove_labels
-                y_labels = cellfun(@(x) x.YLabel.String,obj.handles,'un',0);
+                y_labels = cellfun(@(x) h__getLabel(x,'y'),obj.handles,'un',0);
                 for i = 1:n_rows_l
-                    if ~all(strcmp(y_labels(i,:),y_labels{i,1}))
+                    %First entry may be invalid
+                    row_y_labels = y_labels(i,:);
+                    unique_labels = unique(row_y_labels);
+                    %'' means axes is missing
+                    %Eventually we may wish to support true empty
+                    unique_labels(strcmp(unique_labels,'')) = [];
+                    if length(unique_labels) > 1
+                        %This logic seems a big off, I guess this means
+                        %it is optional
                         if isempty(in.remove_labels)
                             remove_y_labels = false;
                             break
@@ -761,26 +771,52 @@ classdef subplotter < sl.obj.display_class
                 remove_y_labels = false;
             end
             
+            %TODO: Support for missing axes is not great ...
             if remove_y_labels
                 for r = 1:n_rows_l
+                    valid_present = ~isempty(obj.handles{r,1});
                     for c = 2:n_columns_l
                         cur_axis = obj.handles{r,c};
-                        if in.remove_ticks
-                            cur_axis.YTick = [];
+                        if valid_present && ~isempty(cur_axis)
+                            if in.remove_ticks
+                                cur_axis.YTick = [];
+                            else
+                                cur_axis.YTickLabel = [];
+                            end
+                            %TODO: Have option to keep ticks but to remove #s
+                            cur_axis.YLabel = [];
                         else
-                            cur_axis.YTickLabel = [];
+                            valid_present = ~isempty(cur_axis);
                         end
-                        %TODO: Have option to keep ticks but to remove #s
-                        cur_axis.YLabel = [];
                     end
                 end
             end
             
             %--------------------------------------------------------------
             %Gaps: lefts - rights
-            %Resize: based on total size of the graphs without the 
+            %Resize: based on total size of the graphs without the
             
-            row_1_handles = [obj.handles{1,:}];
+            %row_1_handles = [obj.handles{1,:}];
+            
+            row_handles = cell(1,obj.n_columns);
+            for i = 1:obj.n_columns
+                match_found = false;
+                for j = 1:obj.n_rows
+                    h_ax = obj.handles{j,i};
+                    if ~isempty(h_ax)
+                        row_handles{i} = h_ax;
+                        match_found = true;
+                        break
+                    end
+                end
+                if ~match_found
+                    error('code doesn''t support a missing column')
+                end
+            end
+            
+            %with the code fix above this is a misnomer, but should still
+            %work
+            row_1_handles = [row_handles{:}];
             
             full_positions = sl.hg.axes.getPosition(...
                 row_1_handles,'add_colorbar',true,'as_struct',true,...
@@ -810,7 +846,7 @@ classdef subplotter < sl.obj.display_class
             cur_full_lefts = full_positions.left;
             
             %Now the tricky part, we want to move the figures
-            %but we can only specify position or outer-position 
+            %but we can only specify position or outer-position
             %when what we really want to control is the tight
             %position of the group ...
             %
@@ -825,19 +861,19 @@ classdef subplotter < sl.obj.display_class
             %   want
             
             left_extent  = full_positions.left(1);
-
+            
             %DEBUGGING
             %------------------------------------
-%             log_p = cell(1,obj.n_columns);
-%             log_t = cell(1,obj.n_columns);
-%             target_lefts = zeros(1,obj.n_columns);
-%             all_next_lefts = zeros(1,obj.n_columns);
+            %             log_p = cell(1,obj.n_columns);
+            %             log_t = cell(1,obj.n_columns);
+            %             target_lefts = zeros(1,obj.n_columns);
+            %             all_next_lefts = zeros(1,obj.n_columns);
             
             next_left = left_extent;
             for iColumn = 1:obj.n_columns
                 
                 %DEBUGGING
-%                 all_next_lefts(iColumn) = next_left;
+                %                 all_next_lefts(iColumn) = next_left;
                 
                 
                 new_full_width = new_full_widths(iColumn);
@@ -846,39 +882,40 @@ classdef subplotter < sl.obj.display_class
                 delta_left = next_left - cur_left;
                 for iRow = 1:obj.n_rows
                     cur_axes = obj.handles{iRow,iColumn};
+                    if ~isempty(cur_axes)          
+                        cur_position = get(cur_axes,'position');
+                        cur_left_for_below = cur_position(1);
+                        cur_position(3) = new_graph_width;
+                        set(cur_axes,'position',cur_position)
+                        drawnow()
 
-                    cur_position = get(cur_axes,'position');
-                    cur_left_for_below = cur_position(1);
-                    cur_position(3) = new_graph_width;
-                    set(cur_axes,'position',cur_position)
-                    drawnow()
-                    
-                    %Note, not sure how changing width redraws
-                    %left and right so change width then move
-                  	cur_position = get(cur_axes,'position');
-                    cur_position(1) = cur_left_for_below + delta_left;
-                    
-                    set(cur_axes,'position',cur_position)               
-                    drawnow()
+                        %Note, not sure how changing width redraws
+                        %left and right so change width then move
+                        cur_position = get(cur_axes,'position');
+                        cur_position(1) = cur_left_for_below + delta_left;
+
+                        set(cur_axes,'position',cur_position)
+                        drawnow()
+                    end
                     
                     %DEBUGGING
-%                     target_lefts(iColumn) = cur_left_for_below + delta_left; 
+                    %                     target_lefts(iColumn) = cur_left_for_below + delta_left;
                     
                 end
                 
                 %DEBUGGING
-%                 log_p{iColumn} = sl.hg.axes.getPosition(...
-%                     row_1_handles,'add_colorbar',false,'as_struct',true,...
-%                     'flatten_struct',true,'type','p');
-%             
-%                 log_t{iColumn} = sl.hg.axes.getPosition(...
-%                     row_1_handles,'add_colorbar',true,'as_struct',true,...
-%                     'flatten_struct',true,'type','t');
-            
+                %                 log_p{iColumn} = sl.hg.axes.getPosition(...
+                %                     row_1_handles,'add_colorbar',false,'as_struct',true,...
+                %                     'flatten_struct',true,'type','p');
+                %
+                %                 log_t{iColumn} = sl.hg.axes.getPosition(...
+                %                     row_1_handles,'add_colorbar',true,'as_struct',true,...
+                %                     'flatten_struct',true,'type','t');
+                
                 if iColumn ~= obj.n_columns
                     next_left = next_left + new_full_width + gap_widths(iColumn);
                 end
-            end   
+            end
             
         end
     end
@@ -943,7 +980,7 @@ classdef subplotter < sl.obj.display_class
             in.columns = [];
             in.axis = '';
             in = sl.in.processVarargin(in,varargin);
-           
+            
             if ~isempty(in.axis)
                 error('axis changing not yet implemented')
             end
@@ -973,9 +1010,9 @@ classdef subplotter < sl.obj.display_class
             
             %TODO: Rearranging needs to take into account
             %the text
-%             ps_full = sl.hg.axes.getPosition(row_1_handles,...
-%                 'type','outer','as_struct',true,'flatten_struct',true,...
-%                 'add_colorbar',true);
+            %             ps_full = sl.hg.axes.getPosition(row_1_handles,...
+            %                 'type','outer','as_struct',true,'flatten_struct',true,...
+            %                 'add_colorbar',true);
             
             all_xlims = get(row_1_handles,'xlim');
             if ~iscell(all_xlims)
@@ -990,7 +1027,7 @@ classdef subplotter < sl.obj.display_class
             all_rights = ps.right;
             
             left_extent  = all_lefts(1);
-
+            
             pct_durations = all_time_durations/sum(all_time_durations);
             new_widths = pct_durations*total_width;
             
@@ -1022,7 +1059,7 @@ classdef subplotter < sl.obj.display_class
                     %bunch of effort to scale graphs based on x ...
                     %axis(cur_axes,in.axis)
                     %
-                    % i.e. we don't want the xlim values to change after 
+                    % i.e. we don't want the xlim values to change after
                     % we've gone ahead and adjusted widths based on the old
                     % xlims ...
                 end
@@ -1064,6 +1101,7 @@ classdef subplotter < sl.obj.display_class
             
             
             if nargin == 1
+                %Only the object, this is essentialy a next() command
                 row_or_index = obj.last_index + 1;
             end
             
@@ -1116,12 +1154,12 @@ classdef subplotter < sl.obj.display_class
             
             use_lt = false;
             if isnumeric(varargin{1})
-               limit = varargin{1};
-               varargin(1) = [];
-               if limit < 0
-                   limit = abs(limit);
-                   use_lt = true;
-               end
+                limit = varargin{1};
+                varargin(1) = [];
+                if limit < 0
+                    limit = abs(limit);
+                    use_lt = true;
+                end
             else
                 limit = 0;
             end
@@ -1134,7 +1172,7 @@ classdef subplotter < sl.obj.display_class
                         for k = 1:length(c)
                             cur_c = c(k);
                             if strcmp(cur_c.Type,'line') && length(cur_c.XData) <= limit
-                               set(cur_c,varargin{:}) 
+                                set(cur_c,varargin{:})
                             end
                         end
                     end
@@ -1147,11 +1185,11 @@ classdef subplotter < sl.obj.display_class
                         for k = 1:length(c)
                             cur_c = c(k);
                             if strcmp(cur_c.Type,'line') && length(cur_c.XData) >= limit
-                               set(cur_c,varargin{:}) 
+                                set(cur_c,varargin{:})
                             end
                         end
                     end
-                end   
+                end
             end
         end
         function output = getYRange(obj,varargin)
@@ -1172,7 +1210,7 @@ classdef subplotter < sl.obj.display_class
             
             y_min = zeros(1,length(in.rows));
             y_max = zeros(1,length(in.rows));
-                        
+            
             for i = 1:length(in.rows)
                 cur_row = in.rows(i);
                 y_temp = zeros(2,length(in.columns));
@@ -1196,7 +1234,7 @@ classdef subplotter < sl.obj.display_class
             %   ---------------
             %   rows :
             %   columns :
-            %   ml_indices : 
+            %   ml_indices :
             %       Note, this can't be used with rows and columns. This
             %       uses MatLab indexing rather than subplot indexing.
             %       1 3
@@ -1221,7 +1259,7 @@ classdef subplotter < sl.obj.display_class
                     cur_I = in.ml_indices(i);
                     set(obj.handles{cur_I},new_v{:})
                 end
-            else      
+            else
                 rows = in.rows;
                 cols = in.columns;
                 if isempty(rows)
@@ -1315,7 +1353,7 @@ classdef subplotter < sl.obj.display_class
                 delete(cur_axes)
             end
         end
-
+        
         function linkXAxes(obj,varargin)
             %X Keep same x-limits for all axes
             %
@@ -1380,7 +1418,7 @@ classdef subplotter < sl.obj.display_class
             in = sl.in.processVarargin(in,varargin);
             
             if isempty(in.columns)
-               in.columns = 1:obj.n_columns; 
+                in.columns = 1:obj.n_columns;
             end
             
             for i = 1:obj.n_rows
@@ -1393,8 +1431,8 @@ classdef subplotter < sl.obj.display_class
             end
         end
         function h_axes = getAxesAtIndex(obj,index)
-           [row,col] = obj.linearToRowCol(index,obj); 
-           h_axes = obj.handles{row,col};
+            [row,col] = obj.linearToRowCol(index,obj);
+            h_axes = obj.handles{row,col};
         end
         function ylabel_to_title(obj)
             %X Moves string from ylabel to title
@@ -1433,7 +1471,7 @@ classdef subplotter < sl.obj.display_class
                 %https://www.mathworks.com/matlabcentral/answers/358266-get-colorbar-handle-for-a-particular-image
                 h_color = h_axes.Colorbar;
                 if ~isempty(h_color)
-                   delete(h_color) 
+                    delete(h_color)
                 end
             end
         end
@@ -1443,24 +1481,25 @@ classdef subplotter < sl.obj.display_class
 end
 
 function ml_indices = h__resolveIndices(obj,in)
-    %ml_indices
-    %sp_indices
-    
-    if ~isempty(in.sp_indices)
-        error('Not yet implemented')
-    elseif ~isempty(in.ml_indices)
-        ml_indices = in.ml_indices;
-    else
-        ml_indices = 1:obj.n_rows*obj.n_columns;
-    end
+%ml_indices
+%sp_indices
+
+if ~isempty(in.sp_indices)
+    error('Not yet implemented')
+elseif ~isempty(in.ml_indices)
+    ml_indices = in.ml_indices;
+else
+    ml_indices = 1:obj.n_rows*obj.n_columns;
+end
 end
 
 function h__matlabBugFixes(obj)
-    %:/ not sure where this came from ...
-    for i = 1:obj.n_rows
-        for j = 1:obj.n_columns
-            ax = obj.handles{i,j};
-        	if isappdata(ax, 'SubplotDeleteListenersManager')
+%:/ not sure where this came from ...
+for i = 1:obj.n_rows
+    for j = 1:obj.n_columns
+        ax = obj.handles{i,j};
+        if ~isempty(ax) && isvalid(ax)
+            if isappdata(ax, 'SubplotDeleteListenersManager')
                 temp = getappdata(ax, 'SubplotDeleteListenersManager');
                 try
                     delete(temp.SubplotDeleteListener);
@@ -1469,5 +1508,20 @@ function h__matlabBugFixes(obj)
             end
         end
     end
+end
+end
+
+function value = h__getLabel(ax,type)
+if isempty(ax)
+    value = '';
+else
+    if type == 'y'
+        value = ax.YLabel.String;
+    elseif type == 'x'
+        value = ax.XLabel.String;
+    else
+        error('Unexpected type option')
+    end
+end
 end
 
