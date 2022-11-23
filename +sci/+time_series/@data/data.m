@@ -1908,10 +1908,23 @@ classdef data < sl.obj.handle_light
         %
         %         end
         function [output,I] = max(objs,varargin)
+            %X find max value
+            %
+            %   [output,I] = max(objs,varargin)
+            %
+            %   Outputs
+            %   -------
+            %   output :
+            %       max value
+            %   I :
+            %       Either an index or time
             %
             %   Optional Inputs
             %   ---------------
-            %   when:
+            %   dim : default 1
+            %   un : default true
+            %       Whether the output is uniform ...
+            %   when : default 'time'
             %       - time
             %       - index
             
