@@ -16,6 +16,13 @@ classdef data < sl.obj.handle_light
     %   could be large, so there are some aspects of this class that try
     %   and handle this better than might typically be done by the user.
     %
+    %   Examples
+    
+    
+    
+    %   TODO: Move this to markdown files ...
+    %
+    %
     %   Handle vs Value Classing
     %   ------------------------
     %   This class is setup to be used as a handle class. It also however
@@ -207,8 +214,8 @@ classdef data < sl.obj.handle_light
             %
             %   obj = sci.time_series.data(data_in,dt,varargin)
             %
-            %   Inputs:
-            %   -------
+            %   Inputs
+            %   ------
             %   data_in : array [samples x channels]
             %       'data_in' must be with samples going down the rows.
             %   time_object : sci.time_series.time
@@ -216,14 +223,13 @@ classdef data < sl.obj.handle_light
             %       rate of the data.
             %   dt: number
             %
-            %   Optional Inputs:
-            %   ----------------
+            %   Optional Inputs
+            %   ---------------
             %   history: cell array
             %       See description in class
             %   units: str
             %       Units of the data
             %   channel_labels:
-            %       Not yet implemented
             %   events: array or cell array of:
             %               - sci.time_series.discrete_events
             %               - sci.time_series.epochs
@@ -231,6 +237,8 @@ classdef data < sl.obj.handle_light
             %       Value for y_label when plotted.
             
             %This is needed for initializing from a structure :/
+            %
+            %The idea is that it will be populated by the parent
             if nargin == 0
                 return
             end
@@ -282,8 +290,18 @@ classdef data < sl.obj.handle_light
         function sr = getSubsetRetriever(objs)
             sr = sci.time_series.subset_retrieval(objs);
         end
-        function dispSubsetRetrievalHelp(objs)
+        function subsetHelp(objs)
+            %
+            %
+            %   Example
+            %   -------
+            %   demo = sci.time_series.data.example(1);
+            %   demo.subsetHelp
+            %   
             %TODO: Provide links here ...
+            sr = sci.time_series.subset_retrieval(objs);
+            
+            keyboard
             
         end
         function new_objs = copy(old_objs,varargin)
@@ -397,6 +415,42 @@ classdef data < sl.obj.handle_light
         end
     end
     methods (Static)
+        function obj = example(example_id)
+            %X Provides example data object
+            %
+            %   example(*example_id)
+            %
+            %   Inputs
+            %   ------
+            %   example_id : default 1
+            %       1 - chirped signal
+            %
+            %   Examples
+            %   --------
+            %   d = sci.time_series.data.example(1);
+            %   window_width = 0.1;
+            %   r = obj.calculators.spectrogram.ml_spectrogram(d,window_width);
+            
+            if nargin == 0
+                example_id = 1;
+            end
+            
+            switch example_id
+                case 1
+                    dt = 0.005;
+                    t  = -4:dt:2;
+                    time = sci.time_series.time.fromTimeArray(t);
+                    f0 = 10;
+                    f1 = 20;
+                    t1 = 2;
+                    y = chirp(t,f0,t1,f1,'q')';
+                    obj = sci.time_series.data(y,time,'y_label','chirp','units','mV');
+                case 2
+            end
+            
+            %TODO: add on history
+            %TODO: add on events
+        end
         function objs = load(file_path)
             h = load(file_path);
             objs = sci.time_series.data.fromStruct(h.s);
@@ -443,7 +497,13 @@ classdef data < sl.obj.handle_light
             
             sl.obj.dispObject_v1(objs,'show_methods',false);
             
-            SECTION_NAMES = {'constructor related','visualization','events and history','time changing','data changing','math','miscellaneous'};
+            SECTION_NAMES = {'constructor related',...
+                'visualization',...
+                'events and history',...
+                'time changing',...
+                'data changing',...
+                'math',...
+                'miscellaneous'};
             
             sl.obj.disp.sectionMethods(SECTION_NAMES,'sci.time_series.data.dispMethodsSection')
         end
@@ -467,7 +527,7 @@ classdef data < sl.obj.handle_light
             
             switch section_name
                 case 'constructor related'
-                    fcn_names = {'copy','export','fromStruct'};
+                    fcn_names = {'copy','export','fromStruct','example'};
                 case 'visualization'
                     fcn_names = {'plotRows','plot','plotStacked'};
                 case 'events and history'
@@ -475,11 +535,14 @@ classdef data < sl.obj.handle_light
                 case 'time changing'
                     %Not in this file:
                     %resample
-                    fcn_names = {'resample','getDataSubset','zeroTimeByEvent','getDataAlignedToEvent','removeTimeGapsBetweenObjects'};
+                    fcn_names = {'ftime','resample','getDataSubset','zeroTimeByEvent',...
+                        'getDataAlignedToEvent','removeTimeGapsBetweenObjects'};
                 case 'data changing'
                     fcn_names = {'meanSubtract','minSubtract','filter','decimateData','changeUnits'};
                 case 'math'
                     fcn_names = {'add','minus','abs','mrdivide','power','max','min','sum'};
+                case 'stats'
+                    fcn_names = {'percentile'};
                 case 'miscellaneous'
                     fcn_names = {'getRawDataAndTime'};
                 otherwise
@@ -1241,6 +1304,20 @@ classdef data < sl.obj.handle_light
         end
     end
     
+    %Statistics
+    methods
+    	function values = percentile(obj,p)
+            %
+            %   values = obj.percentile(p)
+            %
+            %   Inputs
+            %   ------
+            %   p : array
+            %       percentages
+            values = sl.stats.percentile(obj.d,p);
+        end
+    end
+    
     %Data changing --------------------------------------------------------
     methods
         function [output,time,s] = getReps(obj,start_times,window,varargin)
@@ -1479,6 +1556,22 @@ classdef data < sl.obj.handle_light
             if nargout
                 varargout{1} = temp;
             end
+        end
+
+        function varargout = scale(objs)
+            %
+            %
+            %   scale(objs,[min max])
+            %   
+            %   scale(objs,
+            %
+            %   Scaling operations
+            %   - scale 0 to 1
+            %   - 
+            %
+            %   linear scaling
+            %
+            %       [0 1] set min to 0 and max to 1
         end
         function decimated_data = decimateData(objs,bin_width,varargin)
             %x Resample time series at some lower rate
