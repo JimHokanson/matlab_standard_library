@@ -24,6 +24,10 @@ classdef epoch_processor < sci.time_series.subset_retrieval.processor
         epoch_name   %OR
         epoch_object
         
+        %Which indices to use 
+        %
+        %   Use for:
+        %   
         indices = 'all'
         
         un = true;
@@ -45,6 +49,11 @@ classdef epoch_processor < sci.time_series.subset_retrieval.processor
             %   Inputs
             %   ------
             %   data_objects : sci.time_series.data
+            %
+            %   Optional Inputs
+            %   ---------------
+            %   indices :
+            %   
             %
             %   Outputs
             %   -------
