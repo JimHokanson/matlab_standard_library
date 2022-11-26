@@ -178,7 +178,7 @@ for iObj = 1:length(objs)
     
     is_apple_silicon = sl.os.is_apple_silicon();
     
-    if is_apple_silicon
+    if is_apple_silicon || isempty(which('big_plot'))
         %TODO: Ideally we would fix our mex code ...
         time = time_objs_for_plot(iObj).getTimeArray;
         d = objs(iObj).d;
