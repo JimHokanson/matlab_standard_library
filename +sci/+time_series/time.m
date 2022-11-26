@@ -251,6 +251,24 @@ classdef time < sl.obj.display_class
     end
     
     methods (Static)
+        function obj = fromTimeArray(t)
+            %X Creates object from array of samples
+            %
+            %   obj = fromTimeArray(t)
+            
+            if isempty(t)
+                error('Time vector can''t be empty')
+            elseif length(t) == 1
+                error('Time vector must have at least two elements to establish sampling rate')
+            end
+            
+            %TODO: Might want to check even sampling rate
+            %- What are we doing for plotBig?
+            dt = t(2)-t(1); 
+            t0 = t(1);
+            n_samples = length(t);
+            obj = sci.time_series.time(dt,n_samples,'start_offset',t0);
+        end
         function objs = fromStruct(s_objs)
             %
             %   objs = sci.time_series.time.fromStruct(s_objs)
