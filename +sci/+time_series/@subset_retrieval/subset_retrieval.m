@@ -134,7 +134,10 @@ classdef subset_retrieval < sl.obj.display_class
         end
         function output = fromEpochAndPct(obj,epoch_name,start_pct_offset,stop_pct_offset,varargin)
             %
-            %   output = fromEpochAndPct(obj,epoch_name,varargin)
+            %   output = fromEpochAndPct(obj,epoch_name,start_pct,stop_pct,varargin)
+            %
+            %   varagin not yet supported in this case ...
+            %   output = fromEpochAndPct(obj,epoch_name,[start_pct,stop_pct])
             %
             %                       epoch
             %    ---------------++++++++++++-------------------
@@ -144,8 +147,8 @@ classdef subset_retrieval < sl.obj.display_class
             %   Inputs
             %   ------
             %   epoch_name
-            %   start_pct_offset
-            %   stop_pct_offset
+            %   start_pct_offset : fraction
+            %   stop_pct_offset : fraction
             %
             %   Optional Inputs
             %   ---------------
@@ -156,8 +159,10 @@ classdef subset_retrieval < sl.obj.display_class
             %   %Grab from 20% to 80%
             %   subset = my_data.subset.fromEpochAndPct('fill',0.2,0.8)
             
-            %TODO: Coudl allow start,stop from single input
-            %Check nargin first ...
+            if nargin == 3 && length(start_pct_offset) == 2
+                stop_pct_offset = start_pct_offset(2);
+                start_pct_offset = start_pct_offset(1);
+            end
             
             [~,p_only,varargin] = sl.in.getOptionalParameter(varargin,'p_only','default',false,'remove',true);
             ep = sci.time_series.subset_retrieval.epoch_processor;

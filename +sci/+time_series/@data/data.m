@@ -529,7 +529,7 @@ classdef data < sl.obj.handle_light
                 case 'constructor related'
                     fcn_names = {'copy','export','fromStruct','example'};
                 case 'visualization'
-                    fcn_names = {'plotRows','plot','plotStacked'};
+                    fcn_names = {'plotRows','plot','plotMarkers','plotStacked','plotEvent'};
                 case 'events and history'
                     fcn_names = {'getEvent','addEventElements','addHistoryElements'};
                 case 'time changing'
@@ -787,7 +787,24 @@ classdef data < sl.obj.handle_light
             result_object.line_handles = line_handles;
             
         end
-        
+        function plotEvent(obj,event_name)
+            %x plots event over the dat
+            %
+            %   WORK IN PROGRESS
+            %
+            %   default behavior
+            %   - vertical line
+            %   - with message (if present)
+            %   - ignore value for now
+            %
+            %   Example
+            %   -------
+            %   pres = dba.short.loadChannel('220713_W',1,'pres')
+            %   pres.plotEvent('bladder_contraction_starts')
+            
+            event_obj = obj.event_info.(event_name);
+            plot(event_obj)
+        end
         function plotMarkers(obj,times,varargin)
             %X Plot individual data samples
             %
@@ -2001,10 +2018,23 @@ classdef data < sl.obj.handle_light
         %
         %         end
         function [output,I] = max(objs,varargin)
+            %X find max value
+            %
+            %   [output,I] = max(objs,varargin)
+            %
+            %   Outputs
+            %   -------
+            %   output :
+            %       max value
+            %   I :
+            %       Either an index or time
             %
             %   Optional Inputs
             %   ---------------
-            %   when:
+            %   dim : default 1
+            %   un : default true
+            %       Whether the output is uniform ...
+            %   when : default 'time'
             %       - time
             %       - index
             
