@@ -8,6 +8,8 @@ function runc(varargin)
 %   selection (being careful not to save the file), and then undo the
 %   changes so that the file wasn't changed.
 %
+%   https://jimhokanson.com/blog/2020/2020_01_running_clipboard_code_matlab/
+%
 %   Flags
 %   -----
 %   last - use last command
@@ -22,12 +24,12 @@ function runc(varargin)
 %
 %   Example:
 %   --------
-%   1) 
+%   1)
 %   %Copy the lines below into the clipboard:
-%   
+%
 %   disp('Select this line')
 %   disp('And select this one!')
-%   
+%
 %   %Then type "runc()" into the command window
 %
 %   2) Error in code
@@ -35,7 +37,7 @@ function runc(varargin)
 %   a = 1:5
 %   b = 2*a
 %   c = a(6)
-%   
+%
 %
 %   Improvments:
 %   ------------
@@ -45,6 +47,8 @@ function runc(varargin)
 %       and we might have copy pasted things
 %      - we would need to register/save the last command - techincally
 %       it is already saved in the file
+%   2) Add something at the top and maybe the bottom that indicates this is
+%   temporary
 %
 %
 %   See Also
@@ -57,7 +61,7 @@ function runc(varargin)
 x = 1;
 b = 2;
 %This should throw an error
-c = x(b); 
+c = x(b);
 %}
 
 %%Testing file writing
@@ -74,13 +78,13 @@ in.show_code = false; %flag - disp
 in.is_raw = false;
 %TODO: Write a formal function that handles this ...
 if any(strcmp(varargin,'last'))
-   in.use_last = true; 
+    in.use_last = true;
 end
 if any(strcmp(varargin,'disp'))
-   in.use_last = true; 
+    in.use_last = true;
 end
 if any(strcmp(varargin,'raw'))
-   in.is_raw = true; 
+    in.is_raw = true;
 end
 
 
@@ -89,7 +93,7 @@ end
 %dynamically created functions
 TEST_FILE_NAME = 'z_runc_exec_file.m';
 
-script_name = TEST_FILE_NAME(1:end-2); 
+script_name = TEST_FILE_NAME(1:end-2);
 
 if in.use_last
     if isempty(last_input_string)
@@ -99,15 +103,15 @@ if in.use_last
 else
     str = clipboard('paste');
 end
-    
+
 if in.is_raw
     uncommented_str = str;
 else
-%     n_newlines = length(strfind(str,sprintf('\n'))); %#ok<SPRINTFN>
-%     lines_with_comments = length(regexp(str,'^\s*%','lineanchors'));
+    %     n_newlines = length(strfind(str,sprintf('\n'))); %#ok<SPRINTFN>
+    %     lines_with_comments = length(regexp(str,'^\s*%','lineanchors'));
     n_lines_without_comments = length(regexp(str,'^\s*[^%\s]+','lineanchors'));
     
-    %Tests - copy below and type runc 
+    %Tests - copy below and type runc
     %-----------------
     
     %   Test 1 => n_lines_without_comments = 0
@@ -122,7 +126,7 @@ else
     
     if n_lines_without_comments == 0
         %   %%uncommented_str = regexprep(str,'^\s*%\s*','','lineanchors');%
-     	%Above fails when we strip multiple lines
+        %Above fails when we strip multiple lines
         %   e.g.:
         %
         %     %  %Good Comment
@@ -141,6 +145,10 @@ else
     end
 end
 
+temp_string = [newline '%***************** TEMPORARY, MAKE CHANGES IN ORIGINAL *************' newline];
+
+uncommented_str = [temp_string uncommented_str temp_string];
+
 
 if in.show_code
     disp(uncommented_str)
@@ -150,7 +158,7 @@ function_dir = sl.stack.getMyBasePath();
 file_path = fullfile(function_dir,TEST_FILE_NAME);
 
 if exist(file_path,'file')
-   clear(script_name)
+    clear(script_name)
 end
 
 try
@@ -159,7 +167,7 @@ try
     %Doesn't seem to be a race condition
     run_file = exist(script_name,'file');
 catch ME
-    run_file = false; 
+    run_file = false;
 end
 
 
