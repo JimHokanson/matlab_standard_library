@@ -1,4 +1,4 @@
-classdef git
+classdef git < sl.obj.display_class
     %
     %   Class
     %   sl.git
