@@ -424,12 +424,17 @@ classdef data < sl.obj.handle_light
             %   ------
             %   example_id : default 1
             %       1 - chirped signal
+            %       2 - signal with multiple discrete signals inside and
+            %       events
+            %       3 - signal of same duration as 1
             %
             %   Examples
             %   --------
             %   d = sci.time_series.data.example(1);
             %   window_width = 0.1;
             %   r = obj.calculators.spectrogram.ml_spectrogram(d,window_width);
+            %
+            %
             
             if nargin == 0
                 example_id = 1;
@@ -446,6 +451,10 @@ classdef data < sl.obj.handle_light
                     %TODO: not sure if this is standard or a toolbox
                     y = chirp(t,f0,t1,f1,'q')';
                     obj = sci.time_series.data(y,time,'y_label','chirp','units','mV');
+                    
+                    secs = -3:1:1;
+                    msgs = arrayfun(@(x) sprintf('%d s marker',x),secs,'un',0);
+                    obj.addEvent('seconds',secs,'msgs',msgs);
                 case 2
                     
                     %   d = sci.time_series.data.example(2);
@@ -529,7 +538,25 @@ classdef data < sl.obj.handle_light
                     %types     = [1 2 1 3 1 4 1 4 1 2 1 1];
                     %amps      = [1 4 3 2 1 6 3 4 1 7 8 1];
                     
-                    %type_map = {'pause','sine','square','noise'};                    
+                    %type_map = {'pause','sine','square','noise'};  
+                case 3
+                 	dt = 0.05;
+                    t  = -4:dt:2;
+                    time = sci.time_series.time.fromTimeArray(t);
+                    
+                    y = [1:10 9:-1:-10 -9:1:0];
+                    
+                    n_repeats = ceil(length(t)/length(y));
+                    
+                    y2 = repmat(y,1,n_repeats);
+                    y2(length(t)+1:end) = [];
+                    obj = sci.time_series.data(y2',time,'y_label','saw','units','mL');
+                    
+                    secs = -3:1:1;
+                    msgs = arrayfun(@(x) sprintf('%d s marker',x),secs,'un',0);
+                    obj.addEvent('seconds',secs,'msgs',msgs);
+                otherwise
+                    error('Unrecognized example option')
             end
 
         end

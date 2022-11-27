@@ -4,7 +4,7 @@ function data_subset_objs = getDataSubset(objs,varargin)
 %   data_subset_objs = getDataSubset(objs,varargin)
 %
 %
-%
+%   *********************** OUTDATED ***********************
 %
 %   This function has been rewritten by calling the subset function
 %   of the data object.

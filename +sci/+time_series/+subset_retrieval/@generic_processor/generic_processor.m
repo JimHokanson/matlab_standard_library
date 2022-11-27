@@ -11,9 +11,9 @@ classdef generic_processor < sci.time_series.subset_retrieval.processor
     %   4) start_times, stop_times              fromStartAndStopTimes
     %   5) start_times, sample_duration
     %   6) start_times, time_duration
-    %   7) subset_pct
-    %   8) n_parts
-    %   9) split_percentages NYI
+    %   7) subset_pct                           fromPercentSubset
+    %   8) n_parts                              intoNParts
+    %   9) split_percentages                    splitAtPercentages
     %
     %   Improvements
     %   ------------

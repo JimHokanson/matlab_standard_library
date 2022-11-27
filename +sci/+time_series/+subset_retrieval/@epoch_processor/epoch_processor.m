@@ -6,37 +6,60 @@ classdef epoch_processor < sci.time_series.subset_retrieval.processor
     %   Accessed from:
     %   sci.time_series.subset_retrieval
     %
-    %
     %   See Also
     %   --------
-    %   sci.time_series.subset_retrieval.processor
     %   sci.time_series.subset_retrieval
+    %   sci.time_series.subset_retrieval.processor
     %   sci.time_series.subset_retrieval.event_processor
+    %   sci.time_series.epochs
+    %   sci.time_series.discrete_events
     %
     %   This class returns data subsets for epochs
     %
     %   Supported Calling Forms
     %   -----------------------
+    %   fromEpoch
+    %   fromEpochAndPct
+    %   fromEpochAndSampleWindow
+    %   fromEpochAndTimeWindow
     %   
     
     properties
         d0 = '---------  Must have values -----------'
-        epoch_name   %OR
+        %Name of the epoch. Either this or the object must
+        %be passed in ...
+        epoch_name 
+        
+        %sci.time_series.epochs
         epoch_object
         
-        %Which indices to use 
-        %
-        %   Use for:
-        %   
+        %Which epoch indices to use. Default 'all'
         indices = 'all'
         
+        %Set this to false if:
+        %1) multiple epoachs are being requested
+        %2) 
         un = true;
+        
+        %I don't think this is used ...
         align_time_to_start = false;
         
         %TODO: d1 info is confusing, which calling form???
         d1 = '---------   Specific to calling form ------'
-        percent %2 elements for 
+        %2 elements
+        %t1 = start_time + percent(1)*time_range
+        %t2 = stop_time + percent(2)*time_range
+        %
+        percent
+        
+        %2 elements
+        %t1 = start_time + time_offsets(1)
+        %t2 = start_time + time_offsets(2)
         time_offsets
+        
+        %2 elements
+        %s1 = start_sample + sample_offsets(1)
+        %s2 = start_sample + sample_offsets(2)
         sample_offsets
     end
 
@@ -45,6 +68,10 @@ classdef epoch_processor < sci.time_series.subset_retrieval.processor
             %
             %   Method that specifies the first and last indices of the
             %   original data to use when grabbing a subset of data.
+            %
+            %   Called by
+            %   ---------
+            %   
             %
             %   Inputs
             %   ------

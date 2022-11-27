@@ -98,25 +98,31 @@ classdef subset_retrieval < sl.obj.display_class
            'Click here to view subset retrieval functions'))
         end
         function output = fromEpoch(obj,epoch_name_or_obj,varargin)
+            %X 
             %
             %   output = fromEpoch(obj,epoch_name,varargin)
             %
             %   output = fromEpoch(obj,epoch_object,varargin)
             %
-            %                       epoch
-            %    ---------------++++++++++++-------------------
-            %   start_time = epoch_start
-            %   stop_Time  = epoch_end
+            %   Epoch contains both a start and stop time that 
+            %   determines the extent of the retrieval.
             %
             %   Inputs
             %   ------
-            %   epoch_name
-            %   epoch_object
+            %   epoch_name : string
+            %   epoch_object : 
             %   
             %
             %   Optional Inputs
             %   ---------------
-            %   See sci.time_series.subset_retrieval.epoch_processor
+            %   indices : 
+            %       Indices of the epochs to extract.
+            %   un : default true
+            %       Set to false if you may have more than one epoch
+            %
+            %   See Also
+            %   --------
+            %   sci.time_series.epochs
             %
             %   Example
             %   -------
