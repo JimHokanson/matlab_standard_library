@@ -443,13 +443,95 @@ classdef data < sl.obj.handle_light
                     f0 = 10;
                     f1 = 20;
                     t1 = 2;
+                    %TODO: not sure if this is standard or a toolbox
                     y = chirp(t,f0,t1,f1,'q')';
                     obj = sci.time_series.data(y,time,'y_label','chirp','units','mV');
                 case 2
+                    
+                    %   d = sci.time_series.data.example(2);
+                    
+                    %Let's do pause, sine waves, square waves, and noise
+                    
+                    %A*sin(2*pi*f*t + phase)
+                    
+                    durations = [1 2 3 4 4 3 2 1 5 3 2.5 1.5];
+                    types     = [1 2 1 3 1 4 1 4 1 2 1 4];
+                    amps      = [1 4 3 2 1 6 3 4 1 7 8 1];
+                    
+                    type_map = {'pause','sine','square','noise'};
+                    
+                    t0 = 0;
+                    
+                    time = [];
+                    data = [];
+                    starts = [];
+                    stops = [];
+                    fs = 0.001;
+                    for i = 1:length(durations)
+                        t1 = (t0+fs);
+                        t2 = (t0+durations(i));
+                        t = t1:fs:t2;
+                        switch types(i)
+                            case 1
+                                y = zeros(1,length(t));
+                            case 2
+                                y = amps(i)*sin(2*pi*2*t);
+                            case 3
+                                high = ones(1,50);
+                                low = -1*ones(1,50);
+                                merged = amps(i)*[high low];
+                                n_repeats = ceil(length(t)/length(merged));
+                                y = repmat(merged,1,n_repeats);
+                                y(length(t)+1:end) = [];
+                            case 4
+                                y = amps(i)*rand(1,length(t));
+                        end
+                        starts(end+1) = t(1); %#ok<AGROW>
+                        stops(end+1) = t(end); %#ok<AGROW>
+                        
+                        t0 = t(end);
+                        time = [time t]; %#ok<AGROW>
+                        data = [data y]; %#ok<AGROW>
+                    end
+                    
+                    t = sci.time_series.time.fromTimeArray(time);
+                    obj = sci.time_series.data(data',t,'y_label','example 2','units','parsec');
+                    %channel_labels
+
+                    start_strings = cellfun(@(x) ['start ' x],type_map(types),'un',0);
+                    stop_strings = cellfun(@(x) ['stop ' x],type_map(types),'un',0);
+                    mask = types ~= 1;
+                    
+                    obj.addEvent('starts',starts,'msgs',start_strings,'values',amps);
+                    obj.addEvent('stops',stops,'msgs',stop_strings,'values',amps);
+                    obj.addEpoch('activity',starts(mask),stops(mask),'values',types(mask));
+                    
+                    mask = types == 1;
+                    obj.addEvent('start_pause',starts(mask),'msgs',start_strings(mask));
+                    obj.addEvent('stop_pause',stops(mask),'msgs',stop_strings(mask));
+                    obj.addEpoch('pauses',starts(mask),stops(mask));
+                    
+                    mask = types == 2;
+                    obj.addEvent('start_sine',starts(mask),'msgs',start_strings(mask));
+                    obj.addEvent('stop_sine',stops(mask),'msgs',stop_strings(mask));
+                    obj.addEpoch('sine_waves',starts(mask),stops(mask));
+                    
+                    mask = types == 3;
+                    obj.addEvent('start_square',starts(mask),'msgs',start_strings(mask));
+                    obj.addEvent('stop_square',stops(mask),'msgs',stop_strings(mask));
+                    obj.addEpoch('square_waves',starts(mask),stops(mask));
+                    
+                    mask = types == 4;
+                    obj.addEvent('start_noise',starts(mask),'msgs',start_strings(mask));
+                    obj.addEvent('stop_noise',stops(mask),'msgs',stop_strings(mask));
+                    obj.addEpoch('noise',starts(mask),stops(mask));
+                    %durations = [1 2 3 4 4 3 2 1 5 3 2.5 1.5];
+                    %types     = [1 2 1 3 1 4 1 4 1 2 1 1];
+                    %amps      = [1 4 3 2 1 6 3 4 1 7 8 1];
+                    
+                    %type_map = {'pause','sine','square','noise'};                    
             end
-            
-            %TODO: add on history
-            %TODO: add on events
+
         end
         function objs = load(file_path)
             h = load(file_path);
@@ -852,16 +934,16 @@ classdef data < sl.obj.handle_light
     
     %Add Event or History to data object ----------------------------------
     methods
-        function newEventFromEvent(objs,old_name,new_name)
-            %The example use case is when a file has been marked with a
-            %particular comment
-            %
-            %    We want to find all strings that match some value
-            %    then extract those times (and values?) and move those
-            %    to a new event
-            %
-            %    TODO: What do we need from the user ?????
-        end
+% % % % %         function newEventFromEvent(objs,old_name,new_name)
+% % % % %             %The example use case is when a file has been marked with a
+% % % % %             %particular comment
+% % % % %             %
+% % % % %             %    We want to find all strings that match some value
+% % % % %             %    then extract those times (and values?) and move those
+% % % % %             %    to a new event
+% % % % %             %
+% % % % %             %    TODO: What do we need from the user ?????
+% % % % %         end
         function events = getEvent(objs,name)
             %x Gets a specific event name for all objects
             %
@@ -886,11 +968,58 @@ classdef data < sl.obj.handle_light
             
             events = [temp_ca{:}];
         end
+        function addEpoch(obj,prop_name,start_times,stop_times,varargin)
+            %X Creates and adds a single epoch to the object
+            %
+            %   Optional Inputs
+            %   ---------------
+            %   name : string
+            %       Unclear how this is used other than internally
+            %   values : array, numeric is probably best but cellstr might
+            %            work
+            %
+            %
+            %   See Also
+            %   --------
+            %   sci.time_series.epochs
+            
+            epoch = sci.time_series.epochs(prop_name,start_times,stop_times,varargin{:});
+            obj.addEventElements(epoch);
+        end
+        function addEvent(obj,prop_name,times,varargin)
+            %X Creates and adds a single event to the object
+            %
+            %   addEvent(obj,prop_name,times,varargin)
+            %
+            %   prop_name :
+            %   times :
+            %
+            %   Optional Inputs
+            %   ----------------
+            %   name : string, default sets equal to property name
+            %       This has no variable name restriction
+            %           TODO: Is this used by the subset retriever?
+            %   values : numeric array
+            %   msgs : cellstr
+            %
+            %   See Also
+            %   --------
+            %   sci.time_series.discrete_events
+            %
+            %   Example
+            %   -------
+            %   TODO
+            
+            event = sci.time_series.discrete_events(prop_name,times,varargin{:});
+            obj.addEventElements(event);
+        end
         function addEventElements(obj,event_elements)
             %x Adds event elements to the object. See 'devents' property
             %
-            %   Inputs:
-            %   -------
+            %   Supports add events or epochs
+            %
+            %   Inputs
+            %   ------
             %   event_elements : See sci.time_series.events_holder.addEvents
             %
             %   See Also:
