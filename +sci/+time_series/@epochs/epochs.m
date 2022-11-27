@@ -31,9 +31,10 @@ classdef epochs < sl.obj.display_class
             %
             %   obj = sci.time_series.epochs(prop_name,start_times,stop_times,varargin)
             %
-            %   Optional Inputs:
-            %   ----------------
-            %   name :
+            %   Optional Inputs
+            %   ---------------
+            %   name : string
+            %       Unclear how this is used other than internally
             %   values :
             
             in.name = '';

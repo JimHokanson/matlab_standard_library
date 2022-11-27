@@ -71,7 +71,8 @@ classdef events_holder < dynamicprops
             %   ------
             %   events_holder : sci.time_series.events_holder
             %   events_cell : {sci.time_series.discrete_events}
-            %   
+            %   cell_of_structs :
+            %       fields of the struct needs to be events or epochs
             %
             %   TODO: Finish documentation
             

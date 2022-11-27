@@ -62,11 +62,13 @@ classdef discrete_events < sl.obj.display_class
             %   prop_name :
             %   times :
             %
-            %   Outputs:
-            %   --------
-            %   name :
-            %   values :
-            %   msgs :
+            %   Optional Inputs
+            %   ----------------
+            %   name : string, default sets equal to property name
+            %       This has no variable name restriction
+            %           TODO: Is this used by the subset retriever?
+            %   values : numeric array
+            %   msgs : cellstr
             %
             %   Examples
             %   -----------------------------------------------------------
