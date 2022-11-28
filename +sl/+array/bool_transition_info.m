@@ -7,6 +7,16 @@ classdef bool_transition_info < sl.obj.display_class
     %   high and low transition periods.
     %
     %
+    %   Example
+    %   -------
+    %   data = [0 0 0 1 1 0 0 2 2 2 0 0 4 4 4 4 4 0 4 4 0 0 2 2];
+    %   bti = sl.array.bool_transition_info(data > 1);
+    %
+    %
+    %   See Also
+    %   --------
+    %   sci.time_series.calculators.event_calculators.simpleThreshold
+    %
     %   TODO: Implement units tests for this ...
     %
     %   Improvements:
@@ -246,6 +256,10 @@ classdef bool_transition_info < sl.obj.display_class
             %
             %
             %   type: logical
+            
+            %   The issue here 
+            
+            
             %This should be changed to be more efficient but this
             %was the easiest approach to get right quickly
             logical_data = obj.getMask();
@@ -281,7 +295,7 @@ classdef bool_transition_info < sl.obj.display_class
         function init(obj,logical_data)
             %Written so that negateSections could work easily, technically
             %it shouldn't be needed if negateSections were written
-            %correctly
+            %more efficiently
             obj.first_sample = logical_data(1);
             obj.n_samples    = length(logical_data);
             
