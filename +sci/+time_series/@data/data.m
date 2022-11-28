@@ -297,12 +297,10 @@ classdef data < sl.obj.handle_light
             %   -------
             %   demo = sci.time_series.data.example(1);
             %   demo.subsetHelp
-            %   
+            
             %TODO: Provide links here ...
             sr = sci.time_series.subset_retrieval(objs);
-            
-            keyboard
-            
+            disp(sr)
         end
         function new_objs = copy(old_objs,varargin)
             %x Creates a deep copy of the object
@@ -506,7 +504,7 @@ classdef data < sl.obj.handle_light
                     t = sci.time_series.time.fromTimeArray(time);
                     obj = sci.time_series.data(data',t,'y_label','example 2','units','parsec');
                     %channel_labels
-
+                    
                     start_strings = cellfun(@(x) ['start ' x],type_map(types),'un',0);
                     stop_strings = cellfun(@(x) ['stop ' x],type_map(types),'un',0);
                     mask = types ~= 1;
@@ -538,9 +536,9 @@ classdef data < sl.obj.handle_light
                     %types     = [1 2 1 3 1 4 1 4 1 2 1 1];
                     %amps      = [1 4 3 2 1 6 3 4 1 7 8 1];
                     
-                    %type_map = {'pause','sine','square','noise'};  
+                    %type_map = {'pause','sine','square','noise'};
                 case 3
-                 	dt = 0.05;
+                    dt = 0.05;
                     t  = -4:dt:2;
                     time = sci.time_series.time.fromTimeArray(t);
                     
@@ -558,11 +556,20 @@ classdef data < sl.obj.handle_light
                 otherwise
                     error('Unrecognized example option')
             end
-
+            
         end
-        function objs = load(file_path)
+        function obj = load(file_path)
+            %
+            %   sci.time_series.data.load(file_path)
+            %
+            %   sci.time_series.data.load(dir_result)
+            %
+            if isstruct(file_path)
+                d = file_path;
+                file_path = fullfile(d.folder,d.name);
+            end
             h = load(file_path);
-            objs = sci.time_series.data.fromStruct(h.s);
+            obj = sci.time_series.data.fromStruct(h.s);
         end
         function objs = fromStruct(s_objs)
             %x Creates an instance of the objects from a structure
@@ -606,12 +613,15 @@ classdef data < sl.obj.handle_light
             
             sl.obj.dispObject_v1(objs,'show_methods',false);
             
-            SECTION_NAMES = {'constructor related',...
+            SECTION_NAMES = {...
+                'constructor related',...
                 'visualization',...
                 'events and history',...
                 'time changing',...
                 'data changing',...
                 'math',...
+                'stats',...
+                'subset',...
                 'miscellaneous'};
             
             sl.obj.disp.sectionMethods(SECTION_NAMES,'sci.time_series.data.dispMethodsSection')
@@ -634,26 +644,84 @@ classdef data < sl.obj.handle_light
             %            - 'data changing'
             %
             
+            %Skipping
+            %--------------------
+            %getDataSubset - obsolete
+            %meanSubstract - trying to reduce fcns, do - mean(data) instead
+            %minSubstract - trying to reduce fcns, do - min(data) instead
+            %subset_retriever -why did I create this and getSubsetRetriever
+            
             switch section_name
                 case 'constructor related'
-                    fcn_names = {'copy','export','fromStruct','example'};
+                    fcn_names = {...
+                        'copy',...
+                        'example',...
+                        'export',...
+                        'fromStruct',...
+                        'save',...
+                        };
                 case 'visualization'
-                    fcn_names = {'plotRows','plot','plotMarkers','plotStacked','plotEvent'};
+                    fcn_names = {...
+                        'plot',...
+                        'plotEvent',...
+                        'plotMarkers',...
+                        'plotRows',...
+                        'plotStacked',...
+                        };
                 case 'events and history'
-                    fcn_names = {'getEvent','addEventElements','addHistoryElements'};
+                    fcn_names = {...
+                        'addEpoch',...
+                        'addEvent',...
+                        'getEvent',...
+                        'addEventElements',...
+                        'addHistoryElements'};
                 case 'time changing'
                     %Not in this file:
                     %resample
-                    fcn_names = {'ftime','resample','getDataSubset','zeroTimeByEvent',...
-                        'getDataAlignedToEvent','removeTimeGapsBetweenObjects'};
+                    fcn_names = {...
+                        'ftime',...
+                        'getDataAlignedToEvent',...
+                        'removeTimeGapsBetweenObjects',...
+                        'resample',...
+                        'zeroTimeByEvent',...
+                        };
                 case 'data changing'
-                    fcn_names = {'meanSubtract','minSubtract','filter','decimateData','changeUnits'};
+                    fcn_names = {...
+                        'changeUnits',...
+                        'decimateData',...
+                        'filter',...
+                        'highpass',...
+                        'lowpass',...
+                        'meanSubtract',...
+                        'minSubtract',...
+                        'scale',...
+                        };
                 case 'math'
-                    fcn_names = {'add','minus','abs','mrdivide','power','max','min','sum'};
+                    fcn_names = {...
+                        'abs',...
+                        'add',...
+                        'max',...
+                        'min',...
+                        'minus',...
+                        'mrdivide',...
+                        'mtimes',...
+                        'power',...
+                        'sum',...
+                        'times'};
                 case 'stats'
                     fcn_names = {'percentile'};
                 case 'miscellaneous'
-                    fcn_names = {'getRawDataAndTime'};
+                    fcn_names = {...
+                        'getRawDataAndTime',...
+                        'getReps',...
+                        'getSampleNormalizedData',...
+                        };
+                case 'subset'
+                    fcn_names = {...
+                        'getSubsetRetriever',...
+                        'subset',...
+                        'subsetHelp',...
+                        };
                 otherwise
                     error('Unknown section name')
             end
@@ -961,16 +1029,16 @@ classdef data < sl.obj.handle_light
     
     %Add Event or History to data object ----------------------------------
     methods
-% % % % %         function newEventFromEvent(objs,old_name,new_name)
-% % % % %             %The example use case is when a file has been marked with a
-% % % % %             %particular comment
-% % % % %             %
-% % % % %             %    We want to find all strings that match some value
-% % % % %             %    then extract those times (and values?) and move those
-% % % % %             %    to a new event
-% % % % %             %
-% % % % %             %    TODO: What do we need from the user ?????
-% % % % %         end
+        % % % % %         function newEventFromEvent(objs,old_name,new_name)
+        % % % % %             %The example use case is when a file has been marked with a
+        % % % % %             %particular comment
+        % % % % %             %
+        % % % % %             %    We want to find all strings that match some value
+        % % % % %             %    then extract those times (and values?) and move those
+        % % % % %             %    to a new event
+        % % % % %             %
+        % % % % %             %    TODO: What do we need from the user ?????
+        % % % % %         end
         function events = getEvent(objs,name)
             %x Gets a specific event name for all objects
             %
@@ -1479,7 +1547,7 @@ classdef data < sl.obj.handle_light
     
     %Statistics
     methods
-    	function values = percentile(obj,p)
+        function values = percentile(obj,p)
             %
             %   values = obj.percentile(p)
             %
@@ -1559,14 +1627,21 @@ classdef data < sl.obj.handle_light
             filter_design = sci.time_series.filter.butter(order,f_low,'low');
             new_objs = objs.filter(filter_design);
         end
-        function new_objs = highpass(objs,f_low,order,varargin)
+        function new_objs = highpass(objs,f_high,order,varargin)
+            %X highpass filters with butterworth filter
             %
-            %   new_objs = highpass(objs,f_low,*order,varargin)
+            %   new_objs = highpass(objs,f_high,*order)
+            %
+            %   Inputs
+            %   ------
+            %   f_high :
+            %       Cutoff
+            %   order : default 1
             
             if nargin < 3
                 order = 1;
             end
-            filter_design = sci.time_series.filter.butter(order,f_low,'high');
+            filter_design = sci.time_series.filter.butter(order,f_high,'high');
             new_objs = objs.filter(filter_design);
         end
         function varargout = minSubtract(objs,varargin)
@@ -1730,21 +1805,83 @@ classdef data < sl.obj.handle_light
                 varargout{1} = temp;
             end
         end
-
-        function varargout = scale(objs)
+        function new_obj = conv(obj,vector,varargin)
+            %
+            %   new_obj = conv(obj,vector,varargin)
+            %
+            %   This is preliminary.
+            %
+            %   Inputs
+            %   -------
+            %   vector : array
+            %       Currently this is just samples
+            %
+            %   Optional Inputs
+            %   ---------------
+            %   normalize : default false
+            %
+            %   Improvements
+            %   ------------
+            %   1. Support creation of signals
+            %       - sci.time_series.sig_gen.sinusoid()
+            %       - sci.time_series.sig_gen.square()
+            %       - etc.
+            %   2. Allow expansion 
+            %   3. Allow passing in history info instead of terrible
+            %   default
+            
+            in.normalize = false;
+            in.zero_phase = false;
+            in = sl.in.processVarargin(in,varargin);
+            
+            if in.normalize
+                vector = vector./sum(vector);
+            end
+            
+            new_obj = copy(obj);
+            new_obj.d = conv(obj.d,vector,'same');
+            if in.zero_phase
+                temp = conv(new_obj.d(end:-1:1),vector,'same');
+                new_obj.d = temp(end:-1:1);
+            end
+            new_obj.addHistoryElements(sprintf('Convolved data with signal of length %d',length(vector)));
+            
+        end
+        function o2 = scale(obj,scaling)
             %
             %
-            %   scale(objs,[min max])
-            %   
-            %   scale(objs,
+            %   scale(objs,[new_min new_max])
+            %
+            %   scale(objs,[yold_1 ynew1 yold2 ynew2])
             %
             %   Scaling operations
             %   - scale 0 to 1
-            %   - 
+            %   -
             %
             %   linear scaling
             %
             %       [0 1] set min to 0 and max to 1
+            
+            o2 = copy(obj);
+            
+            if length(scaling) == 2
+                x0 = min(o2.d);
+                x1 = max(o2.d);
+                y0 = scaling(1);
+                y1 = scaling(2);
+                
+            else
+                x0 = scaling(1);
+                x1 = scaling(3);
+                y0 = scaling(2);
+                y1 = scaling(4);
+            end
+            
+            m = (y1-y0)/(x1-x0);
+            %y=mx+b
+            b = y1 - m*x1;
+            
+            o2.d = obj.d*m + b;
         end
         function decimated_data = decimateData(objs,bin_width,varargin)
             %x Resample time series at some lower rate
@@ -2087,6 +2224,13 @@ classdef data < sl.obj.handle_light
             out_objs = [output{:}];
             
         end
+        function out_objs = mtimes(A,B)
+            %
+            %   For convenience this is just times ...
+            
+            out_objs = times(A,B);
+            
+        end
         function out_objs = times(A,B)
             %
             %
@@ -2225,8 +2369,9 @@ classdef data < sl.obj.handle_light
             end
             
         end
-        function output = min(objs,varargin)
+        function [output,I] = min(objs,varargin)
             
+            in.when = 'time';
             in.dim = 1;
             in.un = true;
             in = sl.in.processVarargin(in,varargin);
@@ -2237,17 +2382,23 @@ classdef data < sl.obj.handle_light
             
             n_objs = length(objs);
             temp = cell(1,n_objs);
+            temp2 = cell(1,n_objs);
             for iObj = 1:n_objs
-                temp{iObj} = min(objs(iObj).d,[],in.dim);
+                [temp{iObj},temp2{iObj}] = min(objs(iObj).d,[],in.dim);
+                if strcmp(in.when,'time')
+                    temp2{iObj} = objs(iObj).ftime.getTimesFromIndices(temp2{iObj});
+                end
             end
             
             if ~in.un
                 output = temp;
+                I = temp2;
             else
                 if any(cellfun(@numel,temp) ~= 1)
                     error('One of the objects has more than 1 channel or rep, "''un'',0" required for the input')
                 end
                 output = [temp{:}];
+                I = [temp2{:}];
             end
         end
         function output = var(objs,varargin)
