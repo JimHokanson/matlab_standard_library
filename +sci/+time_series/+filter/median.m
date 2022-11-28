@@ -16,6 +16,10 @@ classdef median
     
     methods
         function obj = median(width,varargin)
+            %
+            
+            error('Not yet implemented')
+            
             in.width_is_time = true;
             in = sl.in.processVarargin(in,varargin);
             
