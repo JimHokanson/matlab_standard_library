@@ -144,12 +144,20 @@ else
         %It also factors in if we plot a bunch of axes, then more later
         %
         %******* This code is a bit rough and needs to be cleaned up
-         h_axes = in.axes;
+        h_axes = in.axes;
         if isempty(h_axes)
             h_axes = gca;
         end
+        %JAH 11/27/2022:
+        %   - this is getting set to 0 by something
+        %   - new line is plotted and nothing else exists
+        %
+        %   h_axes - new plot
+        %
+        %JAH 11/27/2022: Added ishold check, no need to respect
+        % relative offsets if we are going to clear the axes on plotting
         base_datetime = big_plot.getAxisAbsoluteStartTime(h_axes);
-        if ~isempty(base_datetime)
+        if ~isempty(base_datetime) && ishold(h_axes)
             dt = sl.datetime.datenumToSeconds(start_datetimes-base_datetime);
             for iObj = 1:length(time_objs_for_plot)
                 cur_time_obj = time_objs_for_plot(iObj);
