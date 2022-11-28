@@ -37,8 +37,15 @@ classdef simple_threshold_results < sl.obj.display_class
     properties (Dependent)
         n_epochs
         durations
+        
         epoch_averages
         rectified_epoch_averages
+        
+        epoch_right_durations
+        epoch_left_durations
+        epoch_right_averages
+        epoch_left_averages
+        
         epoch_duration_avg_product
         epoch_duration_rect_avg_product
         epoch_averages_original_data
@@ -74,6 +81,53 @@ classdef simple_threshold_results < sl.obj.display_class
             %TODO: This should be fixed earlier in BTI
             if size(value,1) > 1
                 value = value';
+            end
+        end
+        function value = get.epoch_right_durations(obj)
+            %
+            %
+            %   last event has not duration
+            
+            start_times = obj.threshold_start_times;
+            end_times = obj.threshold_end_times;
+            
+            if isempty(start_times)
+                value = [];
+            else
+                value = [start_times(2:end)-end_times(1:end-1) NaN];
+            end
+        end
+        function value = get.epoch_left_durations(obj)
+
+            start_times = obj.threshold_start_times;
+            end_times = obj.threshold_end_times;
+            
+            if isempty(start_times)
+                value = [];
+            else
+                value = [NaN start_times(2:end)-end_times(1:end-1)];
+            end
+        end
+        function value = get.epoch_right_averages(obj)
+            value = NaN(1,obj.n_epochs);
+            raw_data = obj.data.d;
+            start_I = obj.threshold_start_I;
+            end_I = obj.threshold_end_I;
+            for i = 1:obj.n_epochs-1
+                I1 = end_I(i);
+                I2 = start_I(i+1);
+                value(i) = mean(raw_data(I1:I2));
+            end
+        end
+        function value = get.epoch_left_averages(obj)
+            value = NaN(1,obj.n_epochs);
+            raw_data = obj.data.d;
+            start_I = obj.threshold_start_I;
+            end_I = obj.threshold_end_I;
+            for i = 1:obj.n_epochs-1
+                I1 = end_I(i);
+                I2 = start_I(i+1);
+                value(i+1) = mean(raw_data(I1:I2));
             end
         end
         function value = get.epoch_averages(obj)
@@ -121,6 +175,7 @@ classdef simple_threshold_results < sl.obj.display_class
     end
     
     %TODO: How many do we remove from time filtering ????
+    
     
     methods
         function mask = getMask(obj,epoch_value)
@@ -293,7 +348,7 @@ classdef simple_threshold_results < sl.obj.display_class
             %   ------
             %   delete_indices_or_mask : indices or mask
             %       Values to be deleted, generally based on some
-            %       calculated property ...
+            %       calculated property. This corresponds to each epoch.
             %   reason : default 'Unspecified'
             %       This string goes into a deleted entry ...
             %
