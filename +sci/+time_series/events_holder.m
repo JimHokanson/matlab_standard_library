@@ -121,7 +121,7 @@ classdef events_holder < dynamicprops
             %   shiftTimes(obj,old_time_obj,new_time_obj)
             
             if isnumeric(varargin{1})
-                time_to_subtract = varargin(1);
+                time_to_subtract = varargin{1};
             else
                 old_time = varargin{1};
                 new_time = varargin{2};
