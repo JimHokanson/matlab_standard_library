@@ -297,18 +297,29 @@ classdef time_functions < sl.obj.display_class
             
         end
         function removeOffset(obj)
-            %TODO
             d = obj.data_objects;
             for i = 1:length(d)
                 cur_d = d(i);
+                %Hold onto this for shifting events/epochs
+                offset = cur_d.time.start_offset;
                 cur_d.time.start_offset = 0;
+                %Fix times for events/epochs
+                cur_d.event_info.shiftTimes(offset);
             end
         end
         function setOffset(obj,value)
             d = obj.data_objects;
             for i = 1:length(d)
                 cur_d = d(i);
+                offset = cur_d.time.start_offset;
+                
+                %At 20, go to 5, subtract 15
+                
+                time_to_subtract = offset - value;
+                
                 cur_d.time.start_offset = value;
+                
+                cur_d.event_info.shiftTimes(time_to_subtract);
             end 
         end
         function zeroTimeByEvent(obj)
