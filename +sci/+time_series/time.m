@@ -138,6 +138,14 @@ classdef time < sl.obj.display_class
             obj.dt = dt;
             obj.n_samples = n_samples;
         end
+        function setNSamples(obj,n_samples)
+            %
+            %   Added when needing to merge two datasets together
+            %
+            %   Currently this is a simple operation but may not always be
+            %   ...
+           obj.n_samples = n_samples; 
+        end
         function new_objs = copy(objs,varargin)
             %x Creates a copy of the time object from the current version.
             %
