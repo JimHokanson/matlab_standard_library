@@ -1835,6 +1835,7 @@ classdef data < sl.obj.handle_light
             in = sl.in.processVarargin(in,varargin);
             
             if in.normalize
+                %TODO: If the sum is zero, then what?
                 vector = vector./sum(vector);
             end
             
