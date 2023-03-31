@@ -322,8 +322,26 @@ classdef time_functions < sl.obj.display_class
                 cur_d.event_info.shiftTimes(time_to_subtract);
             end 
         end
-        function zeroTimeByEvent(obj)
-            error('Not yet implemented')
+        function zeroTimeByEvent(obj,event_name)
+            %
+            % Sets the time of the event(event_name) to be at t = 0
+            %
+            
+            % data starts at 300
+            % event occurs at 350
+            % 
+            d = obj.data_objects;
+            for i = 1:length(d)
+                cur_d = d(i);
+                ev = cur_d.event_info.(event_name);
+                
+                %Hold onto this for shifting events/epochs
+                start_offset = cur_d.time.start_offset;
+                event_time = ev.times(1);
+                cur_d.time.start_offset = start_offset-event_time;
+                %Fix times for events/epochs
+                cur_d.event_info.shiftTimes(event_time);
+            end
         end
         function resample(obj)
             error('Not yet implemented')
