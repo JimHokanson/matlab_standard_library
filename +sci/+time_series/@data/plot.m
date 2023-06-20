@@ -9,6 +9,10 @@ function varargout = plot(objs,varargin)
 %
 %   Optional Inputs:
 %   ----------------
+%
+%   Any inputs to the normal plot function to control the normal plot style
+%   should work. There are some limitations of this (see below).
+%
 %   axes
 %       - pass in axes to plot on
 %   time_units : {'s','min','ms','h'} (default 's')
@@ -19,9 +23,9 @@ function varargout = plot(objs,varargin)
 %   channels: default 'all'
 %       Pass in the numeric values of the channels to plot.
 %   time_shift: (default true)
-%       If true, then objects will not be shifted to account
-%       for differences in their absolute start times. If not, then there
-%       absolute start time is discounted
+%       If true, then objects will be shifted to account for differences 
+%       in their absolute start times. If not, then there absolute start 
+%       time is discounted
 %   time_spacing: (default [])
 %       If not empty, then subsequent trials are spaced by the specified
 %       amount (Units: same as 'time_units')
@@ -29,6 +33,18 @@ function varargout = plot(objs,varargin)
 %       If true all plots are zeroed to their first sample.
 %
 %   Other optional inputs are passed to the line handle
+%
+%   Limitations
+%   -----------
+%   - Plotting of repetitions not handled.
+%   - Plotting to a specific axes must be done by passing in the 'axes'
+%     property/value pairing.
+%   - Quick
+%
+%   Improvements
+%   ------------
+%   - If markers are requested disable quick plotting
+%
 %
 %   Time Scale
 %   ------------------------------------------
@@ -51,10 +67,14 @@ function varargout = plot(objs,varargin)
 %   See Also:
 %   sci.time_series.time
 
+
+
+%   
 %   TODO: How do we want to plot multiple repetitions ...
 
 % in.slow = false;
 %in.use_absolute_time = true;   NYI
+in.axes = {};
 in.time_offset = [];
 in.epoch = '';
 in.zero_time = false;
@@ -62,7 +82,7 @@ in.quick_plot = true;
 in.time_units = 's';
 in.time_shift = true;
 in.time_spacing = [];
-in.axes = {};
+
 in.channels = 'all';
 
 [in,plotting_options] = sl.in.processVararginWithRemainder(in,varargin);
@@ -138,10 +158,13 @@ else
             cur_time_obj = time_objs_for_plot(iObj);
             cur_time_obj.shiftStartTime(dt(iObj));
         end
-    elseif in.time_shift
+    elseif in.time_shift && ~isempty(which('big_plot'))
         %TODO: This was created for the case of plotting 1 axes at at time
         %
-        %It also factors in if we plot a bunch of axes, then more later
+        %   The goal is to handle absolute start times.
+        %
+        %   In Labchart blocks reset the local time counter but the
+        %   absolute datetime property is always correct.
         %
         %******* This code is a bit rough and needs to be cleaned up
         h_axes = in.axes;
@@ -186,7 +209,7 @@ for iObj = 1:length(objs)
     
     is_apple_silicon = sl.os.is_apple_silicon();
     
-    if is_apple_silicon || isempty(which('big_plot'))
+    if is_apple_silicon || isempty(which('big_plot')) || ~in.quick_plot
         %TODO: Ideally we would fix our mex code ...
         time = time_objs_for_plot(iObj).getTimeArray;
         d = objs(iObj).d;
