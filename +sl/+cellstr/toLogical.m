@@ -13,7 +13,11 @@ function output = toLogical(data,default_value)
 %    1   0   0
 %    1   1   1
 
-if nargin == 1
+if islogical(data)
+    output = data;
+elseif isnumeric(data)
+    output = logical(data);
+elseif nargin == 1
     output = cellfun(@(x) h__toValueNoDefault(x),data);
 else
     output = cellfun(@(x) h__toValue(x,default_value),data);
