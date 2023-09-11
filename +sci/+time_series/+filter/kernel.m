@@ -10,6 +10,9 @@ classdef kernel < handle
     %   - rectangular window
     %   - gaussian window
     %
+    %   For constructor help type:
+    %   help sci.time_series.filter.kernel.kernel
+    %
     
     
     properties
@@ -44,7 +47,7 @@ classdef kernel < handle
             %
             %   Optional Inputs:
             %   ----------------
-            %   type : {'tri','rect'} (default 'tri')
+            %   type : (default 'tri')
             %       The shape to use for smoothing ...
             %       'tri' - triangular window
             %       'rect' - rectangular window
