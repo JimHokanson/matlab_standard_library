@@ -36,8 +36,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     //   output_data = sl.io.decompressDeflateStream(uint8_data,n_bytes_out);
     //
         
-    if (nrhs != 2){
-        mexErrMsgIdAndTxt("SL:decompressDeflateStream:call_error","Invalid # of inputs, 2 expected");
+    if (!((nrhs == 2) || (nrhs == 3))){
+        mexErrMsgIdAndTxt("SL:decompressDeflateStream:call_error","Invalid # of inputs, 2 or 3expected");
     }else if (!mxIsClass(prhs[0],"uint8")){
         mexErrMsgIdAndTxt("SL:decompressDeflateStream:call_error","The 1st input must be of type uint8");
     }else if (!mxIsClass(prhs[1],"double")){
@@ -84,6 +84,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     //This code is based on:
     //https://zlib.net/zpipe.c
     
+
+    //Initialization
+    //---------------------------------------------------------------------
     z_stream strm;
     
     //These are apparently necessary to specify ...
@@ -101,6 +104,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     //Bytef    *next_out; /* next output byte will go here */
     strm.next_out = data_out;
     
+
+    //Inflate Initialization
+    //---------------------------------------------------------------------
     //This is some old code for when I thought a project I was working with
     //had stripped the leading zlib header. I was just passing in the wrong
     //data section. Eventually we could provide this feature as an optional
@@ -110,25 +116,42 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     //We don't expect gzip headers, so we need a negative number
     //Not sure why -15 is better than any other negative number
     //int ret = inflateInit2(&strm,-15);
+
+    //
+    //ZEXTERN int ZEXPORT inflateInit2 OF((z_streamp strm,
+    //                                 int  windowBits));
+    //This is another version of inflateInit with an extra parameter. The 
+    //fields next_in, avail_in, zalloc, zfree and opaque must be initialized 
+    //before by the caller.
+    //
+    // - next_in
+    // - avail_in
+    // - zalloc
+    // - zfree
+    // - opaque
+    //
+    //windowBits can also be –8..–15 for raw inflate
     
-    int ret = inflateInit(&strm);
+    int ret = 0;
+    if (nrhs == 3){
+        ret = inflateInit2(&strm,(int)mxGetScalar(prhs[2]));
+    }else{
+        ret = inflateInit(&strm);
+    }
     
     if (!(ret == Z_STREAM_END || ret == Z_OK)){
-        //??? How is the error message allocated??? strm.msg
-        //Is it on the stack?
-        mexPrintf("Return: %d",ret);
         (void)inflateEnd(&strm);
-        throwError(ret);
+        mexErrMsgIdAndTxt("SL:decompressDeflateStream:inflate_init_error",
+                          "decompression_init_error: %d, %s",ret,strm.msg);
     }
     
     
     ret = inflate( &strm, Z_FINISH );
     
     if (!(ret == Z_STREAM_END || ret == Z_OK)){
-        //??? How is the error message allocated??? strm.msg
-        //TODO: Figure out how to 
         (void)inflateEnd(&strm);
-        throwError(ret);
+        mexErrMsgIdAndTxt("SL:decompressDeflateStream:inflate_init",
+                          "decompression_run_error: %d, %s",ret,strm.msg);
     }
     
     mxSetData(plhs[0],data_out);
@@ -143,6 +166,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     // #define Z_MEM_ERROR    (-4)
     // #define Z_BUF_ERROR    (-5)
     // #define Z_VERSION_ERROR (-6)
+
+    // #define Z_NO_FLUSH      0 - doesn't force flushing until deflate
+    //           has found a good stopping point ...
+    // #define Z_PARTIAL_FLUSH 1 - output not aligned to byte boundary
+    // #define Z_SYNC_FLUSH    2 - output aligned to byte boundary
+    // #define Z_FULL_FLUSH    3
+    // #define Z_FINISH        4 - single step inflation - some memory
+    //      advantages compared to other methods
+    // #define Z_BLOCK         5 - assists in combining deflate streams
+    // #define Z_TREES         6 - returns after header
 
     
     /* clean up and return */
