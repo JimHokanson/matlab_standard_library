@@ -32,6 +32,11 @@ function time_out = msBase1601ToMatlab(time_in)
 %        - datestr as cell
 %   2) Optionally specify time zone shift
 
+if isa(time_in,'uint8')
+    %TODO: check length
+    time_in = typecast(time_in,'uint64');
+end
+
 if ~isa(time_in,'uint64')
     error('The input to this function must of uint64')
 end
