@@ -1,13 +1,22 @@
-function varargout = splitAndProcessVarargin(in,varargin_data,names,varargin)
+function varargout = splitAndProcessVarargin(in,varargin_data,names)
 %x Takes optional inputs meant for different subfunctions and splits them
 %
 %
-%   varargout = sl.in.splitAndProcessVarargin(in,varargin_data,names,varargin);
+%   varargout = sl.in.splitAndProcessVarargin(in,varargin_data,names);
 %
 %   This function was written to support having optional inputs that 
 %   were meant for different functions in the same parent function.
 %
 %   The example below shows how to build up the function.
+%
+%   Unspecified remainder options
+%   -----------------------------
+%   If you specify an empty cell array at the end you'll get all of the 
+%   properties that don't match:
+%   
+%   in.a = 1
+%   s1 = fieldnames(in)
+%   [in,varargin] = sl.in.splitAndProcessVarargin(in,varargin,{s1,{}});
 %
 %   Keeping Subfunction defaults
 %   ----------------------------
@@ -85,14 +94,35 @@ end
 %
 %   In this loop below, names is cumulative, so we don't run into this
 %   problem
+
+missing_allowed = false;
+
+
+%Here we compute "real_names" by calculating the difference between
+%name listing
+%----------------------------------------------------------------------
+%in.a = 1
+%s1 = fieldnames(in)
+%in.b = 2
+%s2 = fieldnames(in)
+%
+%   => We want s2 to only contain 'b', but on input it contains "a" and "b"
+
 real_names = cell(1,n_names);
 real_names{1} = names{1};
 for iName = 2:n_names
-   real_names{iName} = setdiff(names{iName},names{iName-1}); 
+    if isempty(names{iName})
+        %This should really only happen at the end ...
+        real_names{iName} = [];
+        missing_allowed = true;
+    else
+        real_names{iName} = setdiff(names{iName},names{iName-1});
+    end
 end
 names = real_names;
 
-
+%Conversion to a structure - this is standard with other implementations
+%----------------------------------------------------------------------
 if iscell(varargin_data)
    varargin_data = sl.in.propValuePairsToStruct(varargin_data); 
 else
@@ -100,29 +130,42 @@ else
    error('Not yet implemented')
 end
 
+missing = struct;
+%Overriding the default inputs ('in') with the optional inputs ('varargin')
 new_names = fieldnames(varargin_data);
 for iNew = 1:length(new_names)
     cur_name = new_names{iNew};
     if isfield(in,cur_name)
         in.(cur_name) = varargin_data.(cur_name);
     else
-        %TODO: Provide a clickable link to valid field names ...
-        error('Specified field: "%s" is not a valid optional input',cur_name);
+        if missing_allowed
+            missing.(cur_name) = varargin_data.(cur_name);
+        else
+            %TODO: Provide a clickable link to valid field names ...
+            error('Specified field: "%s" is not a valid optional input',cur_name);
+        end
     end
 end
 
+%For each set of names, assign the properties
+%------------------------------------------------------
 varargout = cell(1,nargout);
 for iOut = 1:length(names)
    name_set = names{iOut};
-   s = struct;
-   for iName = 1:length(name_set)
-       cur_name = name_set{iName};
-       cur_value = in.(cur_name);
-       if ~isa(cur_value,'sl.in.NULL')
-          s.(cur_name) = in.(cur_name);
+   if isempty(name_set)
+       s = sl.in.structToPropValuePairs(missing);
+       varargout{iOut} = s;
+   else
+       s = struct;
+       for iName = 1:length(name_set)
+           cur_name = name_set{iName};
+           cur_value = in.(cur_name);
+           if ~isa(cur_value,'sl.in.NULL')
+              s.(cur_name) = in.(cur_name);
+           end
        end
+       varargout{iOut} = s;
    end
-   varargout{iOut} = s;
 end
 
 end
