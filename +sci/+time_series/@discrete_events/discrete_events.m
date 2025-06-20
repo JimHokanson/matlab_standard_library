@@ -76,6 +76,10 @@ classdef discrete_events < sl.obj.display_class
             %   sci.time_series.discrete_events('comments',c.times,'msgs',c.strings)
             %
             
+            if nargin < 2
+               error('Constructor requires at least 2 inputs, name and times') 
+            end
+            
             in.name   = '';
             in.values = [];
             in.msgs   = [];

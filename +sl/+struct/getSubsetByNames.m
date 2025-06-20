@@ -29,6 +29,7 @@ function s2 = getSubsetByNames(s,names_to_keep,varargin)
 %         a
 %         b
 
+in.make_safe = false;
 in.new_names = {};
 in = sl.in.processVarargin(in,varargin);
 
@@ -41,6 +42,9 @@ else
    new_names = in.new_names;
 end
 
+if in.make_safe
+    new_names = cellfun(@genvarname,new_names,'un',0);
+end
 
 s2 = sl.struct.initialize(new_names,size(s));
 for i = 1:length(names_to_keep)

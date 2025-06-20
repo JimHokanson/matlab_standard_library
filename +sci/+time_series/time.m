@@ -24,6 +24,10 @@ classdef time < sl.obj.display_class
         output_units = 's'
         
         d0 = '---------- units insensitive properties --------'
+        %Can be datetime or datenum
+        %
+        %   IF datetime, we plot with datetime
+        %
         start_datetime %
         %This can be used for real dates to identify the
         %actual time of the first sample. No support for time zones is in
@@ -403,11 +407,16 @@ classdef time < sl.obj.display_class
             %
             %
             
-            %TODO: Do an indices check
-            %Make this optional with a default of true ...
-            %sorted check?
-            times = obj.start_offset + (indices-1)*obj.dt;
-            times = h__getTimeScaled(obj,times);
+            if isa(obj.start_datetime,'datetime')
+                times = obj.start_datetime + seconds(obj.start_offset + (indices-1)*obj.dt);
+            else
+
+                %TODO: Do an indices check
+                %Make this optional with a default of true ...
+                %sorted check?
+                times = obj.start_offset + (indices-1)*obj.dt;
+                times = h__getTimeScaled(obj,times);
+            end
         end
         function [indices,result] = getNearestIndices(obj,times,varargin)
             %x Given a set of times, return the closest indices
