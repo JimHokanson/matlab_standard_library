@@ -78,6 +78,15 @@ function varargout = verticalLines(x_positions,varargin)
 %   --------
 %   sl.plot.type.horizontalLines
 %   sci.time_series.discrete_events>plot
+%
+%   Updates
+%   -------
+%   JAH: 9/9/2024 - modifed text userdata to store x-position. Ths has to
+%   do with hiding text boxes that are off the x-limits. For datetime the
+%   values don't make sense (maybe there is a better workaround?)
+%       - to show this in action make a plot with datetimes and text
+%         then zoom in and ask for the x positions of the text box, the
+%         units are not in datetime units (on 2024a)
 
 %A potentially useful reference
 %Check this out: http://www.mathworks.com/matlabcentral/fileexchange/1039-hline-and-vline
@@ -161,7 +170,7 @@ if ~isempty(in.strings)
         temp_h_text{i} = text(temp_x(1),temp_y(1),strings{i},...
         'rotation',90,'HorizontalAlignment','left',...
         'VerticalAlignment','bottom',in.text_options{:},...
-        'parent',ax);
+        'parent',ax,'UserData',temp_x(1));
     end
     h_text = [temp_h_text{:}];
 end
@@ -269,8 +278,16 @@ function h__hideText(h_text,ax)
 %   of the on_off from previously to only set those that have changed ...
 xlim = ax.XLim;
 
-x_positions = arrayfun(@(x) x.Position(1),h_text);
-is_off = x_positions < xlim(1) | x_positions > xlim(2);
+try
+    x_positions = arrayfun(@(x) x.UserData(1),h_text);
+catch
+    keyboard
+end
+% if isdatetime(xlim)
+% 
+% else
+    is_off = x_positions < xlim(1) | x_positions > xlim(2);
+% end
 
 set(h_text(is_off),'Visible','off');
 set(h_text(~is_off),'Visible','on');
