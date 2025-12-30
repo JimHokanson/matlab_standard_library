@@ -34,18 +34,19 @@ DIRECTORY_EXISTS_RESULT = 7;
 in.open_folder = false;
 in = sl.in.processVarargin(in,varargin);
 
+if isstring(file_or_folder_path)
+    file_or_folder_path = char(file_or_folder_path);
+end
+
 %Resolution to file or folder
 %--------------------------------------------------------------------------
 exist_result = exist(file_or_folder_path,'file');
 if exist_result == DIRECTORY_EXISTS_RESULT    
     folder_path = file_or_folder_path;
-    if isstring(folder_path)
-        folder_path = char(folder_path);
-    end
-    is_file     = false;
+    is_file = false;
 elseif exist_result
     file_path = file_or_folder_path;
-    is_file   = true;
+    is_file = true;
 else
     error_msg = sl.error.getMissingFileErrorMsg(file_or_folder_path);
     error(error_msg);
