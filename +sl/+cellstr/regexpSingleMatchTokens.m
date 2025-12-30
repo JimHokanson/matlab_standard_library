@@ -37,6 +37,15 @@ len = cellfun('length',temp);
 
 is_matched = len ~= 0;
 
+%Force row vector, for later
+%JAH: 12/30/2025 - if data_in was a column vector
+% this code was not good due to the find below.
+%
+%Note, if data_in is a matrix, the code will fail
+%
+%TODO: Check if data is a matrix
+is_matched = is_matched(:)';
+
 output_len = max(len);
 
 n_rows = length(data_in);
