@@ -39,6 +39,9 @@ in = sl.in.processVarargin(in,varargin);
 exist_result = exist(file_or_folder_path,'file');
 if exist_result == DIRECTORY_EXISTS_RESULT    
     folder_path = file_or_folder_path;
+    if isstring(folder_path)
+        folder_path = char(folder_path);
+    end
     is_file     = false;
 elseif exist_result
     file_path = file_or_folder_path;
