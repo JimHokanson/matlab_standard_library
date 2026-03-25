@@ -7,6 +7,9 @@ function saveAsPDF(h_fig,varargin)
 %   ---------------
 %   file_path 
 %       Specify full path to file
+%   format :
+%       - "vector"
+%       - "image"
 %
 %   Examples
 %   --------
@@ -17,6 +20,7 @@ function saveAsPDF(h_fig,varargin)
 %   1)DONE - update documentation Allow file specification as an input
 %   2) Scale to print to a page size
 
+in.format = 'vector';
 in.file_path = '';
 in = sl.in.processVarargin(in,varargin);
 
@@ -50,8 +54,32 @@ h_fig.PaperUnits = 'inches';
 h_fig.PaperPosition = h_fig.Position;
 h_fig.PaperPositionMode = 'auto';
 
+if isa(h_fig, 'matlab.ui.Figure')
+    if in.format == "vector"
+        exportgraphics(h_fig, file_path,'ContentType','vector','BackgroundColor',h_fig.Color);
+    else 
+        %Assuming image for now
+        exportgraphics(h_fig, file_path,'ContentType','image','BackgroundColor',h_fig.Color);
+    end
+else
+    %TODO: image format not yet support
+    if verLessThan('matlab','9.11')
+        %older than 2021b - use this
+        if in.format == "vector"
+            print(h_fig,'-dpdf','-painters',file_path); %#ok<PRTPT>
+        else
+            print(h_fig,'-dpdf','-opengl',file_path); %#ok<PRTOG>
+        end
+    else
+        if in.format == "vector"
+            print(h_fig,'-dpdf','-vector',file_path);
+        else
+            print(h_fig,'-dpdf','-image',file_path);    
+        end
+    end
+end
 
 
-print(h_fig,'-dpdf','-painters',file_path);
- 
+
+
 end

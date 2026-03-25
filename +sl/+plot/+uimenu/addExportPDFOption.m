@@ -1,6 +1,17 @@
-function addExportPDFOption(h_fig)
+function addExportPDFOption(h_fig,options)
 %
-%   sl.plot.uimenu.addExportPDFOption(h_fig)
+%   sl.plot.uimenu.addExportPDFOption(h_fig,**options)
+%
+%   Inputs
+%   ------
+%   h_fig :
+%       Pass in an empty value to use the current figure.
+%
+%   Optional Inputs
+%   ---------------
+%   - format 
+%       - 'vector'
+%       - 'image'
 %
 %   Improvements
 %   ------------
@@ -11,13 +22,18 @@ function addExportPDFOption(h_fig)
 %   --------
 %   sl.plot.export.saveAsPDF
 
+arguments
+    h_fig = [];
+    options.format = 'vector';
+end
+
 TEXT = 'Export to PDF';
 
-if nargin == 0
+if isempty(h_fig)
     h_fig = gcf;
 end
 
 m = sl.plot.uimenu.menu('Custom',h_fig);
-mitem = m.addChild(TEXT,'Callback',@(~,~)sl.plot.export.saveAsPDF(h_fig));
+mitem = m.addChild(TEXT,'Callback',@(~,~)sl.plot.export.saveAsPDF(h_fig,'format',options.format));
 
 end
