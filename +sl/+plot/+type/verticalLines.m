@@ -263,7 +263,14 @@ function h__cleanCallback(h_lines,h_text,ax,in,pv)
            if strcmp(ME.identifier,'MATLAB:class:InvalidHandle')
               %ok
            else
-               rethrow(ME);
+               %Do we need a pause here
+               %- I hit this end point when deleting a figure
+               if isvalid(ax) && any(isvalid(h_text))
+                   rethrow(ME);
+                   %Thrown, but handles were invalid
+                   %    identifier: 'MATLAB:UndefinedFunction'
+                   %message: 'Unrecognized function or variable 'x_positions'.'
+               end
            end
         end
     end
