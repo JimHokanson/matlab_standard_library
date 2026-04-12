@@ -91,6 +91,13 @@ in.channels = 'all';
 % in = sl.in.processVarargin(in,local_options);
 
 
+if isempty(objs)
+    %This occurs if something asks for data and none exists the
+    %library can return an empty object which is an object of this
+    %type but of length == 0
+    error('Unable to plot empty objects')
+end
+
 if ~isempty(in.epoch)
    temp = cell(1,length(objs));
    for i = 1:length(objs)
@@ -181,10 +188,14 @@ else
         % relative offsets if we are going to clear the axes on plotting
         base_datetime = big_plot.getAxisAbsoluteStartTime(h_axes);
         if ~isempty(base_datetime) && ishold(h_axes)
-            dt = sl.datetime.datenumToSeconds(start_datetimes-base_datetime);
-            for iObj = 1:length(time_objs_for_plot)
-                cur_time_obj = time_objs_for_plot(iObj);
-                cur_time_obj.shiftStartTime(dt(iObj));
+            if isa(base_datetime,'datetime')
+                %Don't do anything, MATLAB handles this for us!
+            else
+                dt = sl.datetime.datenumToSeconds(start_datetimes-base_datetime);
+                for iObj = 1:length(time_objs_for_plot)
+                    cur_time_obj = time_objs_for_plot(iObj);
+                    cur_time_obj.shiftStartTime(dt(iObj));
+                end
             end
         else
             base_datetime = min(start_datetimes);
