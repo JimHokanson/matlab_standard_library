@@ -270,7 +270,7 @@ classdef time < sl.obj.display_class
             
             if isempty(t)
                 error('Time vector can''t be empty')
-            elseif length(t) == 1
+            elseif isscalar(t)
                 error('Time vector must have at least two elements to establish sampling rate')
             end
             
@@ -372,8 +372,30 @@ classdef time < sl.obj.display_class
             I1 = in.start_index - 1;
             I2 = in.end_index - 1;
             
-            time_array = ((I1:I2)*obj.dt + obj.start_offset)';
-            time_array = h__getTimeScaled(obj,time_array);
+            % time_array = ((I1:I2)*obj.dt + obj.start_offset)';
+            % time_array = h__getTimeScaled(obj,time_array);
+
+            %TODO: Merge with similar method below
+            if isa(obj.start_datetime,'datetime')
+                temp_time = obj.start_offset + (I1:I2)*obj.dt;
+                if isa(temp_time,'duration')
+                    time_array = obj.start_datetime + temp_time;
+                else
+                    %dt is in units of seconds
+                    time_array = obj.start_datetime + seconds();
+                end
+            else
+                if isa(obj.dt,'duration')
+                    time_array = obj.start_offset + (I1:I2)*obj.dt;
+                else
+                    %TODO: Do an indices check
+                    %Make this optional with a default of true ...
+                    %sorted check?
+                    times = obj.start_offset + (indices-1)*obj.dt;
+                    time_array = h__getTimeScaled(obj,times);
+                end
+            end
+
         end
         function indices = getIndicesFromTimes(obj,times)
             %JAH: Added this for compatibility with streaming data
@@ -408,15 +430,31 @@ classdef time < sl.obj.display_class
             %
             
             if isa(obj.start_datetime,'datetime')
-                times = obj.start_datetime + seconds(obj.start_offset + (indices-1)*obj.dt);
-            else
+                temp_time = obj.start_offset + (indices-1)*obj.dt;
+                if isa(temp_time,'duration')
+                    times = obj.start_datetime + temp_time;
+                else
+                    %dt is in units of seconds
+                    times = obj.start_datetime + seconds();
+                end
 
-                %TODO: Do an indices check
-                %Make this optional with a default of true ...
-                %sorted check?
-                times = obj.start_offset + (indices-1)*obj.dt;
-                times = h__getTimeScaled(obj,times);
+            else
+                if isa(obj.dt,'duration')
+                    times = obj.start_offset + (indices-1)*obj.dt;
+                else
+                    %TODO: Do an indices check
+                    %Make this optional with a default of true ...
+                    %sorted check?
+                    times = obj.start_offset + (indices-1)*obj.dt;
+                    times = h__getTimeScaled(obj,times);
+                end
             end
+        end
+        function flag = datetimePresent(obj)
+            flag = isa(obj.start_datetime,'datetime');
+        end
+        function flag = durationPresent(obj)
+            flag = isa(obj.dt,'duration');
         end
         function [indices,result] = getNearestIndices(obj,times,varargin)
             %x Given a set of times, return the closest indices
@@ -506,11 +544,17 @@ end
 %TODO: Document these functions
 %This should all be moved to sci.units ...
 function times_scaled = h__getTimeScaled(obj,times)
-scale_factor = h__getTimeScaleFactor(obj.output_units,true);
-if scale_factor == 1
+if isa(times,'datetime')
+    times_scaled = times;
+elseif isa(times,'duration')
     times_scaled = times;
 else
-    times_scaled = times*scale_factor;
+    scale_factor = h__getTimeScaleFactor(obj.output_units,true);
+    if scale_factor == 1
+        times_scaled = times;
+    else
+        times_scaled = times*scale_factor;
+    end
 end
 end
 
