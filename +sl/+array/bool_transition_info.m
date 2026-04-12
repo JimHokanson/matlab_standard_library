@@ -190,7 +190,14 @@ classdef bool_transition_info < sl.obj.display_class
             obj.time = in.time;
             
             if ~isempty(in.time)
-                obj.start_time = in.time.start_offset;
+                %TODO: This should be improved
+                %isprop on datetime array returns array
+                %not sure about isfield on struct array
+                if any(isfield(in.time,'start_offset')) || any(isprop(in.time,'start_offset'))
+                    obj.start_time = in.time.start_offset;
+                else
+                    obj.start_time = 0;
+                end
             else
                 %Really samples ...
                 obj.start_time = 1;
@@ -301,6 +308,8 @@ classdef bool_transition_info < sl.obj.display_class
             
             %TODO: We don't even need the temp logic, we could
             %build it in downstream
+            build_rows = isrow(logical_data);
+
             if isrow(logical_data)
                 temp_logic = [~logical_data(1) logical_data];
             else
@@ -328,7 +337,12 @@ classdef bool_transition_info < sl.obj.display_class
                 obj.true_end_indices(1) = [];
             end
             if logical_data(end)
-                obj.true_end_indices(end+1) = length(logical_data);
+                if build_rows
+                    %obj.true_end_indices(end+1) = length(logical_data);
+                    obj.true_end_indices = [obj.true_end_indices length(logical_data)];
+                else
+                    obj.true_end_indices = [obj.true_end_indices; length(logical_data)];
+                end
             end
             
             %false_end_indices ---------------
@@ -337,7 +351,12 @@ classdef bool_transition_info < sl.obj.display_class
                 obj.false_end_indices(1) = [];
             end
             if ~logical_data(end)
-                obj.false_end_indices(end+1) = length(logical_data);
+                %obj.false_end_indices(end+1) = length(logical_data);
+                if build_rows
+                    obj.false_end_indices = [obj.false_end_indices length(logical_data)];
+                else
+                    obj.false_end_indices = [obj.false_end_indices; length(logical_data)];
+                end
             end
             
             %JAH EDIT 11/2020
@@ -369,6 +388,8 @@ if isempty(time)
     %start_time = 0;
     %dt = 1;
     time_out = indices - 1;
+elseif isnumeric(time) || isdatetime(time)
+    time_out = time(indices);
 else
     time_out = time.getTimesFromIndices(indices);
 end
