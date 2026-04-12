@@ -11,7 +11,7 @@ function colors = getMapColorsFromValues(map,values,varargin)
 %   ------
 %   map : [n x 3]
 %       Color values to interpolate between
-%   values : 
+%   values :
 %
 %   Optional Inputs
 %   ---------------
@@ -20,7 +20,7 @@ function colors = getMapColorsFromValues(map,values,varargin)
 %   Example
 %   -------
 %   values = 1:10;
-%   colors = sl.plot.color.getMapColorsFromValues(colormap('autumn'),values); 
+%   colors = sl.plot.color.getMapColorsFromValues(colormap('autumn'),values);
 %
 %   figure
 %   hold on
@@ -38,7 +38,7 @@ if isempty(in.min_value)
 end
 
 if isempty(in.max_value)
-   in.max_value = max(values); 
+    in.max_value = max(values);
 end
 
 %TODO: Error check on min and max, max > min
@@ -47,7 +47,7 @@ range = in.max_value - in.min_value;
 
 %TODO: Not sure if this is what we want ...
 if range == 0
-   norm_values = 0.5*ones(1,length(values)); 
+    norm_values = 0.5*ones(1,length(values));
 else
     norm_values = (values - in.min_value)./range;
 end
