@@ -95,12 +95,12 @@ classdef data < sl.obj.handle_light
     
     %{
     %   2)
-          dt = 0.001;
-          t  = -2:dt:2;
+          dt = 0.00001;
+          t  = -20:dt:20;
           time_obj = sci.time_series.time(dt,length(t));
-          y = chirp(-2:dt:2,100,1,200,'q');
-          wtf = sci.time_series.data(y',time_obj);
-          sc = wtf.calculators.spectrogram;
+          y = chirp(t,100,1,200,'q');
+          d = sci.time_series.data(y',time_obj);
+          sc = d.calculators.spectrogram;
           sd = sc.ml_spectrogram(wtf,dt*100);
           plot(sd)
     
