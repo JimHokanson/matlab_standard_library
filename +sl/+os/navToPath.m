@@ -42,10 +42,10 @@ end
 %--------------------------------------------------------------------------
 exist_result = exist(file_or_folder_path,'file');
 if exist_result == DIRECTORY_EXISTS_RESULT    
-    folder_path = file_or_folder_path;
+    folder_path = char(file_or_folder_path);
     is_file = false;
 elseif exist_result
-    file_path = file_or_folder_path;
+    file_path = char(file_or_folder_path);
     is_file = true;
 else
     error_msg = sl.error.getMissingFileErrorMsg(file_or_folder_path);
