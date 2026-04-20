@@ -367,6 +367,7 @@ classdef time < sl.obj.display_class
             
             in.start_index = 1;
             in.end_index = obj.n_samples;
+            in.wei = 0;
             in = sl.in.processVarargin(in,varargin);
             
             I1 = in.start_index - 1;
@@ -374,25 +375,29 @@ classdef time < sl.obj.display_class
             
             % time_array = ((I1:I2)*obj.dt + obj.start_offset)';
             % time_array = h__getTimeScaled(obj,time_array);
-
-            %TODO: Merge with similar method below
-            if isa(obj.start_datetime,'datetime')
-                temp_time = obj.start_offset + (I1:I2)*obj.dt;
-                if isa(temp_time,'duration')
-                    time_array = obj.start_datetime + temp_time;
-                else
-                    %dt is in units of seconds
-                    time_array = obj.start_datetime + seconds();
-                end
+            if in.wei
+                time_array = ((I1:I2)*obj.dt + obj.start_offset)';
+                time_array = h__getTimeScaled(obj,time_array);
             else
-                if isa(obj.dt,'duration')
-                    time_array = obj.start_offset + (I1:I2)*obj.dt;
+                %TODO: Merge with similar method below
+                if isa(obj.start_datetime,'datetime')
+                    temp_time = obj.start_offset + (I1:I2)*obj.dt;
+                    if isa(temp_time,'duration')
+                        time_array = obj.start_datetime + temp_time;
+                    else
+                        %dt is in units of seconds
+                        time_array = obj.start_datetime + seconds();
+                    end
                 else
-                    %TODO: Do an indices check
-                    %Make this optional with a default of true ...
-                    %sorted check?
-                    times = obj.start_offset + (indices-1)*obj.dt;
-                    time_array = h__getTimeScaled(obj,times);
+                    if isa(obj.dt,'duration')
+                        time_array = obj.start_offset + (I1:I2)*obj.dt;
+                    else
+                        %TODO: Do an indices check
+                        %Make this optional with a default of true ...
+                        %sorted check?
+                        times = obj.start_offset + (indices-1)*obj.dt;
+                        time_array = h__getTimeScaled(obj,times);
+                    end
                 end
             end
 

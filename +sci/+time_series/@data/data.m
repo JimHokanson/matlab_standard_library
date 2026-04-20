@@ -1310,7 +1310,7 @@ classdef data < sl.obj.handle_light
             %   ---------
             %   [p_data,p_time] = p.getRawDataAndTime
             data = obj.d;
-            time = obj.time.getTimeArray();
+            time = obj.time.getTimeArray('wei',1);
         end
         %         function varargout = dif2Loop(objs)
         %             if nargout
