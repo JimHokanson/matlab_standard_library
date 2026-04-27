@@ -302,6 +302,12 @@ classdef data < sl.obj.handle_light
             sr = sci.time_series.subset_retrieval(objs);
             disp(sr)
         end
+        function findTrialtime(obj,trial_id)
+            keyboard
+
+
+
+        end
         function new_objs = copy(old_objs,varargin)
             %x Creates a deep copy of the object
             %

@@ -395,6 +395,7 @@ classdef time < sl.obj.display_class
                         %TODO: Do an indices check
                         %Make this optional with a default of true ...
                         %sorted check?
+                        indices = I1:I2;
                         times = obj.start_offset + (indices-1)*obj.dt;
                         time_array = h__getTimeScaled(obj,times);
                     end
