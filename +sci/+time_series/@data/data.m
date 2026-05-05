@@ -302,11 +302,20 @@ classdef data < sl.obj.handle_light
             sr = sci.time_series.subset_retrieval(objs);
             disp(sr)
         end
-        function findTrialtime(obj,trial_id)
-            keyboard
-
-
-
+        function [trial_start_time, stim_on_time,trial_end_time] = findTrialtime(obj,trial_id)
+%             keyboard
+            qp_name = sprintf('qp%.0f',trial_id);
+            trial_indice = strcmp(obj.event_info.comments.msgs,qp_name);
+            time_indice = find(trial_indice==1);
+            trial_start_time = obj.event_info.comments.times(time_indice);
+            stim_on_time = obj.event_info.comments.times(time_indice+1);
+            trial_end_time = obj.event_info.comments.times(time_indice+2);
+            trial_start_comment = obj.event_info.comments.msgs(time_indice);
+            stim_start_comment = obj.event_info.comments.msgs(time_indice+1);
+            trial_end_comment = obj.event_info.comments.msgs(time_indice+2);
+            if ~contains(trial_start_comment,'qp') || ~contains(stim_start_comment,'start') ||~contains(trial_end_comment,'stop')
+                error(qp_name)
+            end
         end
         function new_objs = copy(old_objs,varargin)
             %x Creates a deep copy of the object
